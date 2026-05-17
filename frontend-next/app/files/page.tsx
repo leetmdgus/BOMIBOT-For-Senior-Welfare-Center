@@ -1,4 +1,4 @@
-import { Sidebar } from "@/components/dashboard/sidebar"
+import { Sidebar } from "@/components/common/sidebar"
 import { FilesPageContent } from "@/components/files/files-page-content"
 
 export default function FilesPage() {

@@ -35,6 +35,7 @@ import { UploadDialog } from "./upload-dialog"
 import { NewFolderDialog } from "./new-folder-dialog"
 import { useFileManager } from "./use-file-manager"
 import { getBreadcrumbs } from "./file-utils"
+import { Header } from "../common/header"
 
 function CurrentFolderDropArea({ children }: { children: ReactNode }) {
   const rootDrop = useDroppable({ id: "folder:current" })
@@ -101,51 +102,24 @@ export function FilesPageContent() {
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
-      <header className="border-b border-border bg-white px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-             <div>
-              <h1 className="text-xl font-semibold">
-                <button
-                  className="hover:text-foreground"
-                  onClick={() => manager.setCurrentFolderId(null)}
-                >
-                  파일
-                </button>
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                산하기관 &gt; 춘천북부노인복지관 &gt; 파일
-              </p>
-            </div>
-            {breadcrumbs.map((folder) => (
-              <span key={folder.id} className="flex items-center gap-2">
-                <span>{">"}</span>
-                <button
-                  className="font-medium text-foreground hover:underline"
-                  onClick={() => manager.setCurrentFolderId(folder.id)}
-                >
-                  {folder.name}
-                </button>
-              </span>
-            ))}
-          </div>
+      <Header />
+      <div className="border-b border-border bg-white px-6 py-4">
+        <div className="flex items-center justify-end gap-3">
+          <Button className="gap-2" onClick={() => manager.setUploadOpen(true)}>
+            <Upload className="size-4" />
+            파일 업로드
+          </Button>
 
-          <div className="flex items-center gap-3">
-            <Button className="gap-2" onClick={() => manager.setUploadOpen(true)}>
-              <Upload className="size-4" />
-              파일 업로드
-            </Button>
-            <Button
-              variant="outline"
-              className="gap-2"
-              onClick={() => manager.setNewFolderOpen(true)}
-            >
-              <FolderPlus className="size-4" />
-              새 폴더
-            </Button>
-          </div>
+          <Button
+            variant="outline"
+            className="gap-2"
+            onClick={() => manager.setNewFolderOpen(true)}
+          >
+            <FolderPlus className="size-4" />
+            새 폴더
+          </Button>
         </div>
-      </header>
+      </div>
 
       <main className="flex-1 overflow-auto">
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>

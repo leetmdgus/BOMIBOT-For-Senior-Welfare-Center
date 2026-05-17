@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation"
 
-import { Sidebar } from "@/components/dashboard/sidebar"
+import { Sidebar } from "@/components/common/sidebar"
 import { SurveyBreadcrumb } from "./survey-breadcrumb"
 import { SurveyTabNavigation } from "./survey-tab-navigation"
 import { SurveyHeader } from "./survey-header"

@@ -86,9 +86,9 @@ export const tasksAPI = {
     const searchParams = new URLSearchParams()
     if (params?.projectId) searchParams.set("projectId", params.projectId)
     if (params?.category) searchParams.set("category", params.category)
-    return fetchAPI<any>(`/tasks?${searchParams.toString()}`)
+    return fetchAPI<any>(`/kanban/tasks?${searchParams.toString()}`)
   },
-  create: (data: any) => fetchAPI<any>("/tasks", { method: "POST", body: JSON.stringify(data) }),
-  update: (data: any) => fetchAPI<any>("/tasks", { method: "PUT", body: JSON.stringify(data) }),
-  delete: (id: string) => fetchAPI<any>(`/tasks?id=${id}`, { method: "DELETE" }),
+  create: (data: any) => fetchAPI<any>("/kanban/tasks", { method: "POST", body: JSON.stringify(data) }),
+  update: (data: any) => fetchAPI<any>("/kanban/tasks", { method: "PUT", body: JSON.stringify(data) }),
+  delete: (id: string) => fetchAPI<any>(`/kanban/tasks?id=${id}`, { method: "DELETE" }),
 }

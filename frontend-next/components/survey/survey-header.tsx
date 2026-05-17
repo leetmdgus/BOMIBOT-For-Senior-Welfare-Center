@@ -14,7 +14,7 @@ export function SurveyHeader({ id }: { id: string }) {
     if (typeof window === "undefined") return ""
 
     const returnTo = encodeURIComponent(
-      `${window.location.origin}/task/${id}/survey?view=results`,
+      `${window.location.origin}/kanban/${id}/survey?view=results`,
     )
 
     return `${window.location.origin}/survey/${id}?returnTo=${returnTo}`
@@ -59,7 +59,7 @@ export function SurveyHeader({ id }: { id: string }) {
   return (
     <div className="mb-6 flex items-center justify-between">
       <div className="flex items-center gap-3">
-        <Link href={`/task/${id}/survey`}>
+        <Link href={`/kanban/task/${id}/survey`}>
           <Button variant="ghost" size="icon">
             <ArrowLeft className="size-4" />
           </Button>

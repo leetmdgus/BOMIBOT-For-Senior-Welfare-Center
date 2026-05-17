@@ -3,9 +3,9 @@
 import { useState } from "react"
 import { Sparkles } from "lucide-react"
 
-import { Header } from "@/components/dashboard/header"
-import { ProjectSection } from "@/components/dashboard/project-section"
-import { Sidebar } from "@/components/dashboard/sidebar"
+import { Header } from "@/components/kanban/subheader"
+import { ProjectSection } from "@/components/kanban/project-section"
+import { Sidebar } from "@/components/common/sidebar"
 
 const projectsData = [
   {

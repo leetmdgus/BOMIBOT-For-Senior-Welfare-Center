@@ -5,14 +5,14 @@ export function SurveyTabNavigation({ id }: { id: string }) {
     <div className="border-b border-border bg-card px-6">
       <div className="flex items-center justify-end gap-8">
         <Link
-          href={`/task/${id}/performance`}
+          href={`/kanban/task/${id}/performance`}
           className="py-3 text-sm text-muted-foreground hover:text-foreground"
         >
           실적관리
         </Link>
 
         <Link
-          href={`/task/${id}/business-plan`}
+          href={`/kanban/task/${id}/business-plan`}
           className="py-3 text-sm text-muted-foreground hover:text-foreground"
         >
           사업계획
@@ -23,7 +23,7 @@ export function SurveyTabNavigation({ id }: { id: string }) {
         </span>
 
         <Link
-          href={`/task/${id}/evaluation`}
+          href={`/kanban/task/${id}/evaluation`}
           className="py-3 text-sm text-muted-foreground hover:text-foreground"
         >
           사업평가

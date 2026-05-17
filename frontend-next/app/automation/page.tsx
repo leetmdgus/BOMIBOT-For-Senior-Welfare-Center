@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { Sidebar } from "@/components/dashboard/sidebar"
+import { Sidebar } from "@/components/common/sidebar"
 import { Button } from "@/components/ui/button"
 import { Zap, ArrowLeft } from "lucide-react"
 import {
@@ -11,25 +11,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Header } from "@/components/common/header"
 
 export default function AutomationPage() {
   return (
     <div className="flex min-h-screen bg-background">
       <Sidebar />
       <main className="flex-1 overflow-auto">
-        {/* Breadcrumb */}
-        
-        <header className="flex items-center justify-between border-b border-border bg-card px-6 py-4">
-          <div className="flex items-center gap-4">
-            <div>
-              <h1 className="text-xl font-semibold">문서자동화</h1>
-              <p className="text-sm text-muted-foreground">
-                산하기관 &gt; 춘천북부노인복지관 &gt; 문서자동화
-              </p>
-            </div>
-          </div>
-
-        </header>
+        <Header />
 
         {/* Coming Soon Content */}
         <div className="flex flex-1 flex-col items-center justify-center min-h-[calc(100vh-60px)] p-6">

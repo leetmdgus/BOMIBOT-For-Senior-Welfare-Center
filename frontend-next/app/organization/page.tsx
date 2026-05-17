@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import useSWR from "swr"
-import { Sidebar } from "@/components/dashboard/sidebar"
+import { Sidebar } from "@/components/common/sidebar"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -21,6 +21,7 @@ import {
   Briefcase,
   FileText,
 } from "lucide-react"
+import { Header } from "@/components/common/header"
 
 const fetcher = (url: string) => fetch(url).then(res => res.json())
 
@@ -235,16 +236,7 @@ export default function OrganizationPage() {
 
       <main className="flex-1 overflow-auto">
         {/* Header */}
-        <div className="border-b border-border bg-card px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-xl font-semibold text-foreground">조직현황</h1>
-              <p className="text-sm text-muted-foreground">
-                산하기관 &gt; 춘천북부노인복지관 &gt; 조직현황
-              </p>
-            </div>
-          </div>
-        </div>
+        <Header />
 
         {/* Content */}
         <div className="grid grid-cols-[320px_1fr_400px] gap-6 p-6">
