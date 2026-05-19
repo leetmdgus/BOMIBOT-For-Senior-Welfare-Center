@@ -1,67 +1,56 @@
-import { subProjects } from "@/lib/mocks/kanban.board.mock"
 import { NextResponse } from "next/server"
+
+import { getPerformanceRows } from "@/services/kanban.performance.mock.service"
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
-  const projectId = searchParams.get("projectId")
-  const month = searchParams.get("month")
-  
-  let filteredData = subProjects
-  
-  if (projectId) {
-    filteredData = filteredData.filter(s => s.projectId === projectId)
+  const projectId = searchParams.get("projectId") ?? undefined
+  const month = searchParams.get("month") ?? undefined
+  const scope = searchParams.get("scope")
+
+  if (scope === "input-management") {
+    const { getInputManagementRows } = await import(
+      "@/services/kanban.performance.mock.service"
+    )
+    const data = await getInputManagementRows()
+
+    return NextResponse.json({ data })
   }
-  
-  if (month) {
-    filteredData = filteredData.filter(s => s.month === month)
-  }
-  
-  // Calculate totals
-  const totals = {
-    planPeople: filteredData.reduce((acc, s) => acc + s.planPeople, 0),
-    planCount: filteredData.reduce((acc, s) => acc + s.planCount, 0),
-    planBudget: filteredData.reduce((acc, s) => acc + s.planBudget, 0),
-    actualPeople: filteredData.reduce((acc, s) => acc + s.actualPeople, 0),
-    actualCount: filteredData.reduce((acc, s) => acc + s.actualCount, 0),
-  }
-  
-  return NextResponse.json({
-    data: filteredData,
-    totals,
-    count: filteredData.length,
-  })
+
+  const result = await getPerformanceRows({ projectId, month })
+
+  return NextResponse.json(result)
 }
 
 export async function POST(request: Request) {
   const body = await request.json()
-  
+
   const newRecord = {
     id: `sub${Date.now()}`,
     ...body,
   }
-  
+
   return NextResponse.json(newRecord, { status: 201 })
 }
 
 export async function PUT(request: Request) {
   const body = await request.json()
   const { id, ...updates } = body
-  
+
   if (!id) {
     return NextResponse.json({ error: "Record ID required" }, { status: 400 })
   }
-  
-  // In a real app, this would update the database
+
   return NextResponse.json({ id, ...updates })
 }
 
 export async function DELETE(request: Request) {
   const { searchParams } = new URL(request.url)
   const id = searchParams.get("id")
-  
+
   if (!id) {
     return NextResponse.json({ error: "Record ID required" }, { status: 400 })
   }
-  
+
   return NextResponse.json({ success: true, deletedId: id })
 }

@@ -1,19 +1,33 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 
-import { initialFiles, taskOptions } from "./file-data"
+import { getFileManagerState } from "@/services/files.service"
 import type { FileItem, Permission, SortKey, ViewMode } from "./file-types"
+import type { TaskOption } from "./file-types"
 import { canMoveItem, collectDescendantIds, exportItemsAsJson, getTypeByFileName, sortFiles } from "./file-utils"
 
 export function useFileManager() {
-  const [files, setFiles] = useState<FileItem[]>(initialFiles)
+  const [files, setFiles] = useState<FileItem[]>([])
   const [currentFolderId, setCurrentFolderId] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<ViewMode>("grid")
   const [sortKey, setSortKey] = useState<SortKey>("name")
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedIds, setSelectedIds] = useState<string[]>([])
-  const [recentIds, setRecentIds] = useState<string[]>(["folder-1", "file-1", "file-2", "folder-3"])
+  const [recentIds, setRecentIds] = useState<string[]>([])
+  const [managerTaskOptions, setManagerTaskOptions] = useState<TaskOption[]>([])
+
+  useEffect(() => {
+    getFileManagerState()
+      .then((state) => {
+        setFiles(state.files)
+        setRecentIds(state.recentIds)
+        setManagerTaskOptions(state.taskOptions)
+      })
+      .catch((error) => {
+        console.error("파일 관리 데이터 로드 실패:", error)
+      })
+  }, [])
   const [renameTarget, setRenameTarget] = useState<FileItem | null>(null)
   const [shareTarget, setShareTarget] = useState<FileItem | null>(null)
   const [uploadOpen, setUploadOpen] = useState(false)
@@ -234,7 +248,7 @@ export function useFileManager() {
   }
 
   const uploadFiles = (uploadedFiles: File[], taskId: string) => {
-    const task = taskOptions.find((item) => item.id === taskId)
+    const task = managerTaskOptions.find((item) => item.id === taskId)
     const now = new Date().toISOString()
 
     setFiles((prev) => [
@@ -265,7 +279,7 @@ export function useFileManager() {
 
   return {
     files,
-    taskOptions,
+    taskOptions: managerTaskOptions,
     currentFolderId,
     parentFolderId,
     visibleFiles,

@@ -4,7 +4,7 @@ import dynamic from "next/dynamic"
 
 const PerformanceTable = dynamic(
   () =>
-    import("@/components/kanban/board/performance-table").then((mod) => ({
+    import("@/components/kanban/performance/performance-table").then((mod) => ({
       default: mod.PerformanceTable,
     })),
   {

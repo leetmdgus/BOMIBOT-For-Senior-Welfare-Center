@@ -1,3 +1,8 @@
+/**
+ * @deprecated Use `services/*.service.ts` instead.
+ * This module predates the mock/api/facade service layer and is not used by app components.
+ */
+
 // API Helper Functions
 
 const BASE_URL = "/api"

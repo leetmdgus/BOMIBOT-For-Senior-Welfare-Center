@@ -1,6 +1,6 @@
 // services/kanban.api.service.ts
 
-import { ColumnType, KanbanProject, Staff, Task } from "./kanban.board.types"
+import { ColumnType, CreateProjectRequest, CreateProjectResponse, KanbanProject, ProjectImageOption, Staff, Task } from "./kanban.board.types"
 
 
 async function apiFetch<T>(
@@ -47,10 +47,11 @@ export async function getColumnTypeByCategoryTitle(
   )
 }
 
+
 export async function createProject(
-  project: Omit<KanbanProject, "id">
-): Promise<KanbanProject> {
-  return apiFetch<KanbanProject>("/api/kanban/boards", {
+  project: CreateProjectRequest
+): Promise<CreateProjectResponse> {
+  return apiFetch<CreateProjectResponse>("/api/kanban/boards", {
     method: "POST",
     body: JSON.stringify(project),
   })
@@ -118,6 +119,6 @@ export async function deleteTask(
   return true
 }
 
-export async function getProjectImageOptions() {
-  return apiFetch("/api/kanban/project-image-options")
+export async function getProjectImageOptions(): Promise<ProjectImageOption[]> {
+  return apiFetch<ProjectImageOption[]>("/api/kanban/project-image-options")
 }

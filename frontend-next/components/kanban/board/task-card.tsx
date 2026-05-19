@@ -37,6 +37,8 @@ import { TaskModal, type TaskFormData } from "./task-modal"
 
 import {
   ColumnType,
+  ProjectImageOption,
+  Staff,
   Task,
 } from "@/services/kanban.board.types"
 
@@ -44,7 +46,12 @@ interface TaskCardProps {
   task: Task
   isDragging?: boolean
   columnType?: ColumnType
-  projectTitle?: string
+  projectId?: string
+  projectName?: string
+  categoryId?: string
+  staffList?: Staff[]
+  projectImages?: ProjectImageOption[]
+  year?: string
 
   onAddTask?: () => void
 
@@ -75,7 +82,12 @@ export function TaskCard({
   task,
   isDragging,
   columnType,
-  projectTitle,
+  projectId,
+  projectName,
+  categoryId,
+  staffList,
+  projectImages,
+  year,
   onAddTask,
   onUpdateTask,
   onDeleteTask,
@@ -148,7 +160,7 @@ export function TaskCard({
               className="size-6 opacity-100"
               onClick={(event) => {
                 event.stopPropagation()
-                onAddTask?.()
+                setIsEditModalOpen(true)
               }}
             >
               <Pencil className="size-4" />
@@ -254,12 +266,6 @@ export function TaskCard({
               </ContextMenuItem>
             </ContextMenuContent>
           </ContextMenu>
-
-          {hasProgress && (
-            <div className="shrink-0 rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground">
-              {task.completedCount}/{task.totalCount} 완료
-            </div>
-          )}
         </div>
       </div>
       
@@ -269,6 +275,13 @@ export function TaskCard({
         mode="edit"
         task={task}
         columnType={columnType}
+        defaultProjectId={projectId}
+        defaultCategoryId={categoryId}
+        defaultProjectName={projectName}
+        lockProjectSelect
+        year={year}
+        staffList={staffList}
+        projectImages={projectImages}
         onSubmit={async (data) => {
           await onUpdateTask?.(data)
           setIsEditModalOpen(false)

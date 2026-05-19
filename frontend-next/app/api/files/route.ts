@@ -1,45 +1,16 @@
-import { files } from "@/lib/mocks/kanban.board.mock"
 import { NextResponse } from "next/server"
+
+import { getFilesList } from "@/services/files.mock.service"
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
-  const folder = searchParams.get("folder")
-  const type = searchParams.get("type")
-  const search = searchParams.get("search")
-  
-  let filteredFiles = files
-  
-  if (folder && folder !== "전체") {
-    filteredFiles = filteredFiles.filter(f => f.folder === folder)
-  }
-  
-  if (type && type !== "전체") {
-    filteredFiles = filteredFiles.filter(f => f.type === type)
-  }
-  
-  if (search) {
-    const searchLower = search.toLowerCase()
-    filteredFiles = filteredFiles.filter(f => 
-      f.name.toLowerCase().includes(searchLower)
-    )
-  }
-  
-  const folders = [...new Set(files.map(f => f.folder))]
-  const storageUsed = files.reduce((acc, f) => {
-    const size = parseFloat(f.size)
-    const unit = f.size.includes("MB") ? 1 : f.size.includes("GB") ? 1024 : 0.001
-    return acc + size * unit
-  }, 0)
-  
-  return NextResponse.json({
-    files: filteredFiles,
-    folders,
-    storage: {
-      used: storageUsed.toFixed(1),
-      total: 1000,
-      unit: "MB",
-    },
-  })
+  const folder = searchParams.get("folder") ?? undefined
+  const type = searchParams.get("type") ?? undefined
+  const search = searchParams.get("search") ?? undefined
+
+  const result = await getFilesList({ folder, type, search })
+
+  return NextResponse.json(result)
 }
 
 export async function POST(request: Request) {

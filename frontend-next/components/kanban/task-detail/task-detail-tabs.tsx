@@ -36,7 +36,7 @@ export function TaskDetailTabs({
     tabs[0]
 
   return (
-    <div className="flex h-12 items-center justify-between border-b border-border bg-card px-6">
+    <div className="print-hide flex h-12 items-center justify-between border-b border-border bg-card px-6">
       {/* 좌측 현재 탭명 */}
       <div className="text-sm font-semibold text-foreground">
         {activeTab.label}

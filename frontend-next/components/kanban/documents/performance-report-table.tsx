@@ -1,117 +1,185 @@
+"use client"
+
+import { useEffect, useMemo, useState } from "react"
+
 import { cn } from "@/lib/utils"
+import { getPerformanceReportRows } from "@/services/kanban.documents.service"
+import type { PerformanceReportRow } from "@/services/kanban.documents.types"
+
+import { useDocuments } from "./documents-provider"
+
+function formatNumber(value: number) {
+  return value.toLocaleString("ko-KR")
+}
+
+function getPeriodLabel(quarter: number, periodMode: "quarter" | "month") {
+  if (periodMode === "month") return "월간"
+  if (quarter === 1 || quarter === 2) return "상반기"
+  return "하반기"
+}
 
 export function PerformanceReportTable() {
-  const data = [
-    {
-      category: "상담",
-      project: "일반상담 및 정보제공사업",
-      sub: "신규회원 이용상담",
-      detail: "",
-      plan1: 80,
-      actual1: 127,
-      planC1: 80,
-      actualC1: 127,
-      planB1: 0,
-      actualB1: 0,
-    },
-    {
-      category: "",
-      project: "",
-      sub: "신규회원 가입",
-      detail: "",
-      plan1: 80,
-      actual1: 127,
-      planC1: 80,
-      actualC1: 127,
-      planB1: 0,
-      actualB1: 0,
-    },
-    {
-      category: "",
-      project: "",
-      sub: "신규회원 교육",
-      detail: "",
-      plan1: 80,
-      actual1: 116,
-      planC1: 80,
-      actualC1: 116,
-      planB1: 0,
-      actualB1: 0,
-    },
-    {
-      category: "",
-      project: "사업 소계 > 일반상담 및 정보제공사업 소계",
-      sub: "",
-      detail: "",
-      plan1: 240,
-      actual1: 370,
-      planC1: 240,
-      actualC1: 370,
-      planB1: 0,
-      actualB1: 0,
-      isSubtotal: true,
-    },
-  ]
+  const { year, quarter, periodMode } = useDocuments()
+  const [data, setData] = useState<PerformanceReportRow[]>([])
+
+  useEffect(() => {
+    getPerformanceReportRows()
+      .then(setData)
+      .catch((error) => {
+        console.error("실적보고서 데이터 로드 실패:", error)
+      })
+  }, [])
+
+  const periodLabel = useMemo(
+    () => getPeriodLabel(quarter, periodMode),
+    [quarter, periodMode],
+  )
+
+  let categoryRowsLeft = 0
+  let projectRowsLeft = 0
 
   return (
-    <div className="rounded-xl border border-border bg-card">
-      <div className="border-b border-border p-4">
-        <h3 className="font-medium">조회 결과</h3>
-      </div>
-
+    <div className="overflow-hidden rounded-lg border border-slate-300 bg-white">
       <div className="overflow-x-auto">
-        <table className="w-full text-sm">
+        <table className="min-w-[1200px] w-full border-collapse text-sm">
           <thead>
-            <tr className="border-b border-border bg-muted/50">
-              <th className="px-3 py-2 text-left font-medium">대분류</th>
-              <th className="px-3 py-2 text-left font-medium">사업명</th>
-              <th className="px-3 py-2 text-left font-medium">세부사업명</th>
-              <th className="px-3 py-2 text-left font-medium">상세분류</th>
-              <th className="bg-blue-50 px-3 py-2 text-center font-medium">
-                1월 계획인원
-              </th>
-              <th className="bg-blue-50 px-3 py-2 text-center font-medium">
-                1월 실적인원
-              </th>
-              <th className="bg-blue-50 px-3 py-2 text-center font-medium">
-                1월 계획횟수
-              </th>
-              <th className="bg-blue-50 px-3 py-2 text-center font-medium">
-                1월 실적횟수
-              </th>
-              <th className="bg-blue-50 px-3 py-2 text-center font-medium">
-                1월 계획예산
-              </th>
-              <th className="bg-blue-50 px-3 py-2 text-center font-medium">
-                1월 실적예산
-              </th>
+            <tr className="bg-slate-700 text-white">
+              <Th className="w-[80px]">대분류</Th>
+              <Th className="w-[220px]">사업명</Th>
+              <Th className="w-[180px]">세부사업명</Th>
+              <Th className="w-[140px]">상세분류</Th>
+              <Th>{periodLabel} 계획인원</Th>
+              <Th>{periodLabel} 실적인원</Th>
+              <Th>{periodLabel} 계획횟수</Th>
+              <Th>{periodLabel} 실적횟수</Th>
+              <Th>{periodLabel} 계획예산</Th>
             </tr>
           </thead>
 
           <tbody>
-            {data.map((row, idx) => (
-              <tr
-                key={idx}
-                className={cn(
-                  "border-b border-border",
-                  row.isSubtotal && "bg-amber-50 font-medium"
-                )}
-              >
-                <td className="px-3 py-2">{row.category}</td>
-                <td className="px-3 py-2 text-primary">{row.project}</td>
-                <td className="px-3 py-2">{row.sub}</td>
-                <td className="px-3 py-2">{row.detail}</td>
-                <td className="px-3 py-2 text-center">{row.plan1}</td>
-                <td className="px-3 py-2 text-center">{row.actual1}</td>
-                <td className="px-3 py-2 text-center">{row.planC1}</td>
-                <td className="px-3 py-2 text-center">{row.actualC1}</td>
-                <td className="px-3 py-2 text-center">{row.planB1}</td>
-                <td className="px-3 py-2 text-center">{row.actualB1}</td>
-              </tr>
-            ))}
+            {data.map((row, index) => {
+              const isSubtotal = row.rowType === "subtotal"
+              const categoryCell =
+                categoryRowsLeft === 0 && row.majorCategoryRowSpan ? (
+                  <Td
+                    center
+                    rowSpan={row.majorCategoryRowSpan}
+                    className="align-middle font-medium"
+                  >
+                    {row.majorCategory}
+                  </Td>
+                ) : null
+
+              if (row.majorCategoryRowSpan) {
+                categoryRowsLeft = row.majorCategoryRowSpan - 1
+              } else if (categoryRowsLeft > 0) {
+                categoryRowsLeft -= 1
+              }
+
+              let projectCell: React.ReactNode = null
+
+              if (isSubtotal && row.projectName) {
+                projectCell = (
+                  <Td colSpan={2} className="font-semibold">
+                    {row.projectName}
+                  </Td>
+                )
+              } else if (projectRowsLeft === 0 && row.projectNameRowSpan) {
+                projectCell = (
+                  <Td rowSpan={row.projectNameRowSpan} className="align-middle">
+                    {row.projectName}
+                  </Td>
+                )
+                projectRowsLeft = row.projectNameRowSpan - 1
+              } else if (projectRowsLeft > 0) {
+                projectRowsLeft -= 1
+              }
+
+              return (
+                <tr
+                  key={`${row.subProjectName}-${row.detailCategory}-${index}`}
+                  className={cn(
+                    "border-b border-slate-200",
+                    isSubtotal ? "bg-sky-100 font-semibold" : "bg-white",
+                  )}
+                >
+                  {categoryCell}
+                  {projectCell}
+                  {!isSubtotal ? (
+                    <>
+                      <Td>{row.subProjectName}</Td>
+                      <Td>{row.detailCategory}</Td>
+                    </>
+                  ) : null}
+                  <Td right>{formatNumber(row.planPeople)}</Td>
+                  <Td right className="text-sky-700">
+                    {formatNumber(row.actualPeople)}
+                  </Td>
+                  <Td right>{formatNumber(row.planCount)}</Td>
+                  <Td right className="text-sky-700">
+                    {formatNumber(row.actualCount)}
+                  </Td>
+                  <Td right>{formatNumber(row.planBudget)}</Td>
+                </tr>
+              )
+            })}
           </tbody>
         </table>
       </div>
+
+      <p className="border-t border-slate-200 px-4 py-2 text-xs text-muted-foreground">
+        {year}년 · {quarter}분기 · {periodLabel} 기준
+      </p>
     </div>
+  )
+}
+
+function Th({
+  children,
+  className = "",
+}: {
+  children: React.ReactNode
+  className?: string
+}) {
+  return (
+    <th
+      className={cn(
+        "border border-slate-600 px-3 py-2.5 text-center font-semibold whitespace-nowrap",
+        className,
+      )}
+    >
+      {children}
+    </th>
+  )
+}
+
+function Td({
+  children,
+  className = "",
+  center,
+  right,
+  rowSpan,
+  colSpan,
+}: {
+  children?: React.ReactNode
+  className?: string
+  center?: boolean
+  right?: boolean
+  rowSpan?: number
+  colSpan?: number
+}) {
+  return (
+    <td
+      rowSpan={rowSpan}
+      colSpan={colSpan}
+      className={cn(
+        "border border-slate-200 px-3 py-2 whitespace-nowrap",
+        center && "text-center",
+        right && "text-right",
+        className,
+      )}
+    >
+      {children}
+    </td>
   )
 }

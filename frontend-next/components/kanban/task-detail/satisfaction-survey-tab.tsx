@@ -1,3 +1,6 @@
+"use client"
+
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import {
   Calendar,
@@ -23,9 +26,49 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
-import { statusStyles, surveysData } from "./data"
+import { statusStyles } from "./data"
+import { getSurveys } from "@/services/kanban.task-detail.service"
+import { getSurveyList } from "@/services/survey.service"
+import type { Survey } from "@/services/kanban.task-detail.types"
 
 export function SatisfactionSurveyTab() {
+  const [surveys, setSurveys] = useState<Survey[]>([])
+  const [stats, setStats] = useState({
+    total: 0,
+    active: 0,
+    responses: 0,
+    satisfaction: 0,
+  })
+
+  useEffect(() => {
+    Promise.all([getSurveys(), getSurveyList()])
+      .then(([kanbanSurveys, list]) => {
+        setSurveys(kanbanSurveys)
+
+        const active = list.filter((item) => item.status === "진행중").length
+        const responses = list.reduce(
+          (sum, item) => sum + (item.responseCount ?? 0),
+          0
+        )
+        const rated = list.filter((item) => (item.satisfaction ?? 0) > 0)
+        const satisfaction =
+          rated.length > 0
+            ? rated.reduce((sum, item) => sum + (item.satisfaction ?? 0), 0) /
+              rated.length
+            : 0
+
+        setStats({
+          total: list.length,
+          active,
+          responses,
+          satisfaction,
+        })
+      })
+      .catch((error) => {
+        console.error("설문 데이터 로드 실패:", error)
+      })
+  }, [])
+
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
@@ -40,10 +83,26 @@ export function SatisfactionSurveyTab() {
       </div>
 
       <div className="mb-6 grid grid-cols-4 gap-4">
-        <StatCard icon={<FileText className="size-4" />} label="총 설문" value="5개" />
-        <StatCard icon={<TrendingUp className="size-4 text-primary" />} label="진행중" value="2개" />
-        <StatCard icon={<Users className="size-4 text-amber-500" />} label="총 응답" value="123명" />
-        <StatCard icon={<Star className="size-4 text-yellow-500" />} label="평균 만족도" value="4.35점" />
+        <StatCard
+          icon={<FileText className="size-4" />}
+          label="총 설문"
+          value={`${stats.total}개`}
+        />
+        <StatCard
+          icon={<TrendingUp className="size-4 text-primary" />}
+          label="진행중"
+          value={`${stats.active}개`}
+        />
+        <StatCard
+          icon={<Users className="size-4 text-amber-500" />}
+          label="총 응답"
+          value={`${stats.responses}명`}
+        />
+        <StatCard
+          icon={<Star className="size-4 text-yellow-500" />}
+          label="평균 만족도"
+          value={`${stats.satisfaction.toFixed(2)}점`}
+        />
       </div>
 
       <div className="mb-4 flex items-center gap-4">
@@ -60,7 +119,7 @@ export function SatisfactionSurveyTab() {
       </div>
 
       <div className="space-y-3">
-        {surveysData.map((survey) => (
+        {surveys.map((survey) => (
           <div
             key={survey.id}
             className="group flex items-center justify-between rounded-xl border border-border bg-card p-4 transition-shadow hover:shadow-md"
@@ -83,6 +142,9 @@ export function SatisfactionSurveyTab() {
             </Link>
 
             <div className="flex items-center gap-3">
+              <Link href={`/survey/${survey.id}/respond`} target="_blank">
+                <Button size="sm">응답하기</Button>
+              </Link>
               <Link href={`/survey/${survey.id}?view=results`}>
                 <Button variant="outline" size="sm">
                   결과 보기

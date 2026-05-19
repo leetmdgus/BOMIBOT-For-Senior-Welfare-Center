@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import { Search, X } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -19,18 +20,28 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
-import { TaskModal, type TaskFormData } from "./task-modal"
+import { NewProjectModal } from "./new-project-modal"
+import type { TaskFormData } from "./task-modal"
+import type { ProjectImageOption, Staff } from "@/services/kanban.board.types"
 
 interface HeaderProps {
   year: string
   onYearChange: (year: string) => void
   onCreateProject: (data: TaskFormData) => void | Promise<void>
+  searchQuery: string
+  onSearchQueryChange: (value: string) => void
+  staffList?: Staff[]
+  projectImages?: ProjectImageOption[]
 }
 
 export function SubHeader({
   year,
   onYearChange,
   onCreateProject,
+  searchQuery,
+  onSearchQueryChange,
+  staffList,
+  projectImages,
 }: HeaderProps) {
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false)
 
@@ -43,7 +54,7 @@ export function SubHeader({
               <SelectValue />
             </SelectTrigger>
 
-            <SelectContent>
+            <SelectContent className="z-50 bg-card text-card-foreground">
               <SelectItem value="2024">2024</SelectItem>
               <SelectItem value="2025">2025</SelectItem>
               <SelectItem value="2026">2026</SelectItem>
@@ -52,10 +63,23 @@ export function SubHeader({
           </Select>
 
           <div className="relative w-80">
+            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="사업명 / 담당자 검색"
-              className="rounded-full bg-muted/50 pl-4 pr-10"
+              value={searchQuery}
+              onChange={(event) => onSearchQueryChange(event.target.value)}
+              className="rounded-full bg-muted/50 pl-9 pr-9"
             />
+            {searchQuery ? (
+              <button
+                type="button"
+                onClick={() => onSearchQueryChange("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                aria-label="검색어 지우기"
+              >
+                <X className="size-4" />
+              </button>
+            ) : null}
           </div>
         </div>
 
@@ -77,30 +101,28 @@ export function SubHeader({
 
             <DropdownMenuContent align="center">
               <DropdownMenuItem asChild>
-                <Link href="/kanban/documents/performance">실적보고서</Link>
+                <Link href="/kanban/documents?tab=performance">실적보고서</Link>
               </DropdownMenuItem>
 
               <DropdownMenuItem asChild>
-                <Link href="/kanban/documents/budget">예산보고서</Link>
+                <Link href="/kanban/documents?tab=budget">예산보고서</Link>
               </DropdownMenuItem>
 
               <DropdownMenuItem asChild>
-                <Link href="/kanban/documents/business-plan">사업계획서</Link>
+                <Link href="/kanban/documents?tab=business-plan">사업계획서</Link>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
       </div>
 
-      <TaskModal
+      <NewProjectModal
         open={isTaskModalOpen}
         onOpenChange={setIsTaskModalOpen}
-        formType="newProject"
-        columnType="실적관리"
-        onSubmit={async (data) => {
-          await onCreateProject(data)
-          setIsTaskModalOpen(false)
-        }}
+        year={year}
+        staffList={staffList}
+        projectImages={projectImages}
+        onSubmit={onCreateProject}
       />
     </header>
   )

@@ -1,6 +1,12 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import {
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useState,
+} from "react"
 import {
   Calendar,
   Copy,
@@ -21,94 +27,84 @@ import {
 } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
-import { cn } from "@/lib/utils"
+import { getSurveyDetail, saveSurvey } from "@/services/survey.service"
+import {
+  SurveyOutlineSidebar,
+  type SurveySidebarTab,
+} from "@/components/survey/survey-outline-sidebar"
+import {
+  surveyQuestionSectionId,
+  surveySectionId,
+  useSurveySectionScroll,
+} from "@/components/survey/use-survey-section-scroll"
+import type {
+  SurveyDetail,
+  SurveyQuestion,
+  SurveyQuestionType,
+} from "@/services/survey.types"
 
-type SidebarTab = "outline" | "style" | "settings"
-type QuestionType = "text" | "choice" | "matrix" | "scale"
-
-interface SurveyQuestion {
-  id: string
-  type: QuestionType
-  title: string
-  description: string
-  required: boolean
-  multiple?: boolean
-  options: string[]
-  rows: string[]
-  columns: string[]
-}
+type QuestionType = SurveyQuestionType
 
 const createId = () => crypto.randomUUID()
 
-const defaultQuestions: SurveyQuestion[] = [
-  {
-    id: createId(),
-    type: "text",
-    title: "프로그램 참여 후 좋았던 점은 무엇인가요?",
-    description: "",
-    required: true,
-    options: [],
-    rows: [],
-    columns: [],
-  },
-  {
-    id: createId(),
-    type: "choice",
-    title: "이 프로그램을 선택한 이유는 무엇인가요?",
-    description: "",
-    required: false,
-    multiple: true,
-    options: [
-      "지인 추천",
-      "강사 및 강의 평가가 좋아서",
-      "관심 있는 주제여서",
-      "가능한 시간대여서",
-    ],
-    rows: [],
-    columns: [],
-  },
-  {
-    id: createId(),
-    type: "matrix",
-    title: "프로그램 운영에 대해 평가해주세요.",
-    description: "",
-    required: true,
-    options: [],
-    rows: [
-      "교육 내용이 이해하기 쉬웠다",
-      "강사가 친절하게 설명했다",
-      "참여 시간이 적절했다",
-    ],
-    columns: ["매우 불만족", "불만족", "보통", "만족", "매우 만족"],
-  },
-]
+export interface SurveyEditorHandle {
+  saveDraft: () => void
+  savePublish: () => void
+}
 
-export function SurveyEditor({ id }: { id: string }) {
-  const [selectedTab, setSelectedTab] = useState<SidebarTab>("outline")
+export const SurveyEditor = forwardRef<
+  SurveyEditorHandle,
+  {
+    id: string
+    initialDetail?: SurveyDetail
+    scrollRoot?: HTMLElement | null
+    onSaved?: (detail: SurveyDetail) => void
+    onSavingChange?: (isSaving: boolean) => void
+  }
+>(function SurveyEditor(
+  { id, initialDetail, scrollRoot, onSaved, onSavingChange },
+  ref
+) {
+  const [selectedTab, setSelectedTab] = useState<SurveySidebarTab>("outline")
   const [isSaving, setIsSaving] = useState(false)
-  const [lastSavedAt, setLastSavedAt] = useState<string | null>(null)
 
-  const [overview, setOverview] = useState({
-    purpose: ["이용자의 만족도와 개선 의견을 파악한다."],
-    name: "춘천북부노인복지관 프로그램 만족도 조사",
-    startDate: "",
-    endDate: "",
-    target: "프로그램 참여자",
-    method: "설문조사",
-    staff: "복지1팀 김영수 사회복지사",
-    sampleCount: "",
-    analysisMethod: "기술통계 빈도분석, 5점 척도",
-  })
+  const [overview, setOverview] = useState(
+    initialDetail?.overview ?? {
+      purpose: ["이용자의 만족도와 개선 의견을 파악한다."],
+      limitations: ["표본 수가 제한적일 수 있습니다."],
+      name: "",
+      startDate: "",
+      endDate: "",
+      target: "프로그램 참여자",
+      method: "온라인 설문",
+      staff: "",
+      sampleCount: "",
+      analysisMethod: "기술통계, 5점 척도",
+    }
+  )
 
-  const [basicInfo, setBasicInfo] = useState({
-    title: "춘천북부노인복지관 프로그램 만족도 조사",
-    description: "참여하신 프로그램에 대한 의견을 작성해주세요.",
-    status: "draft",
-  })
+  const [basicInfo, setBasicInfo] = useState(
+    initialDetail?.basicInfo ?? {
+      title: "",
+      description: "",
+      category: "만족도조사",
+      status: "draft" as const,
+    }
+  )
 
-  const [questions, setQuestions] = useState<SurveyQuestion[]>(defaultQuestions)
+  const [questions, setQuestions] = useState<SurveyQuestion[]>(
+    initialDetail?.questions ?? []
+  )
 
-  const questionSummary = useMemo(() => {
+  useEffect(() => {
+    if (!initialDetail) return
+
+    setOverview(initialDetail.overview)
+    setBasicInfo(initialDetail.basicInfo)
+    setQuestions(initialDetail.questions)
+  }, [initialDetail])
+
+  const outlineSections = useMemo(() => {
     const typeLabel: Record<QuestionType, string> = {
       text: "주관식",
       choice: "객관식",
@@ -116,47 +112,64 @@ export function SurveyEditor({ id }: { id: string }) {
       scale: "척도",
     }
 
-    return questions.map((question, index) => ({
-      id: question.id,
-      label: `${index + 1}. ${question.title || "(질문 입력)"}`,
-      type: typeLabel[question.type],
-    }))
+    return [
+      { id: surveySectionId("overview"), label: "1. 조사 개요", type: "섹션" },
+      { id: surveySectionId("basic"), label: "2. 기본 항목", type: "섹션" },
+      ...questions.map((question, index) => ({
+        id: surveyQuestionSectionId(question.id),
+        label: `${index + 1}. ${question.title || "(질문 입력)"}`,
+        type: typeLabel[question.type],
+      })),
+    ]
   }, [questions])
+
+  const { activeSectionId, scrollToSection } = useSurveySectionScroll(
+    scrollRoot ?? null,
+    outlineSections.length
+  )
 
   const handleSave = async (saveType: "draft" | "publish") => {
     setIsSaving(true)
+    onSavingChange?.(true)
 
-    const payload = {
+    try {
+      const result = await saveSurvey(id, {
         saveType,
         overview,
         basicInfo: {
-        ...basicInfo,
-        status: saveType === "publish" ? "active" : basicInfo.status,
+          ...basicInfo,
+          status: saveType === "publish" ? "active" : basicInfo.status,
         },
         questions,
-    }
+        style: initialDetail?.style,
+        settings: initialDetail?.settings,
+      })
 
-    const res = await fetch(`/api/surveys/${id}`, {
-        method: "POST",
-        headers: {
-        "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-    })
+      const nextDetail = await getSurveyDetail(result.id)
+      onSaved?.(nextDetail)
 
-    if (!res.ok) {
-        alert("설문 저장에 실패했습니다.")
-        setIsSaving(false)
-        return
+      if (saveType === "publish") {
+        alert(
+          "설문이 저장되었습니다. 설문 링크 복사 또는 QR 다운로드를 사용할 수 있습니다."
+        )
+      }
+    } catch (error) {
+      console.error("설문 저장 실패:", error)
+      alert("설문 저장에 실패했습니다.")
+    } finally {
+      setIsSaving(false)
+      onSavingChange?.(false)
     }
+  }
 
-    setLastSavedAt(new Date().toLocaleTimeString("ko-KR"))
-    setIsSaving(false)
-
-    if (saveType === "publish") {
-        alert("설문이 저장되었습니다. 링크 복사 또는 QR 다운로드를 사용할 수 있습니다.")
-    }
-    }
+  useImperativeHandle(ref, () => ({
+    saveDraft: () => {
+      void handleSave("draft")
+    },
+    savePublish: () => {
+      void handleSave("publish")
+    },
+  }))
 
   const addPurpose = () => {
     setOverview((prev) => ({
@@ -181,6 +194,32 @@ export function SurveyEditor({ id }: { id: string }) {
         prev.purpose.length > 1
           ? prev.purpose.filter((_, itemIndex) => itemIndex !== index)
           : prev.purpose,
+    }))
+  }
+
+  const addLimitation = () => {
+    setOverview((prev) => ({
+      ...prev,
+      limitations: [...prev.limitations, ""],
+    }))
+  }
+
+  const updateLimitation = (index: number, value: string) => {
+    setOverview((prev) => ({
+      ...prev,
+      limitations: prev.limitations.map((item, itemIndex) =>
+        itemIndex === index ? value : item
+      ),
+    }))
+  }
+
+  const removeLimitation = (index: number) => {
+    setOverview((prev) => ({
+      ...prev,
+      limitations:
+        prev.limitations.length > 1
+          ? prev.limitations.filter((_, itemIndex) => itemIndex !== index)
+          : prev.limitations,
     }))
   }
 
@@ -245,106 +284,96 @@ export function SurveyEditor({ id }: { id: string }) {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="sticky top-0 z-20 flex items-center justify-between rounded-xl border border-border bg-background/95 p-4 backdrop-blur">
-        <div>
-          <h2 className="text-lg font-semibold text-foreground">설문 편집</h2>
-          <p className="text-sm text-muted-foreground">
-            설문 내용을 수정한 뒤 저장할 수 있습니다.
-            {lastSavedAt && ` 마지막 저장: ${lastSavedAt}`}
-          </p>
-        </div>
+    <div className="flex gap-6">
+      <div className="min-w-0 flex-1 space-y-6">
+        <SurveyOverviewForm
+          sectionId={surveySectionId("overview")}
+          overview={overview}
+          onChange={setOverview}
+          onAddPurpose={addPurpose}
+          onUpdatePurpose={updatePurpose}
+          onRemovePurpose={removePurpose}
+          onAddLimitation={addLimitation}
+          onUpdateLimitation={updateLimitation}
+          onRemoveLimitation={removeLimitation}
+          questionCount={questions.length}
+        />
 
-        <div className="flex items-center gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            disabled={isSaving}
-            onClick={() => handleSave("draft")}
-          >
-            임시저장
-          </Button>
+        <SurveyBasicInfoForm
+          sectionId={surveySectionId("basic")}
+          basicInfo={basicInfo}
+          onChange={setBasicInfo}
+        />
 
-          <Button
-            type="button"
-            disabled={isSaving}
-            onClick={() => handleSave("publish")}
-          >
-            {isSaving ? "저장 중..." : "저장하기"}
-          </Button>
-        </div>
-      </div>
-
-      <div className="flex gap-6">
-        <div className="flex-1 space-y-6">
-          <SurveyOverviewForm
-            overview={overview}
-            onChange={setOverview}
-            onAddPurpose={addPurpose}
-            onUpdatePurpose={updatePurpose}
-            onRemovePurpose={removePurpose}
-            questionCount={questions.length}
-          />
-
-          <SurveyBasicInfoForm basicInfo={basicInfo} onChange={setBasicInfo} />
-
-          <div className="flex items-center justify-between rounded-xl border border-border bg-card p-4">
-            <div>
-              <h3 className="font-semibold text-foreground">설문 문항</h3>
-              <p className="text-sm text-muted-foreground">
-                문항을 추가하고 유형별 옵션을 편집하세요.
-              </p>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <Button variant="outline" onClick={() => addQuestion("text")}>
-                <Plus className="mr-2 size-4" />
-                주관식
-              </Button>
-              <Button variant="outline" onClick={() => addQuestion("choice")}>
-                <Plus className="mr-2 size-4" />
-                객관식
-              </Button>
-              <Button variant="outline" onClick={() => addQuestion("matrix")}>
-                <Plus className="mr-2 size-4" />
-                표형
-              </Button>
-            </div>
+        <div className="flex items-center justify-between rounded-xl border border-border bg-card p-4">
+          <div>
+            <h3 className="font-semibold text-foreground">설문 문항</h3>
+            <p className="text-sm text-muted-foreground">
+              문항을 추가하고 유형별 옵션을 편집하세요.
+            </p>
           </div>
 
-          {questions.map((question, index) => (
-            <QuestionEditor
-              key={question.id}
-              question={question}
-              index={index}
-              onChange={updateQuestion}
-              onDelete={removeQuestion}
-              onDuplicate={duplicateQuestion}
-            />
-          ))}
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="outline" onClick={() => addQuestion("text")}>
+              <Plus className="mr-2 size-4" />
+              주관식
+            </Button>
+            <Button variant="outline" onClick={() => addQuestion("choice")}>
+              <Plus className="mr-2 size-4" />
+              객관식
+            </Button>
+            <Button variant="outline" onClick={() => addQuestion("matrix")}>
+              <Plus className="mr-2 size-4" />
+              표형
+            </Button>
+            <Button variant="outline" onClick={() => addQuestion("scale")}>
+              <Plus className="mr-2 size-4" />
+              척도
+            </Button>
+          </div>
         </div>
 
-        <SurveyOutlineSidebar
-          selectedTab={selectedTab}
-          onChange={setSelectedTab}
-          basicInfoTitle={basicInfo.title}
-          questions={questionSummary}
-        />
+        {questions.map((question, index) => (
+          <QuestionEditor
+            key={question.id}
+            sectionId={surveyQuestionSectionId(question.id)}
+            question={question}
+            index={index}
+            onChange={updateQuestion}
+            onDelete={removeQuestion}
+            onDuplicate={duplicateQuestion}
+          />
+        ))}
       </div>
+
+      <SurveyOutlineSidebar
+        selectedTab={selectedTab}
+        onChange={setSelectedTab}
+        basicInfoTitle={basicInfo.title}
+        sections={outlineSections}
+        activeSectionId={activeSectionId}
+        onNavigate={scrollToSection}
+      />
     </div>
   )
-}
+})
 
 function SurveyOverviewForm({
+  sectionId,
   overview,
   onChange,
   onAddPurpose,
   onUpdatePurpose,
   onRemovePurpose,
+  onAddLimitation,
+  onUpdateLimitation,
+  onRemoveLimitation,
   questionCount,
 }: {
+  sectionId: string
   overview: {
     purpose: string[]
+    limitations: string[]
     name: string
     startDate: string
     endDate: string
@@ -357,6 +386,7 @@ function SurveyOverviewForm({
   onChange: React.Dispatch<
     React.SetStateAction<{
       purpose: string[]
+      limitations: string[]
       name: string
       startDate: string
       endDate: string
@@ -370,10 +400,16 @@ function SurveyOverviewForm({
   onAddPurpose: () => void
   onUpdatePurpose: (index: number, value: string) => void
   onRemovePurpose: (index: number) => void
+  onAddLimitation: () => void
+  onUpdateLimitation: (index: number, value: string) => void
+  onRemoveLimitation: (index: number) => void
   questionCount: number
 }) {
   return (
-    <div className="rounded-xl border border-border bg-card p-6">
+    <div
+      id={sectionId}
+      className="scroll-mt-6 rounded-xl border border-border bg-card p-6"
+    >
       <h3 className="mb-4 text-lg font-bold text-foreground">1. 조사 개요</h3>
 
       <div className="space-y-4">
@@ -507,31 +543,81 @@ function SurveyOverviewForm({
           }
           placeholder="예: 기술통계 빈도분석, 5점 척도"
         />
+
+        <div>
+          <label className="mb-1 block text-sm font-medium text-foreground">
+            자. 조사의 한계점
+          </label>
+
+          <div className="space-y-2">
+            {overview.limitations.map((limitation, index) => (
+              <div key={index} className="flex gap-2">
+                <span className="pt-2 text-muted-foreground">
+                  {String.fromCharCode(44032 + index)}.
+                </span>
+                <Input
+                  value={limitation}
+                  onChange={(event) =>
+                    onUpdateLimitation(index, event.target.value)
+                  }
+                  placeholder="한계점 입력"
+                  className="flex-1"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="text-destructive"
+                  onClick={() => onRemoveLimitation(index)}
+                >
+                  <Trash2 className="size-4" />
+                </Button>
+              </div>
+            ))}
+          </div>
+
+          <Button
+            type="button"
+            variant="link"
+            className="mt-2 text-primary"
+            onClick={onAddLimitation}
+          >
+            <Plus className="mr-1 size-3" />
+            한계점 항목 추가
+          </Button>
+        </div>
       </div>
     </div>
   )
 }
 
 function SurveyBasicInfoForm({
+  sectionId,
   basicInfo,
   onChange,
 }: {
+  sectionId: string
   basicInfo: {
     title: string
     description: string
+    category?: string
     status: string
   }
   onChange: React.Dispatch<
     React.SetStateAction<{
       title: string
       description: string
+      category?: string
       status: string
     }>
   >
 }) {
   return (
-    <div className="rounded-xl border border-border bg-card p-6">
-      <h3 className="mb-4 text-lg font-bold text-foreground">2. 기본 정보</h3>
+    <div
+      id={sectionId}
+      className="scroll-mt-6 rounded-xl border border-border bg-card p-6"
+    >
+      <h3 className="mb-4 text-lg font-bold text-foreground">2. 기본 항목</h3>
 
       <div className="space-y-4">
         <div>
@@ -566,6 +652,27 @@ function SurveyBasicInfoForm({
 
         <div>
           <label className="mb-1 block text-sm font-medium text-foreground">
+            카테고리
+          </label>
+          <Select
+            value={basicInfo.category ?? "만족도조사"}
+            onValueChange={(value) =>
+              onChange((prev) => ({ ...prev, category: value }))
+            }
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="카테고리 선택" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="만족도조사">만족도조사</SelectItem>
+              <SelectItem value="사전조사">사전조사</SelectItem>
+              <SelectItem value="사후평가">사후평가</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
+          <label className="mb-1 block text-sm font-medium text-foreground">
             상태
           </label>
 
@@ -578,7 +685,7 @@ function SurveyBasicInfoForm({
             <SelectTrigger className="w-48">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="z-50 bg-card text-card-foreground">
               <SelectItem value="draft">임시저장</SelectItem>
               <SelectItem value="active">진행중</SelectItem>
               <SelectItem value="closed">마감</SelectItem>
@@ -591,12 +698,14 @@ function SurveyBasicInfoForm({
 }
 
 function QuestionEditor({
+  sectionId,
   question,
   index,
   onChange,
   onDelete,
   onDuplicate,
 }: {
+  sectionId: string
   question: SurveyQuestion
   index: number
   onChange: (questionId: string, patch: Partial<SurveyQuestion>) => void
@@ -624,7 +733,10 @@ function QuestionEditor({
   }
 
   return (
-    <div className="rounded-xl border border-border bg-card p-6">
+    <div
+      id={sectionId}
+      className="scroll-mt-6 rounded-xl border border-border bg-card p-6"
+    >
       <div className="mb-4 flex items-center justify-between gap-4">
         <div className="flex items-center gap-2">
           <GripVertical className="size-4 text-muted-foreground" />
@@ -716,7 +828,7 @@ function QuestionEditor({
 
         {question.type === "text" && (
           <Textarea
-            placeholder="참여자의 답변 입력란"
+            placeholder="참여자의 답변 입력란 (최대 2000자)"
             className="min-h-[100px] bg-muted/50"
             disabled
           />
@@ -903,118 +1015,6 @@ function MatrixInputGroup({
         </Button>
       </div>
     </div>
-  )
-}
-
-function SurveyOutlineSidebar({
-  selectedTab,
-  onChange,
-  basicInfoTitle,
-  questions,
-}: {
-  selectedTab: SidebarTab
-  onChange: (tab: SidebarTab) => void
-  basicInfoTitle: string
-  questions: { id: string; label: string; type: string }[]
-}) {
-  return (
-    <div className="w-72 shrink-0">
-      <div className="sticky top-6 rounded-xl border border-border bg-card p-4">
-        <div className="mb-4 flex items-center gap-4 border-b border-border pb-4">
-          <OutlineTab
-            active={selectedTab === "outline"}
-            onClick={() => onChange("outline")}
-          >
-            목차
-          </OutlineTab>
-          <OutlineTab
-            active={selectedTab === "style"}
-            onClick={() => onChange("style")}
-          >
-            꾸미기
-          </OutlineTab>
-          <OutlineTab
-            active={selectedTab === "settings"}
-            onClick={() => onChange("settings")}
-          >
-            설문 설정
-          </OutlineTab>
-        </div>
-
-        {selectedTab === "outline" && (
-          <div className="space-y-1">
-            <div className="rounded-lg border-2 border-primary bg-primary/5 p-2">
-              <p className="text-xs font-medium text-primary">1/1 페이지</p>
-              <p className="text-sm font-medium text-foreground">
-                {basicInfoTitle || "설문 제목 없음"}
-              </p>
-            </div>
-
-            <div className="space-y-1 pl-2">
-              {questions.map((question) => (
-                <div
-                  key={question.id}
-                  className="group flex items-center gap-2 rounded-lg p-2 text-sm text-muted-foreground hover:bg-muted"
-                >
-                  <span>{question.type}</span>
-                  <span className="line-clamp-1">{question.label}</span>
-                  <GripVertical className="ml-auto size-3 opacity-0 group-hover:opacity-100" />
-                </div>
-              ))}
-            </div>
-
-            <p className="mt-4 text-center text-xs text-muted-foreground">
-              설문에 참여해 주셔서 감사합니다.
-            </p>
-          </div>
-        )}
-
-        {selectedTab === "style" && (
-          <div className="space-y-3 text-sm text-muted-foreground">
-            <p>꾸미기 설정은 이후 연결하면 됩니다.</p>
-            <Button variant="outline" size="sm">
-              테마 색상 선택
-            </Button>
-          </div>
-        )}
-
-        {selectedTab === "settings" && (
-          <div className="space-y-3 text-sm text-muted-foreground">
-            <div className="flex items-center justify-between">
-              <span>응답 받기</span>
-              <Switch defaultChecked />
-            </div>
-            <div className="flex items-center justify-between">
-              <span>중복 응답 허용</span>
-              <Switch />
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
-
-function OutlineTab({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean
-  onClick: () => void
-  children: React.ReactNode
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        "text-sm font-medium",
-        active ? "text-primary" : "text-muted-foreground"
-      )}
-    >
-      {children}
-    </button>
   )
 }
 

@@ -1,5 +1,10 @@
-import ResultTab from "@/components/kanban/task-detail/performance/result-tab";
+import { redirect } from "next/navigation"
 
-export default function Page() {
-  return <ResultTab />
+export default async function Page({
+  params,
+}: {
+  params: Promise<{ id: string }>
+}) {
+  const { id } = await params
+  redirect(`/kanban/task/${id}/performance`)
 }

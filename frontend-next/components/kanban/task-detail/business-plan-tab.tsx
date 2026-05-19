@@ -11,6 +11,7 @@ import {
   X,
 } from "lucide-react"
 
+import { PrintArea } from "@/components/common/print-area"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -87,7 +88,7 @@ export function BusinessPlanTab() {
   if (isEditMode) {
     return (
       <div className="flex gap-6">
-        <div className="flex-1">
+        <PrintArea className="flex-1">
           <BusinessPlanTopTitle title="사업계획서" />
 
           <div className="rounded-xl border border-border bg-white shadow-sm">
@@ -223,7 +224,7 @@ export function BusinessPlanTab() {
               </div>
             ))}
           </div>
-        </div>
+        </PrintArea>
 
         <BusinessPlanActions
           editMode
@@ -235,7 +236,7 @@ export function BusinessPlanTab() {
 
   return (
     <div className="flex gap-6">
-      <div className="flex-1">
+      <PrintArea className="flex-1">
         <BusinessPlanTopTitle title="사업계획서" />
 
         <div className="rounded-xl border border-border bg-white p-8 shadow-sm">
@@ -284,7 +285,7 @@ export function BusinessPlanTab() {
             </div>
           </div>
         </div>
-      </div>
+      </PrintArea>
 
       <BusinessPlanActions onEdit={() => setIsEditMode(true)} />
     </div>
@@ -327,13 +328,18 @@ function BusinessPlanActions({
   onEdit: () => void
 }) {
   return (
-    <div className="flex flex-col gap-2 pt-12">
+    <div className="print-hide flex flex-col gap-2 pt-12">
       <Button variant="outline" className="justify-start">
         <List className="mr-2 size-4" />
         목록
       </Button>
 
-      <Button variant="outline" className="justify-start">
+      <Button
+        type="button"
+        variant="outline"
+        className="justify-start"
+        onClick={() => window.print()}
+      >
         <Printer className="mr-2 size-4" />
         인쇄
       </Button>

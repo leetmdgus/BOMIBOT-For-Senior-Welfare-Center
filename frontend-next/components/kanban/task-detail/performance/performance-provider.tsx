@@ -4,25 +4,22 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useRef,
   useState,
 } from "react"
+import {
+  getInputManagementRows,
+} from "@/services/kanban.performance.service"
+import type {
+  PerformanceRow,
+  PerformanceSummaryRow,
+} from "@/services/kanban.performance.types"
 
-export interface RowData {
-  id: string
-  selected: boolean
-  subProject: string
-  detailCategory: string
-  month: string
-  planPeople: number
-  planCount: number
-  planBudget: number
-  actualPeople: number
-  actualCount: number
-  actualExpense: number
-  content: string
-}
+import { inputRowsToSummaryRows } from "./input-rows-to-summary"
+
+export type RowData = PerformanceRow
 
 export type CellKey = keyof Omit<RowData, "id" | "selected">
 
@@ -39,65 +36,6 @@ export const months = [
   "10월",
   "11월",
   "12월",
-]
-
-const initialRows: RowData[] = [
-  {
-    id: "1",
-    selected: false,
-    subProject: "신규회원 이용상담",
-    detailCategory: "--",
-    month: "1월",
-    planPeople: 80,
-    planCount: 80,
-    planBudget: 0,
-    actualPeople: 127,
-    actualCount: 127,
-    actualExpense: 0,
-    content: "신규회원 이용상담",
-  },
-  {
-    id: "2",
-    selected: false,
-    subProject: "신규회원 가입",
-    detailCategory: "--",
-    month: "1월",
-    planPeople: 80,
-    planCount: 80,
-    planBudget: 0,
-    actualPeople: 127,
-    actualCount: 127,
-    actualExpense: 0,
-    content: "신규회원 가입",
-  },
-  {
-    id: "3",
-    selected: false,
-    subProject: "신규회원 교육",
-    detailCategory: "--",
-    month: "1월",
-    planPeople: 80,
-    planCount: 80,
-    planBudget: 0,
-    actualPeople: 116,
-    actualCount: 116,
-    actualExpense: 0,
-    content: "신규회원 교육",
-  },
-  {
-    id: "4",
-    selected: false,
-    subProject: "정보제공상담",
-    detailCategory: "--",
-    month: "2월",
-    planPeople: 8,
-    planCount: 8,
-    planBudget: 0,
-    actualPeople: 0,
-    actualCount: 0,
-    actualExpense: 0,
-    content: "정보제공상담",
-  },
 ]
 
 function aggregateBySubProject(rows: RowData[]) {
@@ -153,17 +91,64 @@ const columns: CellKey[] = [
   "planBudget",
   "actualPeople",
   "actualCount",
+  "actualExpense",
   "content",
 ]
 
-const PerformanceContext = createContext<any>(null)
+export type PerformanceView = "input" | "plan" | "actual" | "result"
+
+const PerformanceContext = createContext<{
+  rows: RowData[]
+  setRows: React.Dispatch<React.SetStateAction<RowData[]>>
+  selectedCell: { rowId: string; column: CellKey } | null
+  inputRefs: React.MutableRefObject<Map<string, HTMLInputElement>>
+  columns: CellKey[]
+  totals: {
+    planPeople: number
+    planCount: number
+    planBudget: number
+    actualPeople: number
+    actualCount: number
+    actualExpense: number
+  }
+  aggregatedData: ReturnType<typeof aggregateBySubProject>
+  summaryRows: PerformanceSummaryRow[]
+  selectedCount: number
+  planVersion: string
+  setPlanVersion: React.Dispatch<React.SetStateAction<string>>
+  supplementVersions: string[]
+  addSupplementaryBudget: () => void
+  activeView: PerformanceView
+  setActiveView: (view: PerformanceView) => void
+  handleCellClick: (rowId: string, column: CellKey) => void
+  handleCellChange: (rowId: string, column: CellKey, value: string | number) => void
+  toggleRowSelection: (rowId: string) => void
+  toggleAllSelection: () => void
+  deleteSelectedRows: () => void
+  copySelectedRows: () => void
+  addRow: () => void
+  getProgressRate: (plan: number, actual: number) => string
+  getProgressColor: (plan: number, actual: number) => string
+} | null>(null)
 
 export function PerformanceProvider({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const [rows, setRows] = useState<RowData[]>(initialRows)
+  const [rows, setRows] = useState<RowData[]>([])
+  const [activeView, setActiveView] = useState<PerformanceView>("input")
+  const [supplementVersions, setSupplementVersions] = useState<string[]>([
+    "기본계획",
+  ])
+
+  useEffect(() => {
+    getInputManagementRows()
+      .then(setRows)
+      .catch((error) => {
+        console.error("실적 데이터 로드 실패:", error)
+      })
+  }, [])
   const [selectedCell, setSelectedCell] = useState<{
     rowId: string
     column: CellKey
@@ -171,7 +156,18 @@ export function PerformanceProvider({
   const [planVersion, setPlanVersion] = useState("기본계획")
   const inputRefs = useRef<Map<string, HTMLInputElement>>(new Map())
 
+  const addSupplementaryBudget = useCallback(() => {
+    if (!window.confirm("정말 추경하시겠습니까?")) return
+
+    const nextLabel = `${supplementVersions.length}차추경` as const
+
+    setSupplementVersions((prev) => [...prev, nextLabel])
+    setPlanVersion(nextLabel)
+  }, [supplementVersions.length])
+
   const aggregatedData = useMemo(() => aggregateBySubProject(rows), [rows])
+
+  const summaryRows = useMemo(() => inputRowsToSummaryRows(rows), [rows])
 
   const totals = useMemo(
     () =>
@@ -276,7 +272,7 @@ export function PerformanceProvider({
         id: `new-${Date.now()}`,
         selected: false,
         subProject: "신규회원 이용상담",
-        detailCategory: "--",
+        detailCategory: "",
         month: "1월",
         planPeople: 0,
         planCount: 0,
@@ -310,14 +306,20 @@ export function PerformanceProvider({
     <PerformanceContext.Provider
       value={{
         rows,
+        setRows,
         selectedCell,
         inputRefs,
         columns,
         totals,
         aggregatedData,
+        summaryRows,
         selectedCount,
         planVersion,
         setPlanVersion,
+        supplementVersions,
+        addSupplementaryBudget,
+        activeView,
+        setActiveView,
         handleCellClick,
         handleCellChange,
         toggleRowSelection,

@@ -6,7 +6,12 @@ import {
   SortableContext,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable"
-import { ColumnType, Task } from "@/services/kanban.board.types"
+import {
+  ColumnType,
+  ProjectImageOption,
+  Staff,
+  Task,
+} from "@/services/kanban.board.types"
 import { TaskFormData } from "./task-modal"
 import { TaskCard } from "./task-card"
 
@@ -18,6 +23,11 @@ interface KanbanColumnProps {
   tasks: Task[]
   color?: string
   columnType?: ColumnType
+  projectId?: string
+  projectName?: string
+  staffList?: Staff[]
+  projectImages?: ProjectImageOption[]
+  year?: string
   onAddTask?: (categoryId: string, columnType: ColumnType) => void
   onUpdateTask?: (
     categoryId: string,
@@ -49,6 +59,11 @@ export function KanbanColumn({
   tasks,
   color = "bg-primary",
   columnType,
+  projectId,
+  projectName,
+  staffList,
+  projectImages,
+  year,
   onAddTask,
   onUpdateTask,
   onDeleteTask,
@@ -88,8 +103,13 @@ export function KanbanColumn({
             <TaskCard
             key={task.id}
             task={task}
-            projectTitle={title}
             columnType={resolvedColumnType}
+            projectId={projectId}
+            projectName={projectName}
+            categoryId={id}
+            staffList={staffList}
+            projectImages={projectImages}
+            year={year}
             onAddTask={
               onAddTask
                 ? () => onAddTask(id, resolvedColumnType)

@@ -1,33 +1,40 @@
 "use client"
 
 import { useMemo, useRef, useState } from "react"
+import type { PerformanceRow } from "@/services/kanban.performance.types"
 import * as XLSX from "xlsx"
 import {
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Circle,
   HelpCircle,
   Plus,
-  Search,
   Trash2,
-  X,
 } from "lucide-react"
 
-type RowData = {
-  id: string
-  selected: boolean
-  subProject: string
-  detailCategory: string
-  month: string
-  planPeople: number
-  planCount: number
-  planBudget: number
-  actualPeople: number
-  actualCount: number
-  actualExpense: number
-  content: string
-}
+import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+import { defaultDetailCategories } from "@/lib/mocks/kanban.performance-input.mock"
 
-type CellKey = keyof RowData
+import { usePerformance } from "./performance-provider"
+import { InputManagementExcelGrid } from "./input-management-excel-grid"
+
+type RowData = PerformanceRow
 
 const months = [
   "1월",
@@ -44,49 +51,48 @@ const months = [
   "12월",
 ]
 
+const NAS_SEARCH_FIELDS = [
+  "NAS 검색 필드 1",
+  "NAS 검색 필드 2",
+  "NAS 검색 필드 3",
+  "NAS 검색 필드 4",
+  "NAS 검색 필드 5",
+]
+
+const DEFAULT_ROW_BATCH = 10
+
 const createId = () =>
   typeof crypto !== "undefined" && crypto.randomUUID
     ? crypto.randomUUID()
     : `${Date.now()}-${Math.random()}`
 
-const initialRows: RowData[] = [
-  ["선택", "4월", 0, 0, 0, 199, 24, 898100],
-  ["온라인홍보", "1월", 0, 1, 0, 0, 1, 0],
-  ["온라인홍보", "1월", 3000, 1, 50000, 3481, 1, 50000],
-  ["온라인홍보", "2월", 0, 1, 0, 0, 1, 0],
-  ["온라인홍보", "2월", 3000, 1, 50000, 3396, 1, 50000],
-  ["온라인홍보", "3월", 0, 1, 0, 0, 1, 0],
-  ["온라인홍보", "3월", 3000, 1, 50000, 3457, 1, 50000],
-].map((item, index) => ({
-  id: createId(),
-  selected: false,
-  subProject: item[0] as string,
-  detailCategory: "—",
-  month: item[1] as string,
-  planPeople: item[2] as number,
-  planCount: item[3] as number,
-  planBudget: item[4] as number,
-  actualPeople: item[5] as number,
-  actualCount: item[6] as number,
-  actualExpense: item[7] as number,
-  content:
-    index % 2 === 0
-      ? "웹매거진 제작 및 발송"
-      : "온라인 게시물 관리대장",
-}))
-
 export function InputManagementTab() {
   const fileRef = useRef<HTMLInputElement | null>(null)
 
-  const [rows, setRows] = useState<RowData[]>(initialRows)
-  const [showHelp, setShowHelp] = useState(false)
+  const {
+    rows,
+    setRows,
+    addSupplementaryBudget,
+    planVersion,
+  } = usePerformance()
+
+  const now = new Date()
+  const [selectedYear, setSelectedYear] = useState(now.getFullYear())
+  const [selectedMonth, setSelectedMonth] = useState(now.getMonth() + 1)
+  const [viewAllMonths, setViewAllMonths] = useState(false)
+
   const [showLoadMenu, setShowLoadMenu] = useState(false)
-  const [showSearchMenu, setShowSearchMenu] = useState(false)
   const [showTaskModal, setShowTaskModal] = useState(false)
-  const [selectedCell, setSelectedCell] = useState<{
-    rowId: string
-    key: CellKey
-  } | null>(null)
+  const [showDetailModal, setShowDetailModal] = useState(false)
+  const [showActualModal, setShowActualModal] = useState(false)
+  const [actualModalRowId, setActualModalRowId] = useState<string | null>(null)
+
+  const [subProjectSort, setSubProjectSort] = useState<"asc" | "desc" | null>(
+    null
+  )
+  const [detailCategorySort, setDetailCategorySort] = useState<
+    "asc" | "desc" | null
+  >(null)
 
   const [contextMenu, setContextMenu] = useState<{
     x: number
@@ -99,13 +105,72 @@ export function InputManagementTab() {
     { id: 3, label: "관내 홍보", color: "#ff9c8f" },
   ])
 
+  const [detailCategoryItems, setDetailCategoryItems] = useState(
+    defaultDetailCategories.map((label, index) => ({
+      id: index + 1,
+      label,
+    })),
+  )
+
   const subProjects = useMemo(
     () => ["선택", ...projectItems.map((item) => item.label)],
     [projectItems],
   )
 
+  const detailCategorySuggestions = useMemo(() => {
+    const fromRows = rows
+      .map((row) => row.detailCategory.trim())
+      .filter(
+        (value) => value && value !== "—" && value !== "--" && value !== "선택",
+      )
+
+    return [
+      ...new Set([
+        ...detailCategoryItems.map((item) => item.label).filter(Boolean),
+        ...fromRows,
+      ]),
+    ]
+  }, [rows, detailCategoryItems])
+
+  const filteredRows = useMemo(() => {
+    if (viewAllMonths) return rows
+
+    const monthLabel = `${selectedMonth}월`
+    return rows.filter((row) => row.month === monthLabel)
+  }, [rows, viewAllMonths, selectedMonth])
+
+  const displayedRows = useMemo(() => {
+    const next = [...filteredRows]
+
+    if (subProjectSort) {
+      next.sort((a, b) => {
+        const compared = a.subProject.localeCompare(b.subProject, "ko")
+        return subProjectSort === "asc" ? compared : -compared
+      })
+    }
+
+    if (detailCategorySort) {
+      next.sort((a, b) => {
+        const compared = a.detailCategory.localeCompare(b.detailCategory, "ko")
+        return detailCategorySort === "asc" ? compared : -compared
+      })
+    }
+
+    return next
+  }, [filteredRows, subProjectSort, detailCategorySort])
+
+  const actualModalRow = useMemo(
+    () => rows.find((row) => row.id === actualModalRowId) ?? null,
+    [rows, actualModalRowId]
+  )
+
+  const yearOptions = useMemo(() => {
+    const current = new Date().getFullYear()
+    return Array.from({ length: 5 }, (_, index) => current - 2 + index)
+  }, [])
+
   const totals = useMemo(() => {
-    return rows.reduce(
+    return displayedRows.reduce(
       (acc, row) => ({
         planPeople: acc.planPeople + row.planPeople,
         planCount: acc.planCount + row.planCount,
@@ -123,7 +188,7 @@ export function InputManagementTab() {
         actualExpense: 0,
       },
     )
-  }, [rows])
+  }, [displayedRows])
 
   const updateRow = <K extends keyof RowData>(
     id: string,
@@ -137,13 +202,17 @@ export function InputManagementTab() {
     )
   }
 
-  const addRows = (count = 100) => {
+  const addRows = (count = DEFAULT_ROW_BATCH) => {
+    const monthLabel = viewAllMonths
+      ? `${selectedMonth}월`
+      : `${selectedMonth}월`
+
     const nextRows: RowData[] = Array.from({ length: count }).map(() => ({
       id: createId(),
       selected: false,
       subProject: "선택",
-      detailCategory: "—",
-      month: "1월",
+      detailCategory: "",
+      month: monthLabel,
       planPeople: 0,
       planCount: 0,
       planBudget: 0,
@@ -177,27 +246,6 @@ export function InputManagementTab() {
     XLSX.writeFile(book, "계획실적_입력관리.xlsx")
   }
 
-  const downloadTemplate = () => {
-    const sheet = XLSX.utils.json_to_sheet([
-      {
-        세부사업명: "온라인홍보",
-        상세분류: "—",
-        월: "1월",
-        계획인원: 0,
-        계획횟수: 1,
-        계획예산: 50000,
-        실적인원: 0,
-        실적횟수: 1,
-        실적지출: 50000,
-        내용: "온라인 게시물 관리대장",
-      },
-    ])
-
-    const book = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(book, sheet, "양식")
-    XLSX.writeFile(book, "계획실적_입력양식.xlsx")
-  }
-
   const importExcel = async (
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
@@ -228,66 +276,64 @@ export function InputManagementTab() {
     event.target.value = ""
   }
 
-  const handlePaste = (
-    event: React.ClipboardEvent<HTMLInputElement>,
-    rowId: string,
-    key: CellKey,
+  const loadFromNas = (fieldName: string) => {
+    const importedRows: RowData[] = Array.from({ length: 3 }).map((_, index) => ({
+      id: createId(),
+      selected: false,
+      subProject: fieldName,
+      detailCategory: "—",
+      month: `${selectedMonth}월`,
+      planPeople: 0,
+      planCount: 1,
+      planBudget: 50000,
+      actualPeople: 0,
+      actualCount: 0,
+      actualExpense: 0,
+      content: `${fieldName} NAS 불러오기 ${index + 1}`,
+    }))
+
+    setRows((prev) => [...prev, ...importedRows])
+    setShowLoadMenu(false)
+  }
+
+  const openActualModal = (rowId: string) => {
+    setActualModalRowId(rowId)
+    setShowActualModal(true)
+  }
+
+  const toggleSort = (
+    column: "subProject" | "detailCategory",
+    current: "asc" | "desc" | null
   ) => {
-    const text = event.clipboardData.getData("text")
-    if (!text.includes("\t") && !text.includes("\n")) return
+    const next =
+      current === null ? "asc" : current === "asc" ? "desc" : null
 
-    event.preventDefault()
+    if (column === "subProject") {
+      setSubProjectSort(next)
+      setDetailCategorySort(null)
+      return
+    }
 
-    const rowIndex = rows.findIndex((row) => row.id === rowId)
-    const keys: CellKey[] = [
-      "subProject",
-      "detailCategory",
-      "month",
-      "planPeople",
-      "planCount",
-      "planBudget",
-      "actualPeople",
-      "actualCount",
-      "actualExpense",
-      "content",
-    ]
+    setDetailCategorySort(next)
+    setSubProjectSort(null)
+  }
 
-    const colIndex = keys.indexOf(key)
-    const lines = text
-      .trim()
-      .split(/\r?\n/)
-      .map((line) => line.split("\t"))
+  const goPrevMonth = () => {
+    setViewAllMonths(false)
+    setSelectedMonth((prev) => (prev <= 1 ? 12 : prev - 1))
+  }
 
-    setRows((prev) => {
-      const next = [...prev]
+  const goNextMonth = () => {
+    setViewAllMonths(false)
+    setSelectedMonth((prev) => (prev >= 12 ? 1 : prev + 1))
+  }
 
-      lines.forEach((cols, r) => {
-        if (!next[rowIndex + r]) return
+  const mergeDisplayedRows = (nextDisplayed: RowData[]) => {
+    const byId = new Map(nextDisplayed.map((row) => [row.id, row]))
 
-        cols.forEach((value, c) => {
-          const targetKey = keys[colIndex + c]
-          if (!targetKey) return
-
-          const numericKeys: CellKey[] = [
-            "planPeople",
-            "planCount",
-            "planBudget",
-            "actualPeople",
-            "actualCount",
-            "actualExpense",
-          ]
-
-          next[rowIndex + r] = {
-            ...next[rowIndex + r],
-            [targetKey]: numericKeys.includes(targetKey)
-              ? Number(value.replaceAll(",", "")) || 0
-              : value,
-          }
-        })
-      })
-
-      return next
-    })
+    setRows((prev) =>
+      prev.map((row) => (byId.has(row.id) ? (byId.get(row.id) as RowData) : row)),
+    )
   }
 
   return (
@@ -296,7 +342,6 @@ export function InputManagementTab() {
       onClick={() => {
         setContextMenu(null)
         setShowLoadMenu(false)
-        setShowSearchMenu(false)
       }}
       onContextMenu={(event) => {
         event.preventDefault()
@@ -314,41 +359,41 @@ export function InputManagementTab() {
         onChange={importExcel}
       />
 
-      <div className="mb-10 flex items-start justify-between">
+      <div className="print-hide mb-10 flex items-start justify-between">
         <div className="flex items-start gap-2">
           <h1 className="text-3xl font-bold">계획/실적 입력관리</h1>
 
-          <button
-            type="button"
-            onClick={(event) => {
-              event.stopPropagation()
-              setShowHelp(true)
-            }}
-            className="mt-1 text-slate-800"
-          >
-            <HelpCircle size={20} />
-          </button>
-
-          {showHelp && (
-            <div className="absolute left-[300px] top-10 z-50 w-[720px] rounded border border-slate-300 bg-white p-4 text-lg leading-8 shadow-lg">
-              <div className="flex justify-between">
-                <div>
-                  <b>계획/실적 입력관리</b>
-                  <br />
-                  세목·세세목·월을 선택하고 인원·횟수·예산을 입력합니다.
-                  <br />
-                  기존 파일을 업로드할 수 있으며, 이미 저장된 행 아래에
-                  파일의 행이 추가됩니다.
-                  <br />
-                  사업실적은 실적 칸을 클릭해 진행내역을 입력합니다.
-                </div>
-
-                <button onClick={() => setShowHelp(false)}>
-                  <X size={18} />
-                </button>
-              </div>
-            </div>
-          )}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button type="button" className="mt-1 text-muted-foreground">
+                <HelpCircle size={20} />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent
+              side="bottom"
+              align="start"
+              className="max-w-md space-y-1 text-sm leading-relaxed"
+            >
+              <p className="font-semibold">계획/실적 입력관리</p>
+              <p>
+                여기서 입력·수정한 내용이 사업계획·사업실적·사업결과 탭에
+                동일하게 반영됩니다.
+              </p>
+              <p>
+                <strong>세세목(상세분류)</strong>은 행 추가 후 세부사업명(세목) 옆
+                열에서 입력합니다. 같은 세목이라도 세세목·월이 다르면 행을 나눕니다.
+              </p>
+              <p>
+                엑셀처럼 셀을 클릭해 직접 입력할 수 있습니다. 복사(Ctrl+C)·붙여넣기(Ctrl+V),
+                범위 선택(Shift+클릭), 셀 모서리 드래그로 채우기가 지원됩니다.
+              </p>
+              <p>
+                기존 파일을 업로드할 수 있으며, 이미 저장된 행 아래에 파일의
+                행이 추가됩니다. 엑셀 양식의 「상세분류」 열에 세세목을 적어 업로드할 수 있습니다.
+              </p>
+              <p>실적 칸은 더블클릭하면 진행내역 입력 창이 열립니다.</p>
+            </TooltipContent>
+          </Tooltip>
         </div>
 
         <div className="relative flex items-start gap-4">
@@ -360,91 +405,154 @@ export function InputManagementTab() {
               }}
             >
               불러오기
-              <ChevronDown size={20} />
+              <ChevronDown size={16} />
+              <span className="text-xs text-muted-foreground">(NAS)</span>
             </TopButton>
 
-            {showLoadMenu && (
+            {showLoadMenu ? (
               <div
-                className="absolute right-0 top-12 z-50 w-48 rounded border border-slate-300 bg-white p-2 shadow-lg"
+                className="absolute right-0 top-12 z-50 w-52 rounded border border-slate-300 bg-white p-1 shadow-lg"
                 onClick={(event) => event.stopPropagation()}
               >
-                <button
-                  className="block w-full px-3 py-2 text-left hover:bg-slate-100"
-                  onClick={() => fileRef.current?.click()}
-                >
-                  엑셀 불러오기
-                </button>
-
-                <button
-                  className="block w-full px-3 py-2 text-left hover:bg-slate-100"
-                  onClick={downloadTemplate}
-                >
-                  양식 다운로드
-                </button>
-
-                <button
-                  className="block w-full px-3 py-2 text-left hover:bg-slate-100"
-                  onClick={exportExcel}
-                >
-                  현재 자료 다운로드
-                </button>
+                {NAS_SEARCH_FIELDS.map((field) => (
+                  <button
+                    key={field}
+                    type="button"
+                    className="block w-full rounded px-3 py-2 text-left text-sm hover:bg-slate-100"
+                    onClick={() => loadFromNas(field)}
+                  >
+                    {field}
+                  </button>
+                ))}
               </div>
-            )}
+            ) : null}
           </div>
 
           <TopButton onClick={() => fileRef.current?.click()}>
             업로드
+            <span className="text-xs text-muted-foreground">(디바이스)</span>
           </TopButton>
 
           <TopButton onClick={exportExcel}>다운로드</TopButton>
-
-          <div className="relative">
-            <button
-              type="button"
-              onClick={(event) => {
-                event.stopPropagation()
-                setShowSearchMenu((prev) => !prev)
-              }}
-              className="mt-12 w-40 bg-slate-300 px-4 py-2 text-center"
-            >
-              검색 필드
-            </button>
-
-            {showSearchMenu && (
-              <div
-                className="absolute right-0 top-20 z-50 w-48 rounded border border-slate-300 bg-white p-3 shadow-lg"
-                onClick={(event) => event.stopPropagation()}
-              >
-                {[
-                  "검색 필드",
-                  "검색 필드",
-                  "검색 필드",
-                  "검색 필드",
-                  "검색 필드",
-                ].map((item, index) => (
-                  <button
-                    key={index}
-                    className="block w-full px-3 py-1 text-left hover:bg-slate-100"
-                  >
-                    {index < 2 ? "∨ " : ""}
-                    {item}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
         </div>
       </div>
 
-      <div className="overflow-auto border-4 border-sky-500">
-        <table className="min-w-[1450px] border-collapse text-sm">
+      <div className="print-hide mb-4 flex flex-wrap items-center gap-2">
+        <select
+          value={String(selectedYear)}
+          onChange={(event) => setSelectedYear(Number(event.target.value))}
+          className="h-9 rounded-md border border-slate-300 bg-white px-3 text-sm"
+        >
+          {yearOptions.map((year) => (
+            <option key={year} value={year}>
+              {year}년
+            </option>
+          ))}
+        </select>
+
+        <select
+          value={String(selectedMonth)}
+          disabled={viewAllMonths}
+          onChange={(event) => {
+            setViewAllMonths(false)
+            setSelectedMonth(Number(event.target.value))
+          }}
+          className="h-9 rounded-md border border-slate-300 bg-white px-3 text-sm disabled:opacity-50"
+        >
+          {months.map((month, index) => (
+            <option key={month} value={index + 1}>
+              {month}
+            </option>
+          ))}
+        </select>
+
+        <Button
+          type="button"
+          variant={viewAllMonths ? "default" : "outline"}
+          size="sm"
+          onClick={() => setViewAllMonths(true)}
+        >
+          전체
+        </Button>
+
+        <Button type="button" variant="outline" size="icon" onClick={goPrevMonth}>
+          <ChevronLeft className="size-4" />
+        </Button>
+        <Button type="button" variant="outline" size="icon" onClick={goNextMonth}>
+          <ChevronRight className="size-4" />
+        </Button>
+
+        <span className="text-sm text-muted-foreground">
+          {viewAllMonths
+            ? `${selectedYear}년 전체`
+            : `${selectedYear}년 ${selectedMonth}월`}
+        </span>
+
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => setShowTaskModal(true)}
+        >
+          세목 추가
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => setShowDetailModal(true)}
+        >
+          세세목 추가
+        </Button>
+      </div>
+
+      <div className="relative overflow-auto rounded-lg border-4 border-sky-500">
+        <div className="print-hide sticky top-0 z-10 flex items-center justify-end gap-2 border-b border-slate-200 bg-slate-50 px-3 py-2">
+          <span className="mr-auto text-xs text-muted-foreground">
+            적용 추경: {planVersion}
+            <span className="ml-2 hidden sm:inline">
+              · 세세목은 「상세분류」 열 · Tab/Enter 이동 · Ctrl+C/V · 셀 모서리 채우기
+            </span>
+          </span>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            className="gap-1"
+            onClick={addSupplementaryBudget}
+          >
+            <Plus className="size-3.5" />
+            추경 추가
+          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button type="button" className="text-muted-foreground">
+                <HelpCircle className="size-4" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent className="max-w-xs text-sm">
+              사업실적·사업결과에는 최신 추경이 적용됩니다.
+            </TooltipContent>
+          </Tooltip>
+        </div>
+        <table className="min-w-[1580px] border-collapse text-sm">
           <thead>
             <tr className="bg-slate-50">
               <Th rowSpan={2} className="w-[180px]">
-                세부사업명(세목) ∨
+                <SortableHeader
+                  label="세부사업명(세목)"
+                  sort={subProjectSort}
+                  onToggle={() => toggleSort("subProject", subProjectSort)}
+                />
               </Th>
               <Th rowSpan={2} className="w-[180px]">
-                상세분류(세세목) ∨
+                <SortableHeader
+                  label="상세분류(세세목)"
+                  sort={detailCategorySort}
+                  onToggle={() =>
+                    toggleSort("detailCategory", detailCategorySort)
+                  }
+                />
               </Th>
               <Th rowSpan={2} className="w-[80px]">
                 월
@@ -479,122 +587,22 @@ export function InputManagementTab() {
             </tr>
           </thead>
 
-          <tbody>
-            {rows.map((row, index) => (
-              <tr key={row.id} className="hover:bg-sky-50">
-                <Td>
-                  <div className="relative">
-                    <select
-                      value={row.subProject}
-                      onChange={(event) =>
-                        updateRow(row.id, "subProject", event.target.value)
-                      }
-                      className="h-8 w-full rounded border border-slate-300 bg-white px-2"
-                    >
-                      {subProjects.map((project) => (
-                        <option key={project}>{project}</option>
-                      ))}
-                    </select>
-
-                  </div>
-                </Td>
-
-                <Td>
-                  <select
-                    value={row.detailCategory}
-                    onChange={(event) =>
-                      updateRow(row.id, "detailCategory", event.target.value)
-                    }
-                    className="h-8 w-full rounded border border-slate-300 bg-white px-2"
-                  >
-                    <option>—</option>
-                  </select>
-                </Td>
-
-                <Td>
-                  <select
-                    value={row.month}
-                    onChange={(event) =>
-                      updateRow(row.id, "month", event.target.value)
-                    }
-                    className="h-8 w-full rounded border border-slate-300 bg-white px-2"
-                  >
-                    {months.map((month) => (
-                      <option key={month}>{month}</option>
-                    ))}
-                  </select>
-                </Td>
-
-                <NumberCell
-                  row={row}
-                  column="planPeople"
-                  selectedCell={selectedCell}
-                  setSelectedCell={setSelectedCell}
-                  onPaste={handlePaste}
-                  onChange={(value) =>
-                    updateRow(row.id, "planPeople", value)
-                  }
-                />
-
-                <NumberCell
-                  row={row}
-                  column="planCount"
-                  selectedCell={selectedCell}
-                  setSelectedCell={setSelectedCell}
-                  onPaste={handlePaste}
-                  onChange={(value) =>
-                    updateRow(row.id, "planCount", value)
-                  }
-                />
-
-                <NumberCell
-                  row={row}
-                  column="planBudget"
-                  selectedCell={selectedCell}
-                  setSelectedCell={setSelectedCell}
-                  onPaste={handlePaste}
-                  onChange={(value) =>
-                    updateRow(row.id, "planBudget", value)
-                  }
-                />
-
-                <Td right className="text-indigo-700">
-                  {row.actualPeople.toLocaleString()}
-                </Td>
-
-                <Td right className="text-indigo-700">
-                  {row.actualCount.toLocaleString()}
-                </Td>
-
-                <Td right>
-                  {row.actualExpense > 0 && (
-                    <span className="mr-2 rounded bg-sky-500 px-1 text-xs text-white">
-                      경
-                    </span>
-                  )}
-                  {row.actualExpense.toLocaleString()}원
-                </Td>
-
-                <Td>
-                  <input
-                    value={row.content}
-                    onPaste={(event) =>
-                      handlePaste(event, row.id, "content")
-                    }
-                    onChange={(event) =>
-                      updateRow(row.id, "content", event.target.value)
-                    }
-                    className="h-8 w-full rounded border border-slate-300 px-2"
-                  />
-                </Td>
-              </tr>
-            ))}
-          </tbody>
+          <InputManagementExcelGrid
+            rows={displayedRows}
+            onRowsChange={mergeDisplayedRows}
+            onOpenActualModal={openActualModal}
+            subProjectSuggestions={subProjects.filter((item) => item !== "선택")}
+            detailCategorySuggestions={detailCategorySuggestions}
+          />
         </table>
       </div>
 
-      <button onClick={() => addRows(100)} className="mt-24 text-lg">
-        하단 100개(기본값) 행 추가
+      <button
+        type="button"
+        onClick={() => addRows(DEFAULT_ROW_BATCH)}
+        className="mt-6 text-sm text-primary underline-offset-4 hover:underline"
+      >
+        하단 {DEFAULT_ROW_BATCH}개(기본값) 행 추가
       </button>
 
       {contextMenu && (
@@ -614,7 +622,18 @@ export function InputManagementTab() {
             }}
           >
             <Plus size={15} />
-            세부사업명 추가
+            세부사업명(세목) 추가
+          </button>
+
+          <button
+            className="flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-slate-100"
+            onClick={() => {
+              setShowDetailModal(true)
+              setContextMenu(null)
+            }}
+          >
+            <Plus size={15} />
+            상세분류(세세목) 추가
           </button>
 
           <button
@@ -624,6 +643,151 @@ export function InputManagementTab() {
             <Plus size={15} />
             행 추가
           </button>
+        </div>
+      )}
+
+      <Dialog open={showActualModal} onOpenChange={setShowActualModal}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>실적 입력</DialogTitle>
+          </DialogHeader>
+
+          {actualModalRow ? (
+            <div className="space-y-3">
+              <div className="grid grid-cols-3 gap-2">
+                <label className="text-sm">
+                  인원(명)
+                  <input
+                    type="number"
+                    className="mt-1 h-9 w-full rounded border px-2"
+                    value={actualModalRow.actualPeople}
+                    onChange={(event) =>
+                      updateRow(
+                        actualModalRow.id,
+                        "actualPeople",
+                        Number(event.target.value) || 0
+                      )
+                    }
+                  />
+                </label>
+                <label className="text-sm">
+                  횟수(회)
+                  <input
+                    type="number"
+                    className="mt-1 h-9 w-full rounded border px-2"
+                    value={actualModalRow.actualCount}
+                    onChange={(event) =>
+                      updateRow(
+                        actualModalRow.id,
+                        "actualCount",
+                        Number(event.target.value) || 0
+                      )
+                    }
+                  />
+                </label>
+                <label className="text-sm">
+                  지출(원)
+                  <input
+                    type="number"
+                    className="mt-1 h-9 w-full rounded border px-2"
+                    value={actualModalRow.actualExpense}
+                    onChange={(event) =>
+                      updateRow(
+                        actualModalRow.id,
+                        "actualExpense",
+                        Number(event.target.value) || 0
+                      )
+                    }
+                  />
+                </label>
+              </div>
+
+              <label className="block text-sm">
+                진행내역
+                <textarea
+                  className="mt-1 min-h-[100px] w-full rounded border px-2 py-2"
+                  value={actualModalRow.content}
+                  onChange={(event) =>
+                    updateRow(actualModalRow.id, "content", event.target.value)
+                  }
+                />
+              </label>
+            </div>
+          ) : null}
+
+          <DialogFooter>
+            <Button type="button" onClick={() => setShowActualModal(false)}>
+              닫기
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {showDetailModal && (
+        <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/20">
+          <div className="w-[520px] rounded bg-white p-6 shadow-2xl">
+            <div className="mb-2 text-center text-xl font-bold">
+              상세분류(세세목) 추가
+            </div>
+            <p className="mb-4 text-center text-sm text-muted-foreground">
+              자주 쓰는 세세목을 등록하면 표 입력 시 자동완성으로 선택할 수 있습니다.
+            </p>
+
+            <div className="space-y-3">
+              {detailCategoryItems.map((item) => (
+                <div key={item.id} className="flex items-center gap-3">
+                  <input
+                    value={item.label}
+                    onChange={(event) =>
+                      setDetailCategoryItems((prev) =>
+                        prev.map((v) =>
+                          v.id === item.id
+                            ? { ...v, label: event.target.value }
+                            : v,
+                        ),
+                      )
+                    }
+                    placeholder="예: 웹매거진, SNS게시"
+                    className="h-9 flex-1 rounded border border-slate-300 px-3"
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setDetailCategoryItems((prev) =>
+                        prev.filter((v) => v.id !== item.id),
+                      )
+                    }
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            <button
+              type="button"
+              className="mt-4 rounded border border-sky-300 px-3 py-1 text-sm text-sky-600"
+              onClick={() =>
+                setDetailCategoryItems((prev) => [
+                  ...prev,
+                  { id: Date.now(), label: "" },
+                ])
+              }
+            >
+              다른 항목 추가
+            </button>
+
+            <div className="mt-8 flex justify-center">
+              <button
+                type="button"
+                className="rounded bg-sky-500 px-10 py-3 text-white"
+                onClick={() => setShowDetailModal(false)}
+              >
+                완료
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -700,7 +864,7 @@ export function InputManagementTab() {
         </div>
       )}
 
-      <div className="fixed bottom-0 left-0 right-0 flex justify-center gap-4 border-t bg-white p-4">
+      <div className="print-hide fixed bottom-0 left-0 right-0 flex justify-center gap-4 border-t bg-white p-4">
         <button
           onClick={exportExcel}
           className="rounded bg-sky-500 px-8 py-2 text-white"
@@ -712,48 +876,27 @@ export function InputManagementTab() {
   )
 }
 
-function NumberCell({
-  row,
-  column,
-  selectedCell,
-  setSelectedCell,
-  onPaste,
-  onChange,
+function SortableHeader({
+  label,
+  sort,
+  onToggle,
 }: {
-  row: RowData
-  column: CellKey
-  selectedCell: { rowId: string; key: CellKey } | null
-  setSelectedCell: React.Dispatch<
-    React.SetStateAction<{ rowId: string; key: CellKey } | null>
-  >
-  onPaste: (
-    event: React.ClipboardEvent<HTMLInputElement>,
-    rowId: string,
-    key: CellKey,
-  ) => void
-  onChange: (value: number) => void
+  label: string
+  sort: "asc" | "desc" | null
+  onToggle: () => void
 }) {
-  const selected =
-    selectedCell?.rowId === row.id && selectedCell.key === column
+  const SortIcon =
+    sort === "asc" ? ArrowUp : sort === "desc" ? ArrowDown : ArrowUpDown
 
   return (
-    <Td className={selected ? "ring-2 ring-sky-400 ring-inset" : ""}>
-      <input
-        type="number"
-        value={Number(row[column]) || 0}
-        onFocus={() =>
-          setSelectedCell({
-            rowId: row.id,
-            key: column,
-          })
-        }
-        onPaste={(event) => onPaste(event, row.id, column)}
-        onChange={(event) =>
-          onChange(Number(event.target.value.replaceAll(",", "")) || 0)
-        }
-        className="h-8 w-full rounded border border-slate-300 px-2 text-center"
-      />
-    </Td>
+    <button
+      type="button"
+      onClick={onToggle}
+      className="inline-flex w-full items-center justify-center gap-1 hover:text-primary"
+    >
+      {label}
+      <SortIcon className="size-3.5 shrink-0 opacity-70" />
+    </button>
   )
 }
 
@@ -803,16 +946,19 @@ function Td({
   center,
   right,
   colSpan,
+  onClick,
 }: {
   children?: React.ReactNode
   className?: string
   center?: boolean
   right?: boolean
   colSpan?: number
+  onClick?: () => void
 }) {
   return (
     <td
       colSpan={colSpan}
+      onClick={onClick}
       className={`border border-slate-200 px-2 py-1 whitespace-nowrap ${
         center ? "text-center" : ""
       } ${right ? "text-right" : ""} ${className}`}

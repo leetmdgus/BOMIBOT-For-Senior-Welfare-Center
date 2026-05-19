@@ -29,7 +29,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@radix-ui/react-dropdown-menu"
+} from "@/components/ui/dropdown-menu"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -40,6 +40,8 @@ import {
   Category,
   ColumnType,
   KanbanProject,
+  ProjectImageOption,
+  Staff,
   Task,
 } from "@/services/kanban.board.types"
 import {
@@ -51,6 +53,9 @@ import {
 
 interface ProjectSectionProps {
   project: KanbanProject
+  year?: string
+  staffList?: Staff[]
+  projectImages?: ProjectImageOption[]
   onRefresh?: () => Promise<void>
   onCreateTask: (
     projectId: string,
@@ -62,6 +67,9 @@ interface ProjectSectionProps {
 
 export function ProjectSection({
   project,
+  year = "2026",
+  staffList,
+  projectImages,
   onRefresh,
   onCreateTask,
   onEditProject,
@@ -440,6 +448,11 @@ export function ProjectSection({
                       tasks={category.tasks}
                       color={category.color}
                       columnType={columnType}
+                      projectId={project.id}
+                      projectName={projectTitle}
+                      staffList={staffList}
+                      projectImages={projectImages}
+                      year={year}
                       onAddTask={(categoryId, type) => {
                         openTaskModal(categoryId, type)
                       }}
@@ -480,8 +493,12 @@ export function ProjectSection({
         }}
         formType="task"
         columnType={selectedColumnType}
+        year={year}
+        staffList={staffList}
+        projectImages={projectImages}
         defaultProjectId={project.id}
         defaultCategoryId={selectedCategoryId ?? defaultCategoryId}
+        defaultProjectName={projectTitle}
         lockProjectSelect
         onSubmit={async (data) => {
           const targetCategoryId = selectedCategoryId ?? defaultCategoryId

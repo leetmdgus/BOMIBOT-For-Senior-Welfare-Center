@@ -1,5 +1,5 @@
-import { redirect } from "next/navigation"
+import { DocumentsWorkspace } from "@/components/kanban/documents/documents-workspace"
 
 export default function DocumentsPage() {
-  redirect("kanban/documents/performance")
+  return <DocumentsWorkspace />
 }

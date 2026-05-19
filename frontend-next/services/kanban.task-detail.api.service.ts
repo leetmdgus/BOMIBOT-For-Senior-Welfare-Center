@@ -1,0 +1,59 @@
+import type {
+  BusinessEvaluationData,
+  EvaluationFile,
+  SaveBusinessEvaluationPayload,
+  Survey,
+} from "./kanban.task-detail.types"
+
+async function apiFetch<T>(url: string, init?: RequestInit): Promise<T> {
+  const response = await fetch(url, {
+    headers: { "Content-Type": "application/json" },
+    ...init,
+  })
+
+  if (!response.ok) {
+    throw new Error(`API 요청 실패: ${response.status}`)
+  }
+
+  return response.json()
+}
+
+export async function getSurveys(): Promise<Survey[]> {
+  return apiFetch<Survey[]>("/api/kanban/task-detail/surveys")
+}
+
+export async function getEvaluationFiles(taskId: string): Promise<EvaluationFile[]> {
+  return apiFetch<EvaluationFile[]>(
+    `/api/kanban/task-detail/files?taskId=${encodeURIComponent(taskId)}`
+  )
+}
+
+export async function getBusinessEvaluation(
+  taskId: string
+): Promise<BusinessEvaluationData> {
+  return apiFetch<BusinessEvaluationData>(
+    `/api/kanban/task-detail/evaluation?taskId=${encodeURIComponent(taskId)}`
+  )
+}
+
+export async function saveBusinessEvaluation(
+  taskId: string,
+  payload: SaveBusinessEvaluationPayload
+): Promise<BusinessEvaluationData> {
+  return apiFetch<BusinessEvaluationData>("/api/kanban/task-detail/evaluation", {
+    method: "PATCH",
+    body: JSON.stringify({ taskId, ...payload }),
+  })
+}
+
+export async function completeBusinessEvaluation(
+  taskId: string
+): Promise<BusinessEvaluationData> {
+  return apiFetch<BusinessEvaluationData>(
+    "/api/kanban/task-detail/evaluation/complete",
+    {
+      method: "POST",
+      body: JSON.stringify({ taskId }),
+    }
+  )
+}

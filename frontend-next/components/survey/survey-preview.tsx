@@ -1,76 +1,231 @@
+"use client"
+
 import { FileText } from "lucide-react"
 
 import { Textarea } from "@/components/ui/textarea"
+import { DEFAULT_SURVEY_THEME } from "@/lib/constants/brand"
+import { cn } from "@/lib/utils"
+import type { SurveyDetail, SurveyQuestion } from "@/services/survey.types"
 
-export function SurveyPreview() {
-  const matrixRows = [
-    "분위기",
-    "소음",
-    "청결",
-    "쾌적",
-    "출입 시의",
-    "스터디 환경",
-    "스피커",
-  ]
+interface SurveyPreviewProps {
+  detail: SurveyDetail
+}
+
+function resolveThemeColor(detail: SurveyDetail) {
+  const color = detail.style.themeColor?.trim()
+  if (!color || color === "#03c75a" || color === "#3b82f6" || color === "#0ea5e9") {
+    return DEFAULT_SURVEY_THEME
+  }
+  return color
+}
+
+export function SurveyPreview({ detail }: SurveyPreviewProps) {
+  const themeColor = resolveThemeColor(detail)
+  const useBrandClasses =
+    themeColor === DEFAULT_SURVEY_THEME || themeColor.includes("oklch")
 
   return (
-    <div className="mx-auto max-w-2xl">
-      <div className="mb-6 overflow-hidden rounded-xl border border-border bg-card">
-        <div className="flex h-32 items-center justify-center bg-gradient-to-r from-blue-400 to-blue-500">
-          <FileText className="size-12 text-white" />
+    <div className="mx-auto max-w-2xl pb-12">
+      <div className="mb-6 overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+        <div
+          className={cn(
+            "flex h-40 items-center justify-center",
+            useBrandClasses &&
+              "bg-gradient-to-br from-primary via-primary/85 to-primary/60"
+          )}
+          style={
+            useBrandClasses
+              ? undefined
+              : {
+                  background: `linear-gradient(135deg, ${themeColor} 0%, ${themeColor}99 55%, ${themeColor}66 100%)`,
+                }
+          }
+        >
+          <FileText className="size-16 text-primary-foreground drop-shadow-sm" />
         </div>
 
         <div className="p-6">
-          <h2 className="mb-2 text-lg font-bold text-foreground">
-            매우 주관적으로 설문 부탁드립니다.
+          <h2 className="mb-2 text-xl font-bold leading-snug text-foreground">
+            {detail.style.coverTitle || detail.basicInfo.title}
           </h2>
-
-          <p className="mb-4 text-sm text-muted-foreground">
-            본 공간은 스터디와 영화를 동시에 즐길 수 있는 서비스 공간입니다.
-            스튜디오 공간과 서비스를 모두 활용한다는 전제로 평가 부탁드립니다.
+          <p className="mb-4 whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
+            {detail.style.coverDescription || detail.basicInfo.description}
           </p>
-
           <p className="text-xs text-muted-foreground">
-            2025.07.27. 오후 05:36 ~ 제한 없음
+            {detail.style.coverPeriodLabel}
           </p>
         </div>
       </div>
 
-      <div className="mb-6 rounded-xl border border-border bg-card p-6">
-        <h3 className="mb-2 text-base font-medium text-foreground">
-          <span className="text-destructive">*</span> 1. 공간 내용 평가
-        </h3>
+      {detail.settings.showProgress ? (
+        <div className="mb-5 h-1.5 overflow-hidden rounded-full bg-muted">
+          <div
+            className={cn(
+              "h-full w-1/3 rounded-full",
+              useBrandClasses && "bg-primary"
+            )}
+            style={useBrandClasses ? undefined : { backgroundColor: themeColor }}
+          />
+        </div>
+      ) : null}
 
-        <p className="mb-4 text-sm text-muted-foreground">
-          해당 부분에서 불편함을 느꼈다면 아래 개선 항목에 적어주세요.
+      {detail.questions.map((question, index) => (
+        <PreviewQuestion
+          key={question.id}
+          question={question}
+          index={index + 1}
+          themeColor={themeColor}
+          useBrandClasses={useBrandClasses}
+        />
+      ))}
+
+      <div
+        className={cn(
+          "rounded-2xl border border-dashed bg-card p-8 text-center text-sm text-muted-foreground",
+          useBrandClasses && "border-primary/30"
+        )}
+        style={useBrandClasses ? undefined : { borderColor: `${themeColor}44` }}
+      >
+        {detail.style.thankYouMessage}
+      </div>
+    </div>
+  )
+}
+
+function PreviewQuestion({
+  question,
+  index,
+  themeColor,
+  useBrandClasses,
+}: {
+  question: SurveyQuestion
+  index: number
+  themeColor: string
+  useBrandClasses: boolean
+}) {
+  return (
+    <div className="mb-5 rounded-2xl border border-border bg-card p-6 shadow-sm">
+      <h3 className="mb-1 text-base font-semibold text-foreground">
+        {question.required ? (
+          <span
+            className={cn("mr-1", useBrandClasses && "text-primary")}
+            style={useBrandClasses ? undefined : { color: themeColor }}
+          >
+            *
+          </span>
+        ) : null}
+        {index}. {question.title}
+      </h3>
+
+      {question.description ? (
+        <p className="mb-4 text-sm leading-relaxed text-muted-foreground">
+          {question.description}
         </p>
+      ) : null}
 
+      {question.type === "text" && (
+        <Textarea
+          placeholder="답변을 입력해 주세요 (최대 2000자)"
+          className="min-h-[120px] resize-none border-muted bg-muted/40"
+          disabled
+        />
+      )}
+
+      {question.type === "scale" && (
+        <div className="overflow-x-auto rounded-xl border border-border bg-muted/20 p-4">
+          <div className="flex min-w-[520px] items-center justify-between gap-2">
+            <span className="shrink-0 text-xs text-muted-foreground">
+              매우 불만족
+            </span>
+            <div className="flex flex-1 items-center justify-center gap-1">
+              {Array.from({ length: 10 }).map((_, scaleIndex) => (
+                <label
+                  key={scaleIndex}
+                  className="flex size-8 cursor-default items-center justify-center rounded-full border border-border bg-background text-xs text-muted-foreground"
+                >
+                  {scaleIndex + 1}
+                </label>
+              ))}
+            </div>
+            <span className="shrink-0 text-xs text-muted-foreground">
+              매우 만족
+            </span>
+          </div>
+        </div>
+      )}
+
+      {question.type === "choice" && (
+        <div className="space-y-2">
+          {question.options.map((option, optionIndex) => (
+            <label
+              key={optionIndex}
+              className="flex cursor-default items-center gap-3 rounded-lg border border-border px-4 py-3 text-sm hover:bg-muted/30"
+            >
+              <input
+                type={question.multiple ? "checkbox" : "radio"}
+                name={question.id}
+                className={cn(
+                  "size-4",
+                  useBrandClasses && "accent-primary"
+                )}
+                style={
+                  useBrandClasses ? undefined : { accentColor: themeColor }
+                }
+                disabled
+              />
+              <span>{option || `선택지 ${optionIndex + 1}`}</span>
+            </label>
+          ))}
+          {question.options.length > 0 ? (
+            <label className="flex cursor-default items-center gap-3 rounded-lg border border-dashed border-border px-4 py-3 text-sm text-muted-foreground">
+              <input
+                type={question.multiple ? "checkbox" : "radio"}
+                disabled
+                className="size-4"
+              />
+              기타
+            </label>
+          ) : null}
+        </div>
+      )}
+
+      {question.type === "matrix" && (
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full min-w-[560px] border-collapse">
             <thead>
-              <tr className="text-sm text-muted-foreground">
-                <th className="pb-3 pr-4 text-left" />
-                <th className="px-3 pb-3 text-center">매우 불만족</th>
-                <th className="px-3 pb-3 text-center">불만족</th>
-                <th className="px-3 pb-3 text-center">보통</th>
-                <th className="px-3 pb-3 text-center">만족</th>
-                <th className="px-3 pb-3 text-center">매우 만족</th>
+              <tr className="text-xs text-muted-foreground">
+                <th className="pb-3 pr-4 text-left font-normal" />
+                {question.columns.map((column) => (
+                  <th
+                    key={column}
+                    className="px-2 pb-3 text-center font-medium"
+                  >
+                    {column}
+                  </th>
+                ))}
               </tr>
             </thead>
-
             <tbody>
-              {matrixRows.map((row) => (
+              {question.rows.map((row) => (
                 <tr key={row} className="border-t border-border">
                   <td className="py-3 pr-4 text-sm font-medium text-foreground">
                     {row}
                   </td>
-
-                  {[1, 2, 3, 4, 5].map((col) => (
-                    <td key={col} className="px-3 py-3 text-center">
+                  {question.columns.map((column) => (
+                    <td key={column} className="px-2 py-3 text-center">
                       <input
                         type="radio"
-                        name={row}
-                        className="size-4 accent-primary"
+                        name={`${question.id}-${row}`}
+                        className={cn(
+                          "size-4",
+                          useBrandClasses && "accent-primary"
+                        )}
+                        style={
+                          useBrandClasses
+                            ? undefined
+                            : { accentColor: themeColor }
+                        }
+                        disabled
                       />
                     </td>
                   ))}
@@ -79,63 +234,7 @@ export function SurveyPreview() {
             </tbody>
           </table>
         </div>
-      </div>
-
-      <div className="mb-6 rounded-xl border border-border bg-card p-6">
-        <h3 className="mb-4 text-base font-medium text-foreground">
-          <span className="text-destructive">*</span> 2. 전반적인 만족도
-        </h3>
-
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-muted-foreground">매우 불만족</span>
-
-          <div className="flex items-center gap-2">
-            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
-              <label key={num} className="flex flex-col items-center gap-1">
-                <span className="text-xs text-muted-foreground">{num}</span>
-                <input
-                  type="radio"
-                  name="satisfaction"
-                  className="size-4 accent-primary"
-                />
-              </label>
-            ))}
-          </div>
-
-          <span className="text-sm text-muted-foreground">매우 만족</span>
-        </div>
-      </div>
-
-      <PreviewTextQuestion
-        number={3}
-        title="이용하면서 긍정적인 부분을 구체적으로 적어주세요."
-      />
-
-      <PreviewTextQuestion
-        number={4}
-        title="이용하면서 개선이 필요한 부분을 구체적으로 적어주세요."
-      />
-    </div>
-  )
-}
-
-function PreviewTextQuestion({
-  number,
-  title,
-}: {
-  number: number
-  title: string
-}) {
-  return (
-    <div className="mb-6 rounded-xl border border-border bg-card p-6">
-      <h3 className="mb-4 text-base font-medium text-foreground">
-        <span className="text-destructive">*</span> {number}. {title}
-      </h3>
-
-      <Textarea
-        placeholder="참여자의 답변 입력란 (최대 2000자)"
-        className="min-h-[100px] bg-muted/50"
-      />
+      )}
     </div>
   )
 }

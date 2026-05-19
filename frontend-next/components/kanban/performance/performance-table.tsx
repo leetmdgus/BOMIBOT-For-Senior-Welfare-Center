@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useCallback, useMemo, memo } from "react"
+import { useState, useRef, useCallback, useMemo, memo, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -24,36 +24,8 @@ import {
   ChevronDown,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
-
-interface RowData {
-  id: string
-  selected: boolean
-  subProject: string
-  detailCategory: string
-  month: string
-  planPeople: number
-  planCount: number
-  planBudget: number
-  actualPeople: number
-  actualCount: number
-  actualExpense: number
-  content: string
-}
-
-const initialRows: RowData[] = [
-  { id: "1", selected: false, subProject: "신규회원 이용상담", detailCategory: "--", month: "1월", planPeople: 80, planCount: 80, planBudget: 0, actualPeople: 127, actualCount: 127, actualExpense: 0, content: "신규회원 이용상담" },
-  { id: "2", selected: false, subProject: "신규회원 가입", detailCategory: "--", month: "1월", planPeople: 80, planCount: 80, planBudget: 0, actualPeople: 127, actualCount: 127, actualExpense: 0, content: "신규회원 가입" },
-  { id: "3", selected: false, subProject: "신규회원 교육", detailCategory: "--", month: "1월", planPeople: 80, planCount: 80, planBudget: 0, actualPeople: 116, actualCount: 116, actualExpense: 0, content: "신규회원 교육" },
-  { id: "4", selected: false, subProject: "신규회원 이용상담", detailCategory: "--", month: "2월", planPeople: 80, planCount: 80, planBudget: 0, actualPeople: 93, actualCount: 93, actualExpense: 0, content: "신규회원 이용상담" },
-  { id: "5", selected: false, subProject: "신규회원 가입", detailCategory: "--", month: "2월", planPeople: 80, planCount: 80, planBudget: 0, actualPeople: 93, actualCount: 93, actualExpense: 0, content: "신규회원 가입" },
-  { id: "6", selected: false, subProject: "신규회원 교육", detailCategory: "--", month: "2월", planPeople: 80, planCount: 80, planBudget: 0, actualPeople: 124, actualCount: 124, actualExpense: 0, content: "신규회원 교육" },
-  { id: "7", selected: false, subProject: "신규회원 이용상담", detailCategory: "--", month: "3월", planPeople: 80, planCount: 80, planBudget: 0, actualPeople: 73, actualCount: 73, actualExpense: 0, content: "신규회원 이용상담" },
-  { id: "8", selected: false, subProject: "신규회원 가입", detailCategory: "--", month: "3월", planPeople: 80, planCount: 80, planBudget: 0, actualPeople: 73, actualCount: 73, actualExpense: 0, content: "신규회원 가입" },
-  { id: "9", selected: false, subProject: "신규회원 교육", detailCategory: "--", month: "3월", planPeople: 80, planCount: 80, planBudget: 0, actualPeople: 62, actualCount: 62, actualExpense: 0, content: "신규회원 교육" },
-  { id: "10", selected: false, subProject: "정보제공상담", detailCategory: "--", month: "1월", planPeople: 0, planCount: 0, planBudget: 0, actualPeople: 0, actualCount: 0, actualExpense: 0, content: "정보제공상담" },
-  { id: "11", selected: false, subProject: "정보제공상담", detailCategory: "--", month: "2월", planPeople: 0, planCount: 0, planBudget: 0, actualPeople: 0, actualCount: 0, actualExpense: 0, content: "정보제공상담" },
-  { id: "12", selected: false, subProject: "정보제공상담", detailCategory: "--", month: "3월", planPeople: 8, planCount: 8, planBudget: 0, actualPeople: 0, actualCount: 0, actualExpense: 0, content: "정보제공상담" },
-]
+import { getPerformanceRows } from "@/services/kanban.performance.service"
+import type { PerformanceRow as RowData } from "@/services/kanban.performance.types"
 
 type CellKey = keyof Omit<RowData, "id" | "selected">
 
@@ -95,7 +67,15 @@ function aggregateBySubProject(rows: RowData[]) {
 }
 
 export const PerformanceTable = memo(function PerformanceTable() {
-  const [rows, setRows] = useState<RowData[]>(initialRows)
+  const [rows, setRows] = useState<RowData[]>([])
+
+  useEffect(() => {
+    getPerformanceRows()
+      .then((result) => setRows(result.data))
+      .catch((error) => {
+        console.error("실적 데이터 로드 실패:", error)
+      })
+  }, [])
   const [selectedCell, setSelectedCell] = useState<{ rowId: string; column: CellKey } | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
   const [activeSubTab, setActiveSubTab] = useState<"입력관리" | "사업계획" | "사업실적" | "사업결과">("입력관리")

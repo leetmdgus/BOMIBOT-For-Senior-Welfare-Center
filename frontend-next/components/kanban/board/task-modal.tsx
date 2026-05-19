@@ -22,10 +22,10 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
 import {
-  projectImageOptions,
-  projectsMock,
-  staffMock,
-} from "@/lib/mocks/kanban.board.mock"
+  getProjectImageOptions,
+  getProjects,
+  getStaffList,
+} from "@/services/kanban.board.service"
 import { KanbanProject, ProjectImageOption, Staff, Task } from "@/services/kanban.board.types"
 
 interface ProjectOption {
@@ -48,7 +48,9 @@ interface TaskModalProps {
 
   defaultProjectId?: string
   defaultCategoryId?: string
+  defaultProjectName?: string
   lockProjectSelect?: boolean
+  year?: string
   onSubmit?: (task: TaskFormData) => void | Promise<void>
   onDelete?: () => void | Promise<void>
 }
@@ -80,9 +82,14 @@ export function TaskModal({
   formType = "task",
   columnType,
   task,
+  projects: projectsProp,
+  staffList: staffListProp,
+  projectImages: projectImagesProp,
   defaultProjectId,
   defaultCategoryId,
+  defaultProjectName,
   lockProjectSelect = false,
+  year = "2026",
   onSubmit,
   onDelete,
 }: TaskModalProps) {
@@ -90,21 +97,81 @@ export function TaskModal({
   const [showAssigneeList, setShowAssigneeList] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [staffList, setStaffList] = useState<Staff[]>(staffListProp ?? [])
+  const [projectImages, setProjectImages] = useState<ProjectImageOption[]>(
+    projectImagesProp ?? []
+  )
+  const [loadedProjects, setLoadedProjects] = useState<KanbanProject[]>([])
 
   const isNewProjectForm = formType === "newProject"
+  const resolvedProjects = projectsProp ?? loadedProjects
 
-  const staffList = staffMock
-  const projectImages = projectImageOptions
+  useEffect(() => {
+    if (staffListProp && staffListProp.length > 0) {
+      setStaffList(staffListProp)
+    }
+  }, [staffListProp])
+
+  useEffect(() => {
+    if (projectImagesProp && projectImagesProp.length > 0) {
+      setProjectImages(projectImagesProp)
+    }
+  }, [projectImagesProp])
+
+  useEffect(() => {
+    if (!open) return
+
+    let cancelled = false
+
+    const loadModalData = async () => {
+      const [staff, images, projects] = await Promise.all([
+        staffListProp?.length ? Promise.resolve(staffListProp) : getStaffList(),
+        projectImagesProp?.length
+          ? Promise.resolve(projectImagesProp)
+          : getProjectImageOptions(),
+        projectsProp?.length ? Promise.resolve(projectsProp) : getProjects(year),
+      ])
+
+      if (cancelled) return
+
+      setStaffList(staff)
+      setProjectImages(images)
+      if (!projectsProp?.length) setLoadedProjects(projects)
+    }
+
+    loadModalData().catch((error) => {
+      console.error("모달 데이터 로드 실패:", error)
+    })
+
+    return () => {
+      cancelled = true
+    }
+  }, [open, year, projectsProp, staffListProp, projectImagesProp])
 
   const existingProjects = useMemo<ProjectOption[]>(
     () =>
-      projectsMock.map((project) => ({
-        id: project.id,
+      resolvedProjects.map((project) => ({
+        id: project.id ?? "",
         name: project.title,
-        categoryId: project.categories[0]?.id ?? "실적관리",
+        categoryId:
+          project.categories.find((category) => category.title === "실적관리")
+            ?.id ??
+          project.categories[0]?.id ??
+          "",
       })),
-    [open]
+    [resolvedProjects]
   )
+
+  const resolveAssignees = (assigneeName?: string) => {
+    if (!assigneeName?.trim()) return []
+
+    const matched = staffList.find(
+      (staff) =>
+        assigneeName.includes(staff.name) || staff.name === assigneeName
+    )
+
+    return matched ? [matched] : []
+  }
 
   useEffect(() => {
     if (!open) return
@@ -115,13 +182,14 @@ export function TaskModal({
 
     if (task && mode === "edit") {
       setFormData({
-        projectId: selectedProject?.id ?? "",
+        projectId: defaultProjectId ?? selectedProject?.id ?? "",
         categoryId: defaultCategoryId ?? selectedProject?.categoryId ?? "",
-        projectName: selectedProject?.name ?? "",
+        projectName:
+          defaultProjectName ?? selectedProject?.name ?? "",
         projectImage: "",
         title: task.title,
-        description: task.description,
-        assignees: [],
+        description: task.description ?? "",
+        assignees: resolveAssignees(task.assignee),
       })
       return
     }
@@ -138,7 +206,9 @@ export function TaskModal({
     mode,
     defaultProjectId,
     defaultCategoryId,
+    defaultProjectName,
     existingProjects,
+    staffList,
   ])
 
   const filteredStaff = staffList.filter((staff) => {
@@ -170,7 +240,7 @@ export function TaskModal({
     if (isNewProjectForm && !formData.projectImage.trim()) return
     if (!isNewProjectForm && !formData.projectId) return
     if (!isNewProjectForm && !formData.categoryId) return
-    if (!formData.title.trim()) return
+    if (!isNewProjectForm && !formData.title.trim()) return
 
     try {
       setIsSubmitting(true)
@@ -304,7 +374,7 @@ export function TaskModal({
                   <SelectValue placeholder="사업을 선택하세요" />
                 </SelectTrigger>
 
-                <SelectContent>
+                <SelectContent className="z-50 bg-card text-card-foreground">
                   {existingProjects.map((project) => (
                     <SelectItem key={project.id} value={project.id}>
                       {project.name}
@@ -322,6 +392,11 @@ export function TaskModal({
               </label>
 
               <div className="grid grid-cols-3 gap-3">
+                {projectImages.length === 0 ? (
+                  <p className="col-span-3 py-4 text-center text-sm text-muted-foreground">
+                    이미지 목록을 불러오는 중입니다.
+                  </p>
+                ) : null}
                 {projectImages.map((image: ProjectImageOption) => {
                   const active = formData.projectImage === image.value
 

@@ -7,7 +7,13 @@ import QRCode from "react-qr-code"
 
 import { Button } from "@/components/ui/button"
 
-export function SurveyHeader({ id }: { id: string }) {
+export function SurveyHeader({
+  id,
+  title,
+}: {
+  id: string
+  title?: string
+}) {
   const qrRef = useRef<HTMLDivElement>(null)
 
   const surveyUrl = useMemo(() => {
@@ -25,7 +31,7 @@ export function SurveyHeader({ id }: { id: string }) {
       await navigator.clipboard.writeText(surveyUrl)
       alert("설문 링크가 복사되었습니다.")
     } catch {
-      alert("링크 복사에 실패했습니다.")
+      alert("설문 링크 복사에 실패했습니다.")
     }
   }
 
@@ -65,13 +71,15 @@ export function SurveyHeader({ id }: { id: string }) {
           </Button>
         </Link>
 
-        <h1 className="text-xl font-bold text-foreground">만족도조사</h1>
+        <h1 className="text-xl font-bold text-foreground">
+          {title || "만족도조사"}
+        </h1>
       </div>
 
       <div className="flex items-center gap-2">
         <Button variant="outline" className="gap-2" onClick={handleCopy}>
           <Copy className="size-4" />
-          링크 복사
+          설문 링크 복사
         </Button>
 
         <Button variant="outline" className="gap-2" onClick={handleDownloadQR}>

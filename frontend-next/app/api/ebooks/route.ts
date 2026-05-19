@@ -1,32 +1,15 @@
-import { ebooks } from "@/lib/mocks/kanban.board.mock"
 import { NextResponse } from "next/server"
+
+import { getEbooks } from "@/services/ebooks.mock.service"
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
-  const category = searchParams.get("category")
-  const search = searchParams.get("search")
-  
-  let filteredEbooks = ebooks
-  
-  if (category && category !== "전체") {
-    filteredEbooks = filteredEbooks.filter(e => e.tag === category)
-  }
-  
-  if (search) {
-    const searchLower = search.toLowerCase()
-    filteredEbooks = filteredEbooks.filter(e => 
-      e.title.toLowerCase().includes(searchLower) ||
-      e.team.toLowerCase().includes(searchLower)
-    )
-  }
-  
-  const categories = ["전체", ...new Set(ebooks.map(e => e.tag))]
-  
-  return NextResponse.json({
-    ebooks: filteredEbooks,
-    categories,
-    total: filteredEbooks.length,
-  })
+  const category = searchParams.get("category") ?? undefined
+  const search = searchParams.get("search") ?? undefined
+
+  const result = await getEbooks({ category, search })
+
+  return NextResponse.json(result)
 }
 
 export async function POST(request: Request) {

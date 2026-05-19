@@ -1,4 +1,4 @@
-import type { FileItem, TaskOption } from "./file-types"
+import type { FileItem, TaskOption } from "@/components/files/file-types"
 
 export const taskOptions: TaskOption[] = [
   { id: "task-1", name: "상담 [1-1 일반상담]" },
@@ -81,37 +81,28 @@ export const initialFiles: FileItem[] = [
   },
   {
     id: "file-3",
-    name: "행사사진_2026봄.jpg",
+    name: "프로그램 홍보 이미지.png",
     type: "image",
     parentId: "folder-3",
-    size: "4.2 MB",
-    createdAt: "2026-05-05T09:00:00",
+    size: "5.2 MB",
+    createdAt: "2026-05-02T09:00:00",
     modifiedAt: "2026-05-08T12:00:00",
-    shared: true,
-    permission: "team",
+    permission: "private",
     taskId: "task-4",
     taskName: "복지1팀 운영",
   },
   {
     id: "file-4",
-    name: "홍보영상_최종.mp4",
-    type: "video",
-    parentId: null,
-    size: "128 MB",
-    createdAt: "2026-05-01T09:00:00",
-    modifiedAt: "2026-05-06T12:00:00",
-    permission: "private",
-  },
-  {
-    id: "file-5",
-    name: "예산집행현황.xlsx",
-    type: "spreadsheet",
+    name: "상담일지_4월.hwp",
+    type: "document",
     parentId: "folder-1",
-    size: "956 KB",
-    createdAt: "2026-05-06T09:00:00",
-    modifiedAt: "2026-05-05T12:00:00",
-    permission: "private",
-    taskId: "task-2",
-    taskName: "2026년 사업계획",
+    size: "860 KB",
+    createdAt: "2026-05-01T09:00:00",
+    modifiedAt: "2026-05-07T12:00:00",
+    permission: "team",
+    taskId: "task-1",
+    taskName: "상담 [1-1 일반상담]",
   },
 ]
+
+export const defaultRecentIds = ["folder-1", "file-1", "file-2", "folder-3"]

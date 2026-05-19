@@ -1,6 +1,129 @@
 // Mock Data for 봄이봇 사업관리 시스템
 
-import { ColumnType, KanbanProject, ProjectImageOption, Staff } from "@/services/kanban.board.types"
+import {
+  Category,
+  ColumnType,
+  KanbanProject,
+  ProjectImageOption,
+  Staff,
+  Task,
+} from "@/services/kanban.board.types"
+
+/** 신규 사업 등록 시 기본 칸반 컬럼 (순서·제목 고정) */
+export const DEFAULT_KANBAN_COLUMNS: ReadonlyArray<{
+  title: ColumnType
+  color: string
+}> = [
+  { title: "실적관리", color: "bg-success" },
+  { title: "사업계획", color: "bg-primary" },
+  { title: "만족도조사", color: "bg-accent" },
+  { title: "사업평가", color: "bg-priority-high" },
+] as const
+
+export function createDefaultProjectCategories(options?: {
+  initialTask?: Omit<Task, "id">
+}): Category[] {
+  return DEFAULT_KANBAN_COLUMNS.map((column) => ({
+    id: crypto.randomUUID(),
+    title: column.title,
+    color: column.color,
+    tasks:
+      column.title === "실적관리" && options?.initialTask
+        ? [{ id: crypto.randomUUID(), ...options.initialTask }]
+        : [],
+  }))
+}
+
+export function findCategoryIdByTitle(
+  categories: Category[],
+  title: ColumnType
+): string | undefined {
+  return categories.find((category) => category.title === title)?.id
+}
+
+export function findTaskLocation(taskId: string): {
+  projectId: string
+  categoryId: string
+  categoryTitle: ColumnType
+  task: Task
+} | null {
+  for (const project of projectsMock) {
+    for (const category of project.categories) {
+      const task = category.tasks.find((item) => item.id === taskId)
+      if (task) {
+        return {
+          projectId: project.id,
+          categoryId: category.id,
+          categoryTitle: category.title as ColumnType,
+          task,
+        }
+      }
+    }
+  }
+
+  return null
+}
+
+const COLUMN_PIPELINE: ColumnType[] = [
+  "실적관리",
+  "사업계획",
+  "만족도조사",
+  "사업평가",
+]
+
+/** 완료 시 다음 칸반 컬럼으로 이동. 사업평가는 보드에서 완료 표시만 합니다. */
+export function advanceTaskToNextProcess(taskId: string): boolean {
+  const location = findTaskLocation(taskId)
+  if (!location) return false
+
+  const { projectId, categoryId, categoryTitle, task } = location
+  const project = projectsMock.find((item) => item.id === projectId)
+  if (!project) return false
+
+  const columnIndex = COLUMN_PIPELINE.indexOf(categoryTitle)
+  if (columnIndex === -1) return false
+
+  if (categoryTitle === "사업평가") {
+    const total = task.totalCount ?? 10
+    const taskIndex = project.categories
+      .find((category) => category.id === categoryId)
+      ?.tasks.findIndex((item) => item.id === taskId)
+
+    if (taskIndex === undefined || taskIndex < 0) return false
+
+    const category = project.categories.find((item) => item.id === categoryId)
+    if (!category) return false
+
+    category.tasks[taskIndex] = {
+      ...category.tasks[taskIndex],
+      completedCount: total,
+    }
+
+    return true
+  }
+
+  const nextColumnTitle = COLUMN_PIPELINE[columnIndex + 1]
+  const sourceCategory = project.categories.find(
+    (category) => category.id === categoryId
+  )
+  const targetCategory = project.categories.find(
+    (category) => category.title === nextColumnTitle
+  )
+
+  if (!sourceCategory || !targetCategory) return false
+
+  const taskIndex = sourceCategory.tasks.findIndex((item) => item.id === taskId)
+  if (taskIndex === -1) return false
+
+  const [movedTask] = sourceCategory.tasks.splice(taskIndex, 1)
+  targetCategory.tasks.push({
+    ...movedTask,
+    completedCount: 0,
+    totalCount: movedTask.totalCount ?? 10,
+  })
+
+  return true
+}
 
 export const taskPathMapMock: Record<ColumnType, string> = {
   실적관리: "performance",

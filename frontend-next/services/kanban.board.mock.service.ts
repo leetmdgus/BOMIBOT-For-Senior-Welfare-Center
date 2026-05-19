@@ -1,13 +1,14 @@
 // services/kanban.mock.service.ts
 import {
   categoryColumnTypeMapMock,
+  createDefaultProjectCategories,
   defaultColumnTypeMock,
   projectImageOptions,
   projectsMock,
   staffMock,
   taskPathMapMock,
 } from "@/lib/mocks/kanban.board.mock"
-import { ColumnType, columnTypesMock, KanbanProject, Staff, Task } from "./kanban.board.types"
+import { ColumnType, columnTypesMock, CreateProjectRequest, CreateProjectResponse, KanbanProject, ProjectImageOption, Staff, Task } from "./kanban.board.types"
 
 export async function getProjects(year: string): Promise<KanbanProject[]> {
   console.log("mock selected year:", year)
@@ -35,14 +36,50 @@ export async function getColumnTypeByCategoryTitle(
 }
 
 export async function createProject(
-  project: Omit<KanbanProject, "id">
-): Promise<KanbanProject> {
-  const newProject: KanbanProject = {
-    ...project,
-    id: crypto.randomUUID(),
+  project: CreateProjectRequest
+): Promise<CreateProjectResponse> {
+  const now = new Date().toISOString()
+  const projectId = crypto.randomUUID()
+
+  const newProject: CreateProjectResponse = {
+    id: projectId,
+    assignees: project.assignees,
+    description: project.description,
+    project_image: project.project_image,
+    project_name: project.project_name,
+    title: project.title,
+    created_at: now,
+    updated_at: now,
   }
 
-  projectsMock.push(newProject)
+  const taskTitle = project.title?.trim() || project.project_name
+
+  const newBoardProject: KanbanProject = {
+    id: projectId,
+    number: String(projectsMock.length + 1).padStart(2, "0"),
+    title: project.project_name,
+    team: project.assignees?.[0]?.team ?? "",
+    manager: project.assignees?.[0]
+      ? `${project.assignees[0].team} ${project.assignees[0].name} ${project.assignees[0].position}`
+      : "",
+    image: project.project_image,
+    year: project.year ?? new Date().getFullYear().toString(),
+    categories: createDefaultProjectCategories(
+      taskTitle
+        ? {
+            initialTask: {
+              title: taskTitle,
+              description: project.description ?? "",
+              assignee: project.assignees?.[0]?.name ?? "",
+              completedCount: 0,
+              totalCount: 0,
+            },
+          }
+        : undefined
+    ),
+  }
+
+  projectsMock.push(newBoardProject)
 
   return newProject
 }
@@ -146,6 +183,6 @@ export async function deleteTask(
   return true
 }
 
-export async function getProjectImageOptions() {
+export async function getProjectImageOptions(): Promise<ProjectImageOption[]> {
   return projectImageOptions
 }

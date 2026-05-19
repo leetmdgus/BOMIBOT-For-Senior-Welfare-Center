@@ -3,16 +3,9 @@
 import { useMemo } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { ChevronRight, Eye, GitBranch, RotateCcw } from "lucide-react"
+import { ChevronRight } from "lucide-react"
 
-import { Button } from "@/components/ui/button"
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet"
+import { VersionHistorySheet } from "@/components/kanban/version-history/version-history-sheet"
 
 type BreadcrumbItem = {
   title: string
@@ -34,27 +27,12 @@ const pageLinks: PageLink[] = [
   { title: "전자책자", path: "/ebooks" },
 
   {
-    title: "실적관리",
-    path: "/kanban/documents/performance",
+    title: "사업문서",
+    path: "/kanban/documents",
     breadcrumbs: [
-      { title: "문서" },
-      { title: "실적관리", path: "/kanban/documents/performance" },
-    ],
-  },
-  {
-    title: "예산관리",
-    path: "/kanban/documents/budget",
-    breadcrumbs: [
-      { title: "문서" },
-      { title: "예산관리", path: "/kanban/documents/budget" },
-    ],
-  },
-  {
-    title: "사업계획",
-    path: "/kanban/documents/business-plan",
-    breadcrumbs: [
-      { title: "문서" },
-      { title: "사업계획", path: "/kanban/documents/business-plan" },
+      { title: "사업관리", path: "/kanban" },
+      { title: "대시보드", path: "/dashboard" },
+      { title: "사업문서", path: "/kanban/documents" },
     ],
   },
 
@@ -120,39 +98,6 @@ const pageLinks: PageLink[] = [
   },
 ]
 
-const histories = [
-  {
-    id: "1",
-    user: "관리자",
-    target: "어르신 상담",
-    action: "카드 제목을 수정했습니다.",
-    date: "2026-05-17 17:30",
-    canRestore: true,
-    before: { title: "어르신 상담 초안", column: "실적관리" },
-    after: { title: "어르신 상담", column: "실적관리" },
-  },
-  {
-    id: "2",
-    user: "김영수",
-    target: "프로그램 기획",
-    action: "카드를 이동했습니다.",
-    date: "2026-05-17 16:12",
-    canRestore: true,
-    before: { column: "실적관리", position: 1 },
-    after: { column: "사업계획", position: 0 },
-  },
-  {
-    id: "3",
-    user: "이승현",
-    target: "만족도 설문 작성",
-    action: "카드 설명을 수정했습니다.",
-    date: "2026-05-17 15:40",
-    canRestore: false,
-    before: { description: "설문 초안" },
-    after: { description: "설문지 초안 작성" },
-  },
-]
-
 function matchPath(pathname: string, routePath: string) {
   const routeSegments = routePath.split("/")
   const pathnameSegments = pathname.split("/")
@@ -166,6 +111,12 @@ function matchPath(pathname: string, routePath: string) {
 }
 
 function getCurrentPage(pathname: string) {
+  if (pathname.startsWith("/kanban/documents")) {
+    return (
+      pageLinks.find((page) => page.path === "/kanban/documents") ?? pageLinks[0]
+    )
+  }
+
   return pageLinks.find((page) => matchPath(pathname, page.path)) ?? pageLinks[0]
 }
 
@@ -182,17 +133,20 @@ function getBreadcrumbs(currentPage: PageLink): BreadcrumbItem[] {
   ]
 }
 
-export function Header() {
+interface HeaderProps {
+  kanbanYear?: string
+}
+
+export function Header({ kanbanYear = "2026" }: HeaderProps) {
   const pathname = usePathname()
 
   const currentPage = useMemo(() => getCurrentPage(pathname), [pathname])
   const breadcrumbs = useMemo(() => getBreadcrumbs(currentPage), [currentPage])
 
   const isKanbanPage = pathname === "/kanban"
-  const isAdmin = true
 
   return (
-    <header className="border-b border-border bg-card">
+    <header className="print-hide border-b border-border bg-card">
       <div className="flex items-center justify-between border-b border-border bg-card px-6 py-4">
         <div>
           <h1 className="text-xl font-semibold">{currentPage.title}</h1>
@@ -241,86 +195,7 @@ export function Header() {
           </nav>
         </div>
         
-        {/* 버전기록 시트 */}
-        {isKanbanPage && (
-          <Sheet>
-            <SheetTrigger asChild>
-              <button
-                type="button"
-                className="flex items-center gap-2 rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
-              >
-                <GitBranch className="size-4" />
-                버전 기록
-              </button>
-            </SheetTrigger>
-
-            <SheetContent side="right" className="w-[460px] overflow-y-auto">
-              <SheetHeader>
-                <SheetTitle>버전 기록</SheetTitle>
-              </SheetHeader>
-
-              <div className="mt-6 space-y-3">
-                {histories.map((history) => (
-                  <details
-                    key={history.id}
-                    className="rounded-xl border bg-background p-4"
-                  >
-                    <summary className="cursor-pointer list-none">
-                      <div className="space-y-1">
-                        <p className="text-sm font-medium">
-                          {history.user}님이 {history.target} {history.action}
-                        </p>
-
-                        <p className="text-xs text-muted-foreground">
-                          {history.date}
-                        </p>
-                      </div>
-
-                      <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
-                        <Eye className="size-3" />
-                        미리 보기
-                      </div>
-                    </summary>
-
-                    <div className="mt-4 space-y-4 border-t pt-4">
-                      <div>
-                        <p className="mb-2 text-xs font-semibold text-muted-foreground">
-                          변경 전
-                        </p>
-
-                        <pre className="rounded-lg bg-muted p-3 text-xs">
-                          {JSON.stringify(history.before, null, 2)}
-                        </pre>
-                      </div>
-
-                      <div>
-                        <p className="mb-2 text-xs font-semibold text-muted-foreground">
-                          변경 후
-                        </p>
-
-                        <pre className="rounded-lg bg-muted p-3 text-xs">
-                          {JSON.stringify(history.after, null, 2)}
-                        </pre>
-                      </div>
-
-                      {isAdmin && history.canRestore ? (
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="outline"
-                          className="w-full gap-2"
-                        >
-                          <RotateCcw className="size-4" />
-                          이 시점으로 되돌리기
-                        </Button>
-                      ) : null}
-                    </div>
-                  </details>
-                ))}
-              </div>
-            </SheetContent>
-          </Sheet>
-        )}
+        {isKanbanPage ? <VersionHistorySheet year={kanbanYear} /> : null}
       </div>
     </header>
   )

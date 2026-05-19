@@ -1,9 +1,17 @@
+import { Suspense } from "react"
+
 import { SurveyDetailPage } from "@/components/survey/survey-detail-page"
 
-export default function Page({
+export default async function Page({
   params,
 }: {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }) {
-  return <SurveyDetailPage id={params.id} />
+  const { id } = await params
+
+  return (
+    <Suspense fallback={null}>
+      <SurveyDetailPage id={id} />
+    </Suspense>
+  )
 }

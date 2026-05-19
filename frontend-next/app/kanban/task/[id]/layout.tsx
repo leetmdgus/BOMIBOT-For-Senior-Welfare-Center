@@ -1,4 +1,5 @@
 import { Header } from "@/components/common/header"
+import { PrintArea } from "@/components/common/print-area"
 import { Sidebar } from "@/components/common/sidebar"
 import { TaskDetailTabs } from "@/components/kanban/task-detail/task-detail-tabs"
 
@@ -19,7 +20,9 @@ export default async function TaskDetailLayout({
         <Header />
         <TaskDetailTabs taskId={id} />
 
-        <main className="p-6">{children}</main>
+        <main className="p-6">
+          <PrintArea>{children}</PrintArea>
+        </main>
       </div>
     </div>
   )

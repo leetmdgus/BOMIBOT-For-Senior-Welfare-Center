@@ -12,8 +12,6 @@ export interface Task {
   title: string
   description: string
   assignee: string
-  completedCount?: number
-  totalCount?: number
 }
 
 export interface Category {
@@ -50,4 +48,25 @@ export interface Staff {
 export interface ProjectImageOption {
   label: string
   value: string
+}
+
+// 스키마
+export interface CreateProjectRequest {
+  assignees: Staff[]
+  description: string
+  project_image: string
+  project_name: string
+  title: string
+  year?: string
+}
+
+export interface CreateProjectResponse {
+  id: string
+  assignees: Staff[]
+  description: string
+  project_image: string
+  project_name: string
+  title: string
+  created_at: string
+  updated_at: string
 }

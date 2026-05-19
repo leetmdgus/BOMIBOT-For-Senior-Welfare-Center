@@ -1,11 +1,5 @@
-import { redirect } from "next/navigation"
+import { PerformanceWorkspace } from "@/components/kanban/task-detail/performance/performance-workspace"
 
-export default async function Page({
-  params,
-}: {
-  params: Promise<{ id: string }>
-}) {
-  const { id } = await params
-
-  redirect(`/kanban/task/${id}/performance/input`)
+export default function PerformancePage() {
+  return <PerformanceWorkspace />
 }
