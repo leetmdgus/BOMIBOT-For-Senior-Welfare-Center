@@ -1,183 +1,156 @@
-import { Project } from "@/lib/mock-data";
-import {
-  categoryColumnTypeMapMock,
-  columnTypesMock,
-  defaultColumnTypeMock,
-  projectImageOptions,
-  projectsMock,
-  staffMock,
-  taskPathMapMock,
-  type ColumnType,
-  type KanbanProject,
-  type ProjectImageOption,
-  type Staff,
-  type Task,
-} from "../../mocks/kanban.mock"
+// import {
+//   categoryColumnTypeMapMock,
+//   defaultColumnTypeMock,
+//   projectImageOptions,
+//   projectsMock,
+//   staffMock,
+//   taskPathMapMock,
+// } from "@/lib/mocks/kanban.mock"
+// import type {
+//   ColumnType,
+//   KanbanProject,
+//   Staff,
+//   Task,
+// } from "../../types"
+// import { columnTypesMock } from "../../types"
 
-export async function getProjects(year: string): Promise<Project[]> {
-  // TODO: API 연결 시 아래 mock 반환을 fetch로 교체
-  // const res = await fetch(`/api/projects?year=${year}`)
-  // return res.json()
+// export async function getProjects(year: string): Promise<KanbanProject[]> {
+//   console.log("selected year:", year)
+//   return Promise.resolve(projectsMock)
+// }
 
-  console.log("selected year:", year)
-  return Promise.resolve(projectsMock)
-}
+// export async function getStaffList(): Promise<Staff[]> {
+//   return Promise.resolve(staffMock)
+// }
 
-export async function getProjectOptions(): Promise<
-  { id: string; name: string }[]
-> {
-  // TODO: API 연결 시 GET /api/projects/options 로 교체
-  return Promise.resolve(
-    projectsMock.map((project) => ({
-      id: project.id,
-      name: project.title,
-    }))
-  )
-}
+// export async function getColumnTypes(): Promise<readonly ColumnType[]> {
+//   return Promise.resolve(columnTypesMock)
+// }
 
-export async function getStaffList(): Promise<Staff[]> {
-  // TODO: API 연결 시 GET /api/staff 로 교체
-  return Promise.resolve(staffMock)
-}
+// export async function getTaskPathMap(): Promise<Record<ColumnType, string>> {
+//   return Promise.resolve(taskPathMapMock)
+// }
 
-export async function getColumnTypes(): Promise<readonly ColumnType[]> {
-  // TODO: API 연결 시 GET /api/projects/kanban/columns 로 교체
-  return Promise.resolve(columnTypesMock)
-}
+// export async function getColumnTypeByCategoryTitle(
+//   categoryTitle: string
+// ): Promise<ColumnType> {
+//   return Promise.resolve(
+//     categoryColumnTypeMapMock[categoryTitle.trim()] ?? defaultColumnTypeMock
+//   )
+// }
 
-export async function getTaskPathMap(): Promise<Record<ColumnType, string>> {
-  // TODO: API 연결 시 GET /api/projects/kanban/task-path-map 로 교체
-  return Promise.resolve(taskPathMapMock)
-}
+// export async function createProject(
+//   project: Omit<KanbanProject, "id">
+// ): Promise<KanbanProject> {
+//   const newProject: KanbanProject = {
+//     ...project,
+//     id: crypto.randomUUID(),
+//   }
 
-export async function getColumnTypeByCategoryTitle(
-  categoryTitle: string
-): Promise<ColumnType> {
-  // TODO: API 연결 시 GET /api/projects/kanban/column-type?title=${categoryTitle} 로 교체
-  return Promise.resolve(
-    categoryColumnTypeMapMock[categoryTitle.trim()] ?? defaultColumnTypeMock
-  )
-}
+//   projectsMock.push(newProject)
 
-export async function createProject(
-  project: Omit<Project, "id">
-): Promise<Project> {
-  // TODO: API 연결 시 POST /api/projects 로 교체
-  const newProject: Project = {
-    ...project,
-    id: crypto.randomUUID(),
-  }
+//   return Promise.resolve(newProject)
+// }
 
-  projectsMock.push(newProject)
+// export async function updateProject(
+//   projectId: string,
+//   updatedProject: Partial<KanbanProject>
+// ): Promise<KanbanProject | null> {
+//   const projectIndex = projectsMock.findIndex(
+//     (project) => project.id === projectId
+//   )
 
-  return Promise.resolve(newProject)
-}
+//   if (projectIndex === -1) return null
 
-export async function updateProject(
-  projectId: string,
-  updatedProject: Partial<Project>
-): Promise<Project | null> {
-  // TODO: API 연결 시 PATCH /api/projects/${projectId} 로 교체
-  const projectIndex = projectsMock.findIndex(
-    (project) => project.id === projectId
-  )
+//   projectsMock[projectIndex] = {
+//     ...projectsMock[projectIndex],
+//     ...updatedProject,
+//   }
 
-  if (projectIndex === -1) return null
+//   return Promise.resolve(projectsMock[projectIndex])
+// }
 
-  projectsMock[projectIndex] = {
-    ...projectsMock[projectIndex],
-    ...updatedProject,
-  }
+// export async function deleteProject(projectId: string): Promise<boolean> {
+//   const projectIndex = projectsMock.findIndex(
+//     (project) => project.id === projectId
+//   )
 
-  return Promise.resolve(projectsMock[projectIndex])
-}
+//   if (projectIndex === -1) return false
 
-export async function deleteProject(projectId: string): Promise<boolean> {
-  // TODO: API 연결 시 DELETE /api/projects/${projectId} 로 교체
-  const projectIndex = projectsMock.findIndex(
-    (project) => project.id === projectId
-  )
+//   projectsMock.splice(projectIndex, 1)
 
-  if (projectIndex === -1) return false
+//   return Promise.resolve(true)
+// }
 
-  projectsMock.splice(projectIndex, 1)
+// export async function createTask(
+//   projectId: string,
+//   categoryId: string,
+//   task: Omit<Task, "id">
+// ): Promise<Task | null> {
+//   const project = projectsMock.find((project) => project.id === projectId)
+//   if (!project) return null
 
-  return Promise.resolve(true)
-}
+//   const category = project.categories.find(
+//     (category) => category.id === categoryId
+//   )
+//   if (!category) return null
 
-export async function createTask(
-  projectId: string,
-  categoryId: string,
-  task: Omit<Task, "id">
-): Promise<Task | null> {
-  // TODO: API 연결 시 POST /api/projects/${projectId}/categories/${categoryId}/tasks 로 교체
-  const project = projectsMock.find((project) => project.id === projectId)
-  if (!project) return null
+//   const newTask: Task = {
+//     ...task,
+//     id: crypto.randomUUID(),
+//   }
 
-  const category = project.categories.find(
-    (category) => category.id === categoryId
-  )
-  if (!category) return null
+//   category.tasks.push(newTask)
 
-  const newTask: Task = {
-    ...task,
-    id: crypto.randomUUID(),
-  }
+//   return Promise.resolve(newTask)
+// }
 
-  category.tasks.push(newTask)
+// export async function updateTask(
+//   projectId: string,
+//   categoryId: string,
+//   taskId: string,
+//   updatedTask: Partial<Task>
+// ): Promise<Task | null> {
+//   const project = projectsMock.find((project) => project.id === projectId)
+//   if (!project) return null
 
-  return Promise.resolve(newTask)
-}
+//   const category = project.categories.find(
+//     (category) => category.id === categoryId
+//   )
+//   if (!category) return null
 
-export async function updateTask(
-  projectId: string,
-  categoryId: string,
-  taskId: string,
-  updatedTask: Partial<Task>
-): Promise<Task | null> {
-  // TODO: API 연결 시 PATCH /api/projects/${projectId}/categories/${categoryId}/tasks/${taskId} 로 교체
-  const project = projectsMock.find((project) => project.id === projectId)
-  if (!project) return null
+//   const taskIndex = category.tasks.findIndex((task) => task.id === taskId)
+//   if (taskIndex === -1) return null
 
-  const category = project.categories.find(
-    (category) => category.id === categoryId
-  )
-  if (!category) return null
+//   category.tasks[taskIndex] = {
+//     ...category.tasks[taskIndex],
+//     ...updatedTask,
+//   }
 
-  const taskIndex = category.tasks.findIndex((task) => task.id === taskId)
-  if (taskIndex === -1) return null
+//   return Promise.resolve(category.tasks[taskIndex])
+// }
 
-  category.tasks[taskIndex] = {
-    ...category.tasks[taskIndex],
-    ...updatedTask,
-  }
+// export async function deleteTask(
+//   projectId: string,
+//   categoryId: string,
+//   taskId: string
+// ): Promise<boolean> {
+//   const project = projectsMock.find((project) => project.id === projectId)
+//   if (!project) return false
 
-  return Promise.resolve(category.tasks[taskIndex])
-}
+//   const category = project.categories.find(
+//     (category) => category.id === categoryId
+//   )
+//   if (!category) return false
 
-export async function deleteTask(
-  projectId: string,
-  categoryId: string,
-  taskId: string
-): Promise<boolean> {
-  // TODO: API 연결 시 DELETE /api/projects/${projectId}/categories/${categoryId}/tasks/${taskId} 로 교체
-  const project = projectsMock.find((project) => project.id === projectId)
-  if (!project) return false
+//   const taskIndex = category.tasks.findIndex((task) => task.id === taskId)
+//   if (taskIndex === -1) return false
 
-  const category = project.categories.find(
-    (category) => category.id === categoryId
-  )
-  if (!category) return false
+//   category.tasks.splice(taskIndex, 1)
 
-  const taskIndex = category.tasks.findIndex((task) => task.id === taskId)
-  if (taskIndex === -1) return false
+//   return Promise.resolve(true)
+// }
 
-  category.tasks.splice(taskIndex, 1)
-
-  return Promise.resolve(true)
-}
-
-export async function getProjectImageOptions() {
-  // TODO: API 연결 시 GET /api/projects/images 로 교체
-  return Promise.resolve(projectImageOptions)
-}
+// export async function getProjectImageOptions() {
+//   return Promise.resolve(projectImageOptions)
+// }

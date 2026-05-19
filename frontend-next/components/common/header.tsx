@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useMemo } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { ChevronRight, Eye, GitBranch, RotateCcw } from "lucide-react"
@@ -13,7 +13,6 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet"
-import { TaskModal } from "../kanban/task-modal"
 
 type BreadcrumbItem = {
   title: string
@@ -27,41 +26,19 @@ type PageLink = {
 }
 
 const pageLinks: PageLink[] = [
-  {
-    title: "대시보드",
-    path: "/dashboard",
-  },
-  {
-    title: "조직현황",
-    path: "/organization",
-  },
-  {
-    title: "사업관리",
-    path: "/kanban",
-  },
-  {
-    title: "문서자동화",
-    path: "/automation",
-  },
-  {
-    title: "파일들",
-    path: "/files",
-  },
-  {
-    title: "전자책자",
-    path: "/ebooks",
-  },
+  { title: "대시보드", path: "/dashboard" },
+  { title: "조직현황", path: "/organization" },
+  { title: "사업관리", path: "/kanban" },
+  { title: "문서자동화", path: "/automation" },
+  { title: "파일들", path: "/files" },
+  { title: "전자책자", path: "/ebooks" },
 
-  // 문서
   {
     title: "실적관리",
     path: "/kanban/documents/performance",
     breadcrumbs: [
       { title: "문서" },
-      {
-        title: "실적관리",
-        path: "/kanban/documents/performance",
-      },
+      { title: "실적관리", path: "/kanban/documents/performance" },
     ],
   },
   {
@@ -69,10 +46,7 @@ const pageLinks: PageLink[] = [
     path: "/kanban/documents/budget",
     breadcrumbs: [
       { title: "문서" },
-      {
-        title: "예산관리",
-        path: "/kanban/documents/budget",
-      },
+      { title: "예산관리", path: "/kanban/documents/budget" },
     ],
   },
   {
@@ -80,121 +54,68 @@ const pageLinks: PageLink[] = [
     path: "/kanban/documents/business-plan",
     breadcrumbs: [
       { title: "문서" },
-      {
-        title: "사업계획",
-        path: "/kanban/documents/business-plan",
-      },
+      { title: "사업계획", path: "/kanban/documents/business-plan" },
     ],
   },
 
-  // Task > Performance
   {
     title: "실적 입력",
     path: "/kanban/task/[id]/performance/input",
     breadcrumbs: [
-      {
-        title: "사업관리",
-        path: "/kanban",
-      },
-      {
-        title: "실적관리",
-      },
-      {
-        title: "입력",
-      },
+      { title: "사업관리", path: "/kanban" },
+      { title: "실적관리" },
+      { title: "입력" },
     ],
   },
   {
     title: "실적 계획",
     path: "/kanban/task/[id]/performance/plan",
     breadcrumbs: [
-      {
-        title: "사업관리",
-        path: "/kanban",
-      },
-      {
-        title: "실적관리",
-      },
-      {
-        title: "계획",
-      },
+      { title: "사업관리", path: "/kanban" },
+      { title: "실적관리" },
+      { title: "계획" },
     ],
   },
   {
     title: "실적 현황",
     path: "/kanban/task/[id]/performance/actual",
     breadcrumbs: [
-      {
-        title: "사업관리",
-        path: "/kanban",
-      },
-      {
-        title: "실적관리",
-      },
-      {
-        title: "현황",
-      },
+      { title: "사업관리", path: "/kanban" },
+      { title: "실적관리" },
+      { title: "현황" },
     ],
   },
   {
     title: "실적 결과",
     path: "/kanban/task/[id]/performance/result",
     breadcrumbs: [
-      {
-        title: "사업관리",
-        path: "/kanban",
-      },
-      {
-        title: "실적관리",
-      },
-      {
-        title: "결과",
-      },
+      { title: "사업관리", path: "/kanban" },
+      { title: "실적관리" },
+      { title: "결과" },
     ],
   },
-
-  // Task > Business Plan
   {
     title: "사업계획",
     path: "/kanban/task/[id]/business-plan",
     breadcrumbs: [
-      {
-        title: "사업관리",
-        path: "/kanban",
-      },
-      {
-        title: "사업계획",
-      },
+      { title: "사업관리", path: "/kanban" },
+      { title: "사업계획" },
     ],
   },
-
-  // Task > Survey
   {
     title: "만족도조사",
     path: "/kanban/task/[id]/survey",
     breadcrumbs: [
-      {
-        title: "사업관리",
-        path: "/kanban",
-      },
-      {
-        title: "만족도조사",
-      },
+      { title: "사업관리", path: "/kanban" },
+      { title: "만족도조사" },
     ],
   },
-
-  // Task > Evaluation
   {
     title: "사업평가",
     path: "/kanban/task/[id]/evaluation",
     breadcrumbs: [
-      {
-        title: "사업관리",
-        path: "/kanban",
-      },
-      {
-        title: "사업평가",
-      },
+      { title: "사업관리", path: "/kanban" },
+      { title: "사업평가" },
     ],
   },
 ]
@@ -236,24 +157,16 @@ function matchPath(pathname: string, routePath: string) {
   const routeSegments = routePath.split("/")
   const pathnameSegments = pathname.split("/")
 
-  if (routeSegments.length !== pathnameSegments.length) {
-    return false
-  }
+  if (routeSegments.length !== pathnameSegments.length) return false
 
   return routeSegments.every((segment, index) => {
-    if (segment.startsWith("[") && segment.endsWith("]")) {
-      return true
-    }
-
+    if (segment.startsWith("[") && segment.endsWith("]")) return true
     return segment === pathnameSegments[index]
   })
 }
 
 function getCurrentPage(pathname: string) {
-  return (
-    pageLinks.find((page) => matchPath(pathname, page.path)) ??
-    pageLinks[0]
-  )
+  return pageLinks.find((page) => matchPath(pathname, page.path)) ?? pageLinks[0]
 }
 
 function getBreadcrumbs(currentPage: PageLink): BreadcrumbItem[] {
@@ -270,7 +183,6 @@ function getBreadcrumbs(currentPage: PageLink): BreadcrumbItem[] {
 }
 
 export function Header() {
-  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false)
   const pathname = usePathname()
 
   const currentPage = useMemo(() => getCurrentPage(pathname), [pathname])
@@ -293,7 +205,10 @@ export function Header() {
               const isLast = index === breadcrumbs.length - 1
 
               return (
-                <div key={`${item.title}-${index}`} className="flex items-center gap-1">
+                <div
+                  key={`${item.title}-${index}`}
+                  className="flex items-center gap-1"
+                >
                   {index > 0 && <ChevronRight className="size-3.5" />}
 
                   {item.path && !isLast ? (
@@ -325,7 +240,8 @@ export function Header() {
             })}
           </nav>
         </div>
-
+        
+        {/* 버전기록 시트 */}
         {isKanbanPage && (
           <Sheet>
             <SheetTrigger asChild>
@@ -406,12 +322,6 @@ export function Header() {
           </Sheet>
         )}
       </div>
-
-      <TaskModal
-        open={isTaskModalOpen}
-        onOpenChange={setIsTaskModalOpen}
-        formType="newProject"
-      />
     </header>
   )
 }

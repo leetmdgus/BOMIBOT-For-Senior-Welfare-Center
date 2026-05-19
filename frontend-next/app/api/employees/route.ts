@@ -1,5 +1,5 @@
+import { departments, employees } from "@/lib/mocks/kanban.board.mock"
 import { NextResponse } from "next/server"
-import { employees, departments } from "@/lib/mock-data"
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)

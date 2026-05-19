@@ -1,0 +1,36 @@
+
+export const surveys = [
+  {
+    id: "survey1",
+    title: "2026년 상반기 프로그램 만족도 조사",
+    program: "일반상담 및 정보제공사업",
+    status: "진행중",
+    date: "2026.03.01",
+    endDate: "2026.03.15",
+    responseCount: 156,
+    totalTarget: 200,
+    satisfaction: 4.2,
+  },
+  {
+    id: "survey2",
+    title: "2025년 하반기 이용자 만족도 조사",
+    program: "정보화 교육",
+    status: "완료",
+    date: "2025.12.01",
+    endDate: "2025.12.15",
+    responseCount: 189,
+    totalTarget: 200,
+    satisfaction: 4.5,
+  },
+  {
+    id: "survey3",
+    title: "신규회원 서비스 만족도",
+    program: "회원관리",
+    status: "대기",
+    date: "",
+    endDate: "2026.04.01",
+    responseCount: 0,
+    totalTarget: 100,
+    satisfaction: 0,
+  },
+]

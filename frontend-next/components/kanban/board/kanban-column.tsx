@@ -1,15 +1,15 @@
 "use client"
 
-import { useState } from "react"
 import { Plus } from "lucide-react"
 import { useDroppable } from "@dnd-kit/core"
 import {
   SortableContext,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable"
+import { ColumnType, Task } from "@/services/kanban.board.types"
+import { TaskFormData } from "./task-modal"
+import { TaskCard } from "./task-card"
 
-import { TaskCard, type ColumnType, type Task } from "./task-card"
-import { TaskModal } from "./task-modal"
 
 interface KanbanColumnProps {
   id: string
@@ -18,6 +18,13 @@ interface KanbanColumnProps {
   tasks: Task[]
   color?: string
   columnType?: ColumnType
+  onAddTask?: (categoryId: string, columnType: ColumnType) => void
+  onUpdateTask?: (
+    categoryId: string,
+    taskId: string,
+    data: TaskFormData
+  ) => Promise<void>
+  onDeleteTask?: (categoryId: string, taskId: string) => Promise<void>
 }
 
 function resolveColumnType(title: string, columnType?: ColumnType): ColumnType {
@@ -42,9 +49,10 @@ export function KanbanColumn({
   tasks,
   color = "bg-primary",
   columnType,
+  onAddTask,
+  onUpdateTask,
+  onDeleteTask,
 }: KanbanColumnProps) {
-  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false)
-
   const resolvedColumnType = resolveColumnType(title, columnType)
 
   const { setNodeRef, isOver } = useDroppable({
@@ -61,14 +69,8 @@ export function KanbanColumn({
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className={`size-2 rounded-full ${color}`} />
-
-          <h3 className="font-medium text-foreground">
-            {title}
-          </h3>
-
-          <span className="text-sm text-muted-foreground">
-            +{count}
-          </span>
+          <h3 className="font-medium text-foreground">{title}</h3>
+          <span className="text-sm text-muted-foreground">+{count}</span>
         </div>
       </div>
 
@@ -84,10 +86,26 @@ export function KanbanColumn({
         >
           {tasks.map((task) => (
             <TaskCard
-              key={task.id}
-              task={task}
-              columnType={resolvedColumnType}
-            />
+            key={task.id}
+            task={task}
+            projectTitle={title}
+            columnType={resolvedColumnType}
+            onAddTask={
+              onAddTask
+                ? () => onAddTask(id, resolvedColumnType)
+                : undefined
+            }
+            onUpdateTask={
+              onUpdateTask
+                ? (data) => onUpdateTask(id, task.id, data)
+                : undefined
+            }
+            onDeleteTask={
+              onDeleteTask
+                ? () => onDeleteTask(id, task.id)
+                : undefined
+            }
+          />
           ))}
         </SortableContext>
 
@@ -100,18 +118,12 @@ export function KanbanColumn({
 
       <button
         type="button"
-        onClick={() => setIsTaskModalOpen(true)}
+        onClick={() => onAddTask?.(id, resolvedColumnType)}
         className="mt-3 flex items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border py-3 text-sm text-muted-foreground transition-colors hover:border-primary hover:text-primary"
       >
         <Plus className="size-4" />
         <span>업무 추가</span>
       </button>
-
-      <TaskModal
-        open={isTaskModalOpen}
-        onOpenChange={setIsTaskModalOpen}
-        columnType={resolvedColumnType}
-      />
     </div>
   )
 }

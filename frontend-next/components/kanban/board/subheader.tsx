@@ -2,11 +2,6 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import {
-  Eye,
-  GitBranch,
-  RotateCcw,
-} from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -23,74 +18,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet"
 
-import { TaskModal } from "./task-modal"
+import { TaskModal, type TaskFormData } from "./task-modal"
 
 interface HeaderProps {
   year: string
   onYearChange: (year: string) => void
+  onCreateProject: (data: TaskFormData) => void | Promise<void>
 }
 
-const histories = [
-  {
-    id: "1",
-    user: "관리자",
-    target: "어르신 상담",
-    action: "카드 제목을 수정했습니다.",
-    date: "2026-05-17 17:30",
-    canRestore: true,
-    before: {
-      title: "어르신 상담 초안",
-      column: "실적관리",
-    },
-    after: {
-      title: "어르신 상담",
-      column: "실적관리",
-    },
-  },
-  {
-    id: "2",
-    user: "김영수",
-    target: "프로그램 기획",
-    action: "카드를 이동했습니다.",
-    date: "2026-05-17 16:12",
-    canRestore: true,
-    before: {
-      column: "실적관리",
-      position: 1,
-    },
-    after: {
-      column: "사업계획",
-      position: 0,
-    },
-  },
-  {
-    id: "3",
-    user: "이승현",
-    target: "만족도 설문 작성",
-    action: "카드 설명을 수정했습니다.",
-    date: "2026-05-17 15:40",
-    canRestore: false,
-    before: {
-      description: "설문 초안",
-    },
-    after: {
-      description: "설문지 초안 작성",
-    },
-  },
-]
-
-export function SubHeader({ year, onYearChange }: HeaderProps) {
+export function SubHeader({
+  year,
+  onYearChange,
+  onCreateProject,
+}: HeaderProps) {
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false)
-
-  const isAdmin = true
 
   return (
     <header className="border-b border-border bg-card">
@@ -135,21 +77,15 @@ export function SubHeader({ year, onYearChange }: HeaderProps) {
 
             <DropdownMenuContent align="center">
               <DropdownMenuItem asChild>
-                <Link href="/kanban/documents/performance">
-                  실적보고서
-                </Link>
+                <Link href="/kanban/documents/performance">실적보고서</Link>
               </DropdownMenuItem>
 
               <DropdownMenuItem asChild>
-                <Link href="/kanban/documents/budget">
-                  예산보고서
-                </Link>
+                <Link href="/kanban/documents/budget">예산보고서</Link>
               </DropdownMenuItem>
 
               <DropdownMenuItem asChild>
-                <Link href="/kanban/documents/business-plan">
-                  사업계획서
-                </Link>
+                <Link href="/kanban/documents/business-plan">사업계획서</Link>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -160,6 +96,11 @@ export function SubHeader({ year, onYearChange }: HeaderProps) {
         open={isTaskModalOpen}
         onOpenChange={setIsTaskModalOpen}
         formType="newProject"
+        columnType="실적관리"
+        onSubmit={async (data) => {
+          await onCreateProject(data)
+          setIsTaskModalOpen(false)
+        }}
       />
     </header>
   )

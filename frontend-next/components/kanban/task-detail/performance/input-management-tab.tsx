@@ -496,22 +496,6 @@ export function InputManagementTab() {
                       ))}
                     </select>
 
-                    {index === 5 && (
-                      <div className="absolute left-0 top-9 z-30 w-44 rounded border border-slate-300 bg-white p-3 shadow-xl">
-                        {projectItems.map((item) => (
-                          <div key={item.id} className="py-2 text-sm">
-                            {item.label}
-                          </div>
-                        ))}
-
-                        <button
-                          className="mt-2 text-sky-600"
-                          onClick={() => setShowTaskModal(true)}
-                        >
-                          편집
-                        </button>
-                      </div>
-                    )}
                   </div>
                 </Td>
 

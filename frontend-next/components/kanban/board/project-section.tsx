@@ -4,9 +4,9 @@ import Image from "next/image"
 import { useCallback, useEffect, useState } from "react"
 import {
   ChevronUp,
-  ImagePlus,
   LayoutGrid,
   Pencil,
+  Plus,
   Settings,
   Trash2,
 } from "lucide-react"
@@ -24,68 +24,63 @@ import {
   type DragStartEvent,
 } from "@dnd-kit/core"
 import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable"
-
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@radix-ui/react-dropdown-menu"
 
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import { TaskFormData, TaskModal } from "./task-modal"
 import { KanbanColumn } from "./kanban-column"
-import { TaskModal } from "./task-modal"
-import { TaskCard, type Task } from "./task-card"
+import { TaskCard } from "./task-card"
 import {
-  createTask,
+  Category,
+  ColumnType,
+  KanbanProject,
+  Task,
+} from "@/services/kanban.board.types"
+import {
+  deleteProject,
+  deleteTask,
   getColumnTypeByCategoryTitle,
-  type ColumnType,
-} from "@/app/api/projects/kanban/services/projects.service"
-
-interface Category {
-  id: string
-  title: string
-  color: string
-  tasks: Task[]
-}
+  updateTask,
+} from "@/services/kanban.board.service"
 
 interface ProjectSectionProps {
-  id: string
-  number: string
-  title: string
-  team: string
-  manager: string
-  image?: string
-  categories: Category[]
+  project: KanbanProject
   onRefresh?: () => Promise<void>
-}
-
-interface ProjectEditFormData {
-  title: string
-  imageFile: File | null
-  imagePreview?: string
+  onCreateTask: (
+    projectId: string,
+    categoryId: string,
+    data: TaskFormData
+  ) => Promise<void>
+  onEditProject: () => void
 }
 
 export function ProjectSection({
-  id,
-  title,
-  image,
-  categories: initialCategories,
+  project,
   onRefresh,
+  onCreateTask,
+  onEditProject,
 }: ProjectSectionProps) {
   const [expanded, setExpanded] = useState(true)
+  const [projectTitle, setProjectTitle] = useState(project.title ?? "")
+  const [projectImage, setProjectImage] = useState<string | undefined>(
+    project.image
+  )
+
   const [taskModalOpen, setTaskModalOpen] = useState(false)
-  const [editModalOpen, setEditModalOpen] = useState(false)
-  const [categories, setCategories] = useState<Category[]>(initialCategories)
+
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
+    null
+  )
+  const [selectedColumnType, setSelectedColumnType] =
+    useState<ColumnType>("실적관리")
+
+  const [categories, setCategories] = useState<Category[]>(project.categories)
   const [activeTask, setActiveTask] = useState<Task | null>(null)
   const [activeColumnType, setActiveColumnType] =
     useState<ColumnType>("실적관리")
@@ -94,13 +89,18 @@ export function ProjectSection({
   )
 
   useEffect(() => {
-    setCategories(initialCategories)
-  }, [initialCategories])
+    setProjectTitle(project.title ?? "")
+    setProjectImage(project.image)
+  }, [project.title, project.image])
+
+  useEffect(() => {
+    setCategories(project.categories)
+  }, [project.categories])
 
   useEffect(() => {
     const loadColumnTypes = async () => {
       const entries = await Promise.all(
-        initialCategories.map(async (category) => [
+        project.categories.map(async (category) => [
           category.id,
           await getColumnTypeByCategoryTitle(category.title),
         ])
@@ -110,13 +110,11 @@ export function ProjectSection({
     }
 
     loadColumnTypes()
-  }, [initialCategories])
+  }, [project.categories])
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
+      activationConstraint: { distance: 8 },
     }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
@@ -132,19 +130,89 @@ export function ProjectSection({
     [categories]
   )
 
-  const handleEditProject = async (data: ProjectEditFormData) => {
-    console.log("프로젝트 수정:", {
-      id,
-      title: data.title,
-      imageFile: data.imageFile,
-    })
+  const handleDeleteProject = async () => {
+    const confirmed = window.confirm("프로젝트를 삭제하시겠습니까?")
 
-    await onRefresh?.()
-    setEditModalOpen(false)
+    if (!confirmed) return
+
+    try {
+      const deleted = await deleteProject(project.id)
+
+      if (!deleted) return
+
+      await onRefresh?.()
+    } catch (error) {
+      console.error("프로젝트 삭제 실패:", error)
+    }
   }
 
-  const handleDeleteProject = () => {
-    console.log("프로젝트 삭제:", id)
+  const handleUpdateTask = async (
+    categoryId: string,
+    taskId: string,
+    data: TaskFormData
+  ) => {
+    try {
+      const sourceCategory = categories.find(
+        (category) => category.id === categoryId
+      )
+
+      const currentTask = sourceCategory?.tasks.find(
+        (task) => task.id === taskId
+      )
+
+      if (!currentTask) return
+
+      const updatedTask: Task = {
+        ...currentTask,
+        title: data.title,
+        description: data.description ?? "",
+        assignee: data.assignees?.[0]?.name ?? currentTask.assignee,
+      }
+
+      await updateTask(project.id, categoryId, taskId, updatedTask)
+
+      setCategories((prev) =>
+        prev.map((category) =>
+          category.id === categoryId
+            ? {
+                ...category,
+                tasks: category.tasks.map((task) =>
+                  task.id === taskId ? updatedTask : task
+                ),
+              }
+            : category
+        )
+      )
+
+      await onRefresh?.()
+    } catch (error) {
+      console.error("업무 수정 실패:", error)
+    }
+  }
+
+  const handleDeleteTask = async (categoryId: string, taskId: string) => {
+    try {
+      await deleteTask(project.id, categoryId, taskId)
+
+      setCategories((prev) =>
+        prev.map((category) =>
+          category.id === categoryId
+            ? {
+                ...category,
+                tasks: category.tasks.filter((task) => task.id !== taskId),
+              }
+            : category
+        )
+      )
+    } catch (error) {
+      console.error("업무 삭제 실패:", error)
+    }
+  }
+
+  const openTaskModal = (categoryId?: string, columnType?: ColumnType) => {
+    setSelectedCategoryId(categoryId ?? null)
+    setSelectedColumnType(columnType ?? "실적관리")
+    setTaskModalOpen(true)
   }
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -265,10 +333,10 @@ export function ProjectSection({
         <div className="mb-6 flex items-start justify-between">
           <div className="flex items-center gap-4">
             <div className="relative flex size-12 items-center justify-center overflow-hidden rounded-xl border border-border/40 bg-white shadow-sm transition-shadow">
-              {image ? (
+              {projectImage ? (
                 <Image
-                  src={image}
-                  alt={title}
+                  src={projectImage}
+                  alt={projectTitle}
                   width={48}
                   height={48}
                   className="h-10 w-10 object-contain"
@@ -280,7 +348,7 @@ export function ProjectSection({
 
             <div className="flex items-center gap-2">
               <h2 className="text-lg font-semibold text-foreground">
-                {title}
+                {projectTitle}
               </h2>
 
               <div className="rounded-full bg-[#a3a3a3] px-2 py-[2px] text-xs font-medium text-white">
@@ -290,6 +358,16 @@ export function ProjectSection({
           </div>
 
           <div className="flex items-center gap-3">
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => openTaskModal(defaultCategoryId, "실적관리")}
+              className="gap-1"
+            >
+              <Plus className="size-4" />
+              추가
+            </Button>
+
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
@@ -303,7 +381,7 @@ export function ProjectSection({
 
               <DropdownMenuContent align="end" className="w-40">
                 <DropdownMenuItem
-                  onClick={() => setEditModalOpen(true)}
+                  onClick={onEditProject}
                   className="cursor-pointer"
                 >
                   <Pencil className="mr-2 size-4" />
@@ -362,6 +440,11 @@ export function ProjectSection({
                       tasks={category.tasks}
                       color={category.color}
                       columnType={columnType}
+                      onAddTask={(categoryId, type) => {
+                        openTaskModal(categoryId, type)
+                      }}
+                      onUpdateTask={handleUpdateTask}
+                      onDeleteTask={handleDeleteTask}
                     />
                   )
                 })}
@@ -387,144 +470,35 @@ export function ProjectSection({
 
       <TaskModal
         open={taskModalOpen}
-        onOpenChange={setTaskModalOpen}
+        onOpenChange={(open) => {
+          setTaskModalOpen(open)
+
+          if (!open) {
+            setSelectedCategoryId(null)
+            setSelectedColumnType("실적관리")
+          }
+        }}
         formType="task"
+        columnType={selectedColumnType}
+        defaultProjectId={project.id}
+        defaultCategoryId={selectedCategoryId ?? defaultCategoryId}
+        lockProjectSelect
         onSubmit={async (data) => {
-          if (!defaultCategoryId) return
+          const targetCategoryId = selectedCategoryId ?? defaultCategoryId
+
+          if (!targetCategoryId) return
 
           try {
-            await createTask(id, defaultCategoryId, {
-              title: data.title,
-              description: data.description ?? "",
-              assignee: data.assignees[0]?.name ?? "",
-            })
+            await onCreateTask(project.id, targetCategoryId, data)
 
-            await onRefresh?.()
             setTaskModalOpen(false)
+            setSelectedCategoryId(null)
+            setSelectedColumnType("실적관리")
           } catch (error) {
             console.error("업무 추가 실패:", error)
           }
         }}
       />
-
-      <ProjectEditModal
-        open={editModalOpen}
-        onOpenChange={setEditModalOpen}
-        project={{
-          id,
-          title,
-          image,
-        }}
-        onSubmit={handleEditProject}
-      />
     </>
-  )
-}
-
-function ProjectEditModal({
-  open,
-  onOpenChange,
-  project,
-  onSubmit,
-}: {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  project: {
-    id: string
-    title: string
-    image?: string
-  }
-  onSubmit: (data: ProjectEditFormData) => Promise<void>
-}) {
-  const [title, setTitle] = useState(project.title)
-  const [imageFile, setImageFile] = useState<File | null>(null)
-  const [imagePreview, setImagePreview] = useState<string | undefined>(
-    project.image
-  )
-
-  useEffect(() => {
-    if (!open) return
-
-    setTitle(project.title)
-    setImageFile(null)
-    setImagePreview(project.image)
-  }, [open, project.title, project.image])
-
-  const handleImageChange = (file?: File) => {
-    if (!file) return
-
-    setImageFile(file)
-    setImagePreview(URL.createObjectURL(file))
-  }
-
-  const handleSubmit = async () => {
-    await onSubmit({
-      title,
-      imageFile,
-      imagePreview,
-    })
-  }
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[460px]">
-        <DialogHeader>
-          <DialogTitle>프로젝트 수정</DialogTitle>
-        </DialogHeader>
-
-        <div className="space-y-5">
-          <div className="space-y-2">
-            <label className="text-sm font-medium">프로젝트명</label>
-            <Input
-              value={title}
-              onChange={(event) => setTitle(event.target.value)}
-              placeholder="프로젝트명을 입력하세요"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium">대표 이미지</label>
-
-            <div className="flex items-center gap-4">
-              <div className="flex size-20 items-center justify-center overflow-hidden rounded-xl border bg-muted">
-                {imagePreview ? (
-                  <Image
-                    src={imagePreview}
-                    alt={title}
-                    width={80}
-                    height={80}
-                    className="h-full w-full object-contain"
-                  />
-                ) : (
-                  <LayoutGrid className="size-8 text-muted-foreground" />
-                )}
-              </div>
-
-              <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-border px-3 py-2 text-sm transition-colors hover:bg-muted">
-                <ImagePlus className="size-4" />
-                이미지 변경
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={(event) =>
-                    handleImageChange(event.target.files?.[0])
-                  }
-                />
-              </label>
-            </div>
-          </div>
-        </div>
-
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            취소
-          </Button>
-          <Button onClick={handleSubmit} disabled={!title.trim()}>
-            저장
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
   )
 }
