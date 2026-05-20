@@ -8,3 +8,4 @@ const performanceService = useMockApi ? mockService : apiService
 export const getPerformanceRows = performanceService.getPerformanceRows
 export const getInputManagementRows = performanceService.getInputManagementRows
 export const getMonthlyPlan = performanceService.getMonthlyPlan
+export const getPerformanceInputMeta = performanceService.getPerformanceInputMeta

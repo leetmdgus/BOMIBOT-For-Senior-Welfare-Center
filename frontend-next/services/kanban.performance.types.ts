@@ -54,6 +54,17 @@ export interface PerformanceSummaryRow {
   }
 }
 
+export interface PerformanceSubProjectChip {
+  id: number
+  label: string
+  color: string
+}
+
+export interface PerformanceInputMeta {
+  subProjectChips: PerformanceSubProjectChip[]
+  detailCategories: string[]
+}
+
 export interface PerformanceListResponse {
   data: PerformanceRow[]
   totals: {

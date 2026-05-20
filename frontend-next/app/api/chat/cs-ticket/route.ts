@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 
-import { submitCsTicketMock } from "@/lib/mocks/chat.mock"
+import { submitCsTicket } from "@/services/chat.mock.service"
 import type { CsTicketRequest } from "@/services/chat.types"
 
 export async function POST(request: Request) {
@@ -14,7 +14,7 @@ export async function POST(request: Request) {
       )
     }
 
-    const result = await submitCsTicketMock({
+    const result = await submitCsTicket({
       message: body.message?.trim() ?? "",
       attachments: body.attachments ?? [],
       pageUrl: body.pageUrl,

@@ -11,5 +11,7 @@ export const getBusinessEvaluation = taskDetailService.getBusinessEvaluation
 export const saveBusinessEvaluation = taskDetailService.saveBusinessEvaluation
 export const completeBusinessEvaluation =
   taskDetailService.completeBusinessEvaluation
+export const getBusinessPlan = taskDetailService.getBusinessPlan
+export const saveBusinessPlan = taskDetailService.saveBusinessPlan
 
 export const getViewTogetherFixedFiles = mockService.getViewTogetherFixedFiles

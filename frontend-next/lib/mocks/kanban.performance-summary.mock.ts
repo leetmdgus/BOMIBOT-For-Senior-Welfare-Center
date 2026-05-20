@@ -80,10 +80,12 @@ export const performanceSummarySeedRows: PerformanceSummaryRow[] = [
     {
       "1월": { people: 10, count: 10, budget: 40_000 },
       "2월": { people: 10, count: 10, budget: 40_000 },
+      "5월": { people: 11, count: 11, budget: 42_000 },
     },
     {
       "1월": { people: 10, count: 10, budget: 38_000 },
       "2월": { people: 9, count: 9, budget: 38_000 },
+      "5월": { people: 10, count: 10, budget: 39_500 },
     },
   ),
   row(
@@ -96,10 +98,12 @@ export const performanceSummarySeedRows: PerformanceSummaryRow[] = [
     {
       "1월": { people: 16, count: 16, budget: 100_000 },
       "2월": { people: 17, count: 17, budget: 100_000 },
+      "5월": { people: 18, count: 18, budget: 105_000 },
     },
     {
       "1월": { people: 15, count: 16, budget: 95_000 },
       "2월": { people: 16, count: 17, budget: 96_000 },
+      "5월": { people: 17, count: 18, budget: 98_000 },
     },
   ),
   row(
@@ -109,6 +113,8 @@ export const performanceSummarySeedRows: PerformanceSummaryRow[] = [
     ["비"],
     { people: 60, count: 60, budget: 200_000 },
     { people: 58, count: 59, budget: 190_000 },
+    { "5월": { people: 5, count: 5, budget: 18_000 } },
+    { "5월": { people: 5, count: 5, budget: 17_500 } },
   ),
   row(
     "3",
@@ -117,6 +123,8 @@ export const performanceSummarySeedRows: PerformanceSummaryRow[] = [
     ["기"],
     { people: 180, count: 180, budget: 900_000 },
     { people: 172, count: 175, budget: 880_000 },
+    { "5월": { people: 15, count: 15, budget: 75_000 } },
+    { "5월": { people: 14, count: 15, budget: 73_000 } },
   ),
   row(
     "4",
@@ -125,6 +133,8 @@ export const performanceSummarySeedRows: PerformanceSummaryRow[] = [
     ["비"],
     { people: 90, count: 90, budget: 300_000 },
     { people: 88, count: 88, budget: 290_000 },
+    { "5월": { people: 8, count: 8, budget: 28_000 } },
+    { "5월": { people: 8, count: 8, budget: 27_000 } },
   ),
   row(
     "5",
@@ -133,6 +143,8 @@ export const performanceSummarySeedRows: PerformanceSummaryRow[] = [
     ["법"],
     { people: 120, count: 120, budget: 600_000 },
     { people: 118, count: 119, budget: 590_000 },
+    { "5월": { people: 10, count: 10, budget: 50_000 } },
+    { "5월": { people: 10, count: 10, budget: 49_000 } },
   ),
   row(
     "6",
@@ -141,6 +153,8 @@ export const performanceSummarySeedRows: PerformanceSummaryRow[] = [
     ["지"],
     { people: 150, count: 150, budget: 750_000 },
     { people: 145, count: 148, budget: 720_000 },
+    { "5월": { people: 12, count: 12, budget: 62_000 } },
+    { "5월": { people: 12, count: 12, budget: 60_000 } },
   ),
   row(
     "7",
@@ -149,6 +163,8 @@ export const performanceSummarySeedRows: PerformanceSummaryRow[] = [
     ["사"],
     { people: 80, count: 80, budget: 200_000 },
     { people: 80, count: 80, budget: 200_000 },
+    { "5월": { people: 7, count: 7, budget: 18_000 } },
+    { "5월": { people: 7, count: 7, budget: 18_000 } },
   ),
 ]
 

@@ -17,6 +17,14 @@ export async function GET(request: Request) {
     return NextResponse.json({ data })
   }
 
+  if (scope === "input-meta") {
+    const { getPerformanceInputMeta } = await import(
+      "@/services/kanban.performance.mock.service"
+    )
+    const meta = await getPerformanceInputMeta()
+    return NextResponse.json(meta)
+  }
+
   const result = await getPerformanceRows({ projectId, month })
 
   return NextResponse.json(result)

@@ -18,6 +18,11 @@ const rawRows: Array<
   ["온라인홍보", "SNS게시", "2월", 3000, 1, 50000, 3396, 1, 50000],
   ["온라인홍보", "웹매거진", "3월", 0, 1, 0, 0, 1, 0],
   ["온라인홍보", "SNS게시", "3월", 3000, 1, 50000, 3457, 1, 50000],
+  ["온라인홍보", "웹매거진", "4월", 0, 1, 0, 0, 1, 0],
+  ["온라인홍보", "SNS게시", "4월", 3000, 1, 50000, 3410, 1, 50000],
+  ["온라인홍보", "웹매거진", "5월", 0, 1, 0, 0, 1, 0],
+  ["온라인홍보", "SNS게시", "5월", 3000, 1, 50000, 3512, 1, 50000],
+  ["선택", "기타", "5월", 0, 0, 0, 210, 26, 920000],
 ]
 
 const demoRows: PerformanceRow[] = rawRows.map((item, index) => ({
@@ -52,4 +57,17 @@ export const defaultDetailCategories = [
   "홍보물제작",
   "행사",
   "기타",
+]
+
+export interface PerformanceSubProjectChip {
+  id: number
+  label: string
+  color: string
+}
+
+/** 입력관리 세목(세부사업명) 칩 목록 */
+export const performanceSubProjectChips: PerformanceSubProjectChip[] = [
+  { id: 1, label: "온라인홍보", color: "#8fd3ff" },
+  { id: 2, label: "오프라인 홍보", color: "#ffe58f" },
+  { id: 3, label: "관내 홍보", color: "#ff9c8f" },
 ]

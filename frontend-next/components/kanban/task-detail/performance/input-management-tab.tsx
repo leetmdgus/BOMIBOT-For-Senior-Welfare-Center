@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import type { PerformanceRow } from "@/services/kanban.performance.types"
 import * as XLSX from "xlsx"
 import {
@@ -11,12 +11,36 @@ import {
   ChevronLeft,
   ChevronRight,
   Circle,
+  Copy,
+  Download,
   HelpCircle,
   Plus,
   Trash2,
+  Upload,
 } from "lucide-react"
+import {
+  DndContext,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core"
+import {
+  SortableContext,
+  arrayMove,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable"
 
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import {
   Dialog,
   DialogContent,
@@ -29,7 +53,8 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { defaultDetailCategories } from "@/lib/mocks/kanban.performance-input.mock"
+import { getPerformanceInputMeta } from "@/services/kanban.performance.service"
+import type { PerformanceSubProjectChip } from "@/services/kanban.performance.types"
 
 import { usePerformance } from "./performance-provider"
 import { InputManagementExcelGrid } from "./input-management-excel-grid"
@@ -68,12 +93,16 @@ const createId = () =>
 
 export function InputManagementTab() {
   const fileRef = useRef<HTMLInputElement | null>(null)
+  const tableScrollRef = useRef<HTMLDivElement | null>(null)
 
   const {
     rows,
     setRows,
     addSupplementaryBudget,
     planVersion,
+    toggleRowSelection,
+    deleteSelectedRows,
+    copySelectedRows,
   } = usePerformance()
 
   const now = new Date()
@@ -81,7 +110,6 @@ export function InputManagementTab() {
   const [selectedMonth, setSelectedMonth] = useState(now.getMonth() + 1)
   const [viewAllMonths, setViewAllMonths] = useState(false)
 
-  const [showLoadMenu, setShowLoadMenu] = useState(false)
   const [showTaskModal, setShowTaskModal] = useState(false)
   const [showDetailModal, setShowDetailModal] = useState(false)
   const [showActualModal, setShowActualModal] = useState(false)
@@ -99,18 +127,29 @@ export function InputManagementTab() {
     y: number
   } | null>(null)
 
-  const [projectItems, setProjectItems] = useState([
-    { id: 1, label: "온라인홍보", color: "#8fd3ff" },
-    { id: 2, label: "오프라인 홍보", color: "#ffe58f" },
-    { id: 3, label: "관내 홍보", color: "#ff9c8f" },
-  ])
-
-  const [detailCategoryItems, setDetailCategoryItems] = useState(
-    defaultDetailCategories.map((label, index) => ({
-      id: index + 1,
-      label,
-    })),
+  const [projectItems, setProjectItems] = useState<PerformanceSubProjectChip[]>(
+    [],
   )
+
+  const [detailCategoryItems, setDetailCategoryItems] = useState<
+    { id: number; label: string }[]
+  >([])
+
+  useEffect(() => {
+    getPerformanceInputMeta()
+      .then((meta) => {
+        setProjectItems(meta.subProjectChips)
+        setDetailCategoryItems(
+          meta.detailCategories.map((label, index) => ({
+            id: index + 1,
+            label,
+          })),
+        )
+      })
+      .catch((error) => {
+        console.error("실적 입력 메타 로드 실패:", error)
+      })
+  }, [])
 
   const subProjects = useMemo(
     () => ["선택", ...projectItems.map((item) => item.label)],
@@ -190,6 +229,28 @@ export function InputManagementTab() {
     )
   }, [displayedRows])
 
+  const selectedDisplayedCount = useMemo(
+    () => displayedRows.filter((row) => row.selected).length,
+    [displayedRows],
+  )
+
+  const allDisplayedSelected =
+    displayedRows.length > 0 &&
+    displayedRows.every((row) => row.selected)
+
+  const isRowOrderLocked =
+    subProjectSort !== null || detailCategorySort !== null
+
+  const selectedDisplayedRows = useMemo(
+    () => displayedRows.filter((row) => row.selected),
+    [displayedRows],
+  )
+
+  const canMoveSelectedRow =
+    !isRowOrderLocked &&
+    selectedDisplayedRows.length === 1 &&
+    displayedRows.length > 1
+
   const updateRow = <K extends keyof RowData>(
     id: string,
     key: K,
@@ -223,6 +284,24 @@ export function InputManagementTab() {
     }))
 
     setRows((prev) => [...prev, ...nextRows])
+
+    requestAnimationFrame(() => {
+      const el = tableScrollRef.current
+      if (el) {
+        el.scrollTo({ top: el.scrollHeight, behavior: "smooth" })
+      }
+    })
+  }
+
+  const toggleAllDisplayedSelection = () => {
+    const displayedIds = new Set(displayedRows.map((row) => row.id))
+    const nextSelected = !allDisplayedSelected
+
+    setRows((prev) =>
+      prev.map((row) =>
+        displayedIds.has(row.id) ? { ...row, selected: nextSelected } : row,
+      ),
+    )
   }
 
   const exportExcel = () => {
@@ -293,7 +372,6 @@ export function InputManagementTab() {
     }))
 
     setRows((prev) => [...prev, ...importedRows])
-    setShowLoadMenu(false)
   }
 
   const openActualModal = (rowId: string) => {
@@ -329,19 +407,59 @@ export function InputManagementTab() {
   }
 
   const mergeDisplayedRows = (nextDisplayed: RowData[]) => {
-    const byId = new Map(nextDisplayed.map((row) => [row.id, row]))
+    const displayedIds = new Set(nextDisplayed.map((row) => row.id))
+    const queue = [...nextDisplayed]
 
     setRows((prev) =>
-      prev.map((row) => (byId.has(row.id) ? (byId.get(row.id) as RowData) : row)),
+      prev.map((row) => {
+        if (!displayedIds.has(row.id)) return row
+        return queue.shift() as RowData
+      }),
     )
+  }
+
+  const reorderDisplayedRows = (nextDisplayed: RowData[]) => {
+    mergeDisplayedRows(nextDisplayed)
+  }
+
+  const moveDisplayedRow = (direction: "up" | "down") => {
+    if (!canMoveSelectedRow) return
+
+    const selectedId = selectedDisplayedRows[0]?.id
+    const currentIndex = displayedRows.findIndex((row) => row.id === selectedId)
+    if (currentIndex < 0) return
+
+    const targetIndex =
+      direction === "up" ? currentIndex - 1 : currentIndex + 1
+    if (targetIndex < 0 || targetIndex >= displayedRows.length) return
+
+    reorderDisplayedRows(arrayMove(displayedRows, currentIndex, targetIndex))
+  }
+
+  const dragSensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 6 },
+    }),
+  )
+
+  const handleRowDragEnd = (event: DragEndEvent) => {
+    if (isRowOrderLocked) return
+
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+
+    const oldIndex = displayedRows.findIndex((row) => row.id === active.id)
+    const newIndex = displayedRows.findIndex((row) => row.id === over.id)
+    if (oldIndex < 0 || newIndex < 0) return
+
+    reorderDisplayedRows(arrayMove(displayedRows, oldIndex, newIndex))
   }
 
   return (
     <div
-      className="relative min-h-screen bg-white p-8 text-slate-900"
+      className="relative w-full rounded border border-slate-300 bg-white text-slate-900"
       onClick={() => {
         setContextMenu(null)
-        setShowLoadMenu(false)
       }}
       onContextMenu={(event) => {
         event.preventDefault()
@@ -359,16 +477,15 @@ export function InputManagementTab() {
         onChange={importExcel}
       />
 
-      <div className="print-hide mb-10 flex items-start justify-between">
-        <div className="flex items-start gap-2">
-          <h1 className="text-3xl font-bold">계획/실적 입력관리</h1>
+      <div className="print-hide flex flex-wrap items-center gap-2 border-b border-slate-200 px-5 py-4">
+        <h2 className="text-3xl font-bold tracking-tight">계획/실적 입력관리</h2>
 
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button type="button" className="mt-1 text-muted-foreground">
-                <HelpCircle size={20} />
-              </button>
-            </TooltipTrigger>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button type="button" className="text-muted-foreground">
+              <HelpCircle className="size-5" />
+            </button>
+          </TooltipTrigger>
             <TooltipContent
               side="bottom"
               align="start"
@@ -393,51 +510,63 @@ export function InputManagementTab() {
               </p>
               <p>실적 칸은 더블클릭하면 진행내역 입력 창이 열립니다.</p>
             </TooltipContent>
-          </Tooltip>
-        </div>
+        </Tooltip>
 
-        <div className="relative flex items-start gap-4">
-          <div className="relative">
-            <TopButton
-              onClick={(event) => {
-                event.stopPropagation()
-                setShowLoadMenu((prev) => !prev)
-              }}
-            >
-              불러오기
-              <ChevronDown size={16} />
-              <span className="text-xs text-muted-foreground">(NAS)</span>
-            </TopButton>
-
-            {showLoadMenu ? (
-              <div
-                className="absolute right-0 top-12 z-50 w-52 rounded border border-slate-300 bg-white p-1 shadow-lg"
-                onClick={(event) => event.stopPropagation()}
-              >
+        <div className="ml-auto flex flex-wrap items-center gap-2">
+          <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  <Download className="size-4" />
+                  불러오기
+                  <ChevronDown className="size-4 opacity-60" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-52">
+                <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
+                  NAS 검색 필드
+                </DropdownMenuLabel>
                 {NAS_SEARCH_FIELDS.map((field) => (
-                  <button
+                  <DropdownMenuItem
                     key={field}
-                    type="button"
-                    className="block w-full rounded px-3 py-2 text-left text-sm hover:bg-slate-100"
                     onClick={() => loadFromNas(field)}
                   >
                     {field}
-                  </button>
+                  </DropdownMenuItem>
                 ))}
-              </div>
-            ) : null}
-          </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
 
-          <TopButton onClick={() => fileRef.current?.click()}>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="gap-2"
+            onClick={() => fileRef.current?.click()}
+          >
+            <Upload className="size-4" />
             업로드
-            <span className="text-xs text-muted-foreground">(디바이스)</span>
-          </TopButton>
+          </Button>
 
-          <TopButton onClick={exportExcel}>다운로드</TopButton>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="gap-2"
+            onClick={exportExcel}
+          >
+            <Download className="size-4" />
+            다운로드
+          </Button>
         </div>
       </div>
 
-      <div className="print-hide mb-4 flex flex-wrap items-center gap-2">
+      <div className="print-hide flex flex-wrap items-center gap-2 border-b border-slate-200 px-5 py-3">
         <select
           value={String(selectedYear)}
           onChange={(event) => setSelectedYear(Number(event.target.value))}
@@ -506,8 +635,9 @@ export function InputManagementTab() {
         </Button>
       </div>
 
-      <div className="relative overflow-auto rounded-lg border-4 border-sky-500">
-        <div className="print-hide sticky top-0 z-10 flex items-center justify-end gap-2 border-b border-slate-200 bg-slate-50 px-3 py-2">
+      <div className="mx-5 mb-5 flex max-h-[calc(100vh-14rem)] flex-col overflow-hidden rounded-lg border border-slate-300">
+        <div className="print-hide shrink-0 space-y-2 border-b border-slate-200 bg-slate-50 px-3 py-2">
+          <div className="flex flex-wrap items-center gap-2">
           <span className="mr-auto text-xs text-muted-foreground">
             적용 추경: {planVersion}
             <span className="ml-2 hidden sm:inline">
@@ -534,10 +664,115 @@ export function InputManagementTab() {
               사업실적·사업결과에는 최신 추경이 적용됩니다.
             </TooltipContent>
           </Tooltip>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 border-t border-slate-200 pt-2">
+            <span className="text-sm text-muted-foreground">
+              {selectedDisplayedCount > 0
+                ? `${selectedDisplayedCount}건 선택`
+                : "선택 없음"}
+            </span>
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              disabled={selectedDisplayedCount === 0}
+              className="gap-1"
+              onClick={deleteSelectedRows}
+            >
+              <Trash2 className="size-3.5" />
+              선택 삭제
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              disabled={selectedDisplayedCount === 0}
+              className="gap-1"
+              onClick={copySelectedRows}
+            >
+              <Copy className="size-3.5" />
+              선택 복사
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              disabled={!canMoveSelectedRow}
+              className="gap-1"
+              onClick={() => moveDisplayedRow("up")}
+              title={
+                isRowOrderLocked
+                  ? "정렬 중에는 순서를 바꿀 수 없습니다"
+                  : "선택한 행을 위로"
+              }
+            >
+              <ArrowUp className="size-3.5" />
+              위로
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              disabled={!canMoveSelectedRow}
+              className="gap-1"
+              onClick={() => moveDisplayedRow("down")}
+              title={
+                isRowOrderLocked
+                  ? "정렬 중에는 순서를 바꿀 수 없습니다"
+                  : "선택한 행을 아래로"
+              }
+            >
+              <ArrowDown className="size-3.5" />
+              아래로
+            </Button>
+            {isRowOrderLocked ? (
+              <span className="text-xs text-muted-foreground">
+                정렬 해제 후 순서 변경
+              </span>
+            ) : (
+              <span className="hidden text-xs text-muted-foreground sm:inline">
+                ⋮⋮ 핸들로 드래그해 순서 변경
+              </span>
+            )}
+            <span className="hidden h-4 w-px bg-slate-300 sm:inline" />
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="gap-1"
+              onClick={() => addRows(1)}
+            >
+              <Plus className="size-3.5" />
+              행 1개 추가
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              className="gap-1"
+              onClick={() => addRows(DEFAULT_ROW_BATCH)}
+            >
+              <Plus className="size-3.5" />
+              행 {DEFAULT_ROW_BATCH}개 추가
+            </Button>
+          </div>
         </div>
-        <table className="min-w-[1580px] border-collapse text-sm">
-          <thead>
+
+        <div
+          ref={tableScrollRef}
+          className="min-h-0 flex-1 overflow-auto"
+        >
+        <table className="min-w-[1620px] border-collapse text-sm">
+          <thead className="sticky top-0 z-10 bg-slate-50 shadow-sm">
             <tr className="bg-slate-50">
+              <Th rowSpan={2} className="w-8" />
+              <Th rowSpan={2} className="w-10">
+                <Checkbox
+                  checked={allDisplayedSelected}
+                  onCheckedChange={toggleAllDisplayedSelection}
+                  aria-label="표시된 행 전체 선택"
+                />
+              </Th>
               <Th rowSpan={2} className="w-[180px]">
                 <SortableHeader
                   label="세부사업명(세목)"
@@ -574,6 +809,8 @@ export function InputManagementTab() {
             </tr>
 
             <tr className="bg-white font-bold">
+              <Td />
+              <Td />
               <Td colSpan={3} center>
                 총계
               </Td>
@@ -587,23 +824,31 @@ export function InputManagementTab() {
             </tr>
           </thead>
 
-          <InputManagementExcelGrid
-            rows={displayedRows}
-            onRowsChange={mergeDisplayedRows}
-            onOpenActualModal={openActualModal}
-            subProjectSuggestions={subProjects.filter((item) => item !== "선택")}
-            detailCategorySuggestions={detailCategorySuggestions}
-          />
+          <DndContext
+            sensors={dragSensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleRowDragEnd}
+          >
+            <SortableContext
+              items={displayedRows.map((row) => row.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              <InputManagementExcelGrid
+                rows={displayedRows}
+                onRowsChange={mergeDisplayedRows}
+                onOpenActualModal={openActualModal}
+                onToggleRowSelection={toggleRowSelection}
+                enableRowReorder={!isRowOrderLocked}
+                subProjectSuggestions={subProjects.filter(
+                  (item) => item !== "선택",
+                )}
+                detailCategorySuggestions={detailCategorySuggestions}
+              />
+            </SortableContext>
+          </DndContext>
         </table>
+        </div>
       </div>
-
-      <button
-        type="button"
-        onClick={() => addRows(DEFAULT_ROW_BATCH)}
-        className="mt-6 text-sm text-primary underline-offset-4 hover:underline"
-      >
-        하단 {DEFAULT_ROW_BATCH}개(기본값) 행 추가
-      </button>
 
       {contextMenu && (
         <div
@@ -864,13 +1109,10 @@ export function InputManagementTab() {
         </div>
       )}
 
-      <div className="print-hide fixed bottom-0 left-0 right-0 flex justify-center gap-4 border-t bg-white p-4">
-        <button
-          onClick={exportExcel}
-          className="rounded bg-sky-500 px-8 py-2 text-white"
-        >
+      <div className="print-hide flex justify-center border-t border-slate-200 bg-white px-5 py-4">
+        <Button type="button" size="sm" onClick={exportExcel}>
           저장
-        </button>
+        </Button>
       </div>
     </div>
   )
@@ -896,24 +1138,6 @@ function SortableHeader({
     >
       {label}
       <SortIcon className="size-3.5 shrink-0 opacity-70" />
-    </button>
-  )
-}
-
-function TopButton({
-  children,
-  onClick,
-}: {
-  children: React.ReactNode
-  onClick?: (event: React.MouseEvent<HTMLButtonElement>) => void
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="flex h-10 items-center gap-2 rounded bg-slate-100 px-5 text-lg font-medium hover:bg-slate-200"
-    >
-      {children}
     </button>
   )
 }

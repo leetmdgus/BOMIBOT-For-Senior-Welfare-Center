@@ -1,9 +1,14 @@
 import { subProjects } from "@/lib/mocks/kanban.board.mock"
 import { getMonthlyPlanMock } from "@/lib/mocks/kanban.monthly-plan.mock"
-import { inputManagementRows } from "@/lib/mocks/kanban.performance-input.mock"
+import {
+  defaultDetailCategories,
+  inputManagementRows,
+  performanceSubProjectChips,
+} from "@/lib/mocks/kanban.performance-input.mock"
 import type {
   MonthlyPlanResponse,
   MonthlyPlanVersion,
+  PerformanceInputMeta,
   PerformanceListResponse,
   PerformanceRow,
 } from "./kanban.performance.types"
@@ -30,6 +35,13 @@ function mapSubProjectToRow(
 
 export async function getInputManagementRows(): Promise<PerformanceRow[]> {
   return inputManagementRows
+}
+
+export async function getPerformanceInputMeta(): Promise<PerformanceInputMeta> {
+  return {
+    subProjectChips: structuredClone(performanceSubProjectChips),
+    detailCategories: [...defaultDetailCategories],
+  }
 }
 
 export async function getMonthlyPlan(

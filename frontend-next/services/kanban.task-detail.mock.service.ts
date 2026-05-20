@@ -1,6 +1,7 @@
 import {
   advanceTaskToNextProcess,
 } from "@/lib/mocks/kanban.board.mock"
+import { defaultBusinessPlanDocument } from "@/lib/mocks/kanban.business-plan.mock"
 import {
   businessEvaluationData,
   filesData,
@@ -9,12 +10,15 @@ import {
 import { surveyListItemsMock } from "@/lib/mocks/survey.mock"
 import type {
   BusinessEvaluationData,
+  BusinessPlanDocument,
   EvaluationFile,
   SaveBusinessEvaluationPayload,
+  SaveBusinessPlanPayload,
   Survey,
 } from "./kanban.task-detail.types"
 
 const evaluationByTaskId = new Map<string, BusinessEvaluationData>()
+const businessPlanByTaskId = new Map<string, BusinessPlanDocument>()
 
 function cloneEvaluation(
   source: BusinessEvaluationData
@@ -96,4 +100,54 @@ export async function completeBusinessEvaluation(
 
   evaluationByTaskId.set(taskId, next)
   return cloneEvaluation(next)
+}
+
+function cloneBusinessPlan(source: BusinessPlanDocument): BusinessPlanDocument {
+  return {
+    formData: {
+      ...source.formData,
+      goals: [...source.formData.goals],
+      subProjects: source.formData.subProjects.map((item) => ({ ...item })),
+    },
+    sections: source.sections.map((section) => ({ ...section })),
+  }
+}
+
+function getOrCreateBusinessPlan(taskId: string): BusinessPlanDocument {
+  const existing = businessPlanByTaskId.get(taskId)
+  if (existing) return existing
+
+  const created = cloneBusinessPlan(defaultBusinessPlanDocument)
+  businessPlanByTaskId.set(taskId, created)
+  return created
+}
+
+export async function getBusinessPlan(
+  taskId: string
+): Promise<BusinessPlanDocument> {
+  return cloneBusinessPlan(getOrCreateBusinessPlan(taskId))
+}
+
+export async function saveBusinessPlan(
+  taskId: string,
+  payload: SaveBusinessPlanPayload
+): Promise<BusinessPlanDocument> {
+  const current = getOrCreateBusinessPlan(taskId)
+  const next: BusinessPlanDocument = {
+    formData: payload.formData
+      ? {
+          ...payload.formData,
+          goals: [...payload.formData.goals],
+          subProjects: payload.formData.subProjects.map((item) => ({
+            ...item,
+          })),
+        }
+      : current.formData,
+    sections: payload.sections
+      ? payload.sections.map((section) => ({ ...section }))
+      : current.sections,
+  }
+
+  businessPlanByTaskId.set(taskId, next)
+  return cloneBusinessPlan(next)
 }

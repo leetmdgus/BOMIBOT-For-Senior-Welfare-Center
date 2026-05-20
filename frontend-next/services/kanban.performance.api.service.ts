@@ -1,6 +1,7 @@
 import type {
   MonthlyPlanResponse,
   MonthlyPlanVersion,
+  PerformanceInputMeta,
   PerformanceListResponse,
 } from "./kanban.performance.types"
 
@@ -14,6 +15,16 @@ export async function getInputManagementRows() {
   const result = await response.json()
 
   return result.data
+}
+
+export async function getPerformanceInputMeta(): Promise<PerformanceInputMeta> {
+  const response = await fetch("/api/performance?scope=input-meta")
+
+  if (!response.ok) {
+    throw new Error(`API 요청 실패: ${response.status}`)
+  }
+
+  return response.json()
 }
 
 export async function getPerformanceRows(params?: {

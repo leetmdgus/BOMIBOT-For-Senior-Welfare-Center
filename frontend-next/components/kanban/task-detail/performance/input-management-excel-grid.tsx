@@ -8,15 +8,12 @@ import {
   type ClipboardEvent,
   type KeyboardEvent,
 } from "react"
-
 import type { PerformanceRow } from "@/services/kanban.performance.types"
-import { cn } from "@/lib/utils"
 
 import {
   INPUT_GRID_COLUMNS,
   applyGridToRows,
   fillRangeValues,
-  isCellInRange,
   normalizeRange,
   parseClipboardGrid,
   rangeToTsv,
@@ -24,18 +21,14 @@ import {
   type CellRange,
   type InputGridColumnKey,
 } from "./input-management-excel"
-import { FundingBudgetCell } from "./funding-budget-cell"
-import {
-  applyActualFunding,
-  applyPlanFunding,
-  getActualFundingEntries,
-  getPlanFundingEntries,
-} from "./performance-funding.utils"
+import { InputManagementGridRow } from "./input-management-grid-row"
 
 type InputManagementExcelGridProps = {
   rows: PerformanceRow[]
   onRowsChange: (rows: PerformanceRow[]) => void
   onOpenActualModal: (rowId: string) => void
+  onToggleRowSelection: (rowId: string) => void
+  enableRowReorder?: boolean
   subProjectSuggestions?: string[]
   detailCategorySuggestions?: string[]
 }
@@ -44,6 +37,8 @@ export function InputManagementExcelGrid({
   rows,
   onRowsChange,
   onOpenActualModal,
+  onToggleRowSelection,
+  enableRowReorder = false,
   subProjectSuggestions = [],
   detailCategorySuggestions = [],
 }: InputManagementExcelGridProps) {
@@ -282,157 +277,25 @@ export function InputManagementExcelGrid({
       onKeyDown={handleKeyDown}
     >
       {rows.map((row, rowIndex) => (
-        <tr key={row.id} className="hover:bg-sky-50/80">
-          {INPUT_GRID_COLUMNS.map((column, colIndex) => {
-            const position = { rowIndex, colIndex }
-            const selected = isCellInRange(rowIndex, colIndex, highlightRange)
-            const isActive =
-              activeCell?.rowIndex === rowIndex &&
-              activeCell.colIndex === colIndex
-            const showFillHandle =
-              fillHandlePosition?.rowIndex === rowIndex &&
-              fillHandlePosition.colIndex === colIndex
-
-            const isActualColumn =
-              column.key === "actualPeople" ||
-              column.key === "actualCount" ||
-              column.key === "actualExpense"
-
-            const isFundingColumn =
-              column.key === "planBudget" || column.key === "actualExpense"
-
-            return (
-              <td
-                key={column.key}
-                data-grid-row={rowIndex}
-                data-grid-col={colIndex}
-                className={cn(
-                  "relative border border-slate-200 p-0",
-                  selected && "bg-sky-100/80",
-                  isActive && "ring-2 ring-sky-500 ring-inset"
-                )}
-                onMouseDown={(event) => handleCellMouseDown(event, position)}
-                onDoubleClick={() => {
-                  if (isActualColumn) {
-                    onOpenActualModal(row.id)
-                  }
-                }}
-              >
-                {isFundingColumn ? (
-                  <FundingBudgetCell
-                    variant={
-                      column.key === "planBudget" ? "plan" : "actual"
-                    }
-                    isActive={isActive}
-                    entries={
-                      column.key === "planBudget"
-                        ? getPlanFundingEntries(row)
-                        : getActualFundingEntries(row)
-                    }
-                    onChange={(entries) => {
-                      const nextRow =
-                        column.key === "planBudget"
-                          ? applyPlanFunding(row, entries)
-                          : applyActualFunding(row, entries)
-
-                      onRowsChange(
-                        rows.map((current, index) =>
-                          index === rowIndex ? nextRow : current,
-                        ),
-                      )
-                    }}
-                  />
-                ) : (
-                  <GridCellEditor
-                    row={row}
-                    columnKey={column.key}
-                    type={column.type}
-                    isActive={isActive}
-                    suggestions={
-                      column.key === "subProject"
-                        ? subProjectSuggestions
-                        : column.key === "detailCategory"
-                          ? detailCategorySuggestions
-                          : undefined
-                    }
-                    onChange={(value) =>
-                      updateCell(rowIndex, column.key, value)
-                    }
-                  />
-                )}
-
-                {showFillHandle ? (
-                  <button
-                    type="button"
-                    aria-label="채우기"
-                    className="absolute -bottom-1 -right-1 z-10 size-2.5 cursor-crosshair border border-slate-600 bg-sky-600"
-                    onMouseDown={(event) =>
-                      handleFillMouseDown(event, position)
-                    }
-                  />
-                ) : null}
-              </td>
-            )
-          })}
-        </tr>
+        <InputManagementGridRow
+          key={row.id}
+          row={row}
+          rowIndex={rowIndex}
+          enableRowReorder={enableRowReorder}
+          highlightRange={highlightRange}
+          activeCell={activeCell}
+          fillHandlePosition={fillHandlePosition}
+          onToggleRowSelection={onToggleRowSelection}
+          onOpenActualModal={onOpenActualModal}
+          onRowsChange={onRowsChange}
+          rows={rows}
+          updateCell={updateCell}
+          handleCellMouseDown={handleCellMouseDown}
+          handleFillMouseDown={handleFillMouseDown}
+          subProjectSuggestions={subProjectSuggestions}
+          detailCategorySuggestions={detailCategorySuggestions}
+        />
       ))}
     </tbody>
-  )
-}
-
-function GridCellEditor({
-  row,
-  columnKey,
-  type,
-  isActive,
-  suggestions,
-  onChange,
-}: {
-  row: PerformanceRow
-  columnKey: InputGridColumnKey
-  type: "text" | "number"
-  isActive: boolean
-  suggestions?: string[]
-  onChange: (value: string | number) => void
-}) {
-  const value = row[columnKey]
-  const listId =
-    suggestions?.length &&
-    (columnKey === "subProject" || columnKey === "detailCategory")
-      ? `${columnKey}-suggestions-${row.id}`
-      : undefined
-
-  return (
-    <>
-      {listId ? (
-        <datalist id={listId}>
-          {suggestions?.map((item) => (
-            <option key={item} value={item} />
-          ))}
-        </datalist>
-      ) : null}
-
-      <input
-        type={type === "number" ? "text" : "text"}
-        inputMode={type === "number" ? "decimal" : "text"}
-        list={listId}
-        value={type === "number" ? String(value ?? 0) : String(value ?? "")}
-        onMouseDown={(event) => event.stopPropagation()}
-        onChange={(event) => {
-          const next = event.target.value
-          if (type === "number") {
-            const cleaned = next.replaceAll(",", "").trim()
-            onChange(cleaned === "" ? 0 : Number(cleaned) || 0)
-            return
-          }
-          onChange(next)
-        }}
-        className={cn(
-          "h-8 w-full border-0 bg-transparent px-2 text-sm outline-none",
-          type === "number" ? "text-right tabular-nums" : "text-left",
-          isActive && "bg-white"
-        )}
-      />
-    </>
   )
 }

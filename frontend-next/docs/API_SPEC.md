@@ -2,7 +2,31 @@
 
 > Base URL: `/api`  
 > Content-Type: `application/json` (파일·이미지 첨부 CS 티켓은 Base64 `dataUrl` 포함 JSON)  
-> 환경 변수 `NEXT_PUBLIC_USE_MOCK_API=true` 일 때 클라이언트는 API 대신 `services/*.mock.service.ts` 를 직접 호출합니다.
+> 환경 변수 `NEXT_PUBLIC_USE_MOCK_API=true` 일 때 클라이언트는 API 대신 `services/*.mock.service.ts` 를 직접 호출합니다.  
+> `false` 일 때는 `services/*.api.service.ts` → `app/api/**` → 동일 `*.mock.service.ts` (백엔드 연동 전까지 서버 목업).
+
+## 데이터 레이어 구조
+
+```
+components / pages
+    ↓  import
+services/*.service.ts          ← NEXT_PUBLIC_USE_MOCK_API 분기 (facade)
+    ↓                    ↓
+*.mock.service.ts      *.api.service.ts → fetch("/api/...")
+    ↓                    ↓
+lib/mocks/*.ts         app/api/**/route.ts → *.mock.service.ts
+```
+
+| 계층 | 역할 |
+|------|------|
+| `lib/mocks/*.ts` | 정적 시드·상수·목업 비즈니스 데이터 (단일 출처) |
+| `services/*.types.ts` | 요청/응답 TypeScript 타입 |
+| `services/*.mock.service.ts` | 인메모리 저장·변환·집계 로직 |
+| `services/*.api.service.ts` | REST `fetch` 클라이언트 |
+| `services/*.service.ts` | UI가 import 하는 공개 API |
+| `app/api/**` | Next.js Route Handler (서버 목업) |
+
+**UI 규칙:** 화면 컴포넌트는 `lib/mocks` 를 직접 import 하지 않고 `services/*.service.ts` 만 사용합니다.
 
 ## 목차
 
@@ -397,7 +421,51 @@
 
 **Response 200:** 완료된 `BusinessEvaluationData` (`isCompleted: true`)
 
-**Service:** `kanban.task-detail.service.ts`
+### `GET /api/kanban/task-detail/business-plan`
+
+업무별 **사업계획서** 탭 본문 (단위사업계획서 편집/조회).
+
+**Query**
+
+| 이름 | 타입 | 필수 | 설명 |
+|------|------|------|------|
+| taskId | string | Y | 업무 ID |
+
+**Response 200:** `BusinessPlanDocument`
+
+```json
+{
+  "formData": {
+    "projectName": "일반상담 및 정보제공사업",
+    "purpose": "...",
+    "goals": ["..."],
+    "period": "2026-01-01 ~ 2026-12-31",
+    "target": "...",
+    "totalCount": "2,960명 / 2,965회",
+    "budget": "금 15,000,000원 (천오백만)",
+    "budgetCategory": "사업비-사업비-상담사업비",
+    "manager": "복지1팀 김연수 사회복지사",
+    "subProjects": [
+      { "name": "신규회원 이용상담", "output": "...", "outcome": "..." }
+    ]
+  },
+  "sections": [
+    { "id": 1, "type": "file", "title": "" },
+    { "id": 2, "type": "heading", "title": "III. 사업 목적 및 평가방법" }
+  ]
+}
+```
+
+### `PATCH /api/kanban/task-detail/business-plan`
+
+사업계획서 저장.
+
+**Request Body:** `SaveBusinessPlanPayload` + `taskId` (필수)
+
+**Response 200:** 갱신된 `BusinessPlanDocument`
+
+**Mock:** `lib/mocks/kanban.business-plan.mock.ts`  
+**Service:** `getBusinessPlan()`, `saveBusinessPlan()` → `kanban.task-detail.service.ts`
 
 ---
 
@@ -407,12 +475,14 @@
 
 | 탭 | 데이터 소스 (현재) |
 |----|-------------------|
-| 계획/실적 입력관리 | `GET /api/performance?scope=input-management` |
-| 사업계획 | `GET /api/performance/monthly-plan` + 추경 버전 |
-| 사업실적 | 클라이언트 집계 또는 `lib/mocks/kanban.performance-summary.mock.ts` |
-| 사업결과 | 동일 (계획 대비 진행률 표시) |
+| 계획/실적 입력관리 | `getInputManagementRows()` + `getPerformanceInputMeta()` |
+| 사업계획 | 입력관리 행 → `inputRowsToSummaryRows()` 클라이언트 집계 (`variant=plan`) |
+| 사업실적 | 동일 (`variant=actual`) |
+| 사업결과 | 동일 (`variant=result`, 계획 대비 진행률) |
 
-> **Note:** 사업계획·사업실적·사업결과 월별 시트는 아직 전용 REST API가 없으며, 목업은 `kanban.performance-summary.mock.ts`에서 로드합니다. 백엔드 연동 시 `GET /api/performance/summary` 등으로 분리 권장.
+> **단일 데이터 소스:** `lib/mocks/kanban.performance-input.mock.ts` 의 `inputManagementRows` 가 입력관리·사업계획·사업실적·사업결과 탭에 공통 반영됩니다.  
+> `kanban.performance-summary.mock.ts` 는 시드 집계용 보조 데이터입니다.  
+> `GET /api/performance/monthly-plan` 은 월별 계획 시트용 별도 목업(`kanban.monthly-plan.mock.ts`)이며, 현재 사업계획 탭 UI는 사용하지 않습니다.
 
 ### `GET /api/performance`
 
@@ -464,6 +534,35 @@
 { "data": [ /* PerformanceRow[] */ ] }
 ```
 
+### `GET /api/performance?scope=input-meta`
+
+입력관리 UI 메타 (세목 칩·세세목 제안 목록).
+
+**Response 200:** `PerformanceInputMeta`
+
+```json
+{
+  "subProjectChips": [
+    { "id": 1, "label": "온라인홍보", "color": "#8fd3ff" }
+  ],
+  "detailCategories": ["웹매거진", "SNS게시", "홍보물제작", "행사", "기타"]
+}
+```
+
+**Service:** `getPerformanceInputMeta()` → `kanban.performance.service.ts`
+
+### `PerformanceRow` (입력관리 행)
+
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| planFunding | PerformanceFundingEntry[] | 원천별 계획 예산 |
+| actualFunding | PerformanceFundingEntry[] | 원천별 실적 지출 |
+| planBudget | number | `planFunding` 합계 (동기화) |
+| actualExpense | number | `actualFunding` 합계 (동기화) |
+| fundingSources | string[] | 사용 중인 원천 코드 (`경` `기` `비` `지` `법` `사` `잡`) |
+
+`PerformanceFundingEntry`: `{ "source": "비", "amount": 50000 }`
+
 ### `POST` · `PUT` · `DELETE /api/performance`
 
 실적 레코드 CRUD (목업).
@@ -501,7 +600,7 @@
 }
 ```
 
-**Service:** `getPerformanceRows()`, `getInputManagementRows()`, `getMonthlyPlan()` → `kanban.performance.service.ts`
+**Service:** `getPerformanceRows()`, `getInputManagementRows()`, `getPerformanceInputMeta()`, `getMonthlyPlan()` → `kanban.performance.service.ts`
 
 ### 실적 요약 시트 (클라이언트 목업 타입)
 
@@ -610,6 +709,7 @@
 | `/survey/[id]?view=edit` | 설문 편집 (조사 개요·기본 항목·문항) |
 | `/survey/[id]?view=preview` | 참여자 미리보기 |
 | `/survey/[id]?view=results` | 응답 결과·차트 |
+| `/survey/[id]/respond` | 공개 응답 화면 (사이드바 없음) |
 | `/kanban/task/[id]/survey` | 칸반 업무 탭 — 설문 목록 |
 
 **UI 테마:** 기본 `themeColor` 는 BOMIBOT Primary (`oklch(0.55 0.2 260)`, `globals.css` `--primary`) 와 동일합니다.
@@ -847,7 +947,7 @@
 업무 상세 **만족도조사** 탭 카드 목록 (간략 `Survey[]`).
 
 **Service:** `getSurveyList()`, `getSurveyDetail()`, `saveSurvey()`, `submitSurveyResponse()`, `getSurveyResults()` → `survey.service.ts`  
-**Mock:** `lib/mocks/survey.mock.ts`, `lib/mocks/kanban.survey.mock.ts`
+**Mock:** `lib/mocks/survey.mock.ts` (목록·상세·응답·결과, 인메모리 `detailStore` / `responseStore`)
 
 ---
 
@@ -867,7 +967,7 @@ CS 챗봇 UI 설정.
   "welcomeMessage": "안녕하세요, 봄이봇 고객지원입니다...",
   "placeholderReply": "문의가 접수되었습니다...",
   "inputPlaceholder": "이슈 내용을 입력하세요. (Shift+Enter 줄바꿈)",
-  "csEmail": "cs@bomibot.kr",
+  "csEmail": "bomi20260413@gmail.com",
   "maxAttachments": 5,
   "maxMessageLength": 5000,
   "maxImageSizeMb": 10,
@@ -899,8 +999,8 @@ CS 문의 접수 (이메일 발송 목업).
 {
   "ticketId": "CS-M9XK2ABC",
   "emailSent": true,
-  "sentTo": "cs@bomibot.kr",
-  "message": "cs@bomibot.kr로 접수되었습니다. 티켓 번호: CS-M9XK2ABC"
+  "sentTo": "bomi20260413@gmail.com",
+  "message": "bomi20260413@gmail.com로 접수되었습니다. 티켓 번호: CS-M9XK2ABC"
 }
 ```
 
@@ -955,7 +1055,7 @@ CS 문의 접수 (이메일 발송 목업).
 | POST | `/api/kanban/boards` | 프로젝트 생성 |
 | PATCH | `/api/kanban/boards/{projectId}` | 프로젝트 수정 |
 | DELETE | `/api/kanban/boards/{projectId}` | 프로젝트 삭제 |
-| GET | `/api/kanban/boards/{projectId}/details` | 프로젝트 상세 |
+| PATCH | `/api/kanban/boards/{projectId}/details` | 프로젝트 상세 수정 |
 | POST | `/api/kanban/boards/.../tasks` | 업무 추가 |
 | PATCH | `/api/kanban/boards/.../tasks/{taskId}/details` | 업무 수정 |
 | DELETE | `/api/kanban/boards/.../tasks/{taskId}` | 업무 삭제 |
@@ -971,7 +1071,9 @@ CS 문의 접수 (이메일 발송 목업).
 | GET | `/api/kanban/task-detail/evaluation` | 사업평가 조회 |
 | PATCH | `/api/kanban/task-detail/evaluation` | 사업평가 저장 |
 | POST | `/api/kanban/task-detail/evaluation/complete` | 사업평가 완료 |
-| GET | `/api/performance` | 실적 행·입력관리 |
+| GET | `/api/kanban/task-detail/business-plan` | 사업계획서 조회 |
+| PATCH | `/api/kanban/task-detail/business-plan` | 사업계획서 저장 |
+| GET | `/api/performance` | 실적 행·입력관리 (`scope=input-management` \| `input-meta`) |
 | POST | `/api/performance` | 실적 생성 |
 | PUT | `/api/performance` | 실적 수정 |
 | DELETE | `/api/performance` | 실적 삭제 |
@@ -995,7 +1097,7 @@ CS 문의 접수 (이메일 발송 목업).
 
 | 도메인 | Facade Service | Mock Service | API Prefix |
 |--------|----------------|--------------|------------|
-| 대시보드 | `dashboard.service` | `dashboard.mock.service` | `/api/dashboard` |
+| 대시보드 | `dashboard.service` | `dashboard.mockservice` | `/api/dashboard` |
 | 조직 | `organization.service` | `organization.mock.service` | `/api/employees` |
 | 전자책 | `ebooks.service` | `ebooks.mock.service` | `/api/ebooks` |
 | 파일 | `files.service` | `files.mock.service` | `/api/files`, `/api/files/manager` |
@@ -1011,21 +1113,25 @@ CS 문의 접수 (이메일 발송 목업).
 
 ## Mock 데이터 위치
 
-| 파일 | 용도 |
-|------|------|
-| `lib/mocks/dashboard.mock.ts` | 대시보드 |
-| `lib/mocks/organization.mock.ts` | 조직·직원 |
-| `lib/mocks/ebooks.mock.ts` | 전자책 |
-| `lib/mocks/files.mock.ts` | 파일 목록 API |
-| `lib/mocks/files-manager.mock.ts` | 파일 관리 UI |
-| `lib/mocks/kanban.board.mock.ts` | 칸반 보드·문서 원본 일부 |
-| `lib/mocks/kanban.task-detail.mock.ts` | 설문·평가 |
-| `lib/mocks/kanban.documents.mock.ts` | 사업문서 테이블 행 |
-| `lib/mocks/kanban.performance-input.mock.ts` | 실적 입력관리 탭 |
-| `lib/mocks/kanban.monthly-plan.mock.ts` | 월별 사업계획·추경 버전 |
-| `lib/mocks/kanban.performance-summary.mock.ts` | 사업계획/실적/결과 요약 시트 (클라이언트 전용) |
-| `lib/mocks/survey.mock.ts` | 만족도 조사 |
-| `lib/mocks/chat.mock.ts` | CS 챗봇 설정·티켓 접수 |
+| 파일 | 용도 | Mock Service |
+|------|------|----------------|
+| `lib/mocks/dashboard.mock.ts` | 대시보드 | `dashboard.mockservice.ts` |
+| `lib/mocks/organization.mock.ts` | 조직·직원 | `organization.mock.service.ts` |
+| `lib/mocks/ebooks.mock.ts` | 전자책 | `ebooks.mock.service.ts` |
+| `lib/mocks/files.mock.ts` | 파일 목록 API | `files.mock.service.ts` |
+| `lib/mocks/files-manager.mock.ts` | 파일 관리 UI | `files.mock.service.ts` |
+| `lib/mocks/kanban.board.mock.ts` | 칸반 보드·담당자·경로 | `kanban.board.mock.service.ts` |
+| `lib/mocks/kanban.task-detail.mock.ts` | 사업평가·첨부 파일 | `kanban.task-detail.mock.service.ts` |
+| `lib/mocks/kanban.business-plan.mock.ts` | 사업계획서 탭 | `kanban.task-detail.mock.service.ts` |
+| `lib/mocks/kanban.documents.mock.ts` | 사업문서 보고서 행 | `kanban.documents.mock.service.ts` |
+| `lib/mocks/kanban.performance-input.mock.ts` | 실적 입력·집계 단일 소스 | `kanban.performance.mock.service.ts` |
+| `lib/mocks/kanban.monthly-plan.mock.ts` | 월별 계획 시트(보조) | `kanban.performance.mock.service.ts` |
+| `lib/mocks/kanban.performance-summary.mock.ts` | 요약 시드(입력 mock 보조) | — |
+| `lib/mocks/kanban.version-history.mock.ts` | 버전 기록 | `kanban.version-history.mock.service.ts` |
+| `lib/mocks/survey.mock.ts` | 만족도 조사 전역 | `survey.mock.service.ts` |
+| `lib/mocks/chat.mock.ts` | CS 설정·티켓 데이터 | `chat.mock.service.ts` |
+
+**삭제·미사용:** 빈 `kanban.survey.*` 서비스 스텁, `kanban.survey.mock.ts` (설문은 `survey.mock.ts` + `getSurveys()` 로 통합).
 
 ---
 

@@ -69,3 +69,40 @@ export interface SaveBusinessEvaluationPayload {
   goalAppropriacy?: string
   suggestion?: string
 }
+
+export type BusinessPlanSectionType = "file" | "heading" | "table"
+
+export interface BusinessPlanSection {
+  id: number
+  type: BusinessPlanSectionType
+  title: string
+}
+
+export interface BusinessPlanSubProject {
+  name: string
+  output: string
+  outcome: string
+}
+
+export interface BusinessPlanFormData {
+  projectName: string
+  purpose: string
+  goals: string[]
+  period: string
+  target: string
+  totalCount: string
+  budget: string
+  budgetCategory: string
+  manager: string
+  subProjects: BusinessPlanSubProject[]
+}
+
+export interface BusinessPlanDocument {
+  formData: BusinessPlanFormData
+  sections: BusinessPlanSection[]
+}
+
+export interface SaveBusinessPlanPayload {
+  formData?: BusinessPlanFormData
+  sections?: BusinessPlanSection[]
+}

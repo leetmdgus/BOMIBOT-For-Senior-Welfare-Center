@@ -1,7 +1,9 @@
 import type {
   BusinessEvaluationData,
+  BusinessPlanDocument,
   EvaluationFile,
   SaveBusinessEvaluationPayload,
+  SaveBusinessPlanPayload,
   Survey,
 } from "./kanban.task-detail.types"
 
@@ -56,4 +58,22 @@ export async function completeBusinessEvaluation(
       body: JSON.stringify({ taskId }),
     }
   )
+}
+
+export async function getBusinessPlan(
+  taskId: string
+): Promise<BusinessPlanDocument> {
+  return apiFetch<BusinessPlanDocument>(
+    `/api/kanban/task-detail/business-plan?taskId=${encodeURIComponent(taskId)}`
+  )
+}
+
+export async function saveBusinessPlan(
+  taskId: string,
+  payload: SaveBusinessPlanPayload
+): Promise<BusinessPlanDocument> {
+  return apiFetch<BusinessPlanDocument>("/api/kanban/task-detail/business-plan", {
+    method: "PATCH",
+    body: JSON.stringify({ taskId, ...payload }),
+  })
 }

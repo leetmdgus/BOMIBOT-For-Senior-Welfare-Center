@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { useParams } from "next/navigation"
 import {
   ChevronDown,
   ChevronUp,
@@ -15,57 +16,68 @@ import { PrintArea } from "@/components/common/print-area"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
+import {
+  getBusinessPlan,
+  saveBusinessPlan,
+} from "@/services/kanban.task-detail.service"
+import type {
+  BusinessPlanFormData,
+  BusinessPlanSection,
+} from "@/services/kanban.task-detail.types"
+
+const emptyFormData: BusinessPlanFormData = {
+  projectName: "",
+  purpose: "",
+  goals: [],
+  period: "",
+  target: "",
+  totalCount: "",
+  budget: "",
+  budgetCategory: "",
+  manager: "",
+  subProjects: [],
+}
 
 export function BusinessPlanTab() {
-  const [isEditMode, setIsEditMode] = useState(false)
-  const [sections, setSections] = useState([
-    { id: 1, type: "file", title: "" },
-    { id: 2, type: "heading", title: "III. 사업 목적 및 평가방법" },
-    { id: 3, type: "table", title: "1. 사업의 목적 및 목표" },
-    { id: 4, type: "file", title: "" },
-  ])
+  const params = useParams()
+  const taskId = typeof params.id === "string" ? params.id : ""
 
-  const [formData, setFormData] = useState({
-    projectName: "일반상담 및 정보제공사업",
-    purpose:
-      "개별 욕구에 적합한 상담으로 정보 및 복지서비스를 제공하여 건강하고 안정적인 노후 생활 지원",
-    goals: [
-      "초기상담을 통한 욕구 파악으로 이용자 편리성 증진",
-      "기관 사업 및 이용 규정에 대한 이해도 향상",
-      "전문지식 제공으로 노년기 문제 해결 능력 강화",
-    ],
-    period: "2026-01-01 ~ 2026-12-31",
-    target: "춘천시 거주 만 60세 이상 어르신 중 복지관 이용 희망자 및 이용자",
-    totalCount: "2,960명 / 2,965회",
-    budget: "금 15,000,000원 (천오백만)",
-    budgetCategory: "사업비-사업비-상담사업비",
-    manager: "복지1팀 김연수 사회복지사",
-    subProjects: [
-      {
-        name: "신규회원 이용상담",
-        output:
-          "신규회원 이용상담 (960명 / 960회)\n- 상반기 80명×6개월=480명 / 480회\n- 하반기 80명×6개월=480명 / 480회",
-        outcome: "초기상담을 통한 이용자 편리성 증진",
-      },
-      {
-        name: "신규회원 가입",
-        output:
-          "신규회원 가입 (960명 / 960회)\n- 상반기 80명×6개월=480명 / 480회\n- 하반기 80명×6개월=480명 / 480회",
-        outcome: "",
-      },
-      {
-        name: "신규회원 교육",
-        output:
-          "신규회원 교육 (960명 / 960회)\n- 상반기 80명×6개월×90%=480명 / 480회\n- 하반기 80명×6개월×90%=480명 / 480회",
-        outcome: "기관 사업 및 이용 규정에 대한 이해도 향상",
-      },
-      {
-        name: "정보제공상담",
-        output: "정보제공상담 (80명 / 80회)",
-        outcome: "전문지식 제공으로 노년기 문제 해결 능력 강화",
-      },
-    ],
-  })
+  const [isLoading, setIsLoading] = useState(true)
+  const [isEditMode, setIsEditMode] = useState(false)
+  const [sections, setSections] = useState<BusinessPlanSection[]>([])
+  const [formData, setFormData] = useState<BusinessPlanFormData>(emptyFormData)
+
+  useEffect(() => {
+    if (!taskId) {
+      setIsLoading(false)
+      return
+    }
+
+    setIsLoading(true)
+    getBusinessPlan(taskId)
+      .then((document) => {
+        setFormData(document.formData)
+        setSections(document.sections)
+      })
+      .catch((error) => {
+        console.error("사업계획서 로드 실패:", error)
+      })
+      .finally(() => setIsLoading(false))
+  }, [taskId])
+
+  const handleEditToggle = async () => {
+    if (isEditMode && taskId) {
+      try {
+        const saved = await saveBusinessPlan(taskId, { formData, sections })
+        setFormData(saved.formData)
+        setSections(saved.sections)
+      } catch (error) {
+        console.error("사업계획서 저장 실패:", error)
+      }
+    }
+
+    setIsEditMode((prev) => !prev)
+  }
 
   const moveSection = (index: number, direction: "up" | "down") => {
     const nextSections = [...sections]
@@ -83,6 +95,14 @@ export function BusinessPlanTab() {
 
   const deleteSection = (index: number) => {
     setSections(sections.filter((_, sectionIndex) => sectionIndex !== index))
+  }
+
+  if (isLoading) {
+    return (
+      <p className="py-24 text-center text-sm text-muted-foreground">
+        사업계획서를 불러오는 중입니다.
+      </p>
+    )
   }
 
   if (isEditMode) {
@@ -226,10 +246,7 @@ export function BusinessPlanTab() {
           </div>
         </PrintArea>
 
-        <BusinessPlanActions
-          editMode
-          onEdit={() => setIsEditMode(false)}
-        />
+        <BusinessPlanActions editMode onEdit={() => void handleEditToggle()} />
       </div>
     )
   }
@@ -287,7 +304,7 @@ export function BusinessPlanTab() {
         </div>
       </PrintArea>
 
-      <BusinessPlanActions onEdit={() => setIsEditMode(true)} />
+      <BusinessPlanActions onEdit={() => void handleEditToggle()} />
     </div>
   )
 }
