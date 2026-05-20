@@ -1,6 +1,6 @@
 /**
  * 서버 전용 챗봇 로직 (Route Handler · chat.server.service)
- * 클라이언트 facade(chat.service)와 분리 — LLM·SMTP·온톨로지 그래프 빌드는 서버에서만 실행
+ * 클라이언트 facade(chat.service)와 분리 — LLM·SMTP·RAG 검색은 서버에서만 실행
  */
 import { resolveAssistantAnswer } from "@/lib/chat/assistant-server"
 import { processCsTicket } from "@/lib/chat/cs-ticket"

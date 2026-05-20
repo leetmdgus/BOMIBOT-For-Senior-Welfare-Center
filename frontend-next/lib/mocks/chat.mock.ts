@@ -38,9 +38,9 @@ export const chatCsConfigMock = {
 
 export const chatAssistantConfigMock = {
   welcomeMessage:
-    "안녕하세요! 봄이봇 데이터 어시스턴트입니다. 온톨로지 지식 그래프로 질문 범위를 찾고, 실적·대시보드·칸반·설문 데이터로 답해 드립니다.",
+    "안녕하세요! 봄이봇 데이터 어시스턴트입니다. RAG로 관련 문서를 찾고, 실적·대시보드·칸반·설문 데이터를 근거로 답해 드립니다.",
   inputPlaceholder: "예: 5월 실적 예산 합계, 온라인홍보 실적 요약…",
-  thinkingLabel: "데이터를 조회하는 중…",
+  thinkingLabel: "관련 데이터를 검색하는 중…",
   suggestions: [
     {
       id: "a1",
@@ -74,7 +74,7 @@ export const chatAssistantConfigMock = {
     },
     {
       id: "a7",
-      text: "실적 도메인 지식 그래프 구조 보여줘",
+      text: "신규회원 이용상담 5월 실적 알려줘",
       icon: "search" as const,
     },
   ],

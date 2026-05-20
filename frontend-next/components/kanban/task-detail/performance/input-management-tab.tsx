@@ -116,6 +116,10 @@ export function InputManagementTab() {
   const {
     rows,
     setRows,
+    undoRows,
+    redoRows,
+    canUndoRows,
+    canRedoRows,
     addSupplementaryBudget,
     planVersion,
     deleteSelectedRows,
@@ -438,6 +442,25 @@ export function InputManagementTab() {
 
       const hasSelected = selectedDisplayedCount > 0
 
+      if (event.ctrlKey || event.metaKey) {
+        const key = event.key.toLowerCase()
+
+        if (key === "z" && !event.shiftKey && canUndoRows) {
+          event.preventDefault()
+          undoRows()
+          return
+        }
+
+        if (
+          (key === "y" || (key === "z" && event.shiftKey)) &&
+          canRedoRows
+        ) {
+          event.preventDefault()
+          redoRows()
+          return
+        }
+      }
+
       if (event.key === "Delete" && hasSelected) {
         event.preventDefault()
         deleteSelectedRows()
@@ -448,6 +471,8 @@ export function InputManagementTab() {
       if (!(event.ctrlKey || event.metaKey)) return
 
       const key = event.key.toLowerCase()
+
+      if (key === "z" || key === "y") return
 
       if (key === "c" && hasSelected) {
         event.preventDefault()
@@ -672,7 +697,7 @@ export function InputManagementTab() {
               </p>
               <p>
                 엑셀처럼 셀을 클릭해 직접 입력할 수 있습니다. 복사(Ctrl+C)·붙여넣기(Ctrl+V),
-                범위 선택(Shift+클릭), 셀 모서리 드래그로 채우기가 지원됩니다.
+                실행 취소(Ctrl+Z)·다시 실행(Ctrl+Y), 범위 선택(Shift+클릭), 셀 모서리 드래그로 채우기가 지원됩니다.
               </p>
               <p>
                 기존 파일을 업로드할 수 있으며, 이미 저장된 행 아래에 파일의
@@ -781,36 +806,12 @@ export function InputManagementTab() {
           전체
         </Button>
 
-        <Button
-          type="button"
-          variant={monthSort ? "default" : "outline"}
-          size="sm"
-          className="gap-1"
-          disabled={!viewAllMonths}
-          onClick={toggleMonthSortView}
-          title={
-            viewAllMonths
-              ? "1월→12월 순으로 정렬 (다시 누르면 해제)"
-              : "전체 보기에서 사용할 수 있습니다"
-          }
-        >
-          <ArrowUpDown className="size-3.5" />
-          월순 정렬
-        </Button>
-
         <Button type="button" variant="outline" size="icon" onClick={goPrevMonth}>
           <ChevronLeft className="size-4" />
         </Button>
         <Button type="button" variant="outline" size="icon" onClick={goNextMonth}>
           <ChevronRight className="size-4" />
         </Button>
-
-        <span className="text-sm text-muted-foreground">
-          {viewAllMonths
-            ? `${selectedYear}년 전체${monthSort ? ` · 월 ${monthSort === "asc" ? "오름차순" : "내림차순"}` : ""}`
-            : `${selectedYear}년 ${selectedMonth}월`}
-        </span>
-
         <Button
           type="button"
           variant="outline"
@@ -835,7 +836,7 @@ export function InputManagementTab() {
           <span className="mr-auto text-xs text-muted-foreground">
             적용 추경: {planVersion}
             <span className="ml-2 hidden sm:inline">
-              · 세세목은 「상세분류」 열 · Tab/Enter 이동 · Ctrl+C/V · 셀 모서리 채우기
+              · 세세목은 「상세분류」 열 · Tab/Enter · Ctrl+C/V/Z/Y · 셀 모서리 채우기
             </span>
           </span>
           <Button

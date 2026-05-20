@@ -41,6 +41,7 @@ export type AssistantDataSnapshot = {
 
 export type AssistantAnswerSource =
   | "aggregate"
+  | "rag"
   | "ontology"
   | "performance"
   | "dashboard"

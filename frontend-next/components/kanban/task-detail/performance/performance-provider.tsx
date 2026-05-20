@@ -18,6 +18,12 @@ import type {
 } from "@/services/kanban.performance.types"
 
 import { inputRowsToSummaryRows } from "./input-rows-to-summary"
+import {
+  clonePerformanceRows,
+  isSelectionOnlyRowsChange,
+  rowsSnapshotEqual,
+  ROWS_HISTORY_LIMIT,
+} from "./performance-rows-history"
 
 export type RowData = PerformanceRow
 
@@ -100,6 +106,10 @@ export type PerformanceView = "input" | "plan" | "actual" | "result"
 const PerformanceContext = createContext<{
   rows: RowData[]
   setRows: React.Dispatch<React.SetStateAction<RowData[]>>
+  undoRows: () => void
+  redoRows: () => void
+  canUndoRows: boolean
+  canRedoRows: boolean
   selectedCell: { rowId: string; column: CellKey } | null
   inputRefs: React.MutableRefObject<Map<string, HTMLInputElement>>
   columns: CellKey[]
@@ -136,19 +146,119 @@ export function PerformanceProvider({
 }: {
   children: React.ReactNode
 }) {
-  const [rows, setRows] = useState<RowData[]>([])
+  const [rows, setRowsState] = useState<RowData[]>([])
+  const rowsRef = useRef<RowData[]>([])
+  const pastRef = useRef<RowData[][]>([])
+  const futureRef = useRef<RowData[][]>([])
+  const [historyTick, setHistoryTick] = useState(0)
+
   const [activeView, setActiveView] = useState<PerformanceView>("input")
   const [supplementVersions, setSupplementVersions] = useState<string[]>([
     "기본계획",
   ])
 
+  const applyRows = useCallback((next: RowData[]) => {
+    rowsRef.current = next
+    setRowsState(next)
+  }, [])
+
+  const bumpHistory = useCallback(() => {
+    setHistoryTick((n) => n + 1)
+  }, [])
+
+  const resetHistory = useCallback(() => {
+    pastRef.current = []
+    futureRef.current = []
+    bumpHistory()
+  }, [bumpHistory])
+
+  const commitRows = useCallback(
+    (next: RowData[], options?: { recordHistory?: boolean }) => {
+      const prev = rowsRef.current
+      if (rowsSnapshotEqual(prev, next)) return
+
+      const record = options?.recordHistory !== false
+
+      if (record && !isSelectionOnlyRowsChange(prev, next)) {
+        pastRef.current = [
+          ...pastRef.current.slice(-(ROWS_HISTORY_LIMIT - 1)),
+          clonePerformanceRows(prev),
+        ]
+        futureRef.current = []
+        bumpHistory()
+      }
+
+      applyRows(next)
+    },
+    [applyRows, bumpHistory],
+  )
+
+  const setRows = useCallback(
+    (action: React.SetStateAction<RowData[]>) => {
+      const prev = rowsRef.current
+      const next = typeof action === "function" ? action(prev) : action
+      commitRows(next)
+    },
+    [commitRows],
+  )
+
+  const setRowsWithoutHistory = useCallback(
+    (action: React.SetStateAction<RowData[]>) => {
+      const prev = rowsRef.current
+      const next = typeof action === "function" ? action(prev) : action
+      if (rowsSnapshotEqual(prev, next)) return
+      applyRows(next)
+      resetHistory()
+    },
+    [applyRows, resetHistory],
+  )
+
   useEffect(() => {
     getInputManagementRows()
-      .then(setRows)
+      .then(setRowsWithoutHistory)
       .catch((error) => {
         console.error("실적 데이터 로드 실패:", error)
       })
-  }, [])
+  }, [setRowsWithoutHistory])
+
+  const undoRows = useCallback(() => {
+    const past = pastRef.current
+    if (past.length === 0) return
+
+    const previous = past[past.length - 1]
+    pastRef.current = past.slice(0, -1)
+    futureRef.current = [
+      clonePerformanceRows(rowsRef.current),
+      ...futureRef.current,
+    ].slice(0, ROWS_HISTORY_LIMIT)
+    applyRows(clonePerformanceRows(previous))
+    bumpHistory()
+  }, [applyRows, bumpHistory])
+
+  const redoRows = useCallback(() => {
+    const future = futureRef.current
+    if (future.length === 0) return
+
+    const [next, ...rest] = future
+    futureRef.current = rest
+    pastRef.current = [
+      ...pastRef.current,
+      clonePerformanceRows(rowsRef.current),
+    ].slice(-ROWS_HISTORY_LIMIT)
+    applyRows(clonePerformanceRows(next))
+    bumpHistory()
+  }, [applyRows, bumpHistory])
+
+  const canUndoRows = useMemo(
+    () => pastRef.current.length > 0,
+    [historyTick],
+  )
+
+  const canRedoRows = useMemo(
+    () => futureRef.current.length > 0,
+    [historyTick],
+  )
+
   const [selectedCell, setSelectedCell] = useState<{
     rowId: string
     column: CellKey
@@ -187,14 +297,14 @@ export function PerformanceProvider({
           actualPeople: 0,
           actualCount: 0,
           actualExpense: 0,
-        }
+        },
       ),
-    [rows]
+    [rows],
   )
 
   const selectedCount = useMemo(
     () => rows.filter((row) => row.selected).length,
-    [rows]
+    [rows],
   )
 
   const handleCellClick = useCallback((rowId: string, column: CellKey) => {
@@ -215,25 +325,28 @@ export function PerformanceProvider({
                 ...row,
                 [column]: value,
               }
-            : row
-        )
+            : row,
+        ),
       )
     },
-    []
+    [setRows],
   )
 
-  const toggleRowSelection = useCallback((rowId: string) => {
-    setRows((prev) =>
-      prev.map((row) =>
-        row.id === rowId
-          ? {
-              ...row,
-              selected: !row.selected,
-            }
-          : row
+  const toggleRowSelection = useCallback(
+    (rowId: string) => {
+      setRows((prev) =>
+        prev.map((row) =>
+          row.id === rowId
+            ? {
+                ...row,
+                selected: !row.selected,
+              }
+            : row,
+        ),
       )
-    )
-  }, [])
+    },
+    [setRows],
+  )
 
   const toggleAllSelection = useCallback(() => {
     setRows((prev) => {
@@ -244,11 +357,11 @@ export function PerformanceProvider({
         selected: !allSelected,
       }))
     })
-  }, [])
+  }, [setRows])
 
   const deleteSelectedRows = useCallback(() => {
     setRows((prev) => prev.filter((row) => !row.selected))
-  }, [])
+  }, [setRows])
 
   const copySelectedRows = useCallback(() => {
     setRows((prev) => {
@@ -263,7 +376,7 @@ export function PerformanceProvider({
         })),
       ]
     })
-  }, [])
+  }, [setRows])
 
   const addRow = useCallback(() => {
     setRows((prev) => [
@@ -283,7 +396,7 @@ export function PerformanceProvider({
         content: "",
       },
     ])
-  }, [])
+  }, [setRows])
 
   const getProgressRate = useCallback((plan: number, actual: number) => {
     if (plan === 0) return "-"
@@ -307,6 +420,10 @@ export function PerformanceProvider({
       value={{
         rows,
         setRows,
+        undoRows,
+        redoRows,
+        canUndoRows,
+        canRedoRows,
         selectedCell,
         inputRefs,
         columns,

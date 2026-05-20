@@ -21,7 +21,9 @@ import {
   type CellRange,
   type InputGridColumnKey,
 } from "./input-management-excel"
+import { isEditableTarget } from "./input-management-row-selection"
 import { InputManagementGridRow } from "./input-management-grid-row"
+import { usePerformance } from "./performance-provider"
 
 type InputManagementExcelGridProps = {
   rows: PerformanceRow[]
@@ -44,6 +46,7 @@ export function InputManagementExcelGrid({
   subProjectSuggestions = [],
   detailCategorySuggestions = [],
 }: InputManagementExcelGridProps) {
+  const { undoRows, redoRows, canUndoRows, canRedoRows } = usePerformance()
   const tableRef = useRef<HTMLTableSectionElement>(null)
   const [activeCell, setActiveCell] = useState<CellPosition | null>(null)
   const [selection, setSelection] = useState<CellRange | null>(null)
@@ -187,6 +190,20 @@ export function InputManagementExcelGrid({
   )
 
   const handleKeyDown = (event: KeyboardEvent) => {
+    if ((event.ctrlKey || event.metaKey) && !isEditableTarget(event.target)) {
+      const key = event.key.toLowerCase()
+      if (key === "z" && !event.shiftKey && canUndoRows) {
+        event.preventDefault()
+        undoRows()
+        return
+      }
+      if ((key === "y" || (key === "z" && event.shiftKey)) && canRedoRows) {
+        event.preventDefault()
+        redoRows()
+        return
+      }
+    }
+
     if (!activeCell) {
       handleCopy(event)
       return

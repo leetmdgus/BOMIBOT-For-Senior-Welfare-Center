@@ -50,16 +50,26 @@ export interface AssistantSubgraphEdge {
   predicate: string
 }
 
+export interface AssistantRagCitation {
+  id: string
+  source: string
+  title: string
+  snippet: string
+  score?: number
+}
+
 export interface AssistantQuestionResponse {
   answer: string
   sources: string[]
   dataAsOf: string
-  /** 질문과 연결된 온톨로지 서브그래프 */
+  /** RAG 검색으로 찾은 근거 문서 */
+  ragCitations?: AssistantRagCitation[]
+  /** @deprecated 온톨로지 — RAG 전환 후 미사용 */
   subgraph?: {
     nodes: AssistantSubgraphNode[]
     edges: AssistantSubgraphEdge[]
   }
-  /** 그래프 추론 경로 (자연어) */
+  /** @deprecated 온톨로지 — RAG 전환 후 미사용 */
   reasoningPaths?: string[]
 }
 

@@ -21,7 +21,7 @@ import {
   X,
 } from "lucide-react"
 
-import { OntologyGraphView } from "@/components/chatbot/ontology-graph-view"
+import { RagSourcesView } from "@/components/chatbot/rag-sources-view"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -34,8 +34,7 @@ import {
 } from "@/services/chat.service"
 import type {
   AssistantConfig,
-  AssistantSubgraphEdge,
-  AssistantSubgraphNode,
+  AssistantRagCitation,
   ChatMessageAttachment,
   ChatPanelMode,
   ChatSuggestion,
@@ -47,11 +46,7 @@ interface Message {
   content: string
   attachments?: ChatMessageAttachment[]
   sources?: string[]
-  subgraph?: {
-    nodes: AssistantSubgraphNode[]
-    edges: AssistantSubgraphEdge[]
-  }
-  reasoningPaths?: string[]
+  ragCitations?: AssistantRagCitation[]
   timestamp: Date
 }
 
@@ -534,7 +529,7 @@ export function Chatbot() {
                   {csEmail}
                 </span>
               ) : (
-                "온톨로지 지식 그래프 + 실적·대시보드 데이터"
+                "RAG 검색 + 실적·대시보드·칸반 데이터"
               )}
             </p>
           </div>
@@ -584,13 +579,11 @@ export function Chatbot() {
               <p className="whitespace-pre-wrap text-sm">{message.content}</p>
               {mode === "assistant" &&
               message.role === "assistant" &&
-              message.subgraph &&
-              message.subgraph.nodes.length > 0 ? (
-                <OntologyGraphView
-                  nodes={message.subgraph.nodes}
-                  edges={message.subgraph.edges}
-                  reasoningPaths={message.reasoningPaths}
-                  maxHeight={isExpanded ? 200 : 150}
+              message.ragCitations &&
+              message.ragCitations.length > 0 ? (
+                <RagSourcesView
+                  citations={message.ragCitations}
+                  maxHeight={isExpanded ? 220 : 160}
                 />
               ) : null}
               {message.sources && message.sources.length > 0 ? (

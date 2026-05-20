@@ -951,15 +951,15 @@ lib/mocks/*.ts         app/api/**/route.ts → *.mock.service.ts
 
 ---
 
-## 10. 챗봇 (CS · 데이터 어시스턴트 · 온톨로지)
+## 10. 챗봇 (CS · 데이터 어시스턴트 · RAG)
 
 전역 플로팅 위젯 (`components/chatbot.tsx`). 하단 **데이터 챗봇** / **CS 문의** 두 버튼으로 모드를 고르고, 패널 안에서는 모드를 바꾸지 않습니다(다른 모드는 닫은 뒤 다른 버튼으로 열기).
 
 | 탭 | API | 서버 로직 |
 |----|-----|-----------|
 | CS | `POST /api/chat/cs-ticket` | `lib/chat/cs-email.ts` (SMTP) |
-| 데이터 | `POST /api/chat/assistant` | 온톨로지 + Gemini + 규칙 폴백 |
-| (디버그) | `GET /api/chat/ontology` | `lib/chat/ontology/*` |
+| 데이터 | `POST /api/chat/assistant` | RAG 검색 + Gemini + 규칙 폴백 |
+| (레거시) | `GET /api/chat/ontology` | `lib/chat/ontology/*` (UI 미사용) |
 
 **클라이언트:** `chat.service.ts` → mock 모드에서도 어시스턴트·CS·온톨로지는 위 API를 호출 (서버 전용 처리).
 
@@ -969,7 +969,10 @@ lib/mocks/*.ts         app/api/**/route.ts → *.mock.service.ts
 
 | 변수 | 필수 | 설명 |
 |------|------|------|
-| `GEMINI_API_KEY` | 데이터 챗봇 LLM | 없으면 규칙·그래프 엔진만 사용 |
+| `GEMINI_API_KEY` | 데이터 챗봇 LLM | 없으면 RAG+규칙 엔진만 사용 |
+| `RAG_API_URL` | N | 외부 RAG API (POST). 없으면 mock 코퍼스 로컬 검색 |
+| `RAG_API_KEY` | N | 외부 RAG Bearer 토큰 |
+| `RAG_TOP_K` | N | 검색 상위 건수 (기본 8) |
 | `SMTP_USER`, `SMTP_PASS` | CS 메일 | Gmail **앱 비밀번호** 권장 |
 | `CS_EMAIL_TO` | N | 수신 주소 (기본 `bomi20260413@gmail.com`) |
 | `SMTP_SERVICE` | N | 기본 `gmail` |
@@ -1006,7 +1009,7 @@ lib/mocks/*.ts         app/api/**/route.ts → *.mock.service.ts
 
 ### `POST /api/chat/assistant`
 
-온톨로지 지식 그래프로 질문 범위를 좁힌 뒤, 시스템 데이터·(선택) LLM으로 답변.
+RAG로 관련 문서 조각을 검색한 뒤, 시스템 데이터·(선택) LLM으로 답변.
 
 **Request Body:** `AssistantQuestionRequest`
 
@@ -1020,13 +1023,17 @@ lib/mocks/*.ts         app/api/**/route.ts → *.mock.service.ts
 ```json
 {
   "answer": "5월 계획 예산 합계는 …",
-  "sources": ["ontology", "performance"],
+  "sources": ["rag", "performance"],
   "dataAsOf": "2026-05-19T12:00:00.000Z",
-  "subgraph": {
-    "nodes": [{ "id": "domain:performance", "type": "Domain", "label": "계획/실적" }],
-    "edges": [{ "source": "domain:performance", "target": "platform:bomibot", "predicate": "partOf" }]
-  },
-  "reasoningPaths": ["계획/실적 —[상위 포함]→ 봄이봇"]
+  "ragCitations": [
+    {
+      "id": "performance:month:5월",
+      "source": "performance",
+      "title": "월별 실적 · 5월",
+      "snippet": "5월 계획 예산 …",
+      "score": 4
+    }
+  ]
 }
 ```
 

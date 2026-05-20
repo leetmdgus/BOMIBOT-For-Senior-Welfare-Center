@@ -1,78 +1,71 @@
 import { buildAssistantDataSnapshot } from "@/lib/chat/assistant-data"
 import { answerAssistantQuestion } from "@/lib/chat/assistant-engine"
 import {
-  answerWithAssistantLlm,
+  answerWithRagLlm,
   isAssistantLlmConfigured,
-} from "@/lib/chat/assistant-llm"
-import { answerFromKnowledgeGraph } from "@/lib/chat/ontology/answer-from-graph"
-import { resolveOntologyForQuestion } from "@/lib/chat/ontology/resolve-ontology"
-import type { AssistantQuestionResponse } from "@/services/chat.types"
+} from "@/lib/chat/assistant-rag-llm"
+import { resolveRagForQuestion } from "@/lib/chat/rag/resolve-rag"
+import type { RagRetrieveResult } from "@/lib/chat/rag/types"
+import type {
+  AssistantQuestionResponse,
+  AssistantRagCitation,
+} from "@/services/chat.types"
+
+function toCitations(rag: RagRetrieveResult): AssistantRagCitation[] {
+  return rag.chunks.map((chunk) => ({
+    id: chunk.id,
+    source: chunk.source,
+    title: chunk.title,
+    snippet:
+      chunk.text.length > 220 ? `${chunk.text.slice(0, 220)}…` : chunk.text,
+    score: chunk.score,
+  }))
+}
 
 function toResponsePayload(
   answer: string,
   sources: string[],
   dataAsOf: string,
-  query: ReturnType<typeof resolveOntologyForQuestion>["query"],
+  rag: RagRetrieveResult,
 ): AssistantQuestionResponse {
   return {
     answer,
     sources,
     dataAsOf,
-    reasoningPaths: query.reasoningPaths,
-    subgraph: {
-      nodes: query.subgraph.nodes.map((n) => ({
-        id: n.id,
-        type: n.type,
-        label: n.label,
-      })),
-      edges: query.subgraph.edges.map((e) => ({
-        source: e.source,
-        target: e.target,
-        predicate: e.predicate,
-      })),
-    },
+    ragCitations: toCitations(rag),
   }
 }
 
-/** 서버 전용: 온톨로지 그래프 + LLM 우선, 실패 시 그래프/규칙 폴백 */
+function sourcesFromRag(rag: RagRetrieveResult): string[] {
+  return [...new Set(rag.chunks.map((chunk) => chunk.source))]
+}
+
+/** 서버 전용: RAG 검색 + LLM 우선, 실패 시 규칙 엔진 폴백 */
 export async function resolveAssistantAnswer(
   message: string,
 ): Promise<AssistantQuestionResponse> {
   const snapshot = buildAssistantDataSnapshot()
-  const { graph, query } = resolveOntologyForQuestion(message)
+  const rag = await resolveRagForQuestion(message, snapshot)
 
   if (isAssistantLlmConfigured()) {
     try {
-      const llm = await answerWithAssistantLlm(message, snapshot, query)
+      const llm = await answerWithRagLlm(message, snapshot, rag)
       return toResponsePayload(
         llm.content,
         llm.sources,
         snapshot.generatedAt,
-        query,
+        rag,
       )
     } catch (error) {
-      console.error("[assistant-llm] AI 답변 실패, 그래프/규칙으로 폴백:", error)
+      console.error("[assistant-rag-llm] AI 답변 실패, 규칙 엔진으로 폴백:", error)
     }
-  }
-
-  const graphAnswer = answerFromKnowledgeGraph(message, query, graph)
-  if (
-    graphAnswer.sources.includes("ontology") &&
-    (query.subgraph.nodes.length > 3 || /그래프|온톨로지|구조|관계/.test(message))
-  ) {
-    return toResponsePayload(
-      graphAnswer.content,
-      graphAnswer.sources,
-      snapshot.generatedAt,
-      query,
-    )
   }
 
   const rule = answerAssistantQuestion(message, snapshot)
   return toResponsePayload(
     rule.content,
-    [...new Set([...rule.sources, "ontology"])],
+    [...new Set([...rule.sources, ...sourcesFromRag(rag), "rag"])],
     snapshot.generatedAt,
-    query,
+    rag,
   )
 }
