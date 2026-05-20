@@ -4,8 +4,16 @@ export interface ChatSuggestion {
   icon: "barChart" | "fileText" | "search" | "clock" | "alert" | "help"
 }
 
+export type ChatPanelMode = "cs" | "assistant"
+
+export interface AssistantConfig {
+  welcomeMessage: string
+  inputPlaceholder: string
+  thinkingLabel: string
+  suggestions: ChatSuggestion[]
+}
+
 export interface ChatConfig {
-  mode: "cs"
   welcomeMessage: string
   placeholderReply: string
   inputPlaceholder: string
@@ -18,6 +26,41 @@ export interface ChatConfig {
   /** 동영상 1개당 최대 용량(MB) */
   maxVideoSizeMb: number
   suggestions: ChatSuggestion[]
+}
+
+export interface ChatAppConfig {
+  cs: ChatConfig
+  assistant: AssistantConfig
+}
+
+export interface AssistantQuestionRequest {
+  message: string
+  pageUrl?: string
+}
+
+export interface AssistantSubgraphNode {
+  id: string
+  type: string
+  label: string
+}
+
+export interface AssistantSubgraphEdge {
+  source: string
+  target: string
+  predicate: string
+}
+
+export interface AssistantQuestionResponse {
+  answer: string
+  sources: string[]
+  dataAsOf: string
+  /** 질문과 연결된 온톨로지 서브그래프 */
+  subgraph?: {
+    nodes: AssistantSubgraphNode[]
+    edges: AssistantSubgraphEdge[]
+  }
+  /** 그래프 추론 경로 (자연어) */
+  reasoningPaths?: string[]
 }
 
 export interface ChatAttachmentPayload {
@@ -45,4 +88,19 @@ export interface ChatMessageAttachment {
   name: string
   previewUrl: string
   type: string
+}
+
+/** 온톨로지 API — lib/chat/ontology/types 와 동기화 */
+export type {
+  KnowledgeGraph,
+  KnowledgeNode,
+  KnowledgeEdge,
+  GraphQueryResult,
+  OntologyGraphPayload,
+} from "@/lib/chat/ontology/types"
+
+import type { GraphQueryResult, OntologyGraphPayload } from "@/lib/chat/ontology/types"
+
+export type OntologyGraphApiResponse = OntologyGraphPayload & {
+  query?: GraphQueryResult
 }

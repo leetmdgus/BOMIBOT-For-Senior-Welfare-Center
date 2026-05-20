@@ -15,6 +15,6 @@ export async function getDashboardOverview(): Promise<DashboardOverview> {
       progress: progressData,
       calendarEvents,
       volunteerEvents,
-    })
+    }),
   )
 }

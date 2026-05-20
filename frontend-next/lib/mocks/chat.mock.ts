@@ -1,7 +1,6 @@
-import type { ChatConfig, CsTicketRequest, CsTicketResponse } from "@/services/chat.types"
+import type { ChatAppConfig } from "@/services/chat.types"
 
-export const chatConfigMock: ChatConfig = {
-  mode: "cs",
+export const chatCsConfigMock = {
   welcomeMessage:
     "안녕하세요, 봄이봇 고객지원입니다. 이슈 내용을 자세히 적어 주시고, 화면 캡처·오류 영상(동영상)도 첨부해 주시면 담당자가 이메일로 도와드릴게요.",
   placeholderReply:
@@ -17,46 +16,71 @@ export const chatConfigMock: ChatConfig = {
     {
       id: "s1",
       text: "화면에 오류가 나요. 캡처 첨부할게요.",
-      icon: "alert",
+      icon: "alert" as const,
     },
     {
       id: "s2",
       text: "기능 사용 방법이 궁금합니다.",
-      icon: "help",
+      icon: "help" as const,
     },
     {
       id: "s3",
       text: "실적/예산 데이터가 맞지 않아요.",
-      icon: "search",
+      icon: "search" as const,
     },
     {
       id: "s4",
       text: "로그인·권한 관련 문의입니다.",
-      icon: "fileText",
+      icon: "fileText" as const,
     },
   ],
 }
 
-export async function submitCsTicketMock(
-  payload: CsTicketRequest,
-): Promise<CsTicketResponse> {
-  const ticketId = `CS-${Date.now().toString(36).toUpperCase()}`
+export const chatAssistantConfigMock = {
+  welcomeMessage:
+    "안녕하세요! 봄이봇 데이터 어시스턴트입니다. 온톨로지 지식 그래프로 질문 범위를 찾고, 실적·대시보드·칸반·설문 데이터로 답해 드립니다.",
+  inputPlaceholder: "예: 5월 실적 예산 합계, 온라인홍보 실적 요약…",
+  thinkingLabel: "데이터를 조회하는 중…",
+  suggestions: [
+    {
+      id: "a1",
+      text: "계획/실적 데이터 전체 요약해줘",
+      icon: "barChart" as const,
+    },
+    {
+      id: "a2",
+      text: "5월 계획·실적 예산 합계는?",
+      icon: "search" as const,
+    },
+    {
+      id: "a3",
+      text: "온라인홍보 세목 실적 알려줘",
+      icon: "fileText" as const,
+    },
+    {
+      id: "a4",
+      text: "대시보드 현황 요약해줘",
+      icon: "clock" as const,
+    },
+    {
+      id: "a5",
+      text: "칸반 업무가 몇 개야?",
+      icon: "help" as const,
+    },
+    {
+      id: "a6",
+      text: "전체 데이터 통합 요약",
+      icon: "barChart" as const,
+    },
+    {
+      id: "a7",
+      text: "실적 도메인 지식 그래프 구조 보여줘",
+      icon: "search" as const,
+    },
+  ],
+}
 
-  if (process.env.NODE_ENV === "development") {
-    console.info("[CS Ticket → Email]", {
-      to: chatConfigMock.csEmail,
-      ticketId,
-      pageUrl: payload.pageUrl,
-      contactEmail: payload.contactEmail,
-      message: payload.message,
-      attachmentCount: payload.attachments.length,
-    })
-  }
-
-  return {
-    ticketId,
-    emailSent: true,
-    sentTo: chatConfigMock.csEmail,
-    message: `${chatConfigMock.csEmail}로 접수되었습니다. 티켓 번호: ${ticketId}`,
-  }
+export const chatAppConfigMock: ChatAppConfig = {
+  cs: chatCsConfigMock,
+  assistant: chatAssistantConfigMock,
 }

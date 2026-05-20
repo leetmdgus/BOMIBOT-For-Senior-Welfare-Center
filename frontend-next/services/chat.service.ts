@@ -6,3 +6,5 @@ const chatService = useMockApi ? mockService : apiService
 
 export const getChatConfig = chatService.getChatConfig
 export const submitCsTicket = chatService.submitCsTicket
+export const askAssistantQuestion = chatService.askAssistantQuestion
+export const getOntologyGraph = chatService.getOntologyGraph

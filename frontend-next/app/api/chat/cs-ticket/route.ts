@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 
-import { submitCsTicket } from "@/services/chat.mock.service"
+import { submitCsTicketServer } from "@/services/chat.server.service"
 import type { CsTicketRequest } from "@/services/chat.types"
 
 export async function POST(request: Request) {
@@ -14,7 +14,7 @@ export async function POST(request: Request) {
       )
     }
 
-    const result = await submitCsTicket({
+    const result = await submitCsTicketServer({
       message: body.message?.trim() ?? "",
       attachments: body.attachments ?? [],
       pageUrl: body.pageUrl,
@@ -24,9 +24,8 @@ export async function POST(request: Request) {
     return NextResponse.json(result)
   } catch (error) {
     console.error("CS 티켓 접수 실패:", error)
-    return NextResponse.json(
-      { error: "문의 접수에 실패했습니다." },
-      { status: 500 },
-    )
+    const message =
+      error instanceof Error ? error.message : "문의 접수에 실패했습니다."
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

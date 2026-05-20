@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server"
 
-import { getChatConfig } from "@/services/chat.mock.service"
+import { getChatAppConfig } from "@/services/chat.server.service"
 
 export async function GET() {
-  const config = await getChatConfig()
+  const config = await getChatAppConfig()
   return NextResponse.json(config)
 }

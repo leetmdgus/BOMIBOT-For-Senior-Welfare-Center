@@ -8,6 +8,7 @@ import {
   Clock,
   FileText,
   Film,
+  Bot,
   Headphones,
   HelpCircle,
   ImagePlus,
@@ -20,19 +21,37 @@ import {
   X,
 } from "lucide-react"
 
+import { OntologyGraphView } from "@/components/chatbot/ontology-graph-view"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
-import { getChatConfig, submitCsTicket } from "@/services/chat.service"
-import type { ChatMessageAttachment, ChatSuggestion } from "@/services/chat.types"
+import {
+  askAssistantQuestion,
+  getChatConfig,
+  submitCsTicket,
+} from "@/services/chat.service"
+import type {
+  AssistantConfig,
+  AssistantSubgraphEdge,
+  AssistantSubgraphNode,
+  ChatMessageAttachment,
+  ChatPanelMode,
+  ChatSuggestion,
+} from "@/services/chat.types"
 
 interface Message {
   id: string
   role: "user" | "assistant"
   content: string
   attachments?: ChatMessageAttachment[]
+  sources?: string[]
+  subgraph?: {
+    nodes: AssistantSubgraphNode[]
+    edges: AssistantSubgraphEdge[]
+  }
+  reasoningPaths?: string[]
   timestamp: Date
 }
 
@@ -140,8 +159,16 @@ export function Chatbot() {
 
   const [isOpen, setIsOpen] = useState(false)
   const [isExpanded, setIsExpanded] = useState(false)
-  const [messages, setMessages] = useState<Message[]>([])
-  const [suggestions, setSuggestions] = useState<ChatSuggestion[]>([])
+  const [mode, setMode] = useState<ChatPanelMode>("assistant")
+  const [csMessages, setCsMessages] = useState<Message[]>([])
+  const [assistantMessages, setAssistantMessages] = useState<Message[]>([])
+  const [csSuggestions, setCsSuggestions] = useState<ChatSuggestion[]>([])
+  const [assistantConfig, setAssistantConfig] = useState<AssistantConfig | null>(
+    null,
+  )
+  const [assistantSuggestions, setAssistantSuggestions] = useState<
+    ChatSuggestion[]
+  >([])
   const [placeholderReply, setPlaceholderReply] = useState(
     "문의가 접수되었습니다. 담당자가 이메일로 연락드리겠습니다.",
   )
@@ -155,35 +182,58 @@ export function Chatbot() {
   const [contactEmail, setContactEmail] = useState("")
   const [pendingFiles, setPendingFiles] = useState<PendingAttachment[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isAssistantThinking, setIsAssistantThinking] = useState(false)
+
+  const messages = mode === "cs" ? csMessages : assistantMessages
+  const suggestions = mode === "cs" ? csSuggestions : assistantSuggestions
 
   useEffect(() => {
     getChatConfig()
       .then((config) => {
-        setMessages([
+        setCsMessages([
           {
-            id: "welcome",
+            id: "cs-welcome",
             role: "assistant",
-            content: config.welcomeMessage,
+            content: config.cs.welcomeMessage,
             timestamp: new Date(),
           },
         ])
-        setSuggestions(config.suggestions)
-        setPlaceholderReply(config.placeholderReply)
-        setInputPlaceholder(config.inputPlaceholder)
-        setCsEmail(config.csEmail)
-        setMaxAttachments(config.maxAttachments)
-        setMaxMessageLength(config.maxMessageLength)
-        setMaxImageSizeMb(config.maxImageSizeMb)
-        setMaxVideoSizeMb(config.maxVideoSizeMb)
+        setAssistantMessages([
+          {
+            id: "assistant-welcome",
+            role: "assistant",
+            content: config.assistant.welcomeMessage,
+            timestamp: new Date(),
+          },
+        ])
+        setCsSuggestions(config.cs.suggestions)
+        setAssistantSuggestions(config.assistant.suggestions)
+        setAssistantConfig(config.assistant)
+        setPlaceholderReply(config.cs.placeholderReply)
+        setInputPlaceholder(config.cs.inputPlaceholder)
+        setCsEmail(config.cs.csEmail)
+        setMaxAttachments(config.cs.maxAttachments)
+        setMaxMessageLength(config.cs.maxMessageLength)
+        setMaxImageSizeMb(config.cs.maxImageSizeMb)
+        setMaxVideoSizeMb(config.cs.maxVideoSizeMb)
       })
       .catch((error) => {
-        console.error("CS 챗봇 설정 로드 실패:", error)
-        setMessages([
+        console.error("채팅 설정 로드 실패:", error)
+        setCsMessages([
           {
-            id: "welcome",
+            id: "cs-welcome",
             role: "assistant",
             content:
               "안녕하세요, 봄이봇 고객지원입니다. 이슈 내용과 스크린샷을 보내주시면 이메일로 답변드립니다.",
+            timestamp: new Date(),
+          },
+        ])
+        setAssistantMessages([
+          {
+            id: "assistant-welcome",
+            role: "assistant",
+            content:
+              "안녕하세요! 사업 데이터를 바탕으로 질문에 답해 드립니다.",
             timestamp: new Date(),
           },
         ])
@@ -192,7 +242,7 @@ export function Chatbot() {
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  }, [messages, isOpen])
+  }, [messages, isOpen, mode])
 
   useEffect(() => {
     return () => {
@@ -266,7 +316,57 @@ export function Chatbot() {
     })
   }
 
-  const handleSend = async () => {
+  const handleAssistantSend = async () => {
+    const text = input.trim()
+    if (!text || isAssistantThinking) return
+
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      role: "user",
+      content: text,
+      timestamp: new Date(),
+    }
+
+    setAssistantMessages((prev) => [...prev, userMessage])
+    setInput("")
+    setIsAssistantThinking(true)
+
+    try {
+      const result = await askAssistantQuestion({
+        message: text,
+        pageUrl: typeof window !== "undefined" ? window.location.href : undefined,
+      })
+
+      setAssistantMessages((prev) => [
+        ...prev,
+        {
+          id: (Date.now() + 1).toString(),
+          role: "assistant",
+          content: result.answer,
+          sources: result.sources,
+          subgraph: result.subgraph,
+          reasoningPaths: result.reasoningPaths,
+          timestamp: new Date(),
+        },
+      ])
+    } catch (error) {
+      console.error("어시스턴트 응답 실패:", error)
+      setAssistantMessages((prev) => [
+        ...prev,
+        {
+          id: (Date.now() + 1).toString(),
+          role: "assistant",
+          content:
+            "데이터 조회에 실패했습니다. 잠시 후 다시 시도하거나 CS 탭으로 문의해 주세요.",
+          timestamp: new Date(),
+        },
+      ])
+    } finally {
+      setIsAssistantThinking(false)
+    }
+  }
+
+  const handleCsSend = async () => {
     const text = input.trim()
     if (!text && pendingFiles.length === 0) return
     if (text.length > maxMessageLength) {
@@ -298,7 +398,7 @@ export function Chatbot() {
       timestamp: new Date(),
     }
 
-    setMessages((prev) => [...prev, userMessage])
+    setCsMessages((prev) => [...prev, userMessage])
     setInput("")
 
     try {
@@ -324,11 +424,14 @@ export function Chatbot() {
         timestamp: new Date(),
       }
 
-      setMessages((prev) => [...prev, aiMessage])
+      setCsMessages((prev) => [...prev, aiMessage])
 
       toast({
-        title: "문의가 접수되었습니다",
-        description: `${result.sentTo}로 메일이 발송되었습니다. (${result.ticketId})`,
+        title: result.emailSent ? "문의가 접수되었습니다" : "접수됨 (메일 미발송)",
+        description: result.emailSent
+          ? `${result.sentTo}로 메일이 발송되었습니다. (${result.ticketId})`
+          : `${result.message} (${result.ticketId})`,
+        variant: result.emailSent ? "default" : "destructive",
       })
 
       setPendingFiles((prev) => {
@@ -347,19 +450,76 @@ export function Chatbot() {
     }
   }
 
+  const handleSend = () => {
+    if (mode === "cs") {
+      void handleCsSend()
+      return
+    }
+    void handleAssistantSend()
+  }
+
+  const runAssistantQuery = async (text: string) => {
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      role: "user",
+      content: text,
+      timestamp: new Date(),
+    }
+    setAssistantMessages((prev) => [...prev, userMessage])
+    setIsAssistantThinking(true)
+    try {
+      const result = await askAssistantQuestion({ message: text })
+      setAssistantMessages((prev) => [
+        ...prev,
+        {
+          id: (Date.now() + 1).toString(),
+          role: "assistant",
+          content: result.answer,
+          sources: result.sources,
+          subgraph: result.subgraph,
+          reasoningPaths: result.reasoningPaths,
+          timestamp: new Date(),
+        },
+      ])
+    } catch {
+      setAssistantMessages((prev) => [
+        ...prev,
+        {
+          id: (Date.now() + 1).toString(),
+          role: "assistant",
+          content: "데이터 조회에 실패했습니다.",
+          timestamp: new Date(),
+        },
+      ])
+    } finally {
+      setIsAssistantThinking(false)
+    }
+  }
+
   if (!isOpen) {
     return (
-      <div className="fixed bottom-0 right-0 z-50 flex flex-col items-end p-4 pb-5 print:hidden">
+      <div className="fixed bottom-0 right-0 z-50 flex flex-col items-end gap-2 p-4 pb-5 print:hidden">
         <Button
-          onClick={() => setIsOpen(true)}
-          className="h-12 gap-2 rounded-full px-5 shadow-lg"
+          onClick={() => {
+            setMode("assistant")
+            setIsOpen(true)
+          }}
+          className="h-11 gap-2 rounded-full px-4 shadow-lg"
         >
-          <Headphones className="size-5" />
-          고객지원
+          <Bot className="size-5" />
+          데이터 챗봇
         </Button>
-        <p className="mt-1.5 pr-1 text-[10px] text-muted-foreground">
-          이슈·사진·동영상 → 메일 접수
-        </p>
+        <Button
+          onClick={() => {
+            setMode("cs")
+            setIsOpen(true)
+          }}
+          variant="outline"
+          className="h-10 gap-2 rounded-full bg-card px-4 shadow-md"
+        >
+          <Headphones className="size-4" />
+          CS 문의
+        </Button>
       </div>
     )
   }
@@ -373,16 +533,29 @@ export function Chatbot() {
           : "h-[min(580px,85vh)] w-[400px]",
       )}
     >
-      <div className="flex items-center justify-between border-b bg-primary/5 px-4 py-3">
+      <div className="space-y-2 border-b bg-primary/5 px-3 py-3">
+        <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <div className="flex size-9 items-center justify-center rounded-full bg-primary/15">
-            <Headphones className="size-4 text-primary" />
+            {mode === "cs" ? (
+              <Headphones className="size-4 text-primary" />
+            ) : (
+              <Bot className="size-4 text-primary" />
+            )}
           </div>
           <div>
-            <h3 className="font-semibold leading-tight">고객지원 (CS)</h3>
-            <p className="flex items-center gap-1 text-[11px] text-muted-foreground">
-              <Mail className="size-3" />
-              {csEmail}
+            <h3 className="font-semibold leading-tight">
+              {mode === "cs" ? "고객지원 (CS)" : "데이터 챗봇"}
+            </h3>
+            <p className="text-[11px] text-muted-foreground">
+              {mode === "cs" ? (
+                <span className="flex items-center gap-1">
+                  <Mail className="size-3" />
+                  {csEmail}
+                </span>
+              ) : (
+                "온톨로지 지식 그래프 + 실적·대시보드 데이터"
+              )}
             </p>
           </div>
         </div>
@@ -407,6 +580,36 @@ export function Chatbot() {
           >
             <X className="size-4" />
           </Button>
+          </div>
+        </div>
+
+        <div className="flex rounded-lg border bg-background p-0.5 text-xs">
+          <button
+            type="button"
+            onClick={() => setMode("assistant")}
+            className={cn(
+              "flex flex-1 items-center justify-center gap-1 rounded-md px-2 py-1.5 font-medium transition-colors",
+              mode === "assistant"
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:bg-muted",
+            )}
+          >
+            <Bot className="size-3.5" />
+            데이터 챗봇
+          </button>
+          <button
+            type="button"
+            onClick={() => setMode("cs")}
+            className={cn(
+              "flex flex-1 items-center justify-center gap-1 rounded-md px-2 py-1.5 font-medium transition-colors",
+              mode === "cs"
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:bg-muted",
+            )}
+          >
+            <Headphones className="size-3.5" />
+            CS
+          </button>
         </div>
       </div>
 
@@ -428,6 +631,22 @@ export function Chatbot() {
               )}
             >
               <p className="whitespace-pre-wrap text-sm">{message.content}</p>
+              {mode === "assistant" &&
+              message.role === "assistant" &&
+              message.subgraph &&
+              message.subgraph.nodes.length > 0 ? (
+                <OntologyGraphView
+                  nodes={message.subgraph.nodes}
+                  edges={message.subgraph.edges}
+                  reasoningPaths={message.reasoningPaths}
+                  maxHeight={isExpanded ? 200 : 150}
+                />
+              ) : null}
+              {message.sources && message.sources.length > 0 ? (
+                <p className="mt-1.5 text-[10px] opacity-70">
+                  출처: {message.sources.join(" · ")}
+                </p>
+              ) : null}
               {message.attachments && message.attachments.length > 0 ? (
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   {message.attachments.map((attachment) => {
@@ -469,10 +688,17 @@ export function Chatbot() {
           </div>
         ))}
 
+        {isAssistantThinking ? (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Loader2 className="size-4 animate-spin" />
+            {assistantConfig?.thinkingLabel ?? "데이터를 조회하는 중…"}
+          </div>
+        ) : null}
+
         {messages.length === 1 && suggestions.length > 0 ? (
           <div className="pt-1">
             <p className="mb-2 text-xs font-medium text-muted-foreground">
-              자주 묻는 문의
+              {mode === "cs" ? "자주 묻는 문의" : "추천 질문"}
             </p>
             <div className="space-y-1.5">
               {suggestions.map((suggestion) => {
@@ -482,8 +708,15 @@ export function Chatbot() {
                   <button
                     key={suggestion.id}
                     type="button"
-                    onClick={() => setInput(suggestion.text)}
-                    className="flex w-full items-center gap-2 rounded-lg border px-3 py-2 text-left text-sm transition-colors hover:bg-muted"
+                    onClick={() => {
+                      if (mode === "assistant") {
+                        void runAssistantQuery(suggestion.text)
+                        return
+                      }
+                      setInput(suggestion.text)
+                    }}
+                    disabled={isAssistantThinking}
+                    className="flex w-full items-center gap-2 rounded-lg border px-3 py-2 text-left text-sm transition-colors hover:bg-muted disabled:opacity-50"
                   >
                     <Icon className="size-4 shrink-0 text-muted-foreground" />
                     <span>{suggestion.text}</span>
@@ -497,7 +730,7 @@ export function Chatbot() {
         <div ref={messagesEndRef} />
       </div>
 
-      {pendingFiles.length > 0 ? (
+      {mode === "cs" && pendingFiles.length > 0 ? (
         <div className="flex gap-2 overflow-x-auto border-t px-4 py-2">
           {pendingFiles.map((item) => (
             <div key={item.id} className="relative shrink-0">
@@ -520,71 +753,92 @@ export function Chatbot() {
       ) : null}
 
       <div className="space-y-2 border-t p-3">
-        <Input
-          type="email"
-          placeholder="회신 받을 이메일 (선택)"
-          value={contactEmail}
-          onChange={(event) => setContactEmail(event.target.value)}
-          className="h-8 text-xs"
-        />
+        {mode === "cs" ? (
+          <Input
+            type="email"
+            placeholder="회신 받을 이메일 (선택)"
+            value={contactEmail}
+            onChange={(event) => setContactEmail(event.target.value)}
+            className="h-8 text-xs"
+          />
+        ) : null}
 
         <div className="flex items-end gap-2">
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*,video/*"
-            multiple
-            className="hidden"
-            onChange={handleFilesChange}
-          />
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            className="size-9 shrink-0"
-            onClick={handlePickMedia}
-            disabled={pendingFiles.length >= maxAttachments}
-            title="사진·동영상 첨부"
-          >
-            <ImagePlus className="size-4" />
-          </Button>
+          {mode === "cs" ? (
+            <>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*,video/*"
+                multiple
+                className="hidden"
+                onChange={handleFilesChange}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="size-9 shrink-0"
+                onClick={handlePickMedia}
+                disabled={pendingFiles.length >= maxAttachments}
+                title="사진·동영상 첨부"
+              >
+                <ImagePlus className="size-4" />
+              </Button>
+            </>
+          ) : null}
           <div className="relative min-w-0 flex-1">
             <Textarea
-              placeholder={inputPlaceholder}
+              placeholder={
+                mode === "cs"
+                  ? inputPlaceholder
+                  : (assistantConfig?.inputPlaceholder ??
+                    "데이터에 대해 질문해 보세요")
+              }
               value={input}
               onChange={(event) => setInput(event.target.value)}
               onKeyDown={(event) => {
                 if (event.key === "Enter" && !event.shiftKey) {
                   event.preventDefault()
-                  void handleSend()
+                  handleSend()
                 }
               }}
               maxLength={maxMessageLength}
-              rows={isExpanded ? 5 : 3}
-              className="min-h-[72px] max-h-[min(240px,35vh)] resize-y pb-6 pr-1 text-sm leading-relaxed"
-              disabled={isSubmitting}
-            />
-            <p
+              rows={isExpanded ? 5 : mode === "cs" ? 3 : 2}
               className={cn(
-                "pointer-events-none absolute bottom-1.5 right-2 text-[10px] tabular-nums",
-                input.length > maxMessageLength * 0.9
-                  ? "text-destructive"
-                  : "text-muted-foreground/80",
+                "max-h-[min(240px,35vh)] resize-y text-sm leading-relaxed",
+                mode === "cs"
+                  ? "min-h-[72px] pb-6 pr-1"
+                  : "min-h-[56px]",
               )}
-            >
-              {input.length.toLocaleString()} / {maxMessageLength.toLocaleString()}
-            </p>
+              disabled={isSubmitting || isAssistantThinking}
+            />
+            {mode === "cs" ? (
+              <p
+                className={cn(
+                  "pointer-events-none absolute bottom-1.5 right-2 text-[10px] tabular-nums",
+                  input.length > maxMessageLength * 0.9
+                    ? "text-destructive"
+                    : "text-muted-foreground/80",
+                )}
+              >
+                {input.length.toLocaleString()} /{" "}
+                {maxMessageLength.toLocaleString()}
+              </p>
+            ) : null}
           </div>
           <Button
             type="button"
             size="icon"
             className="size-9 shrink-0"
-            onClick={() => void handleSend()}
+            onClick={handleSend}
             disabled={
-              isSubmitting || (!input.trim() && pendingFiles.length === 0)
+              mode === "cs"
+                ? isSubmitting || (!input.trim() && pendingFiles.length === 0)
+                : isAssistantThinking || !input.trim()
             }
           >
-            {isSubmitting ? (
+            {isSubmitting || isAssistantThinking ? (
               <Loader2 className="size-4 animate-spin" />
             ) : (
               <Send className="size-4" />
@@ -593,9 +847,19 @@ export function Chatbot() {
         </div>
 
         <p className="text-center text-[10px] leading-relaxed text-muted-foreground">
-          문의·사진·동영상은 <span className="font-medium">{csEmail}</span>로 메일
-          접수됩니다. 이미지 {maxImageSizeMb}MB·동영상 {maxVideoSizeMb}MB 이하,
-          첨부 최대 {maxAttachments}개.
+          {mode === "cs" ? (
+            <>
+              문의·사진·동영상은{" "}
+              <span className="font-medium">{csEmail}</span>로 메일 접수됩니다.
+              이미지 {maxImageSizeMb}MB·동영상 {maxVideoSizeMb}MB 이하, 첨부 최대{" "}
+              {maxAttachments}개.
+            </>
+          ) : (
+            <>
+              계획/실적·대시보드·칸반·설문 등 연결된 목업 데이터를 집계해
+              답변합니다. 「전체 요약」「5월 실적」처럼 물어보세요.
+            </>
+          )}
         </p>
       </div>
     </div>

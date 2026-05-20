@@ -40,7 +40,7 @@ lib/mocks/*.ts         app/api/**/route.ts → *.mock.service.ts
 8. [실적 관리](#7-실적-관리)
 9. [사업 문서](#8-사업-문서-보고서)
 10. [만족도 조사](#9-만족도-조사-survey)
-11. [고객지원 CS](#10-고객지원-cs-챗봇)
+11. [챗봇 (CS · 데이터 · 온톨로지)](#10-챗봇-cs--데이터-어시스턴트--온톨로지)
 12. [업무 레거시](#11-업무task-레거시)
 13. [전체 API 엔드포인트 목록](#전체-api-엔드포인트-목록)
 14. [Service ↔ API 매핑](#service--api-매핑-요약)
@@ -951,47 +951,122 @@ lib/mocks/*.ts         app/api/**/route.ts → *.mock.service.ts
 
 ---
 
-## 10. 고객지원 (CS 챗봇)
+## 10. 챗봇 (CS · 데이터 어시스턴트 · 온톨로지)
 
-전역 플로팅 위젯. 우하단 **고객지원** 버튼 → 긴 문의 텍스트·이미지·동영상 첨부 → CS 메일 접수(목업).
+전역 플로팅 위젯 (`components/chatbot.tsx`). **CS** / **데이터 챗봇** 탭 전환.
+
+| 탭 | API | 서버 로직 |
+|----|-----|-----------|
+| CS | `POST /api/chat/cs-ticket` | `lib/chat/cs-email.ts` (SMTP) |
+| 데이터 | `POST /api/chat/assistant` | 온톨로지 + Gemini + 규칙 폴백 |
+| (디버그) | `GET /api/chat/ontology` | `lib/chat/ontology/*` |
+
+**클라이언트:** `chat.service.ts` → mock 모드에서도 어시스턴트·CS·온톨로지는 위 API를 호출 (서버 전용 처리).
+
+**서버:** `chat.server.service.ts` ← `app/api/chat/*`
+
+### 환경 변수
+
+| 변수 | 필수 | 설명 |
+|------|------|------|
+| `GEMINI_API_KEY` | 데이터 챗봇 LLM | 없으면 규칙·그래프 엔진만 사용 |
+| `SMTP_USER`, `SMTP_PASS` | CS 메일 | Gmail **앱 비밀번호** 권장 |
+| `CS_EMAIL_TO` | N | 수신 주소 (기본 `bomi20260413@gmail.com`) |
+| `SMTP_SERVICE` | N | 기본 `gmail` |
 
 ### `GET /api/chat/config`
 
-CS 챗봇 UI 설정.
+챗봇 UI 설정 (CS + 데이터 어시스턴트).
 
-**Response 200:** `ChatConfig`
+**Response 200:** `ChatAppConfig`
 
 ```json
 {
-  "mode": "cs",
-  "welcomeMessage": "안녕하세요, 봄이봇 고객지원입니다...",
-  "placeholderReply": "문의가 접수되었습니다...",
-  "inputPlaceholder": "이슈 내용을 입력하세요. (Shift+Enter 줄바꿈)",
-  "csEmail": "bomi20260413@gmail.com",
-  "maxAttachments": 5,
-  "maxMessageLength": 5000,
-  "maxImageSizeMb": 10,
-  "maxVideoSizeMb": 100,
-  "suggestions": [
-    { "id": "s1", "text": "화면에 오류가 나요. 캡처 첨부할게요.", "icon": "alert" }
-  ]
+  "cs": {
+    "welcomeMessage": "안녕하세요, 봄이봇 고객지원입니다...",
+    "placeholderReply": "문의가 접수되었습니다...",
+    "inputPlaceholder": "이슈 내용을 입력하세요.",
+    "csEmail": "bomi20260413@gmail.com",
+    "maxAttachments": 5,
+    "maxMessageLength": 5000,
+    "maxImageSizeMb": 10,
+    "maxVideoSizeMb": 100,
+    "suggestions": [{ "id": "s1", "text": "...", "icon": "alert" }]
+  },
+  "assistant": {
+    "welcomeMessage": "안녕하세요! 봄이봇 데이터 어시스턴트입니다...",
+    "inputPlaceholder": "예: 5월 실적 예산 합계…",
+    "thinkingLabel": "데이터를 조회하는 중…",
+    "suggestions": [{ "id": "a1", "text": "계획/실적 데이터 전체 요약해줘", "icon": "barChart" }]
+  }
 }
 ```
 
+**Service:** `getChatConfig()` → `chat.service.ts`
+
+### `POST /api/chat/assistant`
+
+온톨로지 지식 그래프로 질문 범위를 좁힌 뒤, 시스템 데이터·(선택) LLM으로 답변.
+
+**Request Body:** `AssistantQuestionRequest`
+
+| 필드 | 타입 | 필수 | 설명 |
+|------|------|------|------|
+| message | string | Y | 사용자 질문 |
+| pageUrl | string | N | 질문 시점 URL |
+
+**Response 200:** `AssistantQuestionResponse`
+
+```json
+{
+  "answer": "5월 계획 예산 합계는 …",
+  "sources": ["ontology", "performance"],
+  "dataAsOf": "2026-05-19T12:00:00.000Z",
+  "subgraph": {
+    "nodes": [{ "id": "domain:performance", "type": "Domain", "label": "계획/실적" }],
+    "edges": [{ "source": "domain:performance", "target": "platform:bomibot", "predicate": "partOf" }]
+  },
+  "reasoningPaths": ["계획/실적 —[상위 포함]→ 봄이봇"]
+}
+```
+
+**Service:** `askAssistantQuestion()` → `chat.service.ts`
+
+### `GET /api/chat/ontology`
+
+전체 지식 그래프 또는 질문 기반 서브그래프 조회.
+
+**Query:** `q` (선택) — 자연어 질문
+
+**Response 200:** `OntologyGraphApiResponse` (`OntologyGraphPayload` + 선택 `query`)
+
+```json
+{
+  "graph": { "version": "1.0.0", "generatedAt": "...", "nodes": [], "edges": [], "classHierarchy": {} },
+  "stats": { "nodeCount": 120, "edgeCount": 200, "domainCount": 6 },
+  "query": {
+    "matchedNodeIds": ["domain:performance"],
+    "subgraph": { "nodes": [], "edges": [] },
+    "reasoningPaths": [],
+    "contextText": "..."
+  }
+}
+```
+
+**Service:** `getOntologyGraph(q?)` → `chat.service.ts`
+
 ### `POST /api/chat/cs-ticket`
 
-CS 문의 접수 (이메일 발송 목업).
+CS 문의 접수 · SMTP 메일 발송.
 
 **Request Body:** `CsTicketRequest`
 
 | 필드 | 타입 | 필수 | 설명 |
 |------|------|------|------|
 | message | string | △ | 문의 내용 (`message` 또는 `attachments` 중 하나 이상) |
-| attachments | ChatAttachmentPayload[] | N | 이미지·동영상 Base64 (`image/*`, `video/*`) |
+| attachments | ChatAttachmentPayload[] | N | 이미지·동영상 Base64 |
 | pageUrl | string | N | 접수 시점 페이지 URL |
-| contactEmail | string | N | 회신 받을 이메일 |
-
-`ChatAttachmentPayload`: `{ name, type, dataUrl }` (`dataUrl` = `data:image/...` 또는 `data:video/...;base64,...`)
+| contactEmail | string | N | 회신 이메일 (`Reply-To`) |
 
 **Response 200:** `CsTicketResponse`
 
@@ -1000,13 +1075,15 @@ CS 문의 접수 (이메일 발송 목업).
   "ticketId": "CS-M9XK2ABC",
   "emailSent": true,
   "sentTo": "bomi20260413@gmail.com",
-  "message": "bomi20260413@gmail.com로 접수되었습니다. 티켓 번호: CS-M9XK2ABC"
+  "message": "bomi20260413@gmail.com로 접수 메일을 발송했습니다. 티켓 번호: CS-M9XK2ABC"
 }
 ```
 
-**Response 400:** 문의 내용·첨부 모두 없음
+`emailSent: false` — SMTP 미설정 시 티켓 ID만 발급, 메일 미발송 안내.
 
-**Service:** `getChatConfig()`, `submitCsTicket()` → `chat.service.ts`
+**Response 400 / 500** — 본문 없음 / SMTP 오류
+
+**Service:** `submitCsTicket()` → `chat.service.ts`
 
 ---
 
@@ -1084,8 +1161,10 @@ CS 문의 접수 (이메일 발송 목업).
 | POST | `/api/surveys/{id}` | 설문 저장 |
 | POST | `/api/surveys/{id}/responses` | 설문 응답 제출 |
 | GET | `/api/surveys/{id}/results` | 설문 결과 |
-| GET | `/api/chat/config` | CS 챗봇 설정 |
-| POST | `/api/chat/cs-ticket` | CS 문의 접수 |
+| GET | `/api/chat/config` | 챗봇 UI 설정 (CS + 어시스턴트) |
+| POST | `/api/chat/assistant` | 데이터 어시스턴트 질의 |
+| GET | `/api/chat/ontology` | 온톨로지 지식 그래프 (`?q=`) |
+| POST | `/api/chat/cs-ticket` | CS 문의 · SMTP 메일 |
 | GET | `/api/tasks` | 업무 flat 목록 |
 | POST | `/api/tasks` | 업무 생성 |
 | PUT | `/api/tasks` | 업무 수정 |
@@ -1097,7 +1176,7 @@ CS 문의 접수 (이메일 발송 목업).
 
 | 도메인 | Facade Service | Mock Service | API Prefix |
 |--------|----------------|--------------|------------|
-| 대시보드 | `dashboard.service` | `dashboard.mockservice` | `/api/dashboard` |
+| 대시보드 | `dashboard.service` | `dashboard.mock.service` | `/api/dashboard` |
 | 조직 | `organization.service` | `organization.mock.service` | `/api/employees` |
 | 전자책 | `ebooks.service` | `ebooks.mock.service` | `/api/ebooks` |
 | 파일 | `files.service` | `files.mock.service` | `/api/files`, `/api/files/manager` |
@@ -1107,7 +1186,7 @@ CS 문의 접수 (이메일 발송 목업).
 | 실적 | `kanban.performance.service` | `kanban.performance.mock.service` | `/api/performance`, `/api/performance/monthly-plan` |
 | 사업문서 | `kanban.documents.service` | `kanban.documents.mock.service` | `/api/reports` |
 | 만족도조사 | `survey.service` | `survey.mock.service` | `/api/surveys` |
-| CS 챗봇 | `chat.service` | `chat.mock.service` | `/api/chat/config`, `/api/chat/cs-ticket` |
+| 챗봇 | `chat.service` | `chat.mock.service` (+ `chat.server.service`) | `/api/chat/*` |
 
 ---
 
@@ -1115,7 +1194,7 @@ CS 문의 접수 (이메일 발송 목업).
 
 | 파일 | 용도 | Mock Service |
 |------|------|----------------|
-| `lib/mocks/dashboard.mock.ts` | 대시보드 | `dashboard.mockservice.ts` |
+| `lib/mocks/dashboard.mock.ts` | 대시보드 | `dashboard.mock.service.ts` |
 | `lib/mocks/organization.mock.ts` | 조직·직원 | `organization.mock.service.ts` |
 | `lib/mocks/ebooks.mock.ts` | 전자책 | `ebooks.mock.service.ts` |
 | `lib/mocks/files.mock.ts` | 파일 목록 API | `files.mock.service.ts` |
@@ -1129,7 +1208,10 @@ CS 문의 접수 (이메일 발송 목업).
 | `lib/mocks/kanban.performance-summary.mock.ts` | 요약 시드(입력 mock 보조) | — |
 | `lib/mocks/kanban.version-history.mock.ts` | 버전 기록 | `kanban.version-history.mock.service.ts` |
 | `lib/mocks/survey.mock.ts` | 만족도 조사 전역 | `survey.mock.service.ts` |
-| `lib/mocks/chat.mock.ts` | CS 설정·티켓 데이터 | `chat.mock.service.ts` |
+| `lib/mocks/chat.mock.ts` | 챗봇 UI 설정 (CS·어시스턴트) | `chat.mock.service.ts` / `chat.server.service.ts` |
+| `lib/chat/ontology/*` | 지식 그래프 빌드·질의 | `chat.server.service.ts` |
+| `lib/chat/assistant-*.ts` | 데이터 스냅샷·LLM·규칙 답변 | `chat.server.service.ts` |
+| `lib/chat/cs-*.ts` | CS SMTP 발송 | `chat.server.service.ts` |
 
 **삭제·미사용:** 빈 `kanban.survey.*` 서비스 스텁, `kanban.survey.mock.ts` (설문은 `survey.mock.ts` + `getSurveys()` 로 통합).
 
@@ -1139,9 +1221,20 @@ CS 문의 접수 (이메일 발송 목업).
 
 ```typescript
 import { getProjects } from "@/services/kanban.board.service"
-import { submitCsTicket } from "@/services/chat.service"
+import {
+  askAssistantQuestion,
+  getOntologyGraph,
+  submitCsTicket,
+} from "@/services/chat.service"
 
 const projects = await getProjects("2026")
+
+const answer = await askAssistantQuestion({
+  message: "5월 계획 예산 합계는?",
+  pageUrl: window.location.href,
+})
+
+const graph = await getOntologyGraph("온라인홍보 실적")
 
 await submitCsTicket({
   message: "실적 화면 오류",

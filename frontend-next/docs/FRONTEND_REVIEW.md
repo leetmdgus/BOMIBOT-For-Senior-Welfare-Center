@@ -31,7 +31,8 @@
 | **사업문서** | `/kanban/documents` 단일 페이지 + 탭 전환, 실적/예산/사업계획서 테이블 |
 | **만족도조사** | `/survey/*` — `survey.service` + API, 에디터·미리보기·결과·저장 |
 | **사업평가** | `get/save/completeBusinessEvaluation`, 함께보기 패널, 섹션 추가·스크롤 |
-| **CS 챗봇** | 우하단 고객지원 위젯, 이미지 첨부, `POST /api/chat/cs-ticket` (메일 접수 목업) |
+| **CS 챗봇** | CS·데이터 탭, SMTP 메일(`lib/chat/cs-email`), `POST /api/chat/cs-ticket` |
+| **데이터 챗봇** | 온톨로지 그래프 + Gemini/규칙, `POST /api/chat/assistant`, 서브그래프 UI |
 | **버전 기록** | `kanban.version-history.service` + API |
 
 ---
@@ -92,7 +93,7 @@
 | 월별 계획 API | `kanban.performance.service` | `GET /api/performance/monthly-plan` | **UI 미사용** (아래 TODO) |
 | 사업문서 | `kanban.documents.service` | `GET /api/reports` | `documents-workspace` |
 | 글로벌 설문 | `survey.service` | `/api/surveys`, `/api/surveys/{id}` | `survey-detail-page`, editor, results |
-| CS 챗봇 | `chat.service` | `/api/chat/config`, `/api/chat/cs-ticket` | `chatbot.tsx` (layout) |
+| 챗봇 (CS·데이터·온톨로지) | `chat.service` | `/api/chat/*` | `chatbot.tsx` (layout) |
 
 ### ⚠️ 부분 연결 / 설계 이슈
 
@@ -111,10 +112,8 @@
 
 | 경로 | 상태 |
 |------|------|
-| `services/kanban.survey.*` | 파일 존재하나 **비어 있음** (글로벌 `survey.service`와 중복·미정리) |
-| `services/auth.service.ts` | 비어 있음 |
+| `services/auth.service.ts` | 스텁만 (FastAPI 연동 예정) |
 | `app/api/projects/route.ts` | 전체 주석 처리 |
-| `lib/api.ts` | 레거시 래퍼, **import 없음** (삭제 후보) |
 | `automation` | Coming Soon (의도적) |
 
 ---
@@ -144,7 +143,7 @@ FastAPI 연동 시 반드시 Service facade로 통일해야 합니다.
 | 칸반 CRUD | ✅ | ✅ |
 | 사업평가 save/complete | ✅ | ✅ (task-detail mock) |
 | 설문 save | ✅ | ✅ |
-| CS 티켓 | ✅ | 로그만 (메일 목업) |
+| CS 티켓 | ✅ | SMTP (`SMTP_USER`/`SMTP_PASS` 필요) |
 | 실적 POST/PUT/DELETE | 라우트만 | ❌ |
 | 전자책 POST | 라우트만 | ❌ |
 | 파일 POST/DELETE | 라우트만 | ❌ |
@@ -253,7 +252,7 @@ frontend-next/
 
 #### CS·문서
 
-- [ ] **CS 티켓** — 실제 메일 발송(SMTP/ SendGrid) 또는 티켓 DB 연동
+- [x] **CS 티켓 SMTP** — `lib/chat/cs-email.ts` + `.env` `SMTP_*` (티켓 DB는 미연동)
 - [ ] **사업문서** — 연도·분기 필터 query 파라미터 API 반영
 
 #### 설문
@@ -290,6 +289,6 @@ frontend-next/
 
 ## 11. 결론
 
-프론트엔드는 **Service + Mock + interim API** 패턴이 안정화되었고, **실적관리·사업문서·설문·사업평가·CS 챗봇**까지 UI가 크게 확장되었습니다. 다만 **실적 요약 시트·사업계획 탭의 API 분리**, **입력/파일 mutation 영속화**, **공통 api-client** 없이는 FastAPI 연동 시 기술 부채가 빠르게 증가합니다.
+프론트엔드는 **Service + Mock + interim API** 패턴이 안정화되었고, **실적관리·사업문서·설문·사업평가·챗봇(CS·데이터·온톨로지)**까지 UI가 크게 확장되었습니다. 다만 **실적 요약 시트·사업계획 탭의 API 분리**, **입력/파일 mutation 영속화**, **공통 api-client** 없이는 FastAPI 연동 시 기술 부채가 빠르게 증가합니다.
 
 백엔드와 [API_SPEC.md](./API_SPEC.md)를 기준으로 합의한 뒤, **§10 TODO의 P0 → P1** 순으로 처리하고 **칸반 → 실적 → 문서** 순 연동을 권장합니다.

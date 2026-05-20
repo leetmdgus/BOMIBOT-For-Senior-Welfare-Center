@@ -1,5 +1,5 @@
 import * as apiService from "./dashboard.api.service"
-import * as mockService from "./dashboard.mockservice"
+import * as mockService from "./dashboard.mock.service"
 
 const useMockApi = process.env.NEXT_PUBLIC_USE_MOCK_API === "true"
 

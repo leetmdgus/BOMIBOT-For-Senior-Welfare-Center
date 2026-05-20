@@ -762,6 +762,15 @@ export function InputManagementTab() {
           ref={tableScrollRef}
           className="min-h-0 flex-1 overflow-auto"
         >
+        <DndContext
+          sensors={dragSensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleRowDragEnd}
+        >
+        <SortableContext
+          items={displayedRows.map((row) => row.id)}
+          strategy={verticalListSortingStrategy}
+        >
         <table className="min-w-[1620px] border-collapse text-sm">
           <thead className="sticky top-0 z-10 bg-slate-50 shadow-sm">
             <tr className="bg-slate-50">
@@ -824,29 +833,20 @@ export function InputManagementTab() {
             </tr>
           </thead>
 
-          <DndContext
-            sensors={dragSensors}
-            collisionDetection={closestCenter}
-            onDragEnd={handleRowDragEnd}
-          >
-            <SortableContext
-              items={displayedRows.map((row) => row.id)}
-              strategy={verticalListSortingStrategy}
-            >
-              <InputManagementExcelGrid
-                rows={displayedRows}
-                onRowsChange={mergeDisplayedRows}
-                onOpenActualModal={openActualModal}
-                onToggleRowSelection={toggleRowSelection}
-                enableRowReorder={!isRowOrderLocked}
-                subProjectSuggestions={subProjects.filter(
-                  (item) => item !== "선택",
-                )}
-                detailCategorySuggestions={detailCategorySuggestions}
-              />
-            </SortableContext>
-          </DndContext>
+          <InputManagementExcelGrid
+            rows={displayedRows}
+            onRowsChange={mergeDisplayedRows}
+            onOpenActualModal={openActualModal}
+            onToggleRowSelection={toggleRowSelection}
+            enableRowReorder={!isRowOrderLocked}
+            subProjectSuggestions={subProjects.filter(
+              (item) => item !== "선택",
+            )}
+            detailCategorySuggestions={detailCategorySuggestions}
+          />
         </table>
+        </SortableContext>
+        </DndContext>
         </div>
       </div>
 
