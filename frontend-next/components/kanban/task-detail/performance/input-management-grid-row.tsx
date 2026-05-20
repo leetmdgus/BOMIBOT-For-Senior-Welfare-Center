@@ -31,7 +31,7 @@ export type InputManagementGridRowProps = {
   highlightRange: CellRange | null
   activeCell: CellPosition | null
   fillHandlePosition: CellPosition | null
-  onToggleRowSelection: (rowId: string) => void
+  onRowSelect: (rowId: string, shiftKey: boolean) => void
   onOpenActualModal: (rowId: string) => void
   onRowsChange: (rows: PerformanceRow[]) => void
   rows: PerformanceRow[]
@@ -56,7 +56,7 @@ export function InputManagementGridRow({
   highlightRange,
   activeCell,
   fillHandlePosition,
-  onToggleRowSelection,
+  onRowSelect,
   onOpenActualModal,
   onRowsChange,
   rows,
@@ -109,11 +109,18 @@ export function InputManagementGridRow({
         ) : null}
       </td>
       <td className="w-10 border border-slate-200 bg-white p-0 text-center">
-        <div className="flex h-8 items-center justify-center">
+        <div
+          className="flex h-8 cursor-pointer items-center justify-center"
+          onMouseDown={(event) => event.stopPropagation()}
+          onClick={(event) => {
+            event.stopPropagation()
+            onRowSelect(row.id, event.shiftKey)
+          }}
+        >
           <Checkbox
             checked={row.selected}
-            onCheckedChange={() => onToggleRowSelection(row.id)}
-            onMouseDown={(event) => event.stopPropagation()}
+            onCheckedChange={() => {}}
+            tabIndex={-1}
             aria-label="행 선택"
           />
         </div>

@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import {
   BadgeCheck,
   BarChart3,
@@ -11,7 +12,6 @@ import {
   MessageSquareText,
   MoreHorizontal,
   Pencil,
-  Plus,
   Trash2,
 } from "lucide-react"
 import { CSS } from "@dnd-kit/utilities"
@@ -78,6 +78,10 @@ function getTaskDetailPath(
   return `/kanban/task/${taskId}/${taskPathMap[columnType]}`
 }
 
+function stopCardNavigation(event: React.SyntheticEvent) {
+  event.stopPropagation()
+}
+
 export function TaskCard({
   task,
   isDragging,
@@ -88,10 +92,10 @@ export function TaskCard({
   staffList,
   projectImages,
   year,
-  onAddTask,
   onUpdateTask,
   onDeleteTask,
 }: TaskCardProps) {
+  const router = useRouter()
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
 
   const {
@@ -100,6 +104,7 @@ export function TaskCard({
     setNodeRef,
     transform,
     transition,
+    isDragging: isSortableDragging,
   } = useSortable({
     id: task.id,
   })
@@ -109,16 +114,26 @@ export function TaskCard({
     transition,
   }
 
+  const dragging = isDragging || isSortableDragging
+
   const hasProgress =
+    "completedCount" in task &&
+    "totalCount" in task &&
     task.completedCount !== undefined &&
     task.totalCount !== undefined
 
   const isCompleted =
     hasProgress &&
-    task.totalCount! > 0 &&
-    task.completedCount! >= task.totalCount!
+    (task as Task & { totalCount: number }).totalCount > 0 &&
+    (task as Task & { completedCount: number }).completedCount >=
+      (task as Task & { totalCount: number }).totalCount
 
   const detailPath = getTaskDetailPath(task.id, columnType)
+
+  const openDetail = () => {
+    if (dragging) return
+    router.push(detailPath)
+  }
 
   return (
     <>
@@ -127,39 +142,54 @@ export function TaskCard({
         style={style}
         {...attributes}
         {...listeners}
+        onClick={(event) => {
+          const target = event.target as HTMLElement
+          if (target.closest("[data-card-interactive]")) return
+          openDetail()
+        }}
         className={cn(
-          "group cursor-grab touch-none rounded-lg border border-border bg-card p-3 shadow-sm transition-all hover:shadow-md active:cursor-grabbing",
-          isDragging && "opacity-50 shadow-lg ring-2 ring-primary"
+          "group touch-none rounded-lg border border-border bg-card p-3 shadow-sm transition-all hover:shadow-md",
+          dragging
+            ? "cursor-grabbing opacity-50 shadow-lg ring-2 ring-primary"
+            : "cursor-grab active:cursor-grabbing",
         )}
       >
         <div className="mb-2 flex items-start gap-2">
-          <GripVertical className="mt-0.5 size-4 shrink-0 text-muted-foreground opacity-100" />
+          <GripVertical
+            className="mt-0.5 size-4 shrink-0 text-muted-foreground"
+            aria-hidden
+          />
 
-          <Link
-            href={detailPath}
-            className="group/title flex min-w-0 flex-1 items-start"
+          <div className="flex min-w-0 flex-1 items-start gap-1.5">
+            {isCompleted && (
+              <div className="mt-[2px] shrink-0">
+                <CheckCircle2 className="size-4 fill-emerald-500 text-white drop-shadow-sm" />
+              </div>
+            )}
+
+            <h4 className="line-clamp-2 min-w-0 flex-1 break-words text-[14px] font-semibold leading-5 tracking-[-0.01em] text-card-foreground transition-colors group-hover:text-primary">
+              {task.title}
+            </h4>
+          </div>
+
+          <div
+            data-card-interactive
+            className={cn(
+              "ml-auto flex shrink-0 items-center gap-0.5 transition-opacity",
+              "opacity-0 group-hover:opacity-100 focus-within:opacity-100",
+              dragging && "opacity-100",
+            )}
+            onClick={stopCardNavigation}
+            onPointerDown={stopCardNavigation}
           >
-            <div className="flex min-w-0 items-start gap-1.5">
-              {isCompleted && (
-                <div className="mt-[2px] shrink-0">
-                  <CheckCircle2 className="size-4 fill-emerald-500 text-white drop-shadow-sm" />
-                </div>
-              )}
-
-              <h4 className="line-clamp-2 break-words text-[14px] font-semibold leading-5 tracking-[-0.01em] text-card-foreground transition-colors group-hover/title:text-primary">
-                {task.title}
-              </h4>
-            </div>
-          </Link>
-
-          <div className="ml-auto flex shrink-0 items-center gap-1">
             <Button
               type="button"
               variant="ghost"
               size="icon"
-              className="size-6 opacity-100"
+              className="size-7 cursor-pointer"
+              aria-label="업무 편집"
               onClick={(event) => {
-                event.stopPropagation()
+                stopCardNavigation(event)
                 setIsEditModalOpen(true)
               }}
             >
@@ -172,7 +202,10 @@ export function TaskCard({
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="size-6 opacity-100"
+                  className="size-7 cursor-pointer"
+                  aria-label="업무 메뉴"
+                  onClick={stopCardNavigation}
+                  onPointerDown={stopCardNavigation}
                 >
                   <MoreHorizontal className="size-4" />
                 </Button>
@@ -229,10 +262,13 @@ export function TaskCard({
         <div className="mt-1.5 flex items-center justify-between gap-2 text-[10px] text-muted-foreground">
           <ContextMenu>
             <ContextMenuTrigger asChild>
-              <div className="flex min-w-0 cursor-context-menu items-center gap-1 rounded px-1 py-0.5 transition-colors hover:bg-muted">
-                <span className="shrink-0 text-primary">
-                  ✽
-                </span>
+              <div
+                data-card-interactive
+                className="flex min-w-0 cursor-context-menu items-center gap-1 rounded px-1 py-0.5 transition-colors hover:bg-muted"
+                onClick={stopCardNavigation}
+                onPointerDown={stopCardNavigation}
+              >
+                <span className="shrink-0 text-primary">✽</span>
 
                 <span className="truncate">
                   복지 1팀 {task.assignee} 사회복지사
@@ -253,22 +289,16 @@ export function TaskCard({
 
               <ContextMenuSeparator />
 
-              <ContextMenuItem>
-                복지팀 김연수 사회복지사
-              </ContextMenuItem>
+              <ContextMenuItem>복지팀 김연수 사회복지사</ContextMenuItem>
 
-              <ContextMenuItem>
-                복지팀 김태민 사회복지사
-              </ContextMenuItem>
+              <ContextMenuItem>복지팀 김태민 사회복지사</ContextMenuItem>
 
-              <ContextMenuItem>
-                복지팀 박수현 사회복지사
-              </ContextMenuItem>
+              <ContextMenuItem>복지팀 박수현 사회복지사</ContextMenuItem>
             </ContextMenuContent>
           </ContextMenu>
         </div>
       </div>
-      
+
       <TaskModal
         open={isEditModalOpen}
         onOpenChange={setIsEditModalOpen}

@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import type { PerformanceRow } from "@/services/kanban.performance.types"
 import * as XLSX from "xlsx"
 import {
@@ -58,6 +58,13 @@ import type { PerformanceSubProjectChip } from "@/services/kanban.performance.ty
 
 import { usePerformance } from "./performance-provider"
 import { InputManagementExcelGrid } from "./input-management-excel-grid"
+import {
+  cloneRowForClipboard,
+  isEditableTarget,
+  rowFromClipboardEntry,
+  rowsToTsv,
+  type RowClipboardEntry,
+} from "./input-management-row-selection"
 
 type RowData = PerformanceRow
 
@@ -86,6 +93,14 @@ const NAS_SEARCH_FIELDS = [
 
 const DEFAULT_ROW_BATCH = 10
 
+type SortDirection = "asc" | "desc" | null
+type SortColumn = "subProject" | "detailCategory" | "month"
+
+function monthToOrder(month: string) {
+  const match = month.match(/^(\d{1,2})\s*월/)
+  return match ? Number(match[1]) : 999
+}
+
 const createId = () =>
   typeof crypto !== "undefined" && crypto.randomUUID
     ? crypto.randomUUID()
@@ -94,15 +109,16 @@ const createId = () =>
 export function InputManagementTab() {
   const fileRef = useRef<HTMLInputElement | null>(null)
   const tableScrollRef = useRef<HTMLDivElement | null>(null)
+  const panelRef = useRef<HTMLDivElement | null>(null)
+  const rowSelectAnchorRef = useRef<string | null>(null)
+  const rowClipboardRef = useRef<RowClipboardEntry[]>([])
 
   const {
     rows,
     setRows,
     addSupplementaryBudget,
     planVersion,
-    toggleRowSelection,
     deleteSelectedRows,
-    copySelectedRows,
   } = usePerformance()
 
   const now = new Date()
@@ -115,12 +131,11 @@ export function InputManagementTab() {
   const [showActualModal, setShowActualModal] = useState(false)
   const [actualModalRowId, setActualModalRowId] = useState<string | null>(null)
 
-  const [subProjectSort, setSubProjectSort] = useState<"asc" | "desc" | null>(
-    null
+  const [subProjectSort, setSubProjectSort] = useState<SortDirection>(null)
+  const [detailCategorySort, setDetailCategorySort] = useState<SortDirection>(
+    null,
   )
-  const [detailCategorySort, setDetailCategorySort] = useState<
-    "asc" | "desc" | null
-  >(null)
+  const [monthSort, setMonthSort] = useState<SortDirection>(null)
 
   const [contextMenu, setContextMenu] = useState<{
     x: number
@@ -195,8 +210,20 @@ export function InputManagementTab() {
       })
     }
 
+    if (monthSort) {
+      next.sort((a, b) => {
+        const compared = monthToOrder(a.month) - monthToOrder(b.month)
+        if (compared !== 0) {
+          return monthSort === "asc" ? compared : -compared
+        }
+        const bySubProject = a.subProject.localeCompare(b.subProject, "ko")
+        if (bySubProject !== 0) return bySubProject
+        return a.detailCategory.localeCompare(b.detailCategory, "ko")
+      })
+    }
+
     return next
-  }, [filteredRows, subProjectSort, detailCategorySort])
+  }, [filteredRows, subProjectSort, detailCategorySort, monthSort])
 
   const actualModalRow = useMemo(
     () => rows.find((row) => row.id === actualModalRowId) ?? null,
@@ -239,7 +266,9 @@ export function InputManagementTab() {
     displayedRows.every((row) => row.selected)
 
   const isRowOrderLocked =
-    subProjectSort !== null || detailCategorySort !== null
+    subProjectSort !== null ||
+    detailCategorySort !== null ||
+    monthSort !== null
 
   const selectedDisplayedRows = useMemo(
     () => displayedRows.filter((row) => row.selected),
@@ -286,10 +315,9 @@ export function InputManagementTab() {
     setRows((prev) => [...prev, ...nextRows])
 
     requestAnimationFrame(() => {
-      const el = tableScrollRef.current
-      if (el) {
-        el.scrollTo({ top: el.scrollHeight, behavior: "smooth" })
-      }
+      const wrapper = tableScrollRef.current
+      const lastRow = wrapper?.querySelector("tbody tr:last-child")
+      lastRow?.scrollIntoView({ block: "nearest", behavior: "smooth" })
     })
   }
 
@@ -302,7 +330,145 @@ export function InputManagementTab() {
         displayedIds.has(row.id) ? { ...row, selected: nextSelected } : row,
       ),
     )
+
+    if (nextSelected && displayedRows[0]) {
+      rowSelectAnchorRef.current = displayedRows[0].id
+    }
   }
+
+  const handleRowSelect = useCallback(
+    (rowId: string, shiftKey: boolean) => {
+      const displayedIds = displayedRows.map((row) => row.id)
+
+      if (shiftKey && rowSelectAnchorRef.current) {
+        const anchorIndex = displayedIds.indexOf(rowSelectAnchorRef.current)
+        const clickIndex = displayedIds.indexOf(rowId)
+
+        if (anchorIndex >= 0 && clickIndex >= 0) {
+          const [from, to] =
+            anchorIndex <= clickIndex
+              ? [anchorIndex, clickIndex]
+              : [clickIndex, anchorIndex]
+          const rangeIds = new Set(displayedIds.slice(from, to + 1))
+
+          setRows((prev) =>
+            prev.map((row) => ({
+              ...row,
+              selected: rangeIds.has(row.id),
+            })),
+          )
+          return
+        }
+      }
+
+      setRows((prev) =>
+        prev.map((row) =>
+          row.id === rowId ? { ...row, selected: !row.selected } : row,
+        ),
+      )
+      rowSelectAnchorRef.current = rowId
+    },
+    [displayedRows, setRows],
+  )
+
+  const copySelectedDisplayedRows = useCallback(async () => {
+    const selected = displayedRows.filter((row) => row.selected)
+    if (selected.length === 0) return
+
+    rowClipboardRef.current = selected.map(cloneRowForClipboard)
+
+    try {
+      await navigator.clipboard.writeText(rowsToTsv(selected))
+    } catch {
+      // ignore clipboard errors
+    }
+  }, [displayedRows])
+
+  const pasteRowsBelowSelection = useCallback(() => {
+    const clipboard = rowClipboardRef.current
+    if (clipboard.length === 0) return
+
+    const selectedInDisplay = displayedRows.filter((row) => row.selected)
+    const newRows = clipboard.map((template) =>
+      rowFromClipboardEntry(template, createId),
+    )
+    const newIds = new Set(newRows.map((row) => row.id))
+
+    setRows((prev) => {
+      let next: RowData[]
+
+      if (selectedInDisplay.length === 0) {
+        next = [...prev, ...newRows]
+      } else {
+        const anchor = selectedInDisplay[selectedInDisplay.length - 1]
+        const insertIndex = prev.findIndex((row) => row.id === anchor.id)
+
+        if (insertIndex < 0) {
+          next = [...prev, ...newRows]
+        } else {
+          next = [...prev]
+          next.splice(insertIndex + 1, 0, ...newRows)
+        }
+      }
+
+      return next.map((row) => ({
+        ...row,
+        selected: newIds.has(row.id),
+      }))
+    })
+
+    if (newRows[0]) {
+      rowSelectAnchorRef.current = newRows[0].id
+    }
+  }, [displayedRows, setRows])
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (!panelRef.current?.contains(document.activeElement)) {
+        const active = document.activeElement
+        if (
+          active !== document.body &&
+          !panelRef.current?.contains(active)
+        ) {
+          return
+        }
+      }
+
+      if (isEditableTarget(event.target) && event.key !== "Delete") return
+
+      const hasSelected = selectedDisplayedCount > 0
+
+      if (event.key === "Delete" && hasSelected) {
+        event.preventDefault()
+        deleteSelectedRows()
+        rowSelectAnchorRef.current = null
+        return
+      }
+
+      if (!(event.ctrlKey || event.metaKey)) return
+
+      const key = event.key.toLowerCase()
+
+      if (key === "c" && hasSelected) {
+        event.preventDefault()
+        void copySelectedDisplayedRows()
+        return
+      }
+
+      if (key === "v" && rowClipboardRef.current.length > 0) {
+        event.preventDefault()
+        pasteRowsBelowSelection()
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown, true)
+    return () => window.removeEventListener("keydown", handleKeyDown, true)
+  }, [
+    copySelectedDisplayedRows,
+    deleteSelectedRows,
+    pasteRowsBelowSelection,
+    selectedDisplayedCount,
+  ])
 
   const exportExcel = () => {
     const sheet = XLSX.utils.json_to_sheet(
@@ -379,30 +545,33 @@ export function InputManagementTab() {
     setShowActualModal(true)
   }
 
-  const toggleSort = (
-    column: "subProject" | "detailCategory",
-    current: "asc" | "desc" | null
-  ) => {
+  const toggleSort = (column: SortColumn, current: SortDirection) => {
     const next =
       current === null ? "asc" : current === "asc" ? "desc" : null
 
-    if (column === "subProject") {
-      setSubProjectSort(next)
-      setDetailCategorySort(null)
-      return
-    }
+    setSubProjectSort(column === "subProject" ? next : null)
+    setDetailCategorySort(column === "detailCategory" ? next : null)
+    setMonthSort(column === "month" ? next : null)
+  }
 
-    setDetailCategorySort(next)
+  const toggleMonthSortView = () => {
     setSubProjectSort(null)
+    setDetailCategorySort(null)
+    setMonthSort((prev) => (prev === "asc" ? null : "asc"))
+  }
+
+  const leaveAllMonthsView = () => {
+    setViewAllMonths(false)
+    setMonthSort(null)
   }
 
   const goPrevMonth = () => {
-    setViewAllMonths(false)
+    leaveAllMonthsView()
     setSelectedMonth((prev) => (prev <= 1 ? 12 : prev - 1))
   }
 
   const goNextMonth = () => {
-    setViewAllMonths(false)
+    leaveAllMonthsView()
     setSelectedMonth((prev) => (prev >= 12 ? 1 : prev + 1))
   }
 
@@ -457,6 +626,7 @@ export function InputManagementTab() {
 
   return (
     <div
+      ref={panelRef}
       className="relative w-full rounded border border-slate-300 bg-white text-slate-900"
       onClick={() => {
         setContextMenu(null)
@@ -583,7 +753,7 @@ export function InputManagementTab() {
           value={String(selectedMonth)}
           disabled={viewAllMonths}
           onChange={(event) => {
-            setViewAllMonths(false)
+            leaveAllMonthsView()
             setSelectedMonth(Number(event.target.value))
           }}
           className="h-9 rounded-md border border-slate-300 bg-white px-3 text-sm disabled:opacity-50"
@@ -599,9 +769,33 @@ export function InputManagementTab() {
           type="button"
           variant={viewAllMonths ? "default" : "outline"}
           size="sm"
-          onClick={() => setViewAllMonths(true)}
+          onClick={() => {
+            setViewAllMonths(true)
+            if (monthSort === null) {
+              setSubProjectSort(null)
+              setDetailCategorySort(null)
+              setMonthSort("asc")
+            }
+          }}
         >
           전체
+        </Button>
+
+        <Button
+          type="button"
+          variant={monthSort ? "default" : "outline"}
+          size="sm"
+          className="gap-1"
+          disabled={!viewAllMonths}
+          onClick={toggleMonthSortView}
+          title={
+            viewAllMonths
+              ? "1월→12월 순으로 정렬 (다시 누르면 해제)"
+              : "전체 보기에서 사용할 수 있습니다"
+          }
+        >
+          <ArrowUpDown className="size-3.5" />
+          월순 정렬
         </Button>
 
         <Button type="button" variant="outline" size="icon" onClick={goPrevMonth}>
@@ -613,7 +807,7 @@ export function InputManagementTab() {
 
         <span className="text-sm text-muted-foreground">
           {viewAllMonths
-            ? `${selectedYear}년 전체`
+            ? `${selectedYear}년 전체${monthSort ? ` · 월 ${monthSort === "asc" ? "오름차순" : "내림차순"}` : ""}`
             : `${selectedYear}년 ${selectedMonth}월`}
         </span>
 
@@ -635,7 +829,7 @@ export function InputManagementTab() {
         </Button>
       </div>
 
-      <div className="mx-5 mb-5 flex max-h-[calc(100vh-14rem)] flex-col overflow-hidden rounded-lg border border-slate-300">
+      <div className="mx-5 mb-5 flex flex-col rounded-lg border border-slate-300">
         <div className="print-hide shrink-0 space-y-2 border-b border-slate-200 bg-slate-50 px-3 py-2">
           <div className="flex flex-wrap items-center gap-2">
           <span className="mr-auto text-xs text-muted-foreground">
@@ -683,58 +877,7 @@ export function InputManagementTab() {
               <Trash2 className="size-3.5" />
               선택 삭제
             </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant="ghost"
-              disabled={selectedDisplayedCount === 0}
-              className="gap-1"
-              onClick={copySelectedRows}
-            >
-              <Copy className="size-3.5" />
-              선택 복사
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant="ghost"
-              disabled={!canMoveSelectedRow}
-              className="gap-1"
-              onClick={() => moveDisplayedRow("up")}
-              title={
-                isRowOrderLocked
-                  ? "정렬 중에는 순서를 바꿀 수 없습니다"
-                  : "선택한 행을 위로"
-              }
-            >
-              <ArrowUp className="size-3.5" />
-              위로
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant="ghost"
-              disabled={!canMoveSelectedRow}
-              className="gap-1"
-              onClick={() => moveDisplayedRow("down")}
-              title={
-                isRowOrderLocked
-                  ? "정렬 중에는 순서를 바꿀 수 없습니다"
-                  : "선택한 행을 아래로"
-              }
-            >
-              <ArrowDown className="size-3.5" />
-              아래로
-            </Button>
-            {isRowOrderLocked ? (
-              <span className="text-xs text-muted-foreground">
-                정렬 해제 후 순서 변경
-              </span>
-            ) : (
-              <span className="hidden text-xs text-muted-foreground sm:inline">
-                ⋮⋮ 핸들로 드래그해 순서 변경
-              </span>
-            )}
+            
             <span className="hidden h-4 w-px bg-slate-300 sm:inline" />
             <Button
               type="button"
@@ -758,10 +901,7 @@ export function InputManagementTab() {
           </div>
         </div>
 
-        <div
-          ref={tableScrollRef}
-          className="min-h-0 flex-1 overflow-auto"
-        >
+        <div ref={tableScrollRef} className="overflow-x-auto">
         <DndContext
           sensors={dragSensors}
           collisionDetection={closestCenter}
@@ -799,7 +939,11 @@ export function InputManagementTab() {
                 />
               </Th>
               <Th rowSpan={2} className="w-[80px]">
-                월
+                <SortableHeader
+                  label="월"
+                  sort={monthSort}
+                  onToggle={() => toggleSort("month", monthSort)}
+                />
               </Th>
               <Th colSpan={3}>계획</Th>
               <Th colSpan={3}>실적</Th>
@@ -837,7 +981,8 @@ export function InputManagementTab() {
             rows={displayedRows}
             onRowsChange={mergeDisplayedRows}
             onOpenActualModal={openActualModal}
-            onToggleRowSelection={toggleRowSelection}
+            onRowSelect={handleRowSelect}
+            hasRowSelection={selectedDisplayedCount > 0}
             enableRowReorder={!isRowOrderLocked}
             subProjectSuggestions={subProjects.filter(
               (item) => item !== "선택",
@@ -1124,7 +1269,7 @@ function SortableHeader({
   onToggle,
 }: {
   label: string
-  sort: "asc" | "desc" | null
+  sort: SortDirection
   onToggle: () => void
 }) {
   const SortIcon =

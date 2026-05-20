@@ -316,24 +316,31 @@ export function Chatbot() {
     })
   }
 
-  const handleAssistantSend = async () => {
-    const text = input.trim()
-    if (!text || isAssistantThinking) return
+  const sendAssistantMessage = async (
+    text: string,
+    options?: { appendUserMessage?: boolean },
+  ) => {
+    const trimmed = text.trim()
+    if (!trimmed || isAssistantThinking) return
 
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      role: "user",
-      content: text,
-      timestamp: new Date(),
+    const appendUser = options?.appendUserMessage !== false
+    if (appendUser) {
+      setAssistantMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now().toString(),
+          role: "user",
+          content: trimmed,
+          timestamp: new Date(),
+        },
+      ])
     }
 
-    setAssistantMessages((prev) => [...prev, userMessage])
-    setInput("")
     setIsAssistantThinking(true)
 
     try {
       const result = await askAssistantQuestion({
-        message: text,
+        message: trimmed,
         pageUrl: typeof window !== "undefined" ? window.location.href : undefined,
       })
 
@@ -357,13 +364,20 @@ export function Chatbot() {
           id: (Date.now() + 1).toString(),
           role: "assistant",
           content:
-            "데이터 조회에 실패했습니다. 잠시 후 다시 시도하거나 CS 탭으로 문의해 주세요.",
+            "데이터 조회에 실패했습니다. 잠시 후 다시 시도하거나 화면을 닫은 뒤 하단의 CS 문의 버튼으로 문의해 주세요.",
           timestamp: new Date(),
         },
       ])
     } finally {
       setIsAssistantThinking(false)
     }
+  }
+
+  const handleAssistantSend = async () => {
+    const text = input.trim()
+    if (!text || isAssistantThinking) return
+    setInput("")
+    await sendAssistantMessage(text, { appendUserMessage: true })
   }
 
   const handleCsSend = async () => {
@@ -459,41 +473,7 @@ export function Chatbot() {
   }
 
   const runAssistantQuery = async (text: string) => {
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      role: "user",
-      content: text,
-      timestamp: new Date(),
-    }
-    setAssistantMessages((prev) => [...prev, userMessage])
-    setIsAssistantThinking(true)
-    try {
-      const result = await askAssistantQuestion({ message: text })
-      setAssistantMessages((prev) => [
-        ...prev,
-        {
-          id: (Date.now() + 1).toString(),
-          role: "assistant",
-          content: result.answer,
-          sources: result.sources,
-          subgraph: result.subgraph,
-          reasoningPaths: result.reasoningPaths,
-          timestamp: new Date(),
-        },
-      ])
-    } catch {
-      setAssistantMessages((prev) => [
-        ...prev,
-        {
-          id: (Date.now() + 1).toString(),
-          role: "assistant",
-          content: "데이터 조회에 실패했습니다.",
-          timestamp: new Date(),
-        },
-      ])
-    } finally {
-      setIsAssistantThinking(false)
-    }
+    await sendAssistantMessage(text, { appendUserMessage: true })
   }
 
   if (!isOpen) {
@@ -581,35 +561,6 @@ export function Chatbot() {
             <X className="size-4" />
           </Button>
           </div>
-        </div>
-
-        <div className="flex rounded-lg border bg-background p-0.5 text-xs">
-          <button
-            type="button"
-            onClick={() => setMode("assistant")}
-            className={cn(
-              "flex flex-1 items-center justify-center gap-1 rounded-md px-2 py-1.5 font-medium transition-colors",
-              mode === "assistant"
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:bg-muted",
-            )}
-          >
-            <Bot className="size-3.5" />
-            데이터 챗봇
-          </button>
-          <button
-            type="button"
-            onClick={() => setMode("cs")}
-            className={cn(
-              "flex flex-1 items-center justify-center gap-1 rounded-md px-2 py-1.5 font-medium transition-colors",
-              mode === "cs"
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:bg-muted",
-            )}
-          >
-            <Headphones className="size-3.5" />
-            CS
-          </button>
         </div>
       </div>
 
@@ -852,12 +803,12 @@ export function Chatbot() {
               문의·사진·동영상은{" "}
               <span className="font-medium">{csEmail}</span>로 메일 접수됩니다.
               이미지 {maxImageSizeMb}MB·동영상 {maxVideoSizeMb}MB 이하, 첨부 최대{" "}
-              {maxAttachments}개.
+              {maxAttachments}개. 다른 문의는 창을 닫은 뒤 데이터 챗봇 버튼을 이용해 주세요.
             </>
           ) : (
             <>
-              계획/실적·대시보드·칸반·설문 등 연결된 목업 데이터를 집계해
-              답변합니다. 「전체 요약」「5월 실적」처럼 물어보세요.
+              온톨로지 지식 그래프와 연결된 목업 데이터로 답합니다. 「전체 요약」「5월 실적」처럼
+              물어보세요. 고객지원은 창을 닫은 뒤 CS 문의 버튼을 눌러 주세요.
             </>
           )}
         </p>

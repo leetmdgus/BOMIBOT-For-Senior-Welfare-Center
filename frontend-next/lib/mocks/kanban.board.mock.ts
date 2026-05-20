@@ -159,7 +159,7 @@ export const projectsMock: KanbanProject[] = [
         tasks: [
           {
             id: "task1",
-            title: "3월 상담 실적 등록",
+            title: "일반상담 및 정보제공사업",
             description: "상담 인원 및 횟수 데이터 입력",
             assignee: "김영수",
             completedCount: 15,
@@ -174,7 +174,7 @@ export const projectsMock: KanbanProject[] = [
         tasks: [
           {
             id: "task2",
-            title: "2026 사업계획서 수립",
+            title: "전문상담사업",
             description: "연간 사업 목표 및 예산 수립",
             assignee: "김영수",
             completedCount: 8,
@@ -189,7 +189,7 @@ export const projectsMock: KanbanProject[] = [
         tasks: [
           {
             id: "task3",
-            title: "이용자 만족도 설문 배포",
+            title: "이용자관리 및 이용자권리증진사업",
             description: "상반기 프로그램 만족도 조사",
             assignee: "김영수",
             completedCount: 45,
@@ -204,7 +204,7 @@ export const projectsMock: KanbanProject[] = [
         tasks: [
           {
             id: "task4",
-            title: "상반기 종합 평가서 작성",
+            title: "평생교육지원사업",
             description: "성과 분석 및 개선 사항 도출",
             assignee: "김영수",
             completedCount: 3,
@@ -230,7 +230,7 @@ export const projectsMock: KanbanProject[] = [
         tasks: [
           {
             id: "task5",
-            title: "스마트폰 교육 실적",
+            title: "취미여가지원사업",
             description: "4월 스마트폰 활용 교육 실적 등록",
             assignee: "박미영",
             completedCount: 28,
@@ -245,7 +245,7 @@ export const projectsMock: KanbanProject[] = [
         tasks: [
           {
             id: "task6",
-            title: "하반기 교육 계획",
+            title: "문화예술지원사업",
             description: "하반기 정보화 교육 커리큘럼 수립",
             assignee: "박미영",
             completedCount: 5,
@@ -283,7 +283,7 @@ export const projectsMock: KanbanProject[] = [
         tasks: [
           {
             id: "task7",
-            title: "스마트폰 교육 실적",
+            title: "읍면동평생학습지원사업",
             description: "4월 스마트폰 활용 교육 실적 등록",
             assignee: "박미영",
             completedCount: 28,
@@ -298,7 +298,7 @@ export const projectsMock: KanbanProject[] = [
         tasks: [
           {
             id: "task8",
-            title: "하반기 교육 계획",
+            title: "노인복지증진사업",
             description: "하반기 정보화 교육 커리큘럼 수립",
             assignee: "박미영",
             completedCount: 5,

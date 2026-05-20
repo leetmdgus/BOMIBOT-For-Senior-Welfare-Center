@@ -27,7 +27,8 @@ type InputManagementExcelGridProps = {
   rows: PerformanceRow[]
   onRowsChange: (rows: PerformanceRow[]) => void
   onOpenActualModal: (rowId: string) => void
-  onToggleRowSelection: (rowId: string) => void
+  onRowSelect: (rowId: string, shiftKey: boolean) => void
+  hasRowSelection?: boolean
   enableRowReorder?: boolean
   subProjectSuggestions?: string[]
   detailCategorySuggestions?: string[]
@@ -37,7 +38,8 @@ export function InputManagementExcelGrid({
   rows,
   onRowsChange,
   onOpenActualModal,
-  onToggleRowSelection,
+  onRowSelect,
+  hasRowSelection = false,
   enableRowReorder = false,
   subProjectSuggestions = [],
   detailCategorySuggestions = [],
@@ -168,6 +170,8 @@ export function InputManagementExcelGrid({
         return
       }
 
+      if (hasRowSelection) return
+
       if (!selection) return
 
       event.preventDefault()
@@ -179,7 +183,7 @@ export function InputManagementExcelGrid({
         // ignore clipboard errors
       }
     },
-    [rows, selection]
+    [hasRowSelection, rows, selection]
   )
 
   const handleKeyDown = (event: KeyboardEvent) => {
@@ -285,7 +289,7 @@ export function InputManagementExcelGrid({
           highlightRange={highlightRange}
           activeCell={activeCell}
           fillHandlePosition={fillHandlePosition}
-          onToggleRowSelection={onToggleRowSelection}
+          onRowSelect={onRowSelect}
           onOpenActualModal={onOpenActualModal}
           onRowsChange={onRowsChange}
           rows={rows}
