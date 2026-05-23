@@ -644,7 +644,7 @@ export function clearRichTextTableCellEditing(root: HTMLElement): void {
   })
 }
 
-function markRichTextTableCellEditing(cell: HTMLTableCellElement): void {
+export function markRichTextTableCellEditing(cell: HTMLTableCellElement): void {
   const table = cell.closest("table")
   table
     ?.querySelectorAll(".bp-rt-cell-editing")
