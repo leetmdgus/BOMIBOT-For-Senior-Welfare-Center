@@ -6,6 +6,7 @@ import {
   findTableWithCellSelection,
   getCellBounds,
   getTableCellSelection,
+  refreshAllTableCellSelectionVisuals,
   setTableCellSelection,
   type CellRange,
 } from "@/lib/rich-text-table-grid"
@@ -26,7 +27,9 @@ const TABLE_CLASS =
   "bp-rt-table w-full border-collapse border border-black text-sm my-2 table-fixed"
 
 export function applyRichTextTableCellDefaults(cell: HTMLTableCellElement) {
-  cell.className = CELL_CLASS
+  for (const token of CELL_CLASS.split(/\s+/)) {
+    cell.classList.add(token)
+  }
   if (!cell.hasAttribute("contenteditable")) {
     cell.setAttribute("contenteditable", "true")
   }
@@ -528,6 +531,7 @@ export function enhanceAllTablesInEditor(
     ensureTableStructure(table)
     attachTableResizeHandles(table, onTableChange)
   })
+  refreshAllTableCellSelectionVisuals(root)
 }
 
 export type RichTextTableCellHit = {

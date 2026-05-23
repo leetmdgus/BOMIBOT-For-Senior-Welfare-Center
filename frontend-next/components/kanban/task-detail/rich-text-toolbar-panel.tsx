@@ -65,6 +65,7 @@ export function RichTextToolbarPanel({
   return (
     <div
       data-print-chrome
+      data-rte-table-chrome
       className={cn(
         "bp-rich-editor-toolbar print-hide bg-slate-50/80",
         vertical

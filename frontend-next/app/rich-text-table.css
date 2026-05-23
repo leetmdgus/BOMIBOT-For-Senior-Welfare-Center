@@ -16,7 +16,7 @@
 .bp-rich-editor table.bp-rt-table th.bp-rt-cell-selected {
   outline: 2px solid oklch(0.55 0.2 260);
   outline-offset: -2px;
-  background-color: oklch(0.55 0.2 260 / 0.08);
+  /* 배경색 채우기와 겹치지 않도록 outline만 사용 */
 }
 
 /* 열 너비 — 셀 오른쪽 가장자리 */

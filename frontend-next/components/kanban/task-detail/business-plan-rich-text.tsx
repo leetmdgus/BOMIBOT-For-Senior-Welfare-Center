@@ -1,8 +1,10 @@
 "use client"
 
 import {
+  createContext,
   forwardRef,
   useCallback,
+  useContext,
   useEffect,
   useId,
   useImperativeHandle,
@@ -71,11 +73,17 @@ import {
   splitRichTextTableCellHorizontal,
   splitRichTextTableCellVertical,
 } from "@/lib/rich-text-table-utils"
+import { refreshAllTableCellSelectionVisuals } from "@/lib/rich-text-table-grid"
 import {
   applyRichTextFontSizePx,
   HANGUL_FONT_SIZES_PX,
   parseFontSizePx,
 } from "@/lib/rich-text-font-size"
+import {
+  applyTableStyleFromEditor,
+  applyWholeTableBorderStyle,
+  type TableBorderStyle,
+} from "@/lib/rich-text-table-style"
 import { cn } from "@/lib/utils"
 
 export type RichTextToolbarVariant = "compact" | "full"
@@ -378,11 +386,15 @@ export const BusinessPlanRichText = forwardRef<
     return withTableCtx((ctx) => mergeRichTextTableCells(ctx)) !== false
   }
   api.applyTableCellFill = (color) => {
-    const ok = applyTableStyleFromEditor(editorRef.current, getTableCtx(), {
+    const el = editorRef.current
+    const ok = applyTableStyleFromEditor(el, getTableCtx(), {
       type: "fill",
       color,
     })
-    if (ok) emitChange()
+    if (ok) {
+      emitChange()
+      if (el) refreshAllTableCellSelectionVisuals(el)
+    }
     return ok
   }
   api.applyTableBorder = (border) => {
@@ -495,7 +507,7 @@ export const BusinessPlanRichText = forwardRef<
             onClick={() => onActivate?.()}
             className="bp-rich-editor formal-doc min-h-[12rem] w-full min-w-0 px-3 py-3 text-[11px] leading-relaxed outline-none"
             style={{ minHeight }}
-            data-placeholder="내용을 입력하세요. 표 셀 오른쪽·아래 가장자리를 드래그하면 열 너비·행 높이를 조절할 수 있습니다."
+            data-placeholder="내용을 입력하세요. 표 셀을 드래그하면 여러 셀을 선택할 수 있고, 셀색으로 배경을 함께 바꿀 수 있습니다."
           />
           <RichTextTableSelectionLayer
             editorRoot={editorDom}
@@ -532,6 +544,8 @@ export const BusinessPlanRichText = forwardRef<
 
 BusinessPlanRichText.displayName = "BusinessPlanRichText"
 
+const ToolbarButtonLabelsContext = createContext(false)
+
 function ToolbarButton({
   title,
   onClick,
@@ -550,6 +564,9 @@ function ToolbarButton({
   /** 세로 툴바에서 아이콘 아래 짧은 라벨 */
   label?: string
 }) {
+  const showButtonLabels = useContext(ToolbarButtonLabelsContext)
+  const visibleLabel = showButtonLabels ? label : undefined
+
   return (
     <Button
       type="button"
@@ -561,7 +578,7 @@ function ToolbarButton({
       onClick={onClick}
       className={cn(
         "bp-toolbar-btn gap-1 text-xs font-medium text-slate-700 hover:bg-slate-200/90 hover:text-slate-900",
-        label
+        visibleLabel
           ? "h-auto min-h-9 flex-col px-1 py-1.5"
           : "h-8 min-w-8 px-1.5",
         active && "bg-primary/10 text-primary ring-1 ring-primary/20",
@@ -570,9 +587,9 @@ function ToolbarButton({
       )}
     >
       {children}
-      {label ? (
+      {visibleLabel ? (
         <span className="max-w-full truncate text-[9px] font-normal leading-none text-muted-foreground">
-          {label}
+          {visibleLabel}
         </span>
       ) : null}
     </Button>
@@ -718,7 +735,8 @@ export function CompactToolbar({
   }
 
   return (
-    <div className="flex flex-col gap-2 p-2">
+    <ToolbarButtonLabelsContext.Provider value={true}>
+      <div className="flex flex-col gap-2 p-2">
       <ToolbarSection label="실행" orientation={orientation}>
         <ToolbarIconGrid orientation={orientation} columns={2}>
           <ToolbarButton title="실행 취소" label="취소" onClick={() => onExec("undo")}>
@@ -766,7 +784,8 @@ export function CompactToolbar({
           </ToolbarButton>
         </ToolbarIconGrid>
       </ToolbarSection>
-    </div>
+      </div>
+    </ToolbarButtonLabelsContext.Provider>
   )
 }
 
@@ -791,7 +810,6 @@ export function HangulToolbar({
   const canStyleTable =
     inTable || (editor?.hasCellSelection?.() ?? false)
   const vertical = orientation === "vertical"
-  const lbl = (text: string) => (vertical ? text : undefined)
 
   const tableToggle = (
     <Button
@@ -812,6 +830,7 @@ export function HangulToolbar({
   )
 
   return (
+    <ToolbarButtonLabelsContext.Provider value={vertical}>
     <div
       className={cn(
         "bp-hangul-toolbar",
@@ -1185,6 +1204,21 @@ export function HangulToolbar({
                 }
               />
             </div>
+          ) : inTable ? (
+            <div className="space-y-1.5 pt-0.5">
+              <p className="text-[10px] leading-snug text-muted-foreground">
+                셀 배경·테두리는 아래에서 바로 적용할 수 있습니다. 행·열·병합은
+                ▲ 펼치기.
+              </p>
+              <RichTextTableStyleToolbar
+                disabled={!canStyleTable || sourceMode}
+                onApplyFill={(color) => editor?.applyTableCellFill(color)}
+                onApplyBorder={(border) => editor?.applyTableBorder(border)}
+                onApplyBorderToWholeTable={(border) =>
+                  editor?.applyTableBorderWhole(border)
+                }
+              />
+            </div>
           ) : (
             <p className="text-[10px] leading-snug text-muted-foreground">
               {vertical
@@ -1208,13 +1242,14 @@ export function HangulToolbar({
           onClick={onSourceToggle}
           active={sourceMode}
           className={cn("font-semibold", vertical ? "w-full" : "ml-auto")}
-          label={vertical ? "소스" : undefined}
+          label="소스"
         >
           <Code className="size-4" />
           {!vertical ? <span className="ml-1">소스</span> : null}
         </ToolbarButton>
       </div>
     </div>
+    </ToolbarButtonLabelsContext.Provider>
   )
 }
 

@@ -26,6 +26,11 @@ import {
   splitRichTextTableCellVertical,
   type RichTextTableContext,
 } from "@/lib/rich-text-table-utils"
+import {
+  applyTableCellsFill,
+  getCellsInRange,
+  TABLE_CELL_FILL_PALETTE,
+} from "@/lib/rich-text-table-style"
 
 type MenuPos = { x: number; y: number }
 
@@ -42,7 +47,9 @@ export function RichTextTableContextMenuLayer({
     pos: MenuPos
     ctx: RichTextTableContext
   } | null>(null)
-  const [openSub, setOpenSub] = useState<"cell" | "row" | "col" | null>(null)
+  const [openSub, setOpenSub] = useState<"cell" | "row" | "col" | "fill" | null>(
+    null,
+  )
 
   const close = useCallback(() => {
     setMenu(null)
@@ -102,6 +109,16 @@ export function RichTextTableContextMenuLayer({
   const canMergeSelection =
     cellSelection &&
     canMergeTableCellRange(cellSelection.table, cellSelection.range)
+
+  const fillTargetCells = cellSelection
+    ? getCellsInRange(cellSelection.table, cellSelection.range)
+    : [ctx.cell]
+
+  const applyFill = (color: string | null) => {
+    applyTableCellsFill(fillTargetCells, color)
+    onChange()
+    close()
+  }
 
   return createPortal(
     <div
@@ -168,6 +185,30 @@ export function RichTextTableContextMenuLayer({
           label="수직 나누기"
           onClick={() => run((c) => splitRichTextTableCellVertical(c))}
         />
+      </SubMenuTrigger>
+
+      <SubMenuTrigger
+        label="셀 배경색"
+        open={openSub === "fill"}
+        onOpen={() => setOpenSub("fill")}
+      >
+        <MenuItem label="배경 없음" onClick={() => applyFill(null)} />
+        <MenuDivider />
+        <div className="grid grid-cols-5 gap-1 px-2 py-1.5">
+          {TABLE_CELL_FILL_PALETTE.map((color) => (
+            <button
+              key={color}
+              type="button"
+              title={color}
+              className={cn(
+                "size-6 rounded-sm border border-gray-300/80 hover:ring-2 hover:ring-primary/40",
+                color === "#FFFFFF" && "bg-white",
+              )}
+              style={{ backgroundColor: color }}
+              onClick={() => applyFill(color)}
+            />
+          ))}
+        </div>
       </SubMenuTrigger>
 
       <SubMenuTrigger

@@ -20,27 +20,10 @@ import { cn } from "@/lib/utils"
 import {
   TABLE_BORDER_STYLE_OPTIONS,
   TABLE_BORDER_WIDTHS_PX,
+  TABLE_CELL_FILL_PALETTE,
   type TableBorderLineStyle,
   type TableBorderStyle,
 } from "@/lib/rich-text-table-style"
-
-const TABLE_FILL_PALETTE = [
-  "#FFFFFF",
-  "#F3F4F6",
-  "#E5E7EB",
-  "#D1D5DB",
-  "#FEF3C7",
-  "#FDE68A",
-  "#FECACA",
-  "#BBDEFB",
-  "#C8E6C9",
-  "#E1BEE7",
-  "#FFF9C4",
-  "#FFCCBC",
-  "#B2DFDB",
-  "#CFD8DC",
-  "#000000",
-] as const
 
 const TABLE_BORDER_COLORS = [
   "#000000",
@@ -94,7 +77,11 @@ export function RichTextTableStyleToolbar({
   }
 
   return (
-    <>
+    <div
+      className="flex flex-wrap items-center gap-0.5"
+      data-rte-table-chrome
+      onMouseDown={(e) => e.preventDefault()}
+    >
       <Popover open={fillOpen} onOpenChange={setFillOpen}>
         <PopoverTrigger asChild>
           <Button
@@ -129,7 +116,7 @@ export function RichTextTableStyleToolbar({
             >
               없음
             </button>
-            {TABLE_FILL_PALETTE.map((color) => (
+            {TABLE_CELL_FILL_PALETTE.map((color) => (
               <button
                 key={color}
                 type="button"
@@ -252,6 +239,6 @@ export function RichTextTableStyleToolbar({
           </div>
         </PopoverContent>
       </Popover>
-    </>
+    </div>
   )
 }

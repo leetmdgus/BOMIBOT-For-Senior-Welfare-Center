@@ -21,6 +21,24 @@ export type TableBorderStyle = {
 
 export const TABLE_BORDER_WIDTHS_PX = [1, 2, 3, 4] as const
 
+export const TABLE_CELL_FILL_PALETTE = [
+  "#FFFFFF",
+  "#F3F4F6",
+  "#E5E7EB",
+  "#D1D5DB",
+  "#FEF3C7",
+  "#FDE68A",
+  "#FECACA",
+  "#BBDEFB",
+  "#C8E6C9",
+  "#E1BEE7",
+  "#FFF9C4",
+  "#FFCCBC",
+  "#B2DFDB",
+  "#CFD8DC",
+  "#000000",
+] as const
+
 export const TABLE_BORDER_STYLE_OPTIONS: {
   value: TableBorderLineStyle
   label: string

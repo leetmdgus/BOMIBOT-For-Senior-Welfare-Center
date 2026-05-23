@@ -3,6 +3,7 @@
 import { useEffect } from "react"
 
 import {
+  buildTableGridMap,
   clearTableCellSelection,
   getCellBounds,
   getTableCellSelection,
@@ -11,6 +12,7 @@ import {
 } from "@/lib/rich-text-table-grid"
 import {
   ensureTableStructure,
+  focusRichTextTableCell,
   moveRichTextTableTabFocus,
 } from "@/lib/rich-text-table-utils"
 
@@ -23,6 +25,7 @@ type RichTextTableSelectionLayerProps = {
 
 type DragState = {
   table: HTMLTableElement
+  anchorCell: HTMLTableCellElement
   startRow: number
   startCol: number
   startX: number
@@ -34,6 +37,15 @@ function isResizeHandleTarget(target: EventTarget | null): boolean {
   if (!(target instanceof Element)) return false
   return Boolean(
     target.closest(".bp-rt-col-resize, .bp-rt-row-resize"),
+  )
+}
+
+function isTableChromeTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof Element)) return false
+  return Boolean(
+    target.closest(
+      "[data-rte-table-chrome], [data-rt-table-menu], .bp-rich-editor-toolbar",
+    ),
   )
 }
 
@@ -64,6 +76,22 @@ function clearOtherTableSelections(
   })
 }
 
+function rangeFromAnchor(
+  startRow: number,
+  startCol: number,
+  endCell: HTMLTableCellElement,
+  table: HTMLTableElement,
+): CellRange | null {
+  const endBounds = getCellBounds(table, endCell)
+  if (!endBounds) return null
+  return {
+    startRow,
+    startCol,
+    endRow: endBounds.maxR,
+    endCol: endBounds.maxC,
+  }
+}
+
 export function RichTextTableSelectionLayer({
   editorRoot,
   onChange,
@@ -74,21 +102,13 @@ export function RichTextTableSelectionLayer({
 
     let drag: DragState | null = null
 
-    const updateRange = (table: HTMLTableElement, endCell: HTMLTableCellElement) => {
-      const endBounds = getCellBounds(table, endCell)
-      if (!drag || !endBounds) return
-
-      const range: CellRange = {
-        startRow: drag.startRow,
-        startCol: drag.startCol,
-        endRow: endBounds.maxR,
-        endCol: endBounds.maxC,
-      }
+    const applyRange = (table: HTMLTableElement, range: CellRange) => {
       setTableCellSelection(table, range)
     }
 
     const onMouseDown = (e: MouseEvent) => {
       if (e.button !== 0) return
+      if (isTableChromeTarget(e.target)) return
 
       const hit = getTableCellFromTarget(root, e.target)
       if (!hit) return
@@ -98,22 +118,34 @@ export function RichTextTableSelectionLayer({
       const bounds = getCellBounds(table, cell)
       if (!bounds) return
 
+      e.preventDefault()
+      window.getSelection()?.removeAllRanges()
+
       clearOtherTableSelections(root, table)
 
       const existing = e.shiftKey ? getTableCellSelection(table) : null
 
       if (existing && e.shiftKey) {
-        setTableCellSelection(table, {
-          startRow: existing.startRow,
-          startCol: existing.startCol,
-          endRow: bounds.maxR,
-          endCol: bounds.maxC,
-        })
+        const range = rangeFromAnchor(
+          existing.startRow,
+          existing.startCol,
+          cell,
+          table,
+        )
+        if (range) applyRange(table, range)
         return
       }
 
+      applyRange(table, {
+        startRow: bounds.minR,
+        startCol: bounds.minC,
+        endRow: bounds.minR,
+        endCol: bounds.minC,
+      })
+
       drag = {
         table,
+        anchorCell: cell,
         startRow: bounds.minR,
         startCol: bounds.minC,
         startX: e.clientX,
@@ -131,6 +163,7 @@ export function RichTextTableSelectionLayer({
         if (dx < DRAG_THRESHOLD_PX && dy < DRAG_THRESHOLD_PX) return
         drag.active = true
         document.body.classList.add("bp-rt-table-selecting")
+        e.preventDefault()
         window.getSelection()?.removeAllRanges()
       }
 
@@ -138,7 +171,13 @@ export function RichTextTableSelectionLayer({
       const hit = getTableCellFromTarget(root, under)
       if (!hit || hit.table !== drag.table) return
 
-      updateRange(drag.table, hit.cell)
+      const range = rangeFromAnchor(
+        drag.startRow,
+        drag.startCol,
+        hit.cell,
+        drag.table,
+      )
+      if (range) applyRange(drag.table, range)
     }
 
     const onMouseUp = (e: MouseEvent) => {
@@ -148,12 +187,10 @@ export function RichTextTableSelectionLayer({
         e.preventDefault()
         onChange?.()
       } else {
-        setTableCellSelection(drag.table, {
-          startRow: drag.startRow,
-          startCol: drag.startCol,
-          endRow: drag.startRow,
-          endCol: drag.startCol,
-        })
+        const map = buildTableGridMap(drag.table)
+        const anchor =
+          map.grid[drag.startRow]?.[drag.startCol] ?? drag.anchorCell
+        focusRichTextTableCell(anchor)
       }
 
       document.body.classList.remove("bp-rt-table-selecting")
@@ -161,6 +198,7 @@ export function RichTextTableSelectionLayer({
     }
 
     const onClickOutside = (e: MouseEvent) => {
+      if (isTableChromeTarget(e.target)) return
       const hit = getTableCellFromTarget(root, e.target)
       if (hit) return
       root.querySelectorAll("table").forEach((table) => {
@@ -189,14 +227,14 @@ export function RichTextTableSelectionLayer({
       })
     }
 
-    root.addEventListener("mousedown", onMouseDown)
+    root.addEventListener("mousedown", onMouseDown, true)
     document.addEventListener("mousemove", onMouseMove)
     document.addEventListener("mouseup", onMouseUp)
     root.addEventListener("click", onClickOutside)
     root.addEventListener("keydown", onKeyDown, true)
 
     return () => {
-      root.removeEventListener("mousedown", onMouseDown)
+      root.removeEventListener("mousedown", onMouseDown, true)
       document.removeEventListener("mousemove", onMouseMove)
       document.removeEventListener("mouseup", onMouseUp)
       root.removeEventListener("click", onClickOutside)

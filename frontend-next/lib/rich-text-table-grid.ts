@@ -139,6 +139,17 @@ export function clearTableCellSelection(table: HTMLTableElement) {
   }
 }
 
+/** 표 구조 재정비 후에도 WeakMap 선택·하이라이트 유지 */
+export function refreshAllTableCellSelectionVisuals(root: HTMLElement): void {
+  root.querySelectorAll("table").forEach((table) => {
+    if (!(table instanceof HTMLTableElement)) return
+    const range = getTableCellSelection(table)
+    if (!range) return
+    clearTableCellSelectionVisual(table)
+    applyTableCellSelectionVisual(table, range)
+  })
+}
+
 export function findTableWithCellSelection(
   root: HTMLElement | null,
 ): { table: HTMLTableElement; range: CellRange } | null {
