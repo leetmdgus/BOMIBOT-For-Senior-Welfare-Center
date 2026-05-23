@@ -80,7 +80,7 @@ export function KanbanColumn({
   })
 
   return (
-    <div className="flex min-w-[220px] flex-1 basis-full flex-col sm:basis-1/2 xl:basis-1/4">
+    <div className="flex min-w-0 flex-col">
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className={`size-2 rounded-full ${color}`} />
@@ -139,7 +139,7 @@ export function KanbanColumn({
       <button
         type="button"
         onClick={() => onAddTask?.(id, resolvedColumnType)}
-        className="mt-3 flex items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border py-3 text-sm text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+        className="mt-3 flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border py-3 text-sm text-muted-foreground transition-colors hover:border-primary hover:text-primary"
       >
         <Plus className="size-4" />
         <span>업무 추가</span>

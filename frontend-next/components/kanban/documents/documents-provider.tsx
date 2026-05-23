@@ -8,6 +8,9 @@ import {
   useState,
 } from "react"
 
+import { downloadDocumentsExcel } from "@/lib/kanban/documents-excel-export"
+import { printPrintArea } from "@/lib/print-print-area"
+
 export type DocumentsView = "performance" | "budget" | "business-plan"
 
 export type ReportPeriodMode = "quarter" | "month"
@@ -47,12 +50,22 @@ export function DocumentsProvider({ children }: { children: React.ReactNode }) {
 
   const viewTitle = viewTitles[activeView]
 
-  const handleDownload = useCallback(() => {
-    window.alert("다운로드 기능은 API 연동 후 제공됩니다.")
-  }, [])
+  const handleDownload = useCallback(async () => {
+    try {
+      await downloadDocumentsExcel({
+        activeView,
+        year,
+        quarter,
+        periodMode,
+      })
+    } catch (error) {
+      console.error("사업문서 엑셀 다운로드 실패:", error)
+      window.alert("엑셀 다운로드에 실패했습니다. 잠시 후 다시 시도해 주세요.")
+    }
+  }, [activeView, year, quarter, periodMode])
 
   const handlePrint = useCallback(() => {
-    window.print()
+    printPrintArea()
   }, [])
 
   return (

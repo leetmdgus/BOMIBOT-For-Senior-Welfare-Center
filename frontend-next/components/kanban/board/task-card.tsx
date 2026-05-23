@@ -102,6 +102,7 @@ export function TaskCard({
     attributes,
     listeners,
     setNodeRef,
+    setActivatorNodeRef,
     transform,
     transition,
     isDragging: isSortableDragging,
@@ -141,24 +142,36 @@ export function TaskCard({
         ref={setNodeRef}
         style={style}
         {...attributes}
-        {...listeners}
         onClick={(event) => {
           const target = event.target as HTMLElement
           if (target.closest("[data-card-interactive]")) return
+          if (target.closest("[data-drag-handle]")) return
           openDetail()
         }}
         className={cn(
-          "group touch-none rounded-lg border border-border bg-card p-3 shadow-sm transition-all hover:shadow-md",
+          "group rounded-lg border border-border bg-card p-3 shadow-sm transition-all hover:shadow-md",
           dragging
             ? "cursor-grabbing opacity-50 shadow-lg ring-2 ring-primary"
-            : "cursor-grab active:cursor-grabbing",
+            : "cursor-pointer",
         )}
       >
         <div className="mb-2 flex items-start gap-2">
-          <GripVertical
-            className="mt-0.5 size-4 shrink-0 text-muted-foreground"
-            aria-hidden
-          />
+          <button
+            type="button"
+            ref={setActivatorNodeRef}
+            data-drag-handle
+            {...listeners}
+            className={cn(
+              "mt-0.5 shrink-0 touch-none rounded p-0.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
+              dragging
+                ? "cursor-grabbing"
+                : "cursor-grab active:cursor-grabbing",
+            )}
+            aria-label="업무 순서 변경"
+            onClick={stopCardNavigation}
+          >
+            <GripVertical className="size-4" aria-hidden />
+          </button>
 
           <div className="flex min-w-0 flex-1 items-start gap-1.5">
             {isCompleted && (
@@ -264,7 +277,7 @@ export function TaskCard({
             <ContextMenuTrigger asChild>
               <div
                 data-card-interactive
-                className="flex min-w-0 cursor-context-menu items-center gap-1 rounded px-1 py-0.5 transition-colors hover:bg-muted"
+                className="flex min-w-0 cursor-pointer items-center gap-1 rounded px-1 py-0.5 transition-colors hover:bg-muted"
                 onClick={stopCardNavigation}
                 onPointerDown={stopCardNavigation}
               >

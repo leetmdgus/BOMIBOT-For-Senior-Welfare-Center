@@ -8,7 +8,8 @@ UI 컴포넌트는 **`services/*.service.ts` facade** 만 import 합니다. (`li
 |------|------|
 | `lib/mocks/` | 정적 시드 데이터 (단일 출처). 도메인별 `*.mock.ts` |
 | `lib/chat/` | 데이터 챗봇·온톨로지·CS 메일 (서버 전용 로직) |
-| `lib/kanban/` | 칸반 UI 헬퍼 (`filter-kanban-projects` 등) |
+| `lib/kanban/` | 칸반 UI 헬퍼 (`filter-kanban-projects`, `evaluation-save-payload` 등) |
+| `lib/evaluation-document-preview.ts` | 평가 참고 문서 미리보기 HTML 생성 |
 | `lib/constants/` | 브랜드 상수 |
 | `utils.ts` | `cn()` 등 공통 유틸 |
 | `survey-theme.ts` | 설문 테마 |

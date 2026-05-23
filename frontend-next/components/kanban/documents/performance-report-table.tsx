@@ -39,9 +39,8 @@ export function PerformanceReportTable() {
   let projectRowsLeft = 0
 
   return (
-    <div className="overflow-hidden rounded-lg border border-slate-300 bg-white">
-      <div className="overflow-x-auto">
-        <table className="min-w-[1200px] w-full border-collapse text-sm">
+    <div className="kanban-documents-report overflow-hidden rounded-lg border border-slate-300 bg-white">
+      <table className="w-full table-fixed border-collapse text-sm">
           <thead>
             <tr className="bg-slate-700 text-white">
               <Th className="w-[80px]">대분류</Th>
@@ -125,9 +124,8 @@ export function PerformanceReportTable() {
             })}
           </tbody>
         </table>
-      </div>
 
-      <p className="border-t border-slate-200 px-4 py-2 text-xs text-muted-foreground">
+      <p className="border-t border-slate-200 px-4 py-2 text-xs text-muted-foreground print:text-slate-600">
         {year}년 · {quarter}분기 · {periodLabel} 기준
       </p>
     </div>

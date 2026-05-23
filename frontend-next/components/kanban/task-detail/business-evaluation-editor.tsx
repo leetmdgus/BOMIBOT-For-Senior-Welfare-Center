@@ -1,6 +1,5 @@
 "use client"
 
-import { ChevronDown, ChevronUp, Trash2 } from "lucide-react"
 
 import {
   A4DocumentViewport,
@@ -19,7 +18,6 @@ import {
   applyPlanFormDataToEvaluation,
   evaluationToPlanFormData,
 } from "@/lib/evaluation-plan-form-adapter"
-import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import type {
   BusinessEvaluationData,
@@ -29,10 +27,9 @@ import type {
 
 import {
   RichTextToolbarProvider,
-  useRichTextEditorSlot,
   useRichTextToolbarOptional,
 } from "@/components/kanban/task-detail/rich-text-toolbar-context"
-import { StickyRichTextToolbar } from "@/components/kanban/task-detail/sticky-rich-text-toolbar"
+import { DocumentSectionControls } from "@/components/kanban/task-detail/document-section-controls"
 import { BusinessPlanRichText } from "./business-plan-rich-text"
 
 type BusinessEvaluationEditorProps = {
@@ -117,8 +114,8 @@ export function BusinessEvaluationEditor({
         <div className="print-hide border-b border-black/20 pb-3" aria-hidden>
           <h3 className="text-base font-semibold">추가 본문</h3>
           <p className="mt-0.5 text-sm text-neutral-600">
-            위 요약 표와 아래 추가 본문 모두 블록입니다. 칸을 클릭하면 좌측 서식 툴바가
-            적용됩니다.
+            위 요약 표는 칸을 클릭해 입력합니다. 아래 본문(고급 서식) 블록마다
+            상단에 서식 툴바가 붙습니다.
           </p>
         </div>
 
@@ -149,9 +146,22 @@ export function BusinessEvaluationEditor({
                   className="scroll-mt-28"
                 >
                   {section.type === "heading" ? (
-                    <div className="hwpx-doc-section-row">
+                    <div className="hwpx-doc-section-row hwpx-doc-section-row--heading">
                       <div className="w-full min-w-0">
-                        <HwpxContentBlock label="대목차" embedded>
+                        <HwpxContentBlock
+                          label="대목차"
+                          embedded
+                          toolbar={
+                            canEdit ? (
+                              <DocumentSectionControls
+                                layout="bar"
+                                onMoveUp={() => moveSection(index, "up")}
+                                onMoveDown={() => moveSection(index, "down")}
+                                onDelete={() => deleteSection(section.id)}
+                              />
+                            ) : undefined
+                          }
+                        >
                           <HwpxTextarea
                             value={section.title}
                             onChange={(title) =>
@@ -170,14 +180,6 @@ export function BusinessEvaluationEditor({
                           />
                         </HwpxContentBlock>
                       </div>
-                      {canEdit ? (
-                        <SectionControls
-                          index={index}
-                          onMove={moveSection}
-                          onDelete={() => deleteSection(section.id)}
-                          className="hwpx-doc-section-row__controls"
-                        />
-                      ) : null}
                     </div>
                   ) : (
                     <EvaluationBodyBlock
@@ -192,9 +194,9 @@ export function BusinessEvaluationEditor({
                       }
                       controls={
                         canEdit ? (
-                          <SectionControls
-                            index={index}
-                            onMove={moveSection}
+                          <DocumentSectionControls
+                            onMoveUp={() => moveSection(index, "up")}
+                            onMoveDown={() => moveSection(index, "down")}
                             onDelete={() => deleteSection(section.id)}
                             className="hwpx-doc-section-row__controls"
                           />
@@ -219,7 +221,6 @@ export function BusinessEvaluationEditor({
         ) : null}
       </section>
 
-      {canEdit ? <StickyRichTextToolbar /> : null}
       </div>
     </RichTextToolbarProvider>
   )
@@ -279,12 +280,6 @@ function EvaluationBodyBlock({
   onContentChange: (content: string) => void
   controls?: React.ReactNode
 }) {
-  const label = section.title?.trim() || `본문 ${bodyIndex}`
-  const { setEditor, onActivate, variant } = useRichTextEditorSlot(
-    section.id,
-    label,
-  )
-
   return (
     <div className="hwpx-doc-section-row">
       <div className="w-full min-w-0">
@@ -292,18 +287,15 @@ function EvaluationBodyBlock({
           title={section.title ?? ""}
           onTitleChange={onTitleChange}
           readOnly={!canEdit}
-          onTitleFocus={onActivate}
           embedded
         >
           <BusinessPlanRichText
-            ref={setEditor}
             value={section.content}
             onChange={onContentChange}
             readOnly={!canEdit}
-            variant={variant}
-            inlineToolbar={false}
+            variant="full"
+            inlineToolbar
             minHeight={280}
-            onActivate={onActivate}
           />
         </HwpxBodyContentBlock>
       </div>
@@ -312,51 +304,3 @@ function EvaluationBodyBlock({
   )
 }
 
-function SectionControls({
-  index,
-  onMove,
-  onDelete,
-  className,
-}: {
-  index: number
-  onMove: (index: number, direction: "up" | "down") => void
-  onDelete: () => void
-  className?: string
-}) {
-  return (
-    <div
-      className={cn(
-        "print-hide flex flex-col items-center gap-1",
-        className,
-      )}
-    >
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        className="size-7 p-0"
-        onClick={() => onMove(index, "up")}
-      >
-        <ChevronUp className="size-4" />
-      </Button>
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        className="size-7 p-0"
-        onClick={() => onMove(index, "down")}
-      >
-        <ChevronDown className="size-4" />
-      </Button>
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        className="size-7 p-0 text-destructive hover:text-destructive"
-        onClick={onDelete}
-      >
-        <Trash2 className="size-4" />
-      </Button>
-    </div>
-  )
-}

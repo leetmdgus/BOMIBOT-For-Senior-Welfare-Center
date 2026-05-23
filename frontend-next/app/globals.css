@@ -131,5 +131,26 @@
   }
   body {
     @apply bg-background text-foreground;
+    cursor: default;
+  }
+}
+
+/* 칸반: 보드는 기본 화살표, 클릭 가능 요소만 pointer / 드래그 핸들은 grab */
+@layer components {
+  .kanban-board-main,
+  .kanban-board-columns {
+    cursor: default;
+  }
+
+  .kanban-board-main :is(a, button, [role='button'], label, summary) {
+    cursor: pointer;
+  }
+
+  .kanban-board-columns [data-drag-handle] {
+    cursor: grab;
+  }
+
+  .kanban-board-columns [data-drag-handle]:active {
+    cursor: grabbing;
   }
 }

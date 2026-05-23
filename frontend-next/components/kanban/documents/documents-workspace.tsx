@@ -10,11 +10,23 @@ export function DocumentsWorkspace() {
 
   switch (activeView) {
     case "budget":
-      return <BudgetReportTable />
+      return (
+        <div className="kanban-documents-report-view kanban-documents-report-view--budget">
+          <BudgetReportTable />
+        </div>
+      )
     case "business-plan":
-      return <BusinessPlanContent />
+      return (
+        <div className="kanban-documents-report-view kanban-documents-report-view--business-plan">
+          <BusinessPlanContent />
+        </div>
+      )
     case "performance":
     default:
-      return <PerformanceReportTable />
+      return (
+        <div className="kanban-documents-report-view kanban-documents-report-view--performance">
+          <PerformanceReportTable />
+        </div>
+      )
   }
 }

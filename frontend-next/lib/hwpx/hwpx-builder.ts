@@ -376,8 +376,13 @@ export function downloadHwpxFile(filename: string, blob: Blob): void {
   const anchor = document.createElement("a")
   anchor.href = url
   anchor.download = safeName.endsWith(".hwpx") ? safeName : `${safeName}.hwpx`
+  anchor.style.display = "none"
+  document.body.appendChild(anchor)
   anchor.click()
-  URL.revokeObjectURL(url)
+  window.setTimeout(() => {
+    anchor.remove()
+    URL.revokeObjectURL(url)
+  }, 200)
 }
 
 export async function downloadHwpxDocument(

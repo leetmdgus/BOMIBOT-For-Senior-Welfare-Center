@@ -411,6 +411,7 @@ function attachColumnResizeHandle(
   cell: HTMLTableCellElement,
   targetColIndex: number,
   onTableChange?: () => void,
+  onBeforeTableMutation?: () => void,
 ) {
   if (cell.querySelector(":scope > .bp-rt-col-resize")) return
 
@@ -419,6 +420,7 @@ function attachColumnResizeHandle(
   handle.title = "열 너비 조절 (드래그)"
   handle.setAttribute("contenteditable", "false")
   handle.addEventListener("mousedown", (e) => {
+    onBeforeTableMutation?.()
     materializeColWidthsPx(table)
     const map = buildTableGridMap(table)
     const startWidths = Array.from({ length: map.cols }, (_, i) =>
@@ -464,6 +466,7 @@ function attachRowResizeHandle(
   cell: HTMLTableCellElement,
   targetRowIndex: number,
   onTableChange?: () => void,
+  onBeforeTableMutation?: () => void,
 ) {
   if (cell.querySelector(":scope > .bp-rt-row-resize")) return
 
@@ -472,6 +475,7 @@ function attachRowResizeHandle(
   handle.title = "행 높이 조절 (드래그)"
   handle.setAttribute("contenteditable", "false")
   handle.addEventListener("mousedown", (e) => {
+    onBeforeTableMutation?.()
     const row = table.rows[targetRowIndex]
     if (!row) return
     const startHeight = row.getBoundingClientRect().height
@@ -497,6 +501,7 @@ function attachRowResizeHandle(
 function attachTableResizeHandles(
   table: HTMLTableElement,
   onTableChange?: () => void,
+  onBeforeTableMutation?: () => void,
 ) {
   const map = buildTableGridMap(table)
   const seenCol = new Set<number>()
@@ -512,11 +517,23 @@ function attachTableResizeHandles(
 
       if (!seenCol.has(bounds.maxC)) {
         seenCol.add(bounds.maxC)
-        attachColumnResizeHandle(table, cell, bounds.maxC, onTableChange)
+        attachColumnResizeHandle(
+          table,
+          cell,
+          bounds.maxC,
+          onTableChange,
+          onBeforeTableMutation,
+        )
       }
       if (!seenRow.has(bounds.maxR)) {
         seenRow.add(bounds.maxR)
-        attachRowResizeHandle(table, cell, bounds.maxR, onTableChange)
+        attachRowResizeHandle(
+          table,
+          cell,
+          bounds.maxR,
+          onTableChange,
+          onBeforeTableMutation,
+        )
       }
     }
   }
@@ -525,11 +542,12 @@ function attachTableResizeHandles(
 export function enhanceAllTablesInEditor(
   root: HTMLElement,
   onTableChange?: () => void,
+  onBeforeTableMutation?: () => void,
 ): void {
   root.querySelectorAll("table").forEach((table) => {
     if (!(table instanceof HTMLTableElement)) return
     ensureTableStructure(table)
-    attachTableResizeHandles(table, onTableChange)
+    attachTableResizeHandles(table, onTableChange, onBeforeTableMutation)
   })
   refreshAllTableCellSelectionVisuals(root)
 }
@@ -559,6 +577,7 @@ export function getRichTextTableCellFromSelection(
 }
 
 export function focusRichTextTableCell(cell: HTMLTableCellElement): void {
+  applyRichTextTableCellDefaults(cell)
   cell.focus({ preventScroll: true })
   const range = document.createRange()
   range.selectNodeContents(cell)
@@ -566,6 +585,73 @@ export function focusRichTextTableCell(cell: HTMLTableCellElement): void {
   const sel = window.getSelection()
   sel?.removeAllRanges()
   sel?.addRange(range)
+  markRichTextTableCellEditing(cell)
+}
+
+/** 더블클릭·클릭 위치에 커서를 두고 셀 안에서 입력 가능하게 */
+export function focusRichTextTableCellAtPoint(
+  cell: HTMLTableCellElement,
+  clientX: number,
+  clientY: number,
+): void {
+  applyRichTextTableCellDefaults(cell)
+  cell.focus({ preventScroll: true })
+
+  const sel = window.getSelection()
+  if (!sel) return
+
+  const doc = cell.ownerDocument
+  let range: Range | null = null
+
+  if (typeof doc.caretRangeFromPoint === "function") {
+    range = doc.caretRangeFromPoint(clientX, clientY)
+  } else {
+    const caretPositionFromPoint = (
+      doc as Document & {
+        caretPositionFromPoint?: (
+          x: number,
+          y: number,
+        ) => { offsetNode: Node; offset: number } | null
+      }
+    ).caretPositionFromPoint
+    if (caretPositionFromPoint) {
+      const pos = caretPositionFromPoint(clientX, clientY)
+      if (pos) {
+        range = doc.createRange()
+        range.setStart(pos.offsetNode, pos.offset)
+        range.collapse(true)
+      }
+    }
+  }
+
+  if (range && cell.contains(range.startContainer)) {
+    sel.removeAllRanges()
+    sel.addRange(range)
+  } else {
+    const fallback = document.createRange()
+    fallback.selectNodeContents(cell)
+    fallback.collapse(true)
+    sel.removeAllRanges()
+    sel.addRange(fallback)
+  }
+
+  markRichTextTableCellEditing(cell)
+}
+
+export function clearRichTextTableCellEditing(root: HTMLElement): void {
+  root.querySelectorAll(".bp-rt-cell-editing").forEach((el) => {
+    el.classList.remove("bp-rt-cell-editing")
+  })
+}
+
+function markRichTextTableCellEditing(cell: HTMLTableCellElement): void {
+  const table = cell.closest("table")
+  table
+    ?.querySelectorAll(".bp-rt-cell-editing")
+    .forEach((el) => {
+      if (el !== cell) el.classList.remove("bp-rt-cell-editing")
+    })
+  cell.classList.add("bp-rt-cell-editing")
 }
 
 /** Tab / Shift+Tab — 표 안에서만 다음·이전 셀로 이동 (페이지 탭 전환 방지) */

@@ -1,19 +1,17 @@
 import { format, parseISO } from "date-fns"
 import { ko } from "date-fns/locale"
 
-import { htmlToHwpxBlocks } from "@/lib/hwpx/html-to-hwpx"
+import { hwpxSectionsFromDocumentSections } from "@/lib/hwpx/export-sections"
 import {
   downloadHwpxDocument,
   formTableRow,
   HWPX_COL,
-  stripHtml,
   summaryTableRows,
   type HwpxDocument,
   type HwpxSection,
   type HwpxTable,
   type HwpxTableCell,
 } from "@/lib/hwpx/hwpx-builder"
-import { parseTableSectionContent } from "@/lib/business-plan-table-utils"
 import {
   formatLineSlotText,
   lineSlotDisplayValue,
@@ -111,15 +109,8 @@ function evaluationSummaryTable(
       { text: "제언 및 향후 계획", header: true },
       { text: slotLines(evaluation.suggestion), colSpan: 2 },
     ],
-    [
-      { text: "슈퍼비전", header: true, colSpan: 4 },
-    ],
-    [
-      {
-        text: slotLines(evaluation.supervision),
-        colSpan: 4,
-      },
-    ],
+    [{ text: "슈퍼비전", header: true, colSpan: 4 }],
+    [{ text: slotLines(evaluation.supervision), colSpan: 4 }],
   ]
 
   if (evaluation.detailRows.length > 0) {
@@ -158,55 +149,11 @@ export function buildBusinessEvaluationHwpx(
     paragraphs: [],
   })
 
-  const bodySections: HwpxSection[] = []
-  for (const section of evaluation.sections) {
-    if (section.type === "heading") {
-      bodySections.push({
-        title: section.title || "대목차",
-        paragraphs: [{ text: section.title, variant: "heading" }],
-      })
-      continue
-    }
-    if (section.type === "table") {
-      const data = parseTableSectionContent(section.content)
-      if (data.preset === "custom") {
-        const rows: HwpxTableCell[][] = data.rows.map((row, rowIndex) =>
-          row.map((text) => ({
-            text: text || "-",
-            header: rowIndex < data.headerRowCount,
-          })),
-        )
-        bodySections.push({
-          title: section.title || "표",
-          tables: [{ colWidths: [...HWPX_COL.sub2], rows }],
-        })
-      }
-      continue
-    }
-    if (section.type === "body") {
-      const html = section.content ?? ""
-      const blocks = htmlToHwpxBlocks(html)
-      const block: HwpxSection = {
-        title: section.title?.trim() || "본문",
-        paragraphs: [],
-        tables: [...blocks.tables],
-      }
-      if (section.title?.trim()) {
-        block.paragraphs?.push({ text: section.title, variant: "heading" })
-      }
-      if (blocks.paragraphs.length > 0) {
-        block.paragraphs?.push(...blocks.paragraphs)
-      } else {
-        const plain = stripHtml(html)
-        if (plain) block.paragraphs?.push({ text: plain, variant: "body" })
-      }
-      if ((block.paragraphs?.length ?? 0) > 0 || (block.tables?.length ?? 0) > 0) {
-        bodySections.push(block)
-      }
-    }
-  }
-
-  sections.push(...bodySections)
+  sections.push(
+    ...hwpxSectionsFromDocumentSections(evaluation.sections, {
+      formData: planForm,
+    }),
+  )
 
   return {
     title,

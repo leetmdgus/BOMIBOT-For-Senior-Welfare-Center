@@ -10,6 +10,9 @@ import {
   useImperativeHandle,
   useRef,
   useState,
+  type KeyboardEvent,
+  type ClipboardEvent,
+  type MouseEvent,
 } from "react"
 import {
   AlignCenter,
@@ -51,6 +54,7 @@ import { ColorPaletteButton } from "@/components/kanban/task-detail/rich-text-co
 import { RichTextTableContextMenuLayer } from "@/components/kanban/task-detail/rich-text-table-context-menu"
 import { RichTextTableSelectionLayer } from "@/components/kanban/task-detail/rich-text-table-selection-layer"
 import { RichTextTableStyleToolbar } from "@/components/kanban/task-detail/rich-text-table-style-toolbar"
+import { ClassicEditorToolbar } from "@/components/kanban/task-detail/classic-editor-toolbar"
 import { TableInsertGrid } from "@/components/kanban/task-detail/table-insert-grid"
 import {
   buildTableHtml,
@@ -74,11 +78,22 @@ import {
   splitRichTextTableCellVertical,
 } from "@/lib/rich-text-table-utils"
 import { refreshAllTableCellSelectionVisuals } from "@/lib/rich-text-table-grid"
+import { createRichTextEditorHistory } from "@/lib/rich-text-editor-history"
 import {
   applyRichTextFontSizePx,
   HANGUL_FONT_SIZES_PX,
   parseFontSizePx,
 } from "@/lib/rich-text-font-size"
+import {
+  insertRichTextImageFromFile,
+  triggerRichTextImageInsert,
+} from "@/lib/rich-text-image-insert"
+import {
+  captureRichTextSelection,
+  restoreRichTextSelection,
+  shouldRestoreSavedSelection,
+  type SavedRichTextSelection,
+} from "@/lib/rich-text-selection"
 import {
   applyTableStyleFromEditor,
   applyWholeTableBorderStyle,
@@ -121,8 +136,10 @@ type BusinessPlanRichTextProps = {
   onChange: (html: string) => void
   readOnly?: boolean
   variant?: RichTextToolbarVariant
-  /** false면 블록 상단 공용 툴바 사용 */
+  /** true면 본문 위 CKEditor형 인라인 툴바 */
   inlineToolbar?: boolean
+  /** 인라인 툴바 상단 블록 제목 (예: II. 서비스 지역…) */
+  inlineToolbarLabel?: string
   minHeight?: number
   className?: string
   onActivate?: () => void
@@ -158,6 +175,7 @@ export const BusinessPlanRichText = forwardRef<
     readOnly = false,
     variant = "compact",
     inlineToolbar = true,
+    inlineToolbarLabel,
     minHeight = 140,
     className,
     onActivate,
@@ -172,7 +190,26 @@ export const BusinessPlanRichText = forwardRef<
   const [, setTableSelectionTick] = useState(0)
   const lastEmitted = useRef("")
   const mounted = useRef(false)
+  const isUndoRedo = useRef(false)
+  const editorHistory = useRef(createRichTextEditorHistory())
+  const savedSelectionRef = useRef<SavedRichTextSelection | null>(null)
   const editorId = useId()
+
+  const saveEditorSelection = useCallback(() => {
+    const el = editorRef.current
+    if (!el) return
+    const captured = captureRichTextSelection(el)
+    if (captured) savedSelectionRef.current = captured
+  }, [])
+
+  const restoreSavedSelectionIfNeeded = useCallback(() => {
+    const el = editorRef.current
+    const saved = savedSelectionRef.current
+    if (!el || !saved) return
+    if (shouldRestoreSavedSelection(el, saved)) {
+      restoreRichTextSelection(el, saved)
+    }
+  }, [])
 
   const bindEditorRef = (el: HTMLDivElement | null) => {
     editorRef.current = el
@@ -188,6 +225,7 @@ export const BusinessPlanRichText = forwardRef<
     }
     lastEmitted.current = html
     enhanceAllTablesInEditor(el)
+    editorHistory.current.clear()
   }, [value])
 
   useEffect(() => {
@@ -201,7 +239,27 @@ export const BusinessPlanRichText = forwardRef<
     syncFromValue()
   }, [value, sourceMode, readOnly, syncFromValue])
 
-  const emitChange = () => {
+  const snapshotBeforeTableMutation = useCallback(() => {
+    const el = editorRef.current
+    if (!el || isUndoRedo.current || sourceMode) return
+    editorHistory.current.push(el.innerHTML)
+  }, [sourceMode])
+
+  const restoreEditorHtml = useCallback(
+    (html: string) => {
+      const el = editorRef.current
+      if (!el) return
+      isUndoRedo.current = true
+      el.innerHTML = html
+      lastEmitted.current = html
+      enhanceAllTablesInEditor(el, undefined, snapshotBeforeTableMutation)
+      onChange(html)
+      isUndoRedo.current = false
+    },
+    [onChange, snapshotBeforeTableMutation],
+  )
+
+  const emitChange = useCallback(() => {
     const el = editorRef.current
     if (!el) return
     const persist = () => {
@@ -209,13 +267,54 @@ export const BusinessPlanRichText = forwardRef<
       lastEmitted.current = html
       onChange(html)
     }
-    enhanceAllTablesInEditor(el, persist)
+    enhanceAllTablesInEditor(el, persist, snapshotBeforeTableMutation)
     persist()
+  }, [onChange, snapshotBeforeTableMutation])
+
+  const handleEditorUndo = useCallback(() => {
+    const el = editorRef.current
+    if (!el || sourceMode) return
+    const restored = editorHistory.current.undo(el.innerHTML)
+    if (restored !== null) {
+      restoreEditorHtml(restored)
+      return
+    }
+    el.focus()
+    document.execCommand("undo")
+    emitChange()
+  }, [sourceMode, restoreEditorHtml, emitChange])
+
+  const handleEditorRedo = useCallback(() => {
+    const el = editorRef.current
+    if (!el || sourceMode) return
+    const restored = editorHistory.current.redo(el.innerHTML)
+    if (restored !== null) {
+      restoreEditorHtml(restored)
+      return
+    }
+    el.focus()
+    document.execCommand("redo")
+    emitChange()
+  }, [sourceMode, restoreEditorHtml, emitChange])
+
+  const handleEditorKeyDown = (e: KeyboardEvent) => {
+    const mod = e.ctrlKey || e.metaKey
+    if (!mod) return
+    if (e.key === "z" && !e.shiftKey) {
+      e.preventDefault()
+      handleEditorUndo()
+      return
+    }
+    if (e.key === "y" || (e.key === "z" && e.shiftKey)) {
+      e.preventDefault()
+      handleEditorRedo()
+    }
   }
 
   const withTableCtx = <T,>(fn: (ctx: NonNullable<ReturnType<typeof getRichTextTableContext>>) => T): T | false => {
     const ctx = getRichTextTableContext(editorRef.current)
     if (!ctx) return false
+    snapshotBeforeTableMutation()
     const result = fn(ctx)
     emitChange()
     return result
@@ -224,24 +323,64 @@ export const BusinessPlanRichText = forwardRef<
   const exec = (command: string, valueArg?: string) => {
     const el = editorRef.current
     if (!el) return
+    if (command === "undo") {
+      handleEditorUndo()
+      return
+    }
+    if (command === "redo") {
+      handleEditorRedo()
+      return
+    }
+
+    restoreSavedSelectionIfNeeded()
+    const saved = savedSelectionRef.current
+
     if (command === "fontSize") {
       const px = parseFontSizePx(valueArg)
       if (px != null) {
-        applyRichTextFontSizePx(el, px)
+        applyRichTextFontSizePx(el, px, { forceFullEditor: saved?.fullEditor })
         emitChange()
+        saveEditorSelection()
         return
       }
     }
+
     el.focus()
     document.execCommand(command, false, valueArg)
     emitChange()
+    saveEditorSelection()
   }
 
-  const insertHtml = (html: string) => {
+  const insertHtml = useCallback((html: string) => {
     editorRef.current?.focus()
     document.execCommand("insertHTML", false, html)
     emitChange()
-  }
+  }, [emitChange])
+
+  const handleEditorPaste = useCallback(
+    (e: ClipboardEvent<HTMLDivElement>) => {
+      const items = e.clipboardData?.items
+      if (!items) return
+
+      for (const item of Array.from(items)) {
+        if (!item.type.startsWith("image/")) continue
+        const file = item.getAsFile()
+        if (!file) continue
+
+        e.preventDefault()
+        void insertRichTextImageFromFile(file, insertHtml).catch((error) => {
+          console.error("이미지 붙여넣기 실패:", error)
+          window.alert(
+            error instanceof Error
+              ? error.message
+              : "이미지를 붙여넣을 수 없습니다.",
+          )
+        })
+        return
+      }
+    },
+    [insertHtml],
+  )
 
   const getTableCtx = () =>
     getRichTextTableContext(editorRef.current)
@@ -256,6 +395,7 @@ export const BusinessPlanRichText = forwardRef<
   const deleteTable = () => {
     const ctx = getTableCtx()
     if (!ctx) return false
+    snapshotBeforeTableMutation()
     deleteRichTextTable(ctx.table)
     emitChange()
     return true
@@ -264,6 +404,7 @@ export const BusinessPlanRichText = forwardRef<
   const insertTableRow = (position: "before" | "after") => {
     const ctx = getTableCtx()
     if (!ctx) return false
+    snapshotBeforeTableMutation()
     insertRichTextTableRow(ctx, position)
     emitChange()
     return true
@@ -272,6 +413,7 @@ export const BusinessPlanRichText = forwardRef<
   const deleteTableRow = () => {
     const ctx = getTableCtx()
     if (!ctx) return false
+    snapshotBeforeTableMutation()
     const ok = deleteRichTextTableRow(ctx)
     if (ok) emitChange()
     return ok
@@ -280,6 +422,7 @@ export const BusinessPlanRichText = forwardRef<
   const insertTableColumn = (position: "before" | "after") => {
     const ctx = getTableCtx()
     if (!ctx) return false
+    snapshotBeforeTableMutation()
     insertRichTextTableColumn(ctx, position)
     emitChange()
     return true
@@ -288,6 +431,7 @@ export const BusinessPlanRichText = forwardRef<
   const deleteTableColumn = () => {
     const ctx = getTableCtx()
     if (!ctx) return false
+    snapshotBeforeTableMutation()
     const ok = deleteRichTextTableColumn(ctx)
     if (ok) emitChange()
     return ok
@@ -379,14 +523,20 @@ export const BusinessPlanRichText = forwardRef<
     return canMergeTableCellRange(hit.table, hit.range)
   }
   api.mergeTableCells = () => {
+    snapshotBeforeTableMutation()
     if (mergeRichTextTableCellSelection(editorRef.current)) {
       emitChange()
       return true
     }
-    return withTableCtx((ctx) => mergeRichTextTableCells(ctx)) !== false
+    const ctx = getTableCtx()
+    if (!ctx) return false
+    mergeRichTextTableCells(ctx)
+    emitChange()
+    return true
   }
   api.applyTableCellFill = (color) => {
     const el = editorRef.current
+    snapshotBeforeTableMutation()
     const ok = applyTableStyleFromEditor(el, getTableCtx(), {
       type: "fill",
       color,
@@ -398,6 +548,7 @@ export const BusinessPlanRichText = forwardRef<
     return ok
   }
   api.applyTableBorder = (border) => {
+    snapshotBeforeTableMutation()
     const ok = applyTableStyleFromEditor(editorRef.current, getTableCtx(), {
       type: "border",
       border,
@@ -408,6 +559,7 @@ export const BusinessPlanRichText = forwardRef<
   api.applyTableBorderWhole = (border) => {
     const ctx = getTableCtx()
     if (!ctx) return false
+    snapshotBeforeTableMutation()
     applyWholeTableBorderStyle(ctx.table, border)
     emitChange()
     return true
@@ -416,13 +568,41 @@ export const BusinessPlanRichText = forwardRef<
   useImperativeHandle(ref, () => api, [])
 
   useEffect(() => {
+    const el = editorRef.current
+    if (!el || readOnly || sourceMode) return
+
+    const onSelectionChange = () => {
+      const sel = window.getSelection()
+      if (!sel || sel.rangeCount === 0) return
+      const range = sel.getRangeAt(0)
+      if (el.contains(range.commonAncestorContainer)) {
+        saveEditorSelection()
+      }
+    }
+
+    el.addEventListener("keyup", saveEditorSelection)
+    el.addEventListener("mouseup", saveEditorSelection)
+    document.addEventListener("selectionchange", onSelectionChange)
+
+    return () => {
+      el.removeEventListener("keyup", saveEditorSelection)
+      el.removeEventListener("mouseup", saveEditorSelection)
+      document.removeEventListener("selectionchange", onSelectionChange)
+    }
+  }, [editorDom, readOnly, sourceMode, saveEditorSelection])
+
+  useEffect(() => {
     if (readOnly || sourceMode) return
     const el = editorRef.current
     if (!el) return
-    enhanceAllTablesInEditor(el, () => {
-      lastEmitted.current = el.innerHTML
-    })
-  }, [value, readOnly, sourceMode])
+    enhanceAllTablesInEditor(
+      el,
+      () => {
+        lastEmitted.current = el.innerHTML
+      },
+      snapshotBeforeTableMutation,
+    )
+  }, [value, readOnly, sourceMode, snapshotBeforeTableMutation])
 
   useEffect(() => {
     const el = editorDom
@@ -450,12 +630,12 @@ export const BusinessPlanRichText = forwardRef<
   return (
     <div
       className={cn(
-        "bp-rich-root w-full min-w-0 overflow-hidden rounded-lg border border-gray-200 print:border-0 print:shadow-none",
+        "bp-rich-root bp-rich-root--inline-toolbar w-full min-w-0 overflow-hidden rounded-md border border-black/15 bg-white print:border-0 print:shadow-none",
         className,
       )}
     >
       {showInlineToolbar && !toolbarCollapsed && variant === "compact" ? (
-        <div className="print-hide">
+        <div className="print-hide border-b border-black/10 bg-slate-50/90">
           <CompactToolbar onExec={exec} onInsertHtml={insertHtml} />
         </div>
       ) : null}
@@ -466,21 +646,9 @@ export const BusinessPlanRichText = forwardRef<
             onInsertHtml={insertHtml}
             onSourceToggle={handleSourceToggle}
             sourceMode={sourceMode}
-            editor={{
-              exec,
-              insertHtml,
-              focus: () => editorRef.current?.focus(),
-              toggleSource: handleSourceToggle,
-              isSourceMode: sourceMode,
-              hasTableContext: () =>
-                Boolean(getRichTextTableContext(editorRef.current)),
-              insertTable,
-              deleteTable,
-              insertTableRow,
-              deleteTableRow,
-              insertTableColumn,
-              deleteTableColumn,
-            }}
+            editor={api}
+            orientation="horizontal"
+            onPrepareCommand={saveEditorSelection}
           />
         </div>
       ) : null}
@@ -491,7 +659,7 @@ export const BusinessPlanRichText = forwardRef<
           value={sourceHtml}
           onChange={(e) => handleSourceChange(e.target.value)}
           onFocus={() => onActivate?.()}
-          className="print-hide min-h-[160px] w-full resize-y border-0 bg-white p-4 font-mono text-xs leading-relaxed outline-none"
+          className="print-hide min-h-[160px] w-full cursor-text resize-y border-0 bg-white p-4 font-mono text-xs leading-relaxed outline-none"
           spellCheck={false}
         />
       ) : (
@@ -503,11 +671,13 @@ export const BusinessPlanRichText = forwardRef<
             suppressContentEditableWarning
             onInput={emitChange}
             onBlur={emitChange}
+            onKeyDown={handleEditorKeyDown}
+            onPaste={handleEditorPaste}
             onFocus={() => onActivate?.()}
             onClick={() => onActivate?.()}
-            className="bp-rich-editor formal-doc min-h-[12rem] w-full min-w-0 px-3 py-3 text-[11px] leading-relaxed outline-none"
+            className="bp-rich-editor formal-doc min-h-[12rem] w-full min-w-0 cursor-text px-3 py-3 text-[11px] leading-relaxed outline-none"
             style={{ minHeight }}
-            data-placeholder="내용을 입력하세요. 표 셀을 드래그하면 여러 셀을 선택할 수 있고, 셀색으로 배경을 함께 바꿀 수 있습니다."
+            data-placeholder="내용을 입력하세요. 표 셀은 더블클릭해 글을 쓰고, 툴바 「이미지」 또는 붙여넣기(Ctrl+V)로 그림을 넣을 수 있습니다."
           />
           <RichTextTableSelectionLayer
             editorRoot={editorDom}
@@ -516,11 +686,12 @@ export const BusinessPlanRichText = forwardRef<
           <RichTextTableContextMenuLayer
             editorRoot={editorDom}
             onChange={emitChange}
+            onBeforeMutation={snapshotBeforeTableMutation}
           />
         </>
       )}
 
-      {variant === "full" ? (
+      {variant === "full" && !inlineToolbar ? (
         <div className="print-hide flex justify-end border-t border-gray-100 bg-gray-50 px-2 py-1">
           <Button
             type="button"
@@ -797,6 +968,7 @@ export function HangulToolbar({
   sourceMode,
   editor,
   orientation = "horizontal",
+  onPrepareCommand,
 }: {
   onExec: (cmd: string, val?: string) => void
   onInsertHtml: (html: string) => void
@@ -804,12 +976,26 @@ export function HangulToolbar({
   sourceMode: boolean
   editor?: RichTextEditorHandle | null
   orientation?: ToolbarOrientation
+  onPrepareCommand?: () => void
 }) {
   const [tableToolsExpanded, setTableToolsExpanded] = useState(false)
   const inTable = editor?.hasTableContext() ?? false
   const canStyleTable =
     inTable || (editor?.hasCellSelection?.() ?? false)
   const vertical = orientation === "vertical"
+
+  if (!vertical) {
+    return (
+      <ClassicEditorToolbar
+        onExec={onExec}
+        onInsertHtml={onInsertHtml}
+        onSourceToggle={onSourceToggle}
+        sourceMode={sourceMode}
+        editor={editor}
+        onPrepareCommand={onPrepareCommand}
+      />
+    )
+  }
 
   const tableToggle = (
     <Button
@@ -854,8 +1040,16 @@ export function HangulToolbar({
           >
             <StyleSelect orientation={orientation} onExec={onExec} />
             <FormatSelect orientation={orientation} onExec={onExec} />
-            <FontSelect orientation={orientation} onExec={onExec} />
-            <SizeSelect orientation={orientation} onExec={onExec} />
+            <FontSelect
+              orientation={orientation}
+              onExec={onExec}
+              onPrepareCommand={onPrepareCommand}
+            />
+            <SizeSelect
+              orientation={orientation}
+              onExec={onExec}
+              onPrepareCommand={onPrepareCommand}
+            />
             <div
               className={cn(
                 "flex gap-0.5",
@@ -1058,11 +1252,7 @@ export function HangulToolbar({
             <ToolbarButton
               title="이미지 삽입"
               label="이미지"
-              onClick={() =>
-                onInsertHtml(
-                  '<img src="https://placehold.co/320x180?text=Image" alt="" class="max-w-full rounded" />',
-                )
-              }
+              onClick={() => triggerRichTextImageInsert(onInsertHtml)}
             >
               <Image className="size-4" />
             </ToolbarButton>
@@ -1316,12 +1506,23 @@ function FormatSelect({
   )
 }
 
+function toolbarSelectTriggerProps(onPrepareCommand?: () => void) {
+  return {
+    onMouseDown: (e: MouseEvent) => {
+      e.preventDefault()
+      onPrepareCommand?.()
+    },
+  }
+}
+
 function FontSelect({
   onExec,
   orientation = "horizontal",
+  onPrepareCommand,
 }: {
   onExec: (cmd: string, val?: string) => void
   orientation?: ToolbarOrientation
+  onPrepareCommand?: () => void
 }) {
   return (
     <Select
@@ -1329,6 +1530,7 @@ function FontSelect({
     >
       <SelectTrigger
         data-toolbar-select
+        {...toolbarSelectTriggerProps(onPrepareCommand)}
         className={cn(
           "h-7 border-gray-300 bg-white text-xs",
           orientation === "vertical" ? "w-full" : "w-[100px]",
@@ -1350,9 +1552,11 @@ function FontSelect({
 function SizeSelect({
   onExec,
   orientation = "horizontal",
+  onPrepareCommand,
 }: {
   onExec: (cmd: string, val?: string) => void
   orientation?: ToolbarOrientation
+  onPrepareCommand?: () => void
 }) {
   return (
     <Select
@@ -1362,6 +1566,7 @@ function SizeSelect({
     >
       <SelectTrigger
         data-toolbar-select
+        {...toolbarSelectTriggerProps(onPrepareCommand)}
         className={cn(
           "h-7 border-gray-300 bg-white text-xs",
           orientation === "vertical" ? "w-full" : "w-[76px]",

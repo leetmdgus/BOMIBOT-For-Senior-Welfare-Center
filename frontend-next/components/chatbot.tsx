@@ -16,6 +16,7 @@ import {
   Mail,
   Minimize2,
   Maximize2,
+  RotateCcw,
   Search,
   Send,
   X,
@@ -178,13 +179,23 @@ export function Chatbot() {
   const [pendingFiles, setPendingFiles] = useState<PendingAttachment[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isAssistantThinking, setIsAssistantThinking] = useState(false)
+  const [csWelcomeMessage, setCsWelcomeMessage] = useState(
+    "안녕하세요, 봄이봇 고객지원입니다. 이슈 내용과 스크린샷을 보내주시면 이메일로 답변드립니다.",
+  )
+  const [assistantWelcomeMessage, setAssistantWelcomeMessage] = useState(
+    "안녕하세요! 사업 데이터를 바탕으로 질문에 답해 드립니다.",
+  )
 
   const messages = mode === "cs" ? csMessages : assistantMessages
   const suggestions = mode === "cs" ? csSuggestions : assistantSuggestions
+  const showQuickMenu = messages.length === 1 && suggestions.length > 0
+  const canResetToQuickMenu = messages.length > 1
 
   useEffect(() => {
     getChatConfig()
       .then((config) => {
+        setCsWelcomeMessage(config.cs.welcomeMessage)
+        setAssistantWelcomeMessage(config.assistant.welcomeMessage)
         setCsMessages([
           {
             id: "cs-welcome",
@@ -471,6 +482,37 @@ export function Chatbot() {
     await sendAssistantMessage(text, { appendUserMessage: true })
   }
 
+  const resetToQuickMenu = () => {
+    if (mode === "cs") {
+      setCsMessages([
+        {
+          id: "cs-welcome",
+          role: "assistant",
+          content: csWelcomeMessage,
+          timestamp: new Date(),
+        },
+      ])
+      setInput("")
+      setContactEmail("")
+      setPendingFiles((prev) => {
+        prev.forEach((item) => URL.revokeObjectURL(item.previewUrl))
+        return []
+      })
+      return
+    }
+
+    setAssistantMessages([
+      {
+        id: "assistant-welcome",
+        role: "assistant",
+        content: assistantWelcomeMessage,
+        timestamp: new Date(),
+      },
+    ])
+    setInput("")
+    setIsAssistantThinking(false)
+  }
+
   if (!isOpen) {
     return (
       <div className="fixed bottom-0 right-0 z-50 flex flex-col items-end gap-2 p-4 pb-5 print:hidden">
@@ -535,6 +577,19 @@ export function Chatbot() {
           </div>
         </div>
         <div className="flex items-center gap-1">
+          {canResetToQuickMenu ? (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-8"
+              onClick={resetToQuickMenu}
+              disabled={isSubmitting || isAssistantThinking}
+              title="퀵메뉴로 돌아가기"
+              aria-label="퀵메뉴로 돌아가기"
+            >
+              <RotateCcw className="size-4" />
+            </Button>
+          ) : null}
           <Button
             variant="ghost"
             size="icon"
@@ -639,7 +694,7 @@ export function Chatbot() {
           </div>
         ) : null}
 
-        {messages.length === 1 && suggestions.length > 0 ? (
+        {showQuickMenu ? (
           <div className="pt-1">
             <p className="mb-2 text-xs font-medium text-muted-foreground">
               {mode === "cs" ? "자주 묻는 문의" : "추천 질문"}

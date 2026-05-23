@@ -54,7 +54,7 @@ export function BusinessPlanFloatingPanel({
         </Button>
       </div>
 
-      <div className="reference-plan-panel__scroll min-h-0 flex-1 overflow-y-auto overflow-x-auto">
+      <div className="reference-plan-panel__scroll min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
         {isLoading || !planDocument ? (
           <div className="flex items-center justify-center gap-2 py-16 text-sm text-muted-foreground">
             <Loader2 className="size-4 animate-spin" />

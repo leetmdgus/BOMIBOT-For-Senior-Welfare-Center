@@ -1,13 +1,7 @@
 "use client"
 
 import { useCallback, useEffect } from "react"
-import {
-  ChevronDown,
-  ChevronUp,
-  Eye,
-  Trash2,
-  Upload,
-} from "lucide-react"
+import { Eye, Upload } from "lucide-react"
 
 import {
   A4DocumentViewport,
@@ -15,7 +9,10 @@ import {
 } from "@/components/common/a4-document-viewport"
 import { AddDocumentBlocksBar } from "@/components/kanban/task-detail/add-document-blocks-bar"
 import { BusinessPlanTableBlock } from "@/components/kanban/task-detail/business-plan-table-block"
-import { formalEmptyDocumentHtml } from "@/lib/formal-document-html"
+import {
+  formalEmptyDocumentHtml,
+  nextFormalHeadingTitle,
+} from "@/lib/formal-document-html"
 import {
   HwpxBodyContentBlock,
   HwpxContentBlock,
@@ -40,10 +37,9 @@ import {
 } from "@/components/kanban/task-detail/line-slot-input"
 import {
   RichTextToolbarProvider,
-  useRichTextEditorSlot,
   useRichTextToolbarOptional,
 } from "@/components/kanban/task-detail/rich-text-toolbar-context"
-import { StickyRichTextToolbar } from "@/components/kanban/task-detail/sticky-rich-text-toolbar"
+import { DocumentSectionControls } from "@/components/kanban/task-detail/document-section-controls"
 import { BusinessPlanRichText } from "./business-plan-rich-text"
 
 type BusinessPlanEditorProps = {
@@ -122,12 +118,14 @@ export function BusinessPlanEditor({
   }
 
   const addHeading = () => {
+    const headingCount = sections.filter((section) => section.type === "heading")
+      .length
     onSectionsChange([
       ...sections,
       {
         id: createSectionId(),
         type: "heading",
-        title: "새 제목",
+        title: nextFormalHeadingTitle(headingCount),
       },
     ])
   }
@@ -175,8 +173,8 @@ export function BusinessPlanEditor({
           </p>
         ) : !effectiveReadOnly ? (
           <p className="print-hide border-b border-black/15 bg-[#fafafa] px-4 py-2 text-center text-[11px] text-neutral-600">
-            표 칸을 클릭하면 좌측 서식 툴바가 연결됩니다. 본문(고급 서식)은 아래
-            「추가 본문」에서 이어서 작성할 수 있습니다.
+            요약 표·본문은 칸을 클릭해 입력합니다. 본문(고급 서식) 블록마다
+            상단 툴바로 편집하며, 「추가 본문」으로 섹션을 더할 수 있습니다.
           </p>
         ) : null}
 
@@ -311,7 +309,13 @@ export function BusinessPlanEditor({
               : 0
 
           return (
-          <div key={section.id} className="hwpx-doc-section-row">
+          <div
+            key={section.id}
+            className={cn(
+              "hwpx-doc-section-row",
+              section.type === "heading" && "hwpx-doc-section-row--heading",
+            )}
+          >
             <div className="w-full min-w-0">
               {section.type === "file" && (
                 <div className="p-4">
@@ -333,7 +337,20 @@ export function BusinessPlanEditor({
               )}
 
               {section.type === "heading" && (
-                <HwpxContentBlock label="대목차" embedded>
+                <HwpxContentBlock
+                  label="대목차"
+                  embedded
+                  toolbar={
+                    effectiveReadOnly ? undefined : (
+                      <DocumentSectionControls
+                        layout="bar"
+                        onMoveUp={() => moveSection(index, "up")}
+                        onMoveDown={() => moveSection(index, "down")}
+                        onDelete={() => deleteSection(index)}
+                      />
+                    )
+                  }
+                >
                   {effectiveReadOnly ? (
                     <h3 className="text-base font-semibold">{section.title}</h3>
                   ) : (
@@ -361,7 +378,7 @@ export function BusinessPlanEditor({
                 />
               )}
 
-              {section.type === "table" && (
+              {/* {section.type === "table" && (
                 <BusinessPlanTableBlock
                   section={section}
                   formData={formData}
@@ -369,14 +386,14 @@ export function BusinessPlanEditor({
                   onSectionChange={(patch) => updateSection(index, patch)}
                   onFormDataChange={onFormDataChange}
                 />
-              )}
+              )} */}
             </div>
 
-            {!effectiveReadOnly ? (
-              <SectionControls
-                index={index}
-                onMove={moveSection}
-                onDelete={deleteSection}
+            {!effectiveReadOnly && section.type !== "heading" ? (
+              <DocumentSectionControls
+                onMoveUp={() => moveSection(index, "up")}
+                onMoveDown={() => moveSection(index, "down")}
+                onDelete={() => deleteSection(index)}
                 className="hwpx-doc-section-row__controls"
               />
             ) : null}
@@ -399,7 +416,6 @@ export function BusinessPlanEditor({
             sectionCount={sections.length}
             bodyCount={sections.filter((s) => s.type === "body").length}
           />
-          {!effectiveReadOnly ? <StickyRichTextToolbar /> : null}
         </div>
       ) : null}
       </div>
@@ -472,79 +488,22 @@ function BusinessPlanBodyBlock({
   onTitleChange: (title: string) => void
   onContentChange: (content: string) => void
 }) {
-  const label = section.title?.trim() || `본문 ${bodyIndex}`
-  const { setEditor, onActivate, variant } = useRichTextEditorSlot(
-    `plan-body-${section.id}`,
-    label,
-  )
-
   return (
     <HwpxBodyContentBlock
       title={section.title ?? ""}
       onTitleChange={onTitleChange}
       readOnly={readOnly}
-      onTitleFocus={onActivate}
       embedded
     >
       <BusinessPlanRichText
-        ref={setEditor}
         value={section.content ?? ""}
         onChange={onContentChange}
         readOnly={readOnly}
-        variant={variant}
-        inlineToolbar={false}
+        variant="full"
+        inlineToolbar
         minHeight={280}
-        onActivate={onActivate}
       />
     </HwpxBodyContentBlock>
   )
 }
 
-function SectionControls({
-  index,
-  onMove,
-  onDelete,
-  className,
-}: {
-  index: number
-  onMove: (index: number, direction: "up" | "down") => void
-  onDelete: (index: number) => void
-  className?: string
-}) {
-  return (
-    <div
-      className={cn(
-        "print-hide flex flex-col items-center gap-1",
-        className,
-      )}
-    >
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        className="size-6 p-0"
-        onClick={() => onMove(index, "up")}
-      >
-        <ChevronUp className="size-4" />
-      </Button>
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        className="size-6 p-0"
-        onClick={() => onMove(index, "down")}
-      >
-        <ChevronDown className="size-4" />
-      </Button>
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        className="size-6 p-0 text-destructive hover:text-destructive"
-        onClick={() => onDelete(index)}
-      >
-        <Trash2 className="size-4" />
-      </Button>
-    </div>
-  )
-}

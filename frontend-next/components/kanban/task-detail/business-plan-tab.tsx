@@ -10,6 +10,7 @@ import {
   PrintDocumentShell,
 } from "@/components/common/print-document"
 import { downloadBusinessPlanHwpx } from "@/lib/hwpx/export-business-plan"
+import { defaultBusinessPlanFormData } from "@/lib/mocks/kanban.business-plan.mock"
 import { getBusinessPlan, saveBusinessPlan } from "@/services/kanban.task-detail.service"
 import type {
   BusinessPlanDocument,
@@ -21,17 +22,12 @@ import { useToast } from "@/hooks/use-toast"
 
 import { BusinessPlanEditor } from "./business-plan-editor"
 
-const emptyFormData: BusinessPlanFormData = {
-  projectName: "",
-  purpose: "",
-  goals: [],
-  period: "",
-  target: "",
-  totalCount: "",
-  budget: "",
-  budgetCategory: "",
-  manager: "",
-  subProjects: [],
+function cloneDefaultFormData(): BusinessPlanFormData {
+  return {
+    ...defaultBusinessPlanFormData,
+    goals: [...defaultBusinessPlanFormData.goals],
+    subProjects: defaultBusinessPlanFormData.subProjects.map((row) => ({ ...row })),
+  }
 }
 
 export function BusinessPlanTab() {
@@ -46,7 +42,7 @@ export function BusinessPlanTab() {
   const [previewMode, setPreviewMode] = useState(false)
 
   const [sections, setSections] = useState<BusinessPlanSection[]>([])
-  const [formData, setFormData] = useState<BusinessPlanFormData>(emptyFormData)
+  const [formData, setFormData] = useState<BusinessPlanFormData>(cloneDefaultFormData)
 
   const readOnly = isCompleted || previewMode
 
@@ -141,6 +137,18 @@ export function BusinessPlanTab() {
             await downloadBusinessPlanHwpx(formData, sections)
           }}
         />
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={isSaving || readOnly}
+          onClick={() => void persist()}
+        >
+          {isSaving ? (
+            <Loader2 className="mr-2 size-4 animate-spin" />
+          ) : null}
+          저장
+        </Button>
         <Button
           type="button"
           size="sm"

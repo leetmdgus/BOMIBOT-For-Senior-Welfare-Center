@@ -8,6 +8,17 @@
   padding-left: calc(var(--rich-text-toolbar-rail-width, 240px) + 1rem);
 }
 
+/* 함께보기: 앱 사이드바 + 서식 툴바 유지, 평가서 열 최소 너비 확보 */
+#task-detail-scroll.has-evaluation-together-view.has-rich-text-toolbar-rail > main {
+  padding-left: calc(var(--rich-text-toolbar-rail-width, 240px) + 0.75rem);
+}
+
+#task-detail-scroll.has-evaluation-together-view .evaluation-together-layout,
+#task-detail-scroll.has-evaluation-together-view .evaluation-together-layout--split {
+  width: 100%;
+  max-width: 100%;
+}
+
 .bp-rich-editor-toolbar--vertical {
   display: flex;
   flex-direction: column;

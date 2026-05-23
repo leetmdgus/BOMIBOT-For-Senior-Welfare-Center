@@ -10,6 +10,7 @@
   position: relative;
   overflow: visible;
   vertical-align: top;
+  cursor: text;
 }
 
 .bp-rich-editor table.bp-rt-table td.bp-rt-cell-selected,
@@ -17,6 +18,13 @@
   outline: 2px solid oklch(0.55 0.2 260);
   outline-offset: -2px;
   /* 배경색 채우기와 겹치지 않도록 outline만 사용 */
+}
+
+.bp-rich-editor table.bp-rt-table td.bp-rt-cell-editing,
+.bp-rich-editor table.bp-rt-table th.bp-rt-cell-editing {
+  outline: 2px solid oklch(0.55 0.2 260);
+  outline-offset: -2px;
+  cursor: text;
 }
 
 /* 열 너비 — 셀 오른쪽 가장자리 */
@@ -93,6 +101,33 @@ body.bp-rt-table-resizing.bp-rt-table-resizing--row {
 body.bp-rt-table-selecting {
   user-select: none !important;
   cursor: cell;
+}
+
+body.bp-rt-table-selecting .bp-rich-editor table.bp-rt-table td,
+body.bp-rt-table-selecting .bp-rich-editor table.bp-rt-table th {
+  cursor: cell;
+}
+
+/* 본문(고급 서식) — 편집 시 I-beam 커서 (body 기본 화살표 상속 방지) */
+.bp-rich-editor[contenteditable="true"] {
+  cursor: text;
+}
+
+.bp-rich-editor[contenteditable="true"] :is(p, li, h1, h2, h3, h4, span, div.doc-body, div.doc-section, div.doc-section-plain, div.doc-chapter) {
+  cursor: text;
+}
+
+.bp-rich-editor .bp-rt-image-wrap {
+  margin: 0.5rem 0;
+  text-align: center;
+}
+
+.bp-rich-editor .bp-rt-image {
+  display: inline-block;
+  max-width: 100%;
+  height: auto;
+  vertical-align: middle;
+  cursor: default;
 }
 
 .bp-rich-editor table.bp-rt-table col {

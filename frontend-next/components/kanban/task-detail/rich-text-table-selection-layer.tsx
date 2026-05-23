@@ -11,8 +11,9 @@ import {
   type CellRange,
 } from "@/lib/rich-text-table-grid"
 import {
+  clearRichTextTableCellEditing,
   ensureTableStructure,
-  focusRichTextTableCell,
+  focusRichTextTableCellAtPoint,
   moveRichTextTableTabFocus,
 } from "@/lib/rich-text-table-utils"
 
@@ -118,6 +119,20 @@ export function RichTextTableSelectionLayer({
       const bounds = getCellBounds(table, cell)
       if (!bounds) return
 
+      /* 더블클릭: 셀 안 텍스트 편집(커서 위치) */
+      if (e.detail >= 2) {
+        clearOtherTableSelections(root, table)
+        applyRange(table, {
+          startRow: bounds.minR,
+          startCol: bounds.minC,
+          endRow: bounds.minR,
+          endCol: bounds.minC,
+        })
+        focusRichTextTableCellAtPoint(cell, e.clientX, e.clientY)
+        drag = null
+        return
+      }
+
       e.preventDefault()
       window.getSelection()?.removeAllRanges()
 
@@ -190,10 +205,34 @@ export function RichTextTableSelectionLayer({
         const map = buildTableGridMap(drag.table)
         const anchor =
           map.grid[drag.startRow]?.[drag.startCol] ?? drag.anchorCell
-        focusRichTextTableCell(anchor)
+        focusRichTextTableCellAtPoint(anchor, e.clientX, e.clientY)
       }
 
       document.body.classList.remove("bp-rt-table-selecting")
+      drag = null
+    }
+
+    const onDblClick = (e: MouseEvent) => {
+      if (isTableChromeTarget(e.target)) return
+      const hit = getTableCellFromTarget(root, e.target)
+      if (!hit) return
+
+      e.preventDefault()
+      e.stopPropagation()
+
+      const { table, cell } = hit
+      ensureTableStructure(table)
+      const bounds = getCellBounds(table, cell)
+      if (!bounds) return
+
+      clearOtherTableSelections(root, table)
+      applyRange(table, {
+        startRow: bounds.minR,
+        startCol: bounds.minC,
+        endRow: bounds.minR,
+        endCol: bounds.minC,
+      })
+      focusRichTextTableCellAtPoint(cell, e.clientX, e.clientY)
       drag = null
     }
 
@@ -201,6 +240,7 @@ export function RichTextTableSelectionLayer({
       if (isTableChromeTarget(e.target)) return
       const hit = getTableCellFromTarget(root, e.target)
       if (hit) return
+      clearRichTextTableCellEditing(root)
       root.querySelectorAll("table").forEach((table) => {
         if (table instanceof HTMLTableElement) {
           clearTableCellSelection(table)
@@ -228,6 +268,7 @@ export function RichTextTableSelectionLayer({
     }
 
     root.addEventListener("mousedown", onMouseDown, true)
+    root.addEventListener("dblclick", onDblClick, true)
     document.addEventListener("mousemove", onMouseMove)
     document.addEventListener("mouseup", onMouseUp)
     root.addEventListener("click", onClickOutside)
@@ -235,6 +276,7 @@ export function RichTextTableSelectionLayer({
 
     return () => {
       root.removeEventListener("mousedown", onMouseDown, true)
+      root.removeEventListener("dblclick", onDblClick, true)
       document.removeEventListener("mousemove", onMouseMove)
       document.removeEventListener("mouseup", onMouseUp)
       root.removeEventListener("click", onClickOutside)

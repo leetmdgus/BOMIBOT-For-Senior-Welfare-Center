@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { usePathname } from "next/navigation"
 import Link from "next/link"
 import {
@@ -36,9 +36,23 @@ const menuItems: MenuItem[] = [
   { icon: Settings, label: "메뉴 관리", href: "#" },
 ]
 
+/** 사업계획서·사업평가 작성 화면 — 넓은 문서 영역을 위해 기본 접힘 */
+function shouldCollapseSidebarByDefault(pathname: string) {
+  return (
+    /\/kanban\/task\/[^/]+\/business-plan(?:\/|$)/.test(pathname) ||
+    /\/kanban\/task\/[^/]+\/evaluation(?:\/|$)/.test(pathname)
+  )
+}
+
 export function Sidebar() {
   const pathname = usePathname()
-  const [collapsed, setCollapsed] = useState(false)
+  const [collapsed, setCollapsed] = useState(() =>
+    shouldCollapseSidebarByDefault(pathname),
+  )
+
+  useEffect(() => {
+    setCollapsed(shouldCollapseSidebarByDefault(pathname))
+  }, [pathname])
 
   return (
     <aside

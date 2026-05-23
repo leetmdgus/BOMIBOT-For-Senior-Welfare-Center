@@ -10,6 +10,7 @@ import {
 import { surveyListItemsMock } from "@/lib/mocks/survey.mock"
 import type {
   BusinessEvaluationData,
+  BusinessEvaluationTemplate,
   BusinessPlanDocument,
   EvaluationFile,
   SaveBusinessEvaluationPayload,
@@ -60,8 +61,28 @@ export async function getEvaluationFiles(
   return filesData
 }
 
-export function getViewTogetherFixedFiles(): EvaluationFile[] {
-  return viewTogetherFixedFiles
+export async function getViewTogetherFixedFiles(): Promise<EvaluationFile[]> {
+  return [...viewTogetherFixedFiles]
+}
+
+function cloneEvaluationTemplate(
+  source: BusinessEvaluationData,
+): BusinessEvaluationTemplate {
+  return {
+    performanceIndicator: source.performanceIndicator,
+    evaluationTool: source.evaluationTool,
+    keyFactorAnalysis: source.keyFactorAnalysis,
+    goalAppropriacy: source.goalAppropriacy,
+    suggestion: source.suggestion,
+    detailRows: source.detailRows.map((row) => ({ ...row })),
+    sections: source.sections.map((section) => ({ ...section })),
+  }
+}
+
+export async function getBusinessEvaluationTemplate(
+  _taskId?: string,
+): Promise<BusinessEvaluationTemplate> {
+  return cloneEvaluationTemplate(businessEvaluationData)
 }
 
 export async function getBusinessEvaluation(
@@ -79,8 +100,12 @@ export async function saveBusinessEvaluation(
     ...current,
     ...payload,
     goals: payload.goals ? [...payload.goals] : current.goals,
-    detailRows: payload.detailRows ?? current.detailRows,
-    sections: payload.sections ?? current.sections,
+    detailRows: payload.detailRows
+      ? payload.detailRows.map((row) => ({ ...row }))
+      : current.detailRows,
+    sections: payload.sections
+      ? payload.sections.map((section) => ({ ...section }))
+      : current.sections,
   }
 
   evaluationByTaskId.set(taskId, next)

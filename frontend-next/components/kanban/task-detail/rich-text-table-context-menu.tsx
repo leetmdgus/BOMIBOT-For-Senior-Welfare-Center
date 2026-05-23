@@ -37,11 +37,13 @@ type MenuPos = { x: number; y: number }
 type RichTextTableContextMenuLayerProps = {
   editorRoot: HTMLElement | null
   onChange: () => void
+  onBeforeMutation?: () => void
 }
 
 export function RichTextTableContextMenuLayer({
   editorRoot,
   onChange,
+  onBeforeMutation,
 }: RichTextTableContextMenuLayerProps) {
   const [menu, setMenu] = useState<{
     pos: MenuPos
@@ -59,11 +61,12 @@ export function RichTextTableContextMenuLayer({
   const run = useCallback(
     (fn: (ctx: RichTextTableContext) => boolean | void) => {
       if (!menu) return
+      onBeforeMutation?.()
       fn(menu.ctx)
       onChange()
       close()
     },
-    [menu, onChange, close],
+    [menu, onChange, onBeforeMutation, close],
   )
 
   useEffect(() => {
@@ -115,6 +118,7 @@ export function RichTextTableContextMenuLayer({
     : [ctx.cell]
 
   const applyFill = (color: string | null) => {
+    onBeforeMutation?.()
     applyTableCellsFill(fillTargetCells, color)
     onChange()
     close()

@@ -1,5 +1,6 @@
 import type {
   BusinessEvaluationData,
+  BusinessEvaluationTemplate,
   BusinessPlanDocument,
   EvaluationFile,
   SaveBusinessEvaluationPayload,
@@ -27,6 +28,18 @@ export async function getSurveys(): Promise<Survey[]> {
 export async function getEvaluationFiles(taskId: string): Promise<EvaluationFile[]> {
   return apiFetch<EvaluationFile[]>(
     `/api/kanban/task-detail/files?taskId=${encodeURIComponent(taskId)}`
+  )
+}
+
+export async function getViewTogetherFixedFiles(): Promise<EvaluationFile[]> {
+  return apiFetch<EvaluationFile[]>("/api/kanban/task-detail/view-together-files")
+}
+
+export async function getBusinessEvaluationTemplate(
+  taskId: string,
+): Promise<BusinessEvaluationTemplate> {
+  return apiFetch<BusinessEvaluationTemplate>(
+    `/api/kanban/task-detail/evaluation/template?taskId=${encodeURIComponent(taskId)}`,
   )
 }
 

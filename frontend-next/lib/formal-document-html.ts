@@ -13,6 +13,29 @@ export const ROMAN_CHAPTER_MARKERS = [
   "Ⅹ",
 ] as const
 
+/** 대목차 블록 제목용 ASCII 로마숫자 (I., II., …) */
+const HEADING_ROMAN_ASCII = [
+  "I",
+  "II",
+  "III",
+  "IV",
+  "V",
+  "VI",
+  "VII",
+  "VIII",
+  "IX",
+  "X",
+] as const
+
+export function nextFormalHeadingTitle(
+  existingHeadingCount: number,
+  placeholder = "새 제목",
+): string {
+  const mark =
+    HEADING_ROMAN_ASCII[existingHeadingCount] ?? String(existingHeadingCount + 1)
+  return `${mark}. ${placeholder}`
+}
+
 const th =
   'class="border border-black bg-[#e6e6e6] p-2 text-center text-[10px] font-semibold"'
 const td =
@@ -160,8 +183,9 @@ export function formalEvaluationTableHtml(): string {
 </tbody></table><p><br></p>`
 }
 
+/** 본문 블록 추가 시 기본 HTML (대목차 없이 중·소제목+본문) */
 export function formalEmptyDocumentHtml(): string {
-  return `${formalChapterHtml("사업의 배경 및 필요성", 1)}${formalSectionHtml("대상자 욕구 및 문제점", 1)}${formalBodyHtml()}`
+  return `${formalSectionHtml("소제목", 1)}${formalBodyHtml()}`
 }
 
 export type FormalDocumentTemplate = {
@@ -229,7 +253,8 @@ export const FORMAL_DOCUMENT_TEMPLATES: FormalDocumentTemplate[] = [
   },
   {
     id: "full-section",
-    label: "섹션 세트 (Ⅰ장)",
+    label: "본문 세트 (소제목+문단)",
+    description: "1. 소제목 + 본문 문단",
     html: formalEmptyDocumentHtml(),
   },
 ]

@@ -42,7 +42,9 @@ export function DocumentsHeader() {
   return (
     <div className="mb-6 space-y-4 print:mb-2">
       <div className="flex flex-wrap items-start justify-between gap-4">
-        <h1 className="text-4xl font-bold tracking-tight">{viewTitle}</h1>
+        <h1 className="screen-only text-4xl font-bold tracking-tight">
+          {viewTitle}
+        </h1>
 
         <div className="print-hide flex border-b border-border">
           {tabs.map((tab) => {

@@ -12,8 +12,9 @@ import { EvaluationSplitLayout } from "@/components/kanban/task-detail/evaluatio
 import { EvaluationDocumentPanel } from "@/components/kanban/task-detail/evaluation-document-panel"
 import { Button } from "@/components/ui/button"
 import { downloadBusinessEvaluationHwpx } from "@/lib/hwpx/export-business-evaluation"
-import { businessEvaluationData } from "@/lib/mocks/kanban.task-detail.mock"
+import { toSaveBusinessEvaluationPayload } from "@/lib/kanban/evaluation-save-payload"
 import {
+  getBusinessEvaluationTemplate,
   getBusinessPlan,
   getEvaluationFiles,
   getViewTogetherFixedFiles,
@@ -54,7 +55,7 @@ export function BusinessPlanEvaluationWorkspace({
     null,
   )
   const [documentFiles, setDocumentFiles] = useState<EvaluationFile[]>([])
-  const [fixedFiles] = useState(() => getViewTogetherFixedFiles())
+  const [fixedFiles, setFixedFiles] = useState<EvaluationFile[]>([])
   const [planLoading, setPlanLoading] = useState(true)
   const [showDocPanel, setShowDocPanel] = useState(false)
   const [datePickerOpen, setDatePickerOpen] = useState(false)
@@ -87,12 +88,14 @@ export function BusinessPlanEvaluationWorkspace({
   const loadPlan = useCallback(async () => {
     setPlanLoading(true)
     try {
-      const [plan, files] = await Promise.all([
+      const [plan, files, togetherFiles] = await Promise.all([
         getBusinessPlan(taskId),
         getEvaluationFiles(taskId),
+        getViewTogetherFixedFiles(),
       ])
       setPlanDocument(plan)
       setDocumentFiles(files)
+      setFixedFiles(togetherFiles)
     } catch (error) {
       console.error("사업계획서 로드 실패:", error)
     } finally {
@@ -110,6 +113,7 @@ export function BusinessPlanEvaluationWorkspace({
     try {
       const saved = await saveBusinessPlan(taskId, {
         formData: planDocument.formData,
+        sections: planDocument.sections,
       })
       setPlanDocument(saved)
     } catch (error) {
@@ -123,19 +127,10 @@ export function BusinessPlanEvaluationWorkspace({
   const persistEvaluation = async () => {
     onSavingChange(true)
     try {
-      const saved = await saveBusinessEvaluation(taskId, {
-        evaluationDate: evaluationData.evaluationDate,
-        purpose: evaluationData.purpose,
-        goals: evaluationData.goals.filter(Boolean),
-        performanceIndicator: evaluationData.performanceIndicator,
-        evaluationTool: evaluationData.evaluationTool,
-        supervision: evaluationData.supervision,
-        detailRows: evaluationData.detailRows,
-        sections: evaluationData.sections,
-        keyFactorAnalysis: evaluationData.keyFactorAnalysis,
-        goalAppropriacy: evaluationData.goalAppropriacy,
-        suggestion: evaluationData.suggestion,
-      })
+      const saved = await saveBusinessEvaluation(
+        taskId,
+        toSaveBusinessEvaluationPayload(evaluationData),
+      )
       onEvaluationSaved(saved)
     } catch (error) {
       console.error("사업평가 저장 실패:", error)
@@ -150,7 +145,7 @@ export function BusinessPlanEvaluationWorkspace({
     await persistEvaluation()
   }
 
-  const handleLoadPreviousEvaluation = () => {
+  const handleLoadPreviousEvaluation = async () => {
     if (
       !window.confirm(
         "이전에 작성된 사업평가서 양식을 불러옵니다. 슬롯·본문 영역이 초기화될 수 있습니다. 계속할까요?",
@@ -159,19 +154,25 @@ export function BusinessPlanEvaluationWorkspace({
       return
     }
 
-    const template = businessEvaluationData
-    onEvaluationChange({
-      ...evaluationData,
-      performanceIndicator: template.performanceIndicator,
-      evaluationTool: template.evaluationTool,
-      keyFactorAnalysis: template.keyFactorAnalysis,
-      goalAppropriacy: template.goalAppropriacy,
-      suggestion: template.suggestion,
-      sections: template.sections.map((s) => ({
-        ...s,
-        id: createId(),
-      })),
-    })
+    try {
+      const template = await getBusinessEvaluationTemplate(taskId)
+      onEvaluationChange({
+        ...evaluationData,
+        performanceIndicator: template.performanceIndicator,
+        evaluationTool: template.evaluationTool,
+        keyFactorAnalysis: template.keyFactorAnalysis,
+        goalAppropriacy: template.goalAppropriacy,
+        suggestion: template.suggestion,
+        detailRows: template.detailRows.map((row) => ({ ...row })),
+        sections: template.sections.map((s) => ({
+          ...s,
+          id: createId(),
+        })),
+      })
+    } catch (error) {
+      console.error("이전 양식 불러오기 실패:", error)
+      alert("이전 양식을 불러오지 못했습니다.")
+    }
   }
 
   const handleImportFromPlan = () => {
@@ -209,7 +210,7 @@ export function BusinessPlanEvaluationWorkspace({
       <div className="evaluation-workspace-chrome print-hide flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border/50 bg-card px-4 py-3">
         <p className="text-sm text-muted-foreground">
           {canEditEvaluation
-            ? "왼쪽에서 평가서를 작성하고, 오른쪽 참고 계획서를 보며 「계획서 → 평가 반영」으로 내용을 가져올 수 있습니다."
+            ? "왼쪽 참고 계획서를 보며 오른쪽에서 평가서를 작성합니다. 「계획서 → 평가 반영」으로 내용을 가져올 수 있습니다."
             : "보기 모드 · 슈퍼비전만 수정할 수 있습니다."}
         </p>
         <div className="flex flex-wrap gap-2">
@@ -232,7 +233,6 @@ export function BusinessPlanEvaluationWorkspace({
             계획서 → 평가 반영
           </Button>
           <HwpxDownloadButton
-            label="HWPX 다운로드"
             onDownload={async () => {
               await downloadBusinessEvaluationHwpx(
                 evaluationData,
@@ -253,8 +253,15 @@ export function BusinessPlanEvaluationWorkspace({
 
       <EvaluationSplitLayout
         defaultShowPlanPanel
-        left={
-          <div className="mx-auto flex w-full min-w-0 flex-col items-center space-y-4 pb-6">
+        referencePlan={
+          <BusinessPlanFloatingPanel
+            taskId={taskId}
+            planDocument={planDocument}
+            isLoading={planLoading}
+          />
+        }
+        evaluation={
+          <div className="flex w-full min-w-0 flex-col space-y-4 pb-6">
             <BusinessEvaluationEditor
               evaluation={evaluationData}
               canEdit={canEditEvaluation}
@@ -278,13 +285,6 @@ export function BusinessPlanEvaluationWorkspace({
               className="sticky bottom-4 z-20"
             />
           </div>
-        }
-        right={
-          <BusinessPlanFloatingPanel
-            taskId={taskId}
-            planDocument={planDocument}
-            isLoading={planLoading}
-          />
         }
       />
     </div>

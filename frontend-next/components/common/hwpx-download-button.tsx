@@ -14,7 +14,7 @@ type HwpxDownloadButtonProps = {
 }
 
 export function HwpxDownloadButton({
-  label = "HWPX 다운로드",
+  label = "한글 다운로드",
   onDownload,
   disabled = false,
   className,
@@ -29,8 +29,8 @@ export function HwpxDownloadButton({
       console.error("HWPX 다운로드 실패:", error)
       alert(
         error instanceof Error
-          ? `HWPX 파일 생성에 실패했습니다.\n${error.message}`
-          : "HWPX 파일 생성에 실패했습니다.",
+          ? `한글(HWPX) 파일 생성에 실패했습니다.\n${error.message}`
+          : "한글(HWPX) 파일 생성에 실패했습니다.",
       )
     } finally {
       setLoading(false)

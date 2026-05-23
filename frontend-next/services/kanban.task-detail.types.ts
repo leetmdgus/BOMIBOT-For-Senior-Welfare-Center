@@ -61,6 +61,15 @@ export interface BusinessEvaluationData {
 }
 
 export interface SaveBusinessEvaluationPayload {
+  team?: string
+  manager?: string
+  period?: string
+  programName?: string
+  target?: string
+  planCount?: string
+  planBudget?: string
+  actualCount?: string
+  actualExpense?: string
   evaluationDate?: string
   purpose?: string
   goals?: string[]
@@ -73,6 +82,18 @@ export interface SaveBusinessEvaluationPayload {
   goalAppropriacy?: string
   suggestion?: string
 }
+
+/** 이전 양식 불러오기용 기본 템플릿 (요약·본문 슬롯) */
+export type BusinessEvaluationTemplate = Pick<
+  BusinessEvaluationData,
+  | "performanceIndicator"
+  | "evaluationTool"
+  | "keyFactorAnalysis"
+  | "goalAppropriacy"
+  | "suggestion"
+  | "detailRows"
+  | "sections"
+>
 
 export type BusinessPlanSectionType = "file" | "heading" | "body" | "table"
 

@@ -1,5 +1,7 @@
 /** 한글(한컴) 워드 — 글자 크기(px) */
 
+import { isFullEditorSelection } from "@/lib/rich-text-selection"
+
 export const DEFAULT_EDITOR_FONT_SIZE_PX = 10
 
 /** 한글 문서용 작은 크기 위주 (px) */
@@ -17,10 +19,38 @@ export function parseFontSizePx(value: string | undefined): number | null {
   return Number.isFinite(px) && px > 0 ? px : null
 }
 
+function applyFontSizeToEntireEditor(root: HTMLElement, px: number): void {
+  const size = `${px}px`
+  root.style.fontSize = size
+
+  root.querySelectorAll<HTMLElement>("[style]").forEach((el) => {
+    if (el.style.fontSize) el.style.fontSize = size
+  })
+
+  root.querySelectorAll<HTMLElement>("span[data-bp-fz]").forEach((el) => {
+    el.style.fontSize = size
+    el.setAttribute("data-bp-fz", String(px))
+  })
+
+  root.querySelectorAll<HTMLElement>("font").forEach((el) => {
+    el.style.fontSize = size
+    el.removeAttribute("size")
+  })
+
+  const sel = window.getSelection()
+  if (sel) {
+    const next = document.createRange()
+    next.selectNodeContents(root)
+    sel.removeAllRanges()
+    sel.addRange(next)
+  }
+}
+
 /** 선택 영역·커서에 px 글자 크기 적용 */
 export function applyRichTextFontSizePx(
   root: HTMLElement | null,
   px: number,
+  options?: { forceFullEditor?: boolean },
 ): boolean {
   if (!root || px <= 0) return false
   root.focus()
@@ -29,6 +59,14 @@ export function applyRichTextFontSizePx(
 
   const range = sel.getRangeAt(0)
   if (!root.contains(range.commonAncestorContainer)) return false
+
+  const fullEditor =
+    options?.forceFullEditor ?? isFullEditorSelection(root, range)
+
+  if (fullEditor) {
+    applyFontSizeToEntireEditor(root, px)
+    return true
+  }
 
   if (range.collapsed) {
     const marker = `<span data-bp-fz="${px}" style="font-size:${px}px">\u200b</span>`
@@ -49,6 +87,7 @@ export function applyRichTextFontSizePx(
     const fragment = range.extractContents()
     const span = document.createElement("span")
     span.style.fontSize = `${px}px`
+    span.setAttribute("data-bp-fz", String(px))
     span.appendChild(fragment)
     range.insertNode(span)
     sel.removeAllRanges()
@@ -62,7 +101,10 @@ export function applyRichTextFontSizePx(
     document.execCommand("fontSize", false, "7")
     const spans = root.querySelectorAll('span[style*="font-size"]')
     const last = spans[spans.length - 1] as HTMLElement | undefined
-    if (last) last.style.fontSize = `${px}px`
+    if (last) {
+      last.style.fontSize = `${px}px`
+      last.setAttribute("data-bp-fz", String(px))
+    }
     return true
   }
 }

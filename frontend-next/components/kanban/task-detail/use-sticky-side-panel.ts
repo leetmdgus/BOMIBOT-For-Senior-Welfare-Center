@@ -129,6 +129,11 @@ export function useStickySidePanel(
       if (child instanceof HTMLElement) ro.observe(child)
     }
 
+    const appSidebar = document.querySelector("[data-app-sidebar]")
+    if (appSidebar instanceof HTMLElement) {
+      ro.observe(appSidebar)
+    }
+
     const anchor = anchorRef.current
     if (anchor) ro.observe(anchor)
     const row = rowRef?.current

@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { getEvaluationDocumentPreviewHtml } from "@/lib/mocks/kanban.evaluation-document-preview.mock"
+import { getEvaluationDocumentPreviewHtml } from "@/lib/evaluation-document-preview"
 import { cn } from "@/lib/utils"
 import type {
   BusinessEvaluationData,

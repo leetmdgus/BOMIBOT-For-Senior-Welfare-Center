@@ -223,7 +223,13 @@ export function ProjectSection({
     setTaskModalOpen(true)
   }
 
+  const resetDragCursor = () => {
+    document.body.style.cursor = ""
+  }
+
   const handleDragStart = (event: DragStartEvent) => {
+    document.body.style.cursor = "grabbing"
+
     const activeId = event.active.id as string
     const category = findCategoryByTaskId(activeId)
 
@@ -293,6 +299,8 @@ export function ProjectSection({
   }
 
   const handleDragEnd = (event: DragEndEvent) => {
+    resetDragCursor()
+
     const { active, over } = event
 
     setActiveTask(null)
@@ -413,7 +421,7 @@ export function ProjectSection({
             <button
               type="button"
               onClick={() => setExpanded((prev) => !prev)}
-              className="rounded-lg p-1 hover:bg-muted"
+              className="cursor-pointer rounded-lg p-1 hover:bg-muted"
               aria-label={expanded ? "접기" : "펼치기"}
             >
               <ChevronUp
@@ -433,39 +441,34 @@ export function ProjectSection({
             onDragStart={handleDragStart}
             onDragOver={handleDragOver}
             onDragEnd={handleDragEnd}
+            onDragCancel={resetDragCursor}
           >
-            <div className="overflow-x-auto pb-2">
-              <div className="flex gap-4">
-                {categories.map((category) => {
-                  const columnType = columnTypeMap[category.id] ?? "실적관리"
+            <div className="kanban-board-columns grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              {categories.map((category) => {
+                const columnType = columnTypeMap[category.id] ?? "실적관리"
 
-                  return (
-                    <KanbanColumn
-                      key={category.id}
-                      id={category.id}
-                      title={category.title}
-                      count={category.tasks.length}
-                      tasks={category.tasks}
-                      color={category.color}
-                      columnType={columnType}
-                      projectId={project.id}
-                      projectName={projectTitle}
-                      staffList={staffList}
-                      projectImages={projectImages}
-                      year={year}
-                      onAddTask={(categoryId, type) => {
-                        openTaskModal(categoryId, type)
-                      }}
-                      onUpdateTask={handleUpdateTask}
-                      onDeleteTask={handleDeleteTask}
-                    />
-                  )
-                })}
-              </div>
-
-              <div className="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-muted">
-                <div className="h-full w-1/3 rounded-full bg-muted-foreground/30" />
-              </div>
+                return (
+                  <KanbanColumn
+                    key={category.id}
+                    id={category.id}
+                    title={category.title}
+                    count={category.tasks.length}
+                    tasks={category.tasks}
+                    color={category.color}
+                    columnType={columnType}
+                    projectId={project.id}
+                    projectName={projectTitle}
+                    staffList={staffList}
+                    projectImages={projectImages}
+                    year={year}
+                    onAddTask={(categoryId, type) => {
+                      openTaskModal(categoryId, type)
+                    }}
+                    onUpdateTask={handleUpdateTask}
+                    onDeleteTask={handleDeleteTask}
+                  />
+                )
+              })}
             </div>
 
             <DragOverlay>

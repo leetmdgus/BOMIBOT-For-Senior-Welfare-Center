@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { Briefcase, Search, Sparkles } from "lucide-react"
+import { Briefcase, Search } from "lucide-react"
 
 import { Sidebar } from "@/components/common/sidebar"
 import {
@@ -12,7 +12,7 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty"
 import { Header } from "@/components/common/header"
-import { TaskFormData, TaskModal } from "@/components/kanban/board/task-modal"
+import type { TaskFormData } from "@/components/kanban/board/task-modal"
 import { ProjectEditModal } from "@/components/kanban/board/project-edit-modal"
 import { SubHeader } from "@/components/kanban/board/subheader"
 import { ProjectSection } from "@/components/kanban/board/project-section"
@@ -46,7 +46,6 @@ export function KanbanBoardPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
 
-  const [taskModalOpen, setTaskModalOpen] = useState(false)
   const [editModalOpen, setEditModalOpen] = useState(false)
   const [selectedProject, setSelectedProject] = useState<KanbanProject | null>(
     null
@@ -99,8 +98,6 @@ export function KanbanBoardPage() {
     title: task.title ?? "",
     description: task.description ?? "",
     assignee: task.assignee ?? "",
-    completedCount: task.completedCount ?? 0,
-    totalCount: task.totalCount ?? 0,
   })
 
   const handleCreateProject = async (data: TaskFormData) => {
@@ -145,8 +142,6 @@ export function KanbanBoardPage() {
       title: data.title,
       description: data.description ?? "",
       assignee: data.assignees?.[0]?.name ?? "",
-      completedCount: 0,
-      totalCount: 0,
     })
 
     await refreshProjects()
@@ -170,7 +165,7 @@ export function KanbanBoardPage() {
             projectImages={projectImages}
           />
 
-          <main className="flex-1 overflow-y-auto p-6">
+          <main className="kanban-board-main flex-1 cursor-default overflow-y-auto p-6">
             {isLoading ? (
               <div className="text-sm text-muted-foreground">
                 데이터를 불러오는 중입니다.
@@ -230,33 +225,8 @@ export function KanbanBoardPage() {
               </div>
             )}
           </main>
-
-          {projects.length > 0 ? (
-            <button
-              type="button"
-              onClick={() => setTaskModalOpen(true)}
-              className="fixed bottom-6 right-6 flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-105"
-              aria-label="업무 추가"
-            >
-              <Sparkles className="size-6" />
-            </button>
-          ) : null}
         </div>
       </div>
-
-      <TaskModal
-        open={taskModalOpen}
-        onOpenChange={setTaskModalOpen}
-        formType="task"
-        columnType="실적관리"
-        year={year}
-        projects={projects}
-        staffList={staffList}
-        projectImages={projectImages}
-        onSubmit={async () => {
-          setTaskModalOpen(false)
-        }}
-      />
 
       {selectedProject && (
         <ProjectEditModal

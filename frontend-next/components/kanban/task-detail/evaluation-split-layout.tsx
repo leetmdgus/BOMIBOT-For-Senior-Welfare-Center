@@ -1,42 +1,23 @@
 "use client"
 
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  type CSSProperties,
-  type ReactNode,
-} from "react"
-import { PanelRight, PanelRightClose } from "lucide-react"
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react"
+import { PanelLeft, PanelLeftClose } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import { Slider } from "@/components/ui/slider"
 import { cn } from "@/lib/utils"
 
 import { useStickySidePanel } from "@/components/kanban/task-detail/use-sticky-side-panel"
 
-const STORAGE_SPLIT = "bomi-eval-plan-split-percent"
 const STORAGE_VISIBLE = "bomi-eval-plan-panel-visible-v2"
-const DEFAULT_SPLIT = 42
-const MIN_SPLIT = 28
-const MAX_SPLIT = 55
 
 type EvaluationSplitLayoutProps = {
-  /** 좌측: 평가서 (메인) */
-  left: ReactNode
-  /** 우측: 참고 사업계획서 */
-  right: ReactNode
+  /** 우측: 평가서 작성(수정) 영역 */
+  evaluation: ReactNode
+  /** 좌측: 참고 사업계획서 */
+  referencePlan: ReactNode
   className?: string
-  /** 우측 사업계획서 패널 기본 표시 */
+  /** 참고 계획서 패널 기본 표시 */
   defaultShowPlanPanel?: boolean
-}
-
-function readStoredSplit(): number {
-  if (typeof window === "undefined") return DEFAULT_SPLIT
-  const raw = window.localStorage.getItem(STORAGE_SPLIT)
-  const n = raw ? Number(raw) : DEFAULT_SPLIT
-  return Number.isFinite(n) ? Math.min(MAX_SPLIT, Math.max(MIN_SPLIT, n)) : DEFAULT_SPLIT
 }
 
 function readStoredVisible(fallback: boolean): boolean {
@@ -47,25 +28,23 @@ function readStoredVisible(fallback: boolean): boolean {
 }
 
 /**
- * 사업평가 분할 — 좌: 평가서(메인), 우: 참고 계획서(스크롤 시 sticky)
+ * 사업평가 함께보기 — 좌: 참고 계획서(고정·스크롤), 우: 평가서(수정)
  */
 export function EvaluationSplitLayout({
-  left,
-  right,
+  evaluation,
+  referencePlan,
   className,
   defaultShowPlanPanel = true,
 }: EvaluationSplitLayoutProps) {
-  const [splitPercent, setSplitPercent] = useState(DEFAULT_SPLIT)
   const [showPlanPanel, setShowPlanPanel] = useState(defaultShowPlanPanel)
   const [hydrated, setHydrated] = useState(false)
-  const [isDragging, setIsDragging] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
 
-  const stickyEnabled = showPlanPanel && hydrated
+  const togetherActive = showPlanPanel && hydrated
   const { anchorRef, panelWrapStyle, isPinned, stickyMetrics } =
-    useStickySidePanel(stickyEnabled, containerRef)
+    useStickySidePanel(togetherActive, containerRef)
 
-  const sidePanelStyle: CSSProperties | undefined = isPinned
+  const referencePanelStyle: CSSProperties | undefined = isPinned
     ? panelWrapStyle
     : {
         top: stickyMetrics.scrollTopPx,
@@ -73,56 +52,30 @@ export function EvaluationSplitLayout({
       }
 
   useEffect(() => {
-    setSplitPercent(readStoredSplit())
     setShowPlanPanel(readStoredVisible(defaultShowPlanPanel))
     setHydrated(true)
-  }, [])
-
-  useEffect(() => {
-    if (!hydrated) return
-    window.localStorage.setItem(STORAGE_SPLIT, String(splitPercent))
-  }, [splitPercent, hydrated])
+  }, [defaultShowPlanPanel])
 
   useEffect(() => {
     if (!hydrated) return
     window.localStorage.setItem(STORAGE_VISIBLE, showPlanPanel ? "1" : "0")
   }, [showPlanPanel, hydrated])
 
-  const startResize = useCallback(
-    (clientX: number) => {
-      const container = containerRef.current
-      if (!container) return
-      const rect = container.getBoundingClientRect()
-      const startX = clientX
-      const startPercent = splitPercent
+  useEffect(() => {
+    const scroll = document.getElementById("task-detail-scroll")
+    if (!scroll || !hydrated) return
 
-      setIsDragging(true)
-      document.body.style.cursor = "col-resize"
-      document.body.style.userSelect = "none"
+    const active = showPlanPanel
+    if (active) {
+      scroll.classList.add("has-evaluation-together-view")
+    } else {
+      scroll.classList.remove("has-evaluation-together-view")
+    }
 
-      const onMove = (event: MouseEvent) => {
-        const delta = event.clientX - startX
-        const next = startPercent - (delta / rect.width) * 100
-        setSplitPercent(Math.min(MAX_SPLIT, Math.max(MIN_SPLIT, next)))
-      }
-
-      const onUp = () => {
-        setIsDragging(false)
-        document.body.style.cursor = ""
-        document.body.style.userSelect = ""
-        document.removeEventListener("mousemove", onMove)
-        document.removeEventListener("mouseup", onUp)
-      }
-
-      document.addEventListener("mousemove", onMove)
-      document.addEventListener("mouseup", onUp)
-    },
-    [splitPercent],
-  )
-
-  const planWidthStyle: CSSProperties | undefined = hydrated
-    ? { width: `${splitPercent}%` }
-    : undefined
+    return () => {
+      scroll.classList.remove("has-evaluation-together-view")
+    }
+  }, [showPlanPanel, hydrated])
 
   return (
     <div className={cn("space-y-3", className)}>
@@ -135,100 +88,55 @@ export function EvaluationSplitLayout({
           onClick={() => setShowPlanPanel((v) => !v)}
         >
           {showPlanPanel ? (
-            <PanelRightClose className="mr-1.5 size-3.5" />
+            <PanelLeftClose className="mr-1.5 size-3.5" />
           ) : (
-            <PanelRight className="mr-1.5 size-3.5" />
+            <PanelLeft className="mr-1.5 size-3.5" />
           )}
           {showPlanPanel ? "참고 계획서 닫기" : "참고 계획서 보기"}
         </Button>
 
-        {showPlanPanel ? (
-          <div className="flex min-w-[160px] flex-1 items-center gap-2">
-            <span className="shrink-0 text-[11px] text-muted-foreground">
-              평가서 {Math.round(100 - splitPercent)}% · 참고{" "}
-              {Math.round(splitPercent)}%
-            </span>
-            <Slider
-              value={[splitPercent]}
-              min={MIN_SPLIT}
-              max={MAX_SPLIT}
-              step={1}
-              className="max-w-[200px] flex-1"
-              onValueChange={([value]) => {
-                if (value !== undefined) setSplitPercent(value)
-              }}
-            />
-          </div>
-        ) : (
+        {!showPlanPanel ? (
           <span className="text-[11px] text-muted-foreground">
-            참고 계획서를 켜면 사업계획서 전체(본문 포함)를 보며 평가서를 작성할 수 있습니다.
+            참고 계획서를 켜면 왼쪽에 사업계획서를 고정해 두고 오른쪽에서 평가서를
+            작성할 수 있습니다.
           </span>
-        )}
+        ) : null}
       </div>
 
       <div
         ref={containerRef}
         className={cn(
-          "print-document flex w-full",
+          "evaluation-together-layout print-document w-full min-w-0",
           showPlanPanel
-            ? "flex-col gap-4 md:flex-row md:items-start md:gap-3"
-            : "flex-col",
+            ? "evaluation-together-layout--split grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] md:items-start md:gap-3"
+            : "flex flex-col",
         )}
       >
+        {showPlanPanel ? (
+          <div
+            ref={anchorRef}
+            data-eval-reference-column
+            className="plan-floating-panel reference-plan-panel print-hide min-w-0 w-full"
+          >
+            <div
+              className={cn(
+                "reference-plan-panel__frame w-full",
+                !isPinned &&
+                  "md:sticky md:z-30 md:overflow-y-auto md:overscroll-contain",
+              )}
+              style={referencePanelStyle}
+            >
+              {referencePlan}
+            </div>
+          </div>
+        ) : null}
+
         <div
           data-eval-main-column
-          className="min-w-0 flex-1"
+          className={cn("min-w-0 w-full", showPlanPanel && "md:min-w-0")}
         >
-          {left}
+          {evaluation}
         </div>
-
-        {showPlanPanel ? (
-          <>
-            <div
-              role="separator"
-              aria-orientation="vertical"
-              aria-label="패널 너비 조절"
-              className={cn(
-                "print-hide mx-0.5 hidden shrink-0 cursor-col-resize md:flex md:flex-col",
-                !isPinned && "md:sticky md:z-40",
-                "items-center justify-center self-start",
-              )}
-              style={
-                !isPinned
-                  ? { top: stickyMetrics.scrollTopPx }
-                  : undefined
-              }
-              onMouseDown={(event) => startResize(event.clientX)}
-            >
-              <div
-                className={cn(
-                  "flex h-28 w-2 items-center justify-center rounded-full",
-                  isDragging
-                    ? "bg-primary/50"
-                    : "bg-border/80 hover:bg-primary/25",
-                )}
-              >
-                <div className="h-12 w-1 rounded-full bg-muted-foreground/50" />
-              </div>
-            </div>
-
-            <div
-              ref={anchorRef}
-              className="plan-floating-panel reference-plan-panel print-hide w-full shrink-0 md:min-w-[min(100%,280px)] md:max-w-[48%] md:shrink-0"
-              style={planWidthStyle}
-            >
-              <div
-                className={cn(
-                  "w-full",
-                  !isPinned && "md:sticky md:z-30 md:max-h-[calc(100vh-7rem)] md:overflow-y-auto",
-                )}
-                style={sidePanelStyle}
-              >
-                {right}
-              </div>
-            </div>
-          </>
-        ) : null}
       </div>
     </div>
   )

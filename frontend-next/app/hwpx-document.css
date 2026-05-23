@@ -109,6 +109,10 @@
   line-height: 1.55;
 }
 
+.hwpx-doc__value .bp-rich-editor[contenteditable="true"] {
+  cursor: text;
+}
+
 .hwpx-doc__value .bp-rich-editor.formal-doc {
   max-width: none;
 }
@@ -120,6 +124,10 @@
   max-width: var(--hwpx-doc-max-width, 420mm);
   margin-inline: auto;
   padding-right: 2.5rem;
+}
+
+.hwpx-doc-section-row--heading {
+  padding-right: 0;
 }
 
 .hwpx-doc-section-row__controls {
@@ -147,6 +155,67 @@
 .reference-plan-panel__scroll {
   border: 1px solid rgb(0 0 0 / 0.12);
   background: #fafafa;
+}
+
+/* 본문(고급 서식) — CKEditor형 인라인 툴바 */
+.bp-classic-toolbar {
+  border-bottom: 1px solid #bcbcbc;
+  background: linear-gradient(180deg, #fafafa 0%, #f0f0f0 100%);
+}
+
+.bp-classic-toolbar__row {
+  border-bottom: 1px solid #d4d4d4;
+}
+
+.bp-classic-toolbar__row:last-child {
+  border-bottom: none;
+}
+
+.bp-rich-root--inline-toolbar .bp-classic-toolbar {
+  border-bottom-color: #bcbcbc;
+}
+
+.bp-rich-root--inline-toolbar .bp-rich-editor {
+  border-top: 1px solid #d4d4d4;
+  background: #fff;
+}
+
+.reference-plan-panel__frame {
+  min-height: min(70vh, 720px);
+}
+
+/* 사업평가 함께보기 — 참고(좌) 고정, 평가서(우) + 서식 툴바 */
+#task-detail-scroll.has-evaluation-together-view > main {
+  min-width: 0;
+  max-width: none;
+}
+
+/* 함께보기 — 사이드바 접힘/펼침과 무관하게 좌·우 1:1 */
+.evaluation-together-layout--split {
+  width: 100%;
+  max-width: 100%;
+}
+
+.evaluation-together-layout--split > [data-eval-reference-column],
+.evaluation-together-layout--split > [data-eval-main-column] {
+  min-width: 0;
+  width: 100%;
+}
+
+.evaluation-together-layout [data-eval-reference-column] .reference-plan-panel {
+  max-height: calc(100vh - 8rem);
+}
+
+.evaluation-together-layout [data-eval-reference-column] .hwpx-doc,
+.evaluation-together-layout [data-eval-reference-column] .a4-document-viewport__page {
+  width: 100%;
+  max-width: 100%;
+  margin-inline: auto;
+}
+
+.evaluation-together-layout [data-eval-main-column] .business-evaluation-editor,
+.evaluation-together-layout [data-eval-main-column] .a4-document-viewport__page {
+  max-width: 100%;
 }
 
 @media print {
