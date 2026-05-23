@@ -674,15 +674,51 @@ export function CompactToolbar({
   onInsertHtml: (html: string) => void
   orientation?: ToolbarOrientation
 }) {
+  const vertical = orientation === "vertical"
+
+  if (!vertical) {
+    return (
+      <div className="flex flex-wrap items-center gap-1 border-b border-slate-200 bg-slate-50/90 px-2 py-1.5">
+        <ToolbarButton title="실행 취소" onClick={() => onExec("undo")}>
+          <Undo2 className="size-4" />
+        </ToolbarButton>
+        <ToolbarButton title="다시 실행" onClick={() => onExec("redo")}>
+          <Redo2 className="size-4" />
+        </ToolbarButton>
+        <ToolbarDivider />
+        <ToolbarButton title="굵게" onClick={() => onExec("bold")}>
+          <Bold className="size-4" />
+        </ToolbarButton>
+        <ToolbarButton title="기울임" onClick={() => onExec("italic")}>
+          <Italic className="size-4" />
+        </ToolbarButton>
+        <ToolbarButton title="밑줄" onClick={() => onExec("underline")}>
+          <Underline className="size-4" />
+        </ToolbarButton>
+        <ToolbarButton title="취소선" onClick={() => onExec("strikeThrough")}>
+          <Strikethrough className="size-4" />
+        </ToolbarButton>
+        <ToolbarDivider />
+        <ToolbarButton title="번호 목록" onClick={() => onExec("insertOrderedList")}>
+          <ListOrdered className="size-4" />
+        </ToolbarButton>
+        <ToolbarButton title="글머리 목록" onClick={() => onExec("insertUnorderedList")}>
+          <List className="size-4" />
+        </ToolbarButton>
+        <ToolbarButton
+          title="가. 목록"
+          onClick={() =>
+            onInsertHtml('<ol class="list-hangul"><li>항목</li></ol>')
+          }
+        >
+          <span className="text-xs font-semibold">가.</span>
+        </ToolbarButton>
+      </div>
+    )
+  }
+
   return (
-    <div
-      className={cn(
-        "bp-toolbar-compact",
-        orientation === "horizontal"
-          ? "flex flex-wrap items-center gap-1 border-b border-slate-200 bg-slate-50/90 px-2 py-1.5"
-          : "flex flex-col gap-2 p-2",
-      )}
-    >
+    <div className="flex flex-col gap-2 p-2">
       <ToolbarSection label="실행" orientation={orientation}>
         <ToolbarIconGrid orientation={orientation} columns={2}>
           <ToolbarButton title="실행 취소" label="취소" onClick={() => onExec("undo")}>
@@ -695,7 +731,7 @@ export function CompactToolbar({
       </ToolbarSection>
 
       <ToolbarSection label="서식" orientation={orientation}>
-        <ToolbarIconGrid orientation={orientation} columns={orientation === "vertical" ? 2 : 4}>
+        <ToolbarIconGrid orientation={orientation} columns={2}>
           <ToolbarButton title="굵게" label="굵게" onClick={() => onExec("bold")}>
             <Bold className="size-4" />
           </ToolbarButton>
@@ -755,6 +791,7 @@ export function HangulToolbar({
   const canStyleTable =
     inTable || (editor?.hasCellSelection?.() ?? false)
   const vertical = orientation === "vertical"
+  const lbl = (text: string) => (vertical ? text : undefined)
 
   const tableToggle = (
     <Button
