@@ -42,6 +42,7 @@ export function Sidebar() {
 
   return (
     <aside
+      data-app-sidebar
       className={cn(
         "print-hide sticky top-0 z-40 flex h-dvh shrink-0 flex-col overflow-hidden",
         "border-r border-sidebar-border bg-sidebar",

@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { Search, X } from "lucide-react"
+import { Plus, Search, X } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -85,11 +85,13 @@ export function SubHeader({
 
         <div className="flex items-center gap-3">
           <Button
-            variant="link"
-            className="text-primary"
+            type="button"
+            size="sm"
             onClick={() => setIsTaskModalOpen(true)}
+            className="gap-1"
           >
-            + 신규사업등록
+            <Plus className="size-4" />
+            신규 사업 등록
           </Button>
 
           <DropdownMenu>

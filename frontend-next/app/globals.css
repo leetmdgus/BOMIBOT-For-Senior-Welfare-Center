@@ -4,6 +4,7 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
+  /* BOMIBOT brand primary: oklch(0.55 0.2 260) ~ #5C7CFA */
   --background: oklch(0.97 0.005 240);
   --foreground: oklch(0.2 0.02 260);
   --card: oklch(1 0 0);
@@ -37,8 +38,6 @@
   --sidebar-accent-foreground: oklch(0.3 0.05 260);
   --sidebar-border: oklch(0.92 0.01 240);
   --sidebar-ring: oklch(0.55 0.2 260);
-  
-  /* Custom colors for the dashboard */
   --priority-high: oklch(0.65 0.18 30);
   --priority-medium: oklch(0.75 0.15 85);
   --success: oklch(0.7 0.15 145);
@@ -51,8 +50,8 @@
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.145 0 0);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.985 0 0);
-  --primary-foreground: oklch(0.205 0 0);
+  --primary: oklch(0.62 0.18 260);
+  --primary-foreground: oklch(1 0 0);
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.269 0 0);
@@ -63,7 +62,7 @@
   --destructive-foreground: oklch(0.637 0.237 25.331);
   --border: oklch(0.269 0 0);
   --input: oklch(0.269 0 0);
-  --ring: oklch(0.439 0 0);
+  --ring: oklch(0.55 0.2 260);
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
   --chart-3: oklch(0.769 0.188 70.08);
@@ -120,79 +119,17 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
-@layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
-}
-
 @theme inline {
   --color-priority-high: var(--priority-high);
   --color-priority-medium: var(--priority-medium);
   --color-success: var(--success);
 }
 
-/* ── Print: 본문(.print-area)만 인쇄, 앱 chrome 숨김 ── */
-@media print {
-  @page {
-    margin: 12mm;
-    size: A4 portrait;
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
   }
-
-  html,
   body {
-    width: 100% !important;
-    height: auto !important;
-    overflow: visible !important;
-    background: white !important;
-    print-color-adjust: exact;
-    -webkit-print-color-adjust: exact;
-  }
-
-  .print-hide {
-    display: none !important;
-  }
-
-  body:has(.print-area) * {
-    visibility: hidden;
-  }
-
-  body:has(.print-area) .print-area,
-  body:has(.print-area) .print-area * {
-    visibility: visible;
-  }
-
-  body:has(.print-area) .print-area {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    max-width: none;
-    padding: 0;
-    margin: 0;
-    background: white;
-    box-shadow: none !important;
-  }
-
-  .print-area .overflow-x-auto,
-  .print-area .overflow-auto,
-  .print-area .overflow-y-auto {
-    overflow: visible !important;
-  }
-
-  .print-area table {
-    width: 100% !important;
-    page-break-inside: auto;
-  }
-
-  .print-area tr {
-    page-break-inside: avoid;
-  }
-
-  .print-area thead {
-    display: table-header-group;
+    @apply bg-background text-foreground;
   }
 }

@@ -72,7 +72,7 @@ export function SatisfactionSurveyTab() {
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-xl font-semibold"></h1>
+        <h1 className="text-xl font-semibold">만족도조사</h1>
 
         <Link href="/survey/new?view=edit">
             <Button className="gap-2">

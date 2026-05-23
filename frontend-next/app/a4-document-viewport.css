@@ -1,0 +1,58 @@
+/* A4 가운데 정렬 — 폭은 --a4-page-width (기본 420mm, 사업계획서 210mm) */
+.a4-document-viewport__page {
+  width: min(100%, var(--a4-page-width, 420mm));
+  max-width: var(--a4-page-width, 420mm);
+  margin-inline: auto;
+}
+
+.a4-document-viewport .hwpx-doc {
+  width: 100%;
+  font-size: 11px;
+  line-height: 1.48;
+  box-shadow: 0 2px 12px rgb(0 0 0 / 0.08);
+}
+
+.a4-document-viewport .hwpx-doc__title {
+  font-size: 1.08rem;
+  padding: 0.65rem 0.5rem 0.55rem;
+  letter-spacing: 0.2em;
+}
+
+.a4-document-viewport .hwpx-doc__table th,
+.a4-document-viewport .hwpx-doc__table td {
+  padding: 4px 7px;
+}
+
+.a4-document-viewport .hwpx-doc__band {
+  padding: 6px 8px;
+}
+
+.a4-document-viewport .hwpx-field-textarea,
+.a4-document-viewport .line-slot-textarea {
+  padding: 3px 6px;
+  line-height: 1.42;
+}
+
+.a4-document-viewport .hwpx-doc .ProseMirror {
+  min-height: 2.25rem;
+}
+
+@media print {
+  .a4-document-viewport,
+  .a4-document-viewport__clip,
+  .a4-document-viewport__page {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+    transform: none !important;
+  }
+
+  .a4-document-viewport .hwpx-doc {
+    width: 100% !important;
+    max-width: 100% !important;
+    font-size: inherit;
+    line-height: inherit;
+    box-shadow: none;
+  }
+}

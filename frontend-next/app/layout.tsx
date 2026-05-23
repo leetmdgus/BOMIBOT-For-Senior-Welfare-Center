@@ -1,9 +1,14 @@
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
-import { Chatbot } from '@/components/chatbot'
+import { ChatbotClientLoader } from '@/components/chatbot-client-loader'
 import { Toaster } from '@/components/ui/toaster'
 import './globals.css'
+import './hwpx-document.css'
+import './a4-document-viewport.css'
+import './document-format-toolbar-rail.css'
+import './print-document.css'
+import './rich-text-table.css'
 
 const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
@@ -41,7 +46,7 @@ export default function RootLayout({
       <body className="font-sans antialiased">
         {children}
         <Toaster />
-        <Chatbot />
+        <ChatbotClientLoader />
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>

@@ -78,7 +78,7 @@ export async function saveBusinessEvaluation(
   const next: BusinessEvaluationData = {
     ...current,
     ...payload,
-    goals: current.goals,
+    goals: payload.goals ? [...payload.goals] : current.goals,
     detailRows: payload.detailRows ?? current.detailRows,
     sections: payload.sections ?? current.sections,
   }
@@ -104,6 +104,7 @@ export async function completeBusinessEvaluation(
 
 function cloneBusinessPlan(source: BusinessPlanDocument): BusinessPlanDocument {
   return {
+    isCompleted: source.isCompleted,
     formData: {
       ...source.formData,
       goals: [...source.formData.goals],
@@ -134,6 +135,10 @@ export async function saveBusinessPlan(
 ): Promise<BusinessPlanDocument> {
   const current = getOrCreateBusinessPlan(taskId)
   const next: BusinessPlanDocument = {
+    isCompleted:
+      payload.isCompleted !== undefined
+        ? payload.isCompleted
+        : current.isCompleted,
     formData: payload.formData
       ? {
           ...payload.formData,

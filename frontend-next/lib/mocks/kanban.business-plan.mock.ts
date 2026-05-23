@@ -1,11 +1,24 @@
 import type { BusinessPlanDocument } from "@/services/kanban.task-detail.types"
 
 export const defaultBusinessPlanDocument: BusinessPlanDocument = {
+  isCompleted: false,
   sections: [
     { id: 1, type: "file", title: "" },
-    { id: 2, type: "heading", title: "III. 사업 목적 및 평가방법" },
-    { id: 3, type: "table", title: "1. 사업의 목적 및 목표" },
-    { id: 4, type: "file", title: "" },
+    {
+      id: 2,
+      type: "heading",
+      title: "I. 사업의 배경 및 필요성",
+    },
+    {
+      id: 3,
+      type: "body",
+      title: "",
+      content:
+        "1. 대상자 욕구 및 문제점\n통계청의 고령자 통계에 따르면 고령화 대응의 필요성이 더욱 증가할 것으로 예상된다. 지역 내 어르신의 정보 접근성과 복지서비스 연계에 대한 상담 수요가 지속적으로 증가하고 있다.\n\n2. 사업 추진 필요성\n초기상담을 통해 이용자 욕구를 파악하고 적합한 서비스를 안내함으로써 이용 편의성을 높이고, 기관 사업 이해도를 제고할 필요가 있다.",
+    },
+    { id: 4, type: "heading", title: "II. 사업 목적 및 평가방법" },
+    { id: 5, type: "table", title: "1. 사업의 목적 및 목표" },
+    { id: 6, type: "file", title: "" },
   ],
   formData: {
     projectName: "일반상담 및 정보제공사업",
@@ -49,3 +62,9 @@ export const defaultBusinessPlanDocument: BusinessPlanDocument = {
     ],
   },
 }
+
+export const businessPlanAiDraftBody = `1. 대상자 욕구 및 문제점
+고령 인구 증가에 따라 정보·복지서비스 상담 수요가 확대되고 있으며, 초기 상담을 통한 맞춤형 안내가 필요합니다.
+
+2. 사업 추진 필요성
+이용자 편의성 제고와 기관 사업 이해도 향상을 위해 체계적인 상담·정보제공 체계를 마련합니다.`

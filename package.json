@@ -1,0 +1,12 @@
+{
+  "name": "bomibot-frontend-workspace",
+  "private": true,
+  "description": "Run scripts from frontend-next only. Do not add Vite here.",
+  "scripts": {
+    "dev": "npm run dev --prefix frontend-next",
+    "dev:turbo": "npm run dev:turbo --prefix frontend-next",
+    "build": "npm run build --prefix frontend-next",
+    "start": "npm run start --prefix frontend-next",
+    "lint": "npm run lint --prefix frontend-next"
+  }
+}

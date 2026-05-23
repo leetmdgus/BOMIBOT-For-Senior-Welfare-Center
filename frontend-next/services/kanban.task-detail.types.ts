@@ -27,7 +27,7 @@ export interface EvaluationDetailRow {
   content: string
 }
 
-export type EvaluationSectionType = "heading" | "body"
+export type EvaluationSectionType = "heading" | "body" | "table"
 
 export interface EvaluationSection {
   id: string
@@ -62,6 +62,10 @@ export interface BusinessEvaluationData {
 
 export interface SaveBusinessEvaluationPayload {
   evaluationDate?: string
+  purpose?: string
+  goals?: string[]
+  performanceIndicator?: string
+  evaluationTool?: string
   supervision?: string
   detailRows?: EvaluationDetailRow[]
   sections?: EvaluationSection[]
@@ -70,18 +74,25 @@ export interface SaveBusinessEvaluationPayload {
   suggestion?: string
 }
 
-export type BusinessPlanSectionType = "file" | "heading" | "table"
+export type BusinessPlanSectionType = "file" | "heading" | "body" | "table"
 
 export interface BusinessPlanSection {
   id: number
   type: BusinessPlanSectionType
   title: string
+  content?: string
 }
 
 export interface BusinessPlanSubProject {
   name: string
   output: string
   outcome: string
+  purpose?: string
+  content?: string
+  target?: string
+  period?: string
+  operatingMethod?: string
+  evaluationMethod?: string
 }
 
 export interface BusinessPlanFormData {
@@ -100,9 +111,11 @@ export interface BusinessPlanFormData {
 export interface BusinessPlanDocument {
   formData: BusinessPlanFormData
   sections: BusinessPlanSection[]
+  isCompleted?: boolean
 }
 
 export interface SaveBusinessPlanPayload {
   formData?: BusinessPlanFormData
   sections?: BusinessPlanSection[]
+  isCompleted?: boolean
 }

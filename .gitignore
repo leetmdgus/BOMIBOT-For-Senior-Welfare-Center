@@ -1,0 +1,7 @@
+# 참고용 Vite 프로젝트 (Next와 별도 — dev 시 frontend-next만 사용)
+Bomi-Slot-document-automatation/
+Bomi-Slot-document-automation/
+
+# Next 빌드 산출물
+frontend-next/.next/
+frontend-next/node_modules/

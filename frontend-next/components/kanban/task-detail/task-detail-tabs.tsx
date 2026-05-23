@@ -11,7 +11,7 @@ const tabs = [
     href: "performance",
   },
   {
-    label: "사업계획",
+    label: "사업계획서",
     href: "business-plan",
   },
   {

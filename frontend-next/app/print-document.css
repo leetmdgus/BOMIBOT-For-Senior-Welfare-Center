@@ -1,0 +1,190 @@
+/* ── 화면 전용 / 인쇄 전용 유틸 ── */
+.print-only {
+  display: none !important;
+}
+
+.screen-only {
+  display: block;
+}
+
+.print-hide {
+  /* 화면에서는 표시; 인쇄 시 @media print 에서 숨김 */
+}
+
+/* ── 인쇄: A4 세로 — @page margin 0 으로 브라우저 머리글/바닥글 영역 제거 ── */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 0;
+  }
+
+  html,
+  body {
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+    background: #fff !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  .print-hide,
+  [data-print-chrome],
+  .document-format-toolbar-rail,
+  .reference-plan-panel,
+  .plan-floating-panel,
+  .evaluation-split-layout__chrome,
+  .evaluation-workspace-chrome,
+  .evaluation-form-action-bar {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+
+  .screen-only {
+    display: none !important;
+  }
+
+  /* 앱 chrome 숨기고 인쇄 영역만 표시 */
+  body:has(.print-area) * {
+    visibility: hidden;
+  }
+
+  body:has(.print-area) .print-area,
+  body:has(.print-area) .print-area * {
+    visibility: visible;
+  }
+
+  body:has(.print-area) .print-area,
+  body.is-printing .print-area {
+    position: static !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 12mm 14mm !important;
+    margin: 0 !important;
+    background: #fff !important;
+    box-shadow: none !important;
+  }
+
+  #task-detail-scroll,
+  #task-detail-scroll.has-rich-text-toolbar-rail,
+  #task-detail-scroll.has-rich-text-toolbar-rail > main {
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+  }
+
+  .print-area .overflow-x-auto,
+  .print-area .overflow-auto,
+  .print-area .overflow-y-auto,
+  .print-area .overflow-hidden {
+    overflow: visible !important;
+  }
+
+  /* 화면용 축소·고정 clip 해제 */
+  .print-area .a4-document-viewport,
+  .print-area .a4-document-viewport__clip,
+  .print-area .a4-document-viewport__page {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+    transform: none !important;
+    margin: 0 !important;
+  }
+
+  .print-document-root {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* HWPX 양식 — A4 인쇄 가능 폭(여백 제외)에 맞춤 */
+  .print-area .hwpx-doc,
+  .print-area .hwpx-doc-section-row {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding-right: 0 !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+    page-break-inside: auto;
+  }
+
+  .print-area .hwpx-doc__table-wrap {
+    overflow: visible !important;
+    max-width: 100% !important;
+  }
+
+  .print-area table,
+  .print-area .hwpx-doc__table,
+  .print-area .bp-rt-table {
+    width: 100% !important;
+    max-width: 100% !important;
+    table-layout: fixed !important;
+    page-break-inside: auto;
+  }
+
+  .print-area th,
+  .print-area td {
+    word-wrap: break-word;
+    overflow-wrap: anywhere;
+  }
+
+  .print-area tr {
+    page-break-inside: avoid;
+  }
+
+  .print-area thead {
+    display: table-header-group;
+  }
+
+  /* 리치 텍스트·입력칸 */
+  .print-area .bp-rich-root {
+    width: 100% !important;
+    max-width: 100% !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  .print-area .bp-rich-editor {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: 0 !important;
+    padding: 4px 6px !important;
+    border: none !important;
+    outline: none !important;
+  }
+
+  .print-area .hwpx-field-textarea,
+  .print-area .hwpx-inline-input,
+  .print-area .line-slot-textarea,
+  .print-area textarea {
+    width: 100% !important;
+    max-width: 100% !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    resize: none !important;
+  }
+
+  /* 사업평가: 참고 계획서·분할 UI 제외 */
+  .print-area [data-eval-main-column] {
+    width: 100% !important;
+    max-width: 100% !important;
+    flex: none !important;
+  }
+
+  .print-area .print-document.flex-row > :not([data-eval-main-column]) {
+    display: none !important;
+  }
+}
