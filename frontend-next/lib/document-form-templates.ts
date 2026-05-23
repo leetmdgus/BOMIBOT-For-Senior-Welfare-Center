@@ -8,6 +8,7 @@ import {
   formalPurposeGoalsTableHtml,
   formalStaffCountTableHtml,
 } from "@/lib/formal-document-html"
+import { buildRichTextListHtml } from "@/lib/rich-text-list-utils"
 import { buildTableHtml } from "@/lib/rich-text-table-utils"
 
 export type RichTextFormTemplate = {
@@ -44,7 +45,7 @@ export const RICH_TEXT_FORM_TEMPLATES: RichTextFormTemplate[] = [
   {
     id: "list-hangul",
     label: "가. 목록",
-    html: '<ol class="list-hangul"><li>첫 번째 항목</li><li>두 번째 항목</li></ol><p><br></p>',
+    html: buildRichTextListHtml("hangul", ["첫 번째 항목", "두 번째 항목"]),
   },
   {
     id: "section-heading",

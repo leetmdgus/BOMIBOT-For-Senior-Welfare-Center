@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<hc:version xmlns:hc="http://www.hancom.co.kr/hwpml/2011/core"
+            xmlns:ha="http://www.hancom.co.kr/hwpml/2011/app"
+            tagtypes="1">
+  <ha:app>BOMIBOT</ha:app>
+  <ha:appversion>5.1.0.1</ha:appversion>
+  <hc:version tagtypes="0">
+    <ha:major>5</ha:major>
+    <ha:minor>1</ha:minor>
+  </hc:version>
+</hc:version>

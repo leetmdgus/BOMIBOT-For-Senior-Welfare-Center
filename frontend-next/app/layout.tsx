@@ -9,6 +9,8 @@ import './a4-document-viewport.css'
 import './document-format-toolbar-rail.css'
 import './print-document.css'
 import './rich-text-table.css'
+import './rich-text-lists.css'
+import './rich-text-print.css'
 
 const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });

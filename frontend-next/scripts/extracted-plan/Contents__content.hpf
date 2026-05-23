@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<opf:package xmlns:opf="urn:oasis:names:tc:opendocument:xmlns:package"
+             xmlns:ha="http://www.hancom.co.kr/hwpml/2011/app"
+             xmlns:hpf="http://www.hancom.co.kr/schema/2011/hpf"
+             version="1.5"
+             unique-identifier="bookid">
+  <opf:metadata>
+    <ha:title>일반상담 및 정보제공사업</ha:title>
+    <ha:subject>사업문서</ha:subject>
+  </opf:metadata>
+  <opf:manifest>
+    <opf:item id="header" href="header.xml" media-type="application/hwpml-head+xml"/>
+    <opf:item id="section0" href="section0.xml" media-type="application/hwpml-section+xml"/>
+  </opf:manifest>
+  <opf:spine>
+    <opf:itemref idref="section0"/>
+  </opf:spine>
+</opf:package>

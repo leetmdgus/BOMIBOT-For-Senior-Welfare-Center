@@ -154,7 +154,7 @@ export function buildHeaderXml(documentTitle: string): string {
       <hh:style id="${HWPX_STYLE.body}" type="PARA" name="바탕글" engName="Normal" paraPrIDRef="${HWPX_PARA.body}" charPrIDRef="${HWPX_CHAR.body}" nextStyleIDRef="${HWPX_STYLE.body}" langID="1042" lockForm="0"/>
       <hh:style id="${HWPX_STYLE.title}" type="PARA" name="문서제목" engName="Title" paraPrIDRef="${HWPX_PARA.center}" charPrIDRef="${HWPX_CHAR.title}" nextStyleIDRef="${HWPX_STYLE.body}" langID="1042" lockForm="0"/>
       <hh:style id="${HWPX_STYLE.heading}" type="PARA" name="개요" engName="Heading" paraPrIDRef="${HWPX_PARA.heading}" charPrIDRef="${HWPX_CHAR.heading}" nextStyleIDRef="${HWPX_STYLE.body}" langID="1042" lockForm="0"/>
-      <hh:style id="${HWPX_STYLE.label}" type="CHAR" name="표라벨" engName="Label" paraPrIDRef="${HWPX_PARA.body}" charPrIDRef="${HWPX_CHAR.label}" nextStyleIDRef="${HWPX_STYLE.body}" langID="1042" lockForm="0"/>
+      <hh:style id="${HWPX_STYLE.label}" type="PARA" name="표라벨" engName="Label" paraPrIDRef="${HWPX_PARA.center}" charPrIDRef="${HWPX_CHAR.label}" nextStyleIDRef="${HWPX_STYLE.body}" langID="1042" lockForm="0"/>
     </hh:styles>
   </hh:refList>
   <hh:docInfo>
@@ -165,10 +165,32 @@ export function buildHeaderXml(documentTitle: string): string {
 
 export function buildSettingsXml(): string {
   return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<ha:HWPApplicationSetting xmlns:ha="http://www.hancom.co.kr/hwpml/2011/app"
-  xmlns:config="urn:oasis:names:tc:opendocument:xmlns:config:1.0">
-  <ha:CaretPosition listIDRef="0" paraIDRef="0" pos="0"/>
+<ha:HWPApplicationSetting xmlns:ha="http://www.hancom.co.kr/hwpml/2011/app">
+  <ha:CaretPosition list="0" para="0" pos="0"/>
 </ha:HWPApplicationSetting>`
+}
+
+export function buildVersionXml(): string {
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<hc:version xmlns:hc="http://www.hancom.co.kr/hwpml/2011/core"
+            xmlns:ha="http://www.hancom.co.kr/hwpml/2011/app"
+            tagtypes="1">
+  <ha:app>BOMIBOT</ha:app>
+  <ha:appversion>5.1.0.1</ha:appversion>
+  <hc:version tagtypes="0">
+    <ha:major>5</ha:major>
+    <ha:minor>1</ha:minor>
+  </hc:version>
+</hc:version>`
+}
+
+export function buildContainerXml(): string {
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">
+  <rootfiles>
+    <rootfile full-path="Contents/content.hpf" media-type="application/hwp+zip"/>
+  </rootfiles>
+</container>`
 }
 
 export function buildMetaXml(title: string): string {
@@ -185,21 +207,24 @@ export function buildMetaXml(title: string): string {
 
 export function buildManifestXml(): string {
   return `<?xml version="1.0" encoding="UTF-8"?>
-<manifest xmlns="urn:oasis:names:tc:opendocument:xmlns:manifest:1.0">
-  <file-entry full-path="/" media-type="application/hwp+zip"/>
-  <file-entry full-path="Contents/content.hpf" media-type="application/hwpml-package+xml"/>
-  <file-entry full-path="Contents/header.xml" media-type="application/hwpml-head+xml"/>
-  <file-entry full-path="Contents/section0.xml" media-type="application/hwpml-section+xml"/>
-  <file-entry full-path="version.xml" media-type="application/xml"/>
-  <file-entry full-path="settings.xml" media-type="application/xml"/>
-</manifest>`
+<manifest:manifest xmlns:manifest="urn:oasis:names:tc:opendocument:xmlns:manifest:1.0">
+  <manifest:file-entry manifest:full-path="/" manifest:media-type="application/hwp+zip"/>
+  <manifest:file-entry manifest:full-path="mimetype" manifest:media-type="application/hwp+zip"/>
+  <manifest:file-entry manifest:full-path="version.xml" manifest:media-type="application/xml"/>
+  <manifest:file-entry manifest:full-path="settings.xml" manifest:media-type="application/xml"/>
+  <manifest:file-entry manifest:full-path="Contents/content.hpf" manifest:media-type="application/hwpml-package+xml"/>
+  <manifest:file-entry manifest:full-path="Contents/header.xml" manifest:media-type="application/hwpml-head+xml"/>
+  <manifest:file-entry manifest:full-path="Contents/section0.xml" manifest:media-type="application/hwpml-section+xml"/>
+  <manifest:file-entry manifest:full-path="Meta/meta.xml" manifest:media-type="application/xml"/>
+  <manifest:file-entry manifest:full-path="Preview/PrvText.txt" manifest:media-type="text/plain"/>
+</manifest:manifest>`
 }
 
 /** 섹션 첫 문단 — secPr + 단 설정 (한글 열기 필수) */
 export function buildSectionOpenParagraph(): string {
   return `<hp:p id="0" paraPrIDRef="${HWPX_PARA.body}" styleIDRef="${HWPX_STYLE.body}" pageBreak="0" columnBreak="0" merged="0">
   <hp:run charPrIDRef="${HWPX_CHAR.body}">
-    <hp:secPr id="" textDirection="HORIZONTAL" spaceColumns="1134" tabStop="8000" outlineShapeIDRef="1" memoShapeIDRef="0" textVerticalWidth="0" masterPageCnt="0">
+    <hp:secPr id="" textDirection="HORIZONTAL" spaceColumns="1134" tabStop="8000" outlineShapeIDRef="0" memoShapeIDRef="0" textVerticalWidth="0" masterPageCnt="0">
       <hp:pagePr landscape="WIDELY" width="59528" height="84188" gutterType="LEFT_ONLY">
         <hp:margin header="4252" footer="4252" gutter="0" left="8504" right="8504" top="5668" bottom="4252"/>
       </hp:pagePr>
@@ -219,7 +244,7 @@ export function buildSectionOpenParagraph(): string {
     </hp:secPr>
     <hp:ctrl><hp:colPr id="" type="NEWSPAPER" layout="LEFT" colCount="1" sameSz="1" sameGap="0"/></hp:ctrl>
   </hp:run>
-  <hp:run charPrIDRef="${HWPX_CHAR.body}"><hp:t></hp:t></hp:run>
+  <hp:run charPrIDRef="${HWPX_CHAR.body}"><hp:t> </hp:t></hp:run>
 </hp:p>`
 }
 

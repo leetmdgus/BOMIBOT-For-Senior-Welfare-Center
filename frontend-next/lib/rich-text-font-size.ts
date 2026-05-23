@@ -1,8 +1,9 @@
 /** 한글(한컴) 워드 — 글자 크기(px) */
 
+import { focusActiveRichTextContainer } from "@/lib/rich-text-edit-target"
 import { isFullEditorSelection } from "@/lib/rich-text-selection"
 
-export const DEFAULT_EDITOR_FONT_SIZE_PX = 10
+export const DEFAULT_EDITOR_FONT_SIZE_PX = 11
 
 /** 한글 문서용 작은 크기 위주 (px) */
 export const HANGUL_FONT_SIZES_PX = [
@@ -13,10 +14,106 @@ export type HangulFontSizePx = (typeof HANGUL_FONT_SIZES_PX)[number]
 
 export function parseFontSizePx(value: string | undefined): number | null {
   if (!value) return null
-  const m = /^(\d+)\s*px$/i.exec(value.trim())
+  const m = /^([\d.]+)\s*px$/i.exec(value.trim())
   if (!m) return null
-  const px = Number(m[1])
+  const px = Math.round(Number(m[1]))
   return Number.isFinite(px) && px > 0 ? px : null
+}
+
+export function snapToHangulFontSizePx(px: number): HangulFontSizePx {
+  let nearest = HANGUL_FONT_SIZES_PX[0]
+  let minDiff = Math.abs(px - nearest)
+  for (const candidate of HANGUL_FONT_SIZES_PX) {
+    const diff = Math.abs(px - candidate)
+    if (diff < minDiff) {
+      nearest = candidate
+      minDiff = diff
+    }
+  }
+  return nearest
+}
+
+function readExplicitFontSizePx(el: HTMLElement): number | null {
+  const attr = el.getAttribute("data-bp-fz")
+  if (attr) {
+    const px = Number(attr)
+    if (Number.isFinite(px) && px > 0) return px
+  }
+  const inline = parseFontSizePx(el.style.fontSize)
+  if (inline) return inline
+  if (el.tagName === "FONT") {
+    const legacy = Number(el.getAttribute("size"))
+    if (Number.isFinite(legacy) && legacy > 0) {
+      const legacyMap = [0, 10, 13, 16, 18, 24, 32, 48]
+      return legacyMap[legacy] ?? null
+    }
+  }
+  return null
+}
+
+/** 커서/선택 위치의 글자 크기(px) — 툴바 표시용 */
+export function getRichTextFontSizePxAtSelection(root: HTMLElement): number {
+  const sel = window.getSelection()
+  if (!sel || sel.rangeCount === 0) return DEFAULT_EDITOR_FONT_SIZE_PX
+
+  const node = sel.anchorNode
+  if (!node || !root.contains(node)) return DEFAULT_EDITOR_FONT_SIZE_PX
+
+  let el: HTMLElement | null =
+    node.nodeType === Node.ELEMENT_NODE
+      ? (node as HTMLElement)
+      : node.parentElement
+
+  while (el && el !== root) {
+    const explicit = readExplicitFontSizePx(el)
+    if (explicit != null) return explicit
+    el = el.parentElement
+  }
+
+  const rootInline = parseFontSizePx(root.style.fontSize)
+  if (rootInline) return rootInline
+
+  const leaf =
+    node.nodeType === Node.TEXT_NODE
+      ? node.parentElement
+      : node instanceof HTMLElement
+        ? node
+        : null
+  if (leaf) {
+    const computed = parseFontSizePx(window.getComputedStyle(leaf).fontSize)
+    if (computed) return snapToHangulFontSizePx(computed)
+  }
+
+  return DEFAULT_EDITOR_FONT_SIZE_PX
+}
+
+function stripExplicitFontSizeInFragment(fragment: DocumentFragment): void {
+  fragment.querySelectorAll<HTMLElement>("[data-bp-fz]").forEach((el) => {
+    el.style.fontSize = ""
+    el.removeAttribute("data-bp-fz")
+  })
+  fragment.querySelectorAll<HTMLElement>('[style*="font-size"]').forEach((el) => {
+    el.style.fontSize = ""
+  })
+  fragment.querySelectorAll<HTMLElement>("font[size]").forEach((el) => {
+    el.removeAttribute("size")
+  })
+}
+
+function insertCollapsedFontSizeMarker(range: Range, px: number): void {
+  const span = document.createElement("span")
+  span.style.fontSize = `${px}px`
+  span.setAttribute("data-bp-fz", String(px))
+  span.appendChild(document.createTextNode("\u200b"))
+  range.insertNode(span)
+
+  const sel = window.getSelection()
+  if (!sel) return
+  const next = document.createRange()
+  next.setStart(span.firstChild!, 1)
+  next.collapse(true)
+  sel.removeAllRanges()
+  sel.addRange(next)
 }
 
 function applyFontSizeToEntireEditor(root: HTMLElement, px: number): void {
@@ -53,7 +150,7 @@ export function applyRichTextFontSizePx(
   options?: { forceFullEditor?: boolean },
 ): boolean {
   if (!root || px <= 0) return false
-  root.focus()
+  focusActiveRichTextContainer(root)
   const sel = window.getSelection()
   if (!sel || sel.rangeCount === 0) return false
 
@@ -69,22 +166,13 @@ export function applyRichTextFontSizePx(
   }
 
   if (range.collapsed) {
-    const marker = `<span data-bp-fz="${px}" style="font-size:${px}px">\u200b</span>`
-    document.execCommand("insertHTML", false, marker)
-    const markers = root.querySelectorAll(`span[data-bp-fz="${px}"]`)
-    const last = markers[markers.length - 1]
-    if (last?.firstChild) {
-      const nr = document.createRange()
-      nr.setStart(last.firstChild, 1)
-      nr.collapse(true)
-      sel.removeAllRanges()
-      sel.addRange(nr)
-    }
+    insertCollapsedFontSizeMarker(range, px)
     return true
   }
 
   try {
     const fragment = range.extractContents()
+    stripExplicitFontSizeInFragment(fragment)
     const span = document.createElement("span")
     span.style.fontSize = `${px}px`
     span.setAttribute("data-bp-fz", String(px))
@@ -97,14 +185,23 @@ export function applyRichTextFontSizePx(
     sel.addRange(next)
     return true
   } catch {
-    document.execCommand("styleWithCSS", false, "true")
-    document.execCommand("fontSize", false, "7")
-    const spans = root.querySelectorAll('span[style*="font-size"]')
-    const last = spans[spans.length - 1] as HTMLElement | undefined
-    if (last) {
-      last.style.fontSize = `${px}px`
-      last.setAttribute("data-bp-fz", String(px))
-    }
+    const selectedHtml = range.cloneContents()
+    stripExplicitFontSizeInFragment(selectedHtml)
+    const wrapper = document.createElement("div")
+    wrapper.appendChild(selectedHtml)
+    const inner = wrapper.innerHTML
+    if (!inner) return false
+    range.deleteContents()
+    const span = document.createElement("span")
+    span.style.fontSize = `${px}px`
+    span.setAttribute("data-bp-fz", String(px))
+    span.innerHTML = inner
+    range.insertNode(span)
+    sel.removeAllRanges()
+    const next = document.createRange()
+    next.selectNodeContents(span)
+    next.collapse(false)
+    sel.addRange(next)
     return true
   }
 }

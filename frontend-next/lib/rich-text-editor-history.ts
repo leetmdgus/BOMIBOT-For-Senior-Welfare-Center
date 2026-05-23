@@ -1,12 +1,15 @@
-/** 리치 에디터 HTML 스냅샷 — 표 DOM 조작 등 execCommand undo 미지원 작업용 */
+/** 리치 에디터 HTML 스냅샷 — typing·서식·표 DOM 등 execCommand undo 미지원 작업 공용 */
 export type RichTextEditorHistory = {
+  /** 변경 직전 HTML을 스택에 저장 (연속 동일 값은 무시) */
   push: (html: string) => void
   undo: (currentHtml: string) => string | null
   redo: (currentHtml: string) => string | null
   clear: () => void
+  canUndo: () => boolean
+  canRedo: () => boolean
 }
 
-const MAX_SNAPSHOTS = 80
+const MAX_SNAPSHOTS = 100
 
 export function createRichTextEditorHistory(): RichTextEditorHistory {
   const undoStack: string[] = []
@@ -38,6 +41,14 @@ export function createRichTextEditorHistory(): RichTextEditorHistory {
     clear() {
       undoStack.length = 0
       redoStack.length = 0
+    },
+
+    canUndo() {
+      return undoStack.length > 0
+    },
+
+    canRedo() {
+      return redoStack.length > 0
     },
   }
 }

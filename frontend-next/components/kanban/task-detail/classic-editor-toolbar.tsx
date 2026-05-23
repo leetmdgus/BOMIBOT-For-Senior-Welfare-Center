@@ -37,8 +37,9 @@ import type { RichTextEditorHandle } from "@/components/kanban/task-detail/busin
 import { ColorPaletteButton } from "@/components/kanban/task-detail/rich-text-color-palette"
 import { RichTextTableStyleToolbar } from "@/components/kanban/task-detail/rich-text-table-style-toolbar"
 import { TableInsertGrid } from "@/components/kanban/task-detail/table-insert-grid"
-import { triggerRichTextImageInsert } from "@/lib/rich-text-image-insert"
+import { buildRichTextListHtml } from "@/lib/rich-text-list-utils"
 import { HANGUL_FONT_SIZES_PX } from "@/lib/rich-text-font-size"
+import { triggerRichTextImageInsert } from "@/lib/rich-text-image-insert"
 import { buildTableHtml } from "@/lib/rich-text-table-utils"
 import { cn } from "@/lib/utils"
 
@@ -100,6 +101,7 @@ export function ClassicEditorToolbar({
   sourceMode,
   editor,
   onPrepareCommand,
+  fontSizeValue,
 }: {
   onExec: (cmd: string, val?: string) => void
   onInsertHtml: (html: string) => void
@@ -107,6 +109,7 @@ export function ClassicEditorToolbar({
   sourceMode: boolean
   editor?: RichTextEditorHandle | null
   onPrepareCommand?: () => void
+  fontSizeValue?: string
 }) {
   const inTable = editor?.hasTableContext() ?? false
   const canStyleTable =
@@ -207,10 +210,14 @@ export function ClassicEditorToolbar({
           <List className="size-3.5" />
         </ClassicBtn>
         <ClassicBtn
+          title="1) 목록"
+          onClick={() => onInsertHtml(buildRichTextListHtml("decimal-paren"))}
+        >
+          <span className="text-[11px] font-semibold">1)</span>
+        </ClassicBtn>
+        <ClassicBtn
           title="가. 목록"
-          onClick={() =>
-            onInsertHtml('<ol class="list-hangul"><li>항목</li></ol>')
-          }
+          onClick={() => onInsertHtml(buildRichTextListHtml("hangul"))}
         >
           <span className="text-[11px] font-semibold">가.</span>
         </ClassicBtn>
@@ -247,7 +254,11 @@ export function ClassicEditorToolbar({
         <StyleSelect onExec={onExec} onPrepareCommand={onPrepareCommand} />
         <FormatSelect onExec={onExec} onPrepareCommand={onPrepareCommand} />
         <FontSelect onExec={onExec} onPrepareCommand={onPrepareCommand} />
-        <SizeSelect onExec={onExec} onPrepareCommand={onPrepareCommand} />
+        <SizeSelect
+          onExec={onExec}
+          onPrepareCommand={onPrepareCommand}
+          value={fontSizeValue}
+        />
         <ClassicSep />
         <ColorPaletteButton
           label="글자색"
@@ -432,12 +443,17 @@ function FontSelect({
 function SizeSelect({
   onExec,
   onPrepareCommand,
+  value,
 }: {
   onExec: (cmd: string, val?: string) => void
   onPrepareCommand?: () => void
+  value?: string
 }) {
   return (
-    <Select onValueChange={(v) => v && onExec("fontSize", v)}>
+    <Select
+      value={value}
+      onValueChange={(v) => v && onExec("fontSize", v)}
+    >
       <SelectTrigger
         data-toolbar-select
         {...toolbarSelectTriggerProps(onPrepareCommand)}

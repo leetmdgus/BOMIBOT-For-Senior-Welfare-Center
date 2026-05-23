@@ -164,6 +164,10 @@ export function RichTextToolbarPanel({
               onSourceToggle={() => editor?.toggleSource()}
               sourceMode={sourceMode}
               editor={editor}
+              onPrepareCommand={() => editor?.saveSelection()}
+              fontSizeValue={
+                editor ? `${editor.getFontSizePx()}px` : undefined
+              }
             />
           )}
         </div>

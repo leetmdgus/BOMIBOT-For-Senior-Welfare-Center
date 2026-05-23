@@ -14,7 +14,6 @@ import {
   clearRichTextTableCellEditing,
   ensureTableStructure,
   focusRichTextTableCellAtPoint,
-  moveRichTextTableTabFocus,
 } from "@/lib/rich-text-table-utils"
 
 const DRAG_THRESHOLD_PX = 4
@@ -249,16 +248,6 @@ export function RichTextTableSelectionLayer({
     }
 
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Tab") {
-        const moved = moveRichTextTableTabFocus(root, e.shiftKey)
-        if (moved) {
-          e.preventDefault()
-          e.stopPropagation()
-          onChange?.()
-        }
-        return
-      }
-
       if (e.key !== "Escape") return
       root.querySelectorAll("table").forEach((table) => {
         if (table instanceof HTMLTableElement) {

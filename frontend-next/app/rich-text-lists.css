@@ -1,0 +1,100 @@
+/* 본문·표 셀 공통 — 번호/글머리 목록 (1. 2. 3. · 가. · ○ 등) */
+
+@counter-style bp-hangul {
+  system: alphabetic;
+  symbols: "가" "나" "다" "라" "마" "바" "사" "아" "자" "차" "카" "타" "파" "하";
+  suffix: ". ";
+}
+
+@counter-style bp-hangul-paren {
+  system: alphabetic;
+  symbols: "가" "나" "다" "라" "마" "바" "사" "아" "자" "차" "카" "타" "파" "하";
+  suffix: ") ";
+}
+
+.bp-rich-editor :is(ol, ul),
+.bp-rich-editor table.bp-rt-table :is(td, th) :is(ol, ul) {
+  margin: 0.2em 0;
+  padding-left: 1.65em;
+  list-style-position: outside;
+}
+
+.bp-rich-editor :is(ol, ul) > li,
+.bp-rich-editor table.bp-rt-table :is(td, th) :is(ol, ul) > li {
+  margin: 0.12em 0;
+  padding-left: 0.15em;
+}
+
+/* 1. 2. 3. */
+.bp-rich-editor ol:not([class]),
+.bp-rich-editor ol.bp-list-decimal {
+  list-style-type: decimal;
+}
+
+/* 1) 2) 3) */
+.bp-rich-editor ol.list-decimal-paren {
+  list-style: none;
+  counter-reset: bp-decimal-paren;
+  padding-left: 0;
+}
+
+.bp-rich-editor ol.list-decimal-paren > li {
+  counter-increment: bp-decimal-paren;
+  position: relative;
+  padding-left: 1.75em;
+  list-style: none;
+}
+
+.bp-rich-editor ol.list-decimal-paren > li::before {
+  content: counter(bp-decimal-paren) ") ";
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+/* 가. 나. 다. */
+.bp-rich-editor ol.list-hangul {
+  list-style: bp-hangul;
+}
+
+/* 가) 나) 다) */
+.bp-rich-editor ol.list-hangul-paren {
+  list-style: bp-hangul-paren;
+}
+
+/* ● 글머리 */
+.bp-rich-editor ul:not([class]),
+.bp-rich-editor ul.bp-list-bullet {
+  list-style-type: disc;
+}
+
+/* ○ 글머리 */
+.bp-rich-editor ul.list-circle {
+  list-style-type: circle;
+}
+
+/* prose 리셋보다 표 셀 안 목록 우선 */
+.bp-rich-editor.prose :is(ol, ul),
+.bp-rich-editor.prose table.bp-rt-table :is(td, th) :is(ol, ul) {
+  margin-top: 0.2em;
+  margin-bottom: 0.2em;
+  padding-inline-start: 1.65em;
+}
+
+.bp-rich-editor.prose :is(ol, ul) > li,
+.bp-rich-editor.prose table.bp-rt-table :is(td, th) :is(ol, ul) > li {
+  margin-top: 0.12em;
+  margin-bottom: 0.12em;
+  padding-inline-start: 0.15em;
+}
+
+.bp-rich-editor table.bp-rt-table :is(td, th) :is(ol, ul) {
+  max-width: 100%;
+}
+
+@media print {
+  .bp-rich-editor :is(ol, ul),
+  .bp-rich-editor table.bp-rt-table :is(td, th) :is(ol, ul) {
+    break-inside: avoid;
+  }
+}

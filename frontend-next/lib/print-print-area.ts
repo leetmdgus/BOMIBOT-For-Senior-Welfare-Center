@@ -2,6 +2,7 @@ import {
   isKanbanDocumentsPrintArea,
   KANBAN_DOCUMENTS_PRINT_CSS,
 } from "@/lib/kanban-documents-print-css"
+import { preparePrintAreaHtml } from "@/lib/prepare-print-area-html"
 
 /** 브라우저 인쇄 머리글(날짜·URL·페이지)에 쓰이지 않도록 빈 제목 */
 const PRINT_FRAME_TITLE = "\u00A0"
@@ -88,6 +89,7 @@ export function printPrintArea(): void {
 
   const documentsLandscape = isKanbanDocumentsPrintArea(printArea)
   const iframePrintStyles = buildIframePrintStyles(documentsLandscape)
+  const printBodyHtml = preparePrintAreaHtml(printArea)
 
   const html = `<!DOCTYPE html>
 <html lang="ko">
@@ -99,7 +101,7 @@ ${inlineStyles}
 <style>${iframePrintStyles}</style>
 </head>
 <body class="is-printing">
-<div class="print-area print-document${documentsLandscape ? " kanban-documents-print" : ""}">${printArea.innerHTML}</div>
+<div class="print-area print-document${documentsLandscape ? " kanban-documents-print" : ""}">${printBodyHtml}</div>
 </body>
 </html>`
 

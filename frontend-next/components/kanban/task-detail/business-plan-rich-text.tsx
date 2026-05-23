@@ -66,8 +66,10 @@ import {
   enhanceAllTablesInEditor,
   findTableWithCellSelection,
   getRichTextTableContext,
+  getRichTextTableCellFromSelection,
   insertRichTextTable,
   mergeRichTextTableCellSelection,
+  moveRichTextTableTabFocus,
   insertRichTextTableCell,
   insertRichTextTableColumn,
   insertRichTextTableRow,
@@ -79,8 +81,11 @@ import {
 } from "@/lib/rich-text-table-utils"
 import { refreshAllTableCellSelectionVisuals } from "@/lib/rich-text-table-grid"
 import { createRichTextEditorHistory } from "@/lib/rich-text-editor-history"
+import { RICH_TEXT_FLUSH_BEFORE_PRINT } from "@/lib/prepare-print-area-html"
 import {
   applyRichTextFontSizePx,
+  DEFAULT_EDITOR_FONT_SIZE_PX,
+  getRichTextFontSizePxAtSelection,
   HANGUL_FONT_SIZES_PX,
   parseFontSizePx,
 } from "@/lib/rich-text-font-size"
@@ -88,6 +93,13 @@ import {
   insertRichTextImageFromFile,
   triggerRichTextImageInsert,
 } from "@/lib/rich-text-image-insert"
+import { focusActiveRichTextContainer } from "@/lib/rich-text-edit-target"
+import {
+  applyRichTextListCommand,
+  buildRichTextListHtml,
+  insertRichTextHtmlAtSelection,
+  isCursorInRichTextListItem,
+} from "@/lib/rich-text-list-utils"
 import {
   captureRichTextSelection,
   restoreRichTextSelection,
@@ -109,6 +121,8 @@ export type RichTextEditorHandle = {
   focus: () => void
   toggleSource: () => void
   isSourceMode: boolean
+  saveSelection: () => void
+  getFontSizePx: () => number
   hasTableContext: () => boolean
   getTableContext: () => ReturnType<typeof getRichTextTableContext>
   insertTable: (rows: number, cols: number) => void
@@ -187,10 +201,14 @@ export const BusinessPlanRichText = forwardRef<
   const [sourceMode, setSourceMode] = useState(false)
   const [sourceHtml, setSourceHtml] = useState("")
   const [toolbarCollapsed, setToolbarCollapsed] = useState(false)
+  const [toolbarFontSizePx, setToolbarFontSizePx] = useState(
+    DEFAULT_EDITOR_FONT_SIZE_PX,
+  )
   const [, setTableSelectionTick] = useState(0)
   const lastEmitted = useRef("")
   const mounted = useRef(false)
   const isUndoRedo = useRef(false)
+  const isComposing = useRef(false)
   const editorHistory = useRef(createRichTextEditorHistory())
   const savedSelectionRef = useRef<SavedRichTextSelection | null>(null)
   const editorId = useId()
@@ -200,6 +218,12 @@ export const BusinessPlanRichText = forwardRef<
     if (!el) return
     const captured = captureRichTextSelection(el)
     if (captured) savedSelectionRef.current = captured
+  }, [])
+
+  const refreshToolbarFontSize = useCallback(() => {
+    const el = editorRef.current
+    if (!el) return
+    setToolbarFontSizePx(getRichTextFontSizePxAtSelection(el))
   }, [])
 
   const restoreSavedSelectionIfNeeded = useCallback(() => {
@@ -239,7 +263,7 @@ export const BusinessPlanRichText = forwardRef<
     syncFromValue()
   }, [value, sourceMode, readOnly, syncFromValue])
 
-  const snapshotBeforeTableMutation = useCallback(() => {
+  const snapshotBeforeChange = useCallback(() => {
     const el = editorRef.current
     if (!el || isUndoRedo.current || sourceMode) return
     editorHistory.current.push(el.innerHTML)
@@ -252,11 +276,11 @@ export const BusinessPlanRichText = forwardRef<
       isUndoRedo.current = true
       el.innerHTML = html
       lastEmitted.current = html
-      enhanceAllTablesInEditor(el, undefined, snapshotBeforeTableMutation)
+      enhanceAllTablesInEditor(el, undefined, snapshotBeforeChange)
       onChange(html)
       isUndoRedo.current = false
     },
-    [onChange, snapshotBeforeTableMutation],
+    [onChange, snapshotBeforeChange],
   )
 
   const emitChange = useCallback(() => {
@@ -267,9 +291,9 @@ export const BusinessPlanRichText = forwardRef<
       lastEmitted.current = html
       onChange(html)
     }
-    enhanceAllTablesInEditor(el, persist, snapshotBeforeTableMutation)
+    enhanceAllTablesInEditor(el, persist, snapshotBeforeChange)
     persist()
-  }, [onChange, snapshotBeforeTableMutation])
+  }, [onChange, snapshotBeforeChange])
 
   const handleEditorUndo = useCallback(() => {
     const el = editorRef.current
@@ -277,12 +301,8 @@ export const BusinessPlanRichText = forwardRef<
     const restored = editorHistory.current.undo(el.innerHTML)
     if (restored !== null) {
       restoreEditorHtml(restored)
-      return
     }
-    el.focus()
-    document.execCommand("undo")
-    emitChange()
-  }, [sourceMode, restoreEditorHtml, emitChange])
+  }, [sourceMode, restoreEditorHtml])
 
   const handleEditorRedo = useCallback(() => {
     const el = editorRef.current
@@ -290,12 +310,22 @@ export const BusinessPlanRichText = forwardRef<
     const restored = editorHistory.current.redo(el.innerHTML)
     if (restored !== null) {
       restoreEditorHtml(restored)
-      return
     }
-    el.focus()
-    document.execCommand("redo")
-    emitChange()
-  }, [sourceMode, restoreEditorHtml, emitChange])
+  }, [sourceMode, restoreEditorHtml])
+
+  const handleEditorBeforeInput = useCallback(() => {
+    if (isComposing.current) return
+    snapshotBeforeChange()
+  }, [snapshotBeforeChange])
+
+  const handleCompositionStart = useCallback(() => {
+    isComposing.current = true
+    snapshotBeforeChange()
+  }, [snapshotBeforeChange])
+
+  const handleCompositionEnd = useCallback(() => {
+    isComposing.current = false
+  }, [])
 
   const handleEditorKeyDown = (e: KeyboardEvent) => {
     const mod = e.ctrlKey || e.metaKey
@@ -314,7 +344,7 @@ export const BusinessPlanRichText = forwardRef<
   const withTableCtx = <T,>(fn: (ctx: NonNullable<ReturnType<typeof getRichTextTableContext>>) => T): T | false => {
     const ctx = getRichTextTableContext(editorRef.current)
     if (!ctx) return false
-    snapshotBeforeTableMutation()
+    snapshotBeforeChange()
     const result = fn(ctx)
     emitChange()
     return result
@@ -332,30 +362,54 @@ export const BusinessPlanRichText = forwardRef<
       return
     }
 
+    snapshotBeforeChange()
     restoreSavedSelectionIfNeeded()
     const saved = savedSelectionRef.current
 
     if (command === "fontSize") {
+      if (saved) restoreRichTextSelection(el, saved)
       const px = parseFontSizePx(valueArg)
       if (px != null) {
         applyRichTextFontSizePx(el, px, { forceFullEditor: saved?.fullEditor })
         emitChange()
         saveEditorSelection()
+        setToolbarFontSizePx(px)
         return
       }
     }
 
-    el.focus()
+    if (command === "insertOrderedList") {
+      applyRichTextListCommand(el, "insertOrderedList", "decimal")
+      emitChange()
+      saveEditorSelection()
+      return
+    }
+    if (command === "insertUnorderedList") {
+      applyRichTextListCommand(el, "insertUnorderedList", "bullet")
+      emitChange()
+      saveEditorSelection()
+      return
+    }
+    if (command === "indent" || command === "outdent") {
+      applyRichTextListCommand(el, command)
+      emitChange()
+      saveEditorSelection()
+      return
+    }
+
+    focusActiveRichTextContainer(el)
     document.execCommand(command, false, valueArg)
     emitChange()
     saveEditorSelection()
   }
 
   const insertHtml = useCallback((html: string) => {
-    editorRef.current?.focus()
-    document.execCommand("insertHTML", false, html)
+    const el = editorRef.current
+    if (!el) return
+    snapshotBeforeChange()
+    insertRichTextHtmlAtSelection(el, html)
     emitChange()
-  }, [emitChange])
+  }, [emitChange, snapshotBeforeChange])
 
   const handleEditorPaste = useCallback(
     (e: ClipboardEvent<HTMLDivElement>) => {
@@ -388,6 +442,7 @@ export const BusinessPlanRichText = forwardRef<
   const insertTable = (rows: number, cols: number) => {
     const el = editorRef.current
     if (!el) return
+    snapshotBeforeChange()
     insertRichTextTable(el, rows, cols)
     emitChange()
   }
@@ -395,7 +450,7 @@ export const BusinessPlanRichText = forwardRef<
   const deleteTable = () => {
     const ctx = getTableCtx()
     if (!ctx) return false
-    snapshotBeforeTableMutation()
+    snapshotBeforeChange()
     deleteRichTextTable(ctx.table)
     emitChange()
     return true
@@ -404,7 +459,7 @@ export const BusinessPlanRichText = forwardRef<
   const insertTableRow = (position: "before" | "after") => {
     const ctx = getTableCtx()
     if (!ctx) return false
-    snapshotBeforeTableMutation()
+    snapshotBeforeChange()
     insertRichTextTableRow(ctx, position)
     emitChange()
     return true
@@ -413,7 +468,7 @@ export const BusinessPlanRichText = forwardRef<
   const deleteTableRow = () => {
     const ctx = getTableCtx()
     if (!ctx) return false
-    snapshotBeforeTableMutation()
+    snapshotBeforeChange()
     const ok = deleteRichTextTableRow(ctx)
     if (ok) emitChange()
     return ok
@@ -422,7 +477,7 @@ export const BusinessPlanRichText = forwardRef<
   const insertTableColumn = (position: "before" | "after") => {
     const ctx = getTableCtx()
     if (!ctx) return false
-    snapshotBeforeTableMutation()
+    snapshotBeforeChange()
     insertRichTextTableColumn(ctx, position)
     emitChange()
     return true
@@ -431,7 +486,7 @@ export const BusinessPlanRichText = forwardRef<
   const deleteTableColumn = () => {
     const ctx = getTableCtx()
     if (!ctx) return false
-    snapshotBeforeTableMutation()
+    snapshotBeforeChange()
     const ok = deleteRichTextTableColumn(ctx)
     if (ok) emitChange()
     return ok
@@ -466,6 +521,8 @@ export const BusinessPlanRichText = forwardRef<
       focus: () => {},
       toggleSource: () => {},
       isSourceMode: false,
+      saveSelection: () => {},
+      getFontSizePx: () => DEFAULT_EDITOR_FONT_SIZE_PX,
       hasTableContext: () => false,
       getTableContext: () => null,
       insertTable: () => {},
@@ -495,6 +552,12 @@ export const BusinessPlanRichText = forwardRef<
   api.focus = () => editorRef.current?.focus()
   api.toggleSource = handleSourceToggle
   api.isSourceMode = sourceMode
+  api.saveSelection = saveEditorSelection
+  api.getFontSizePx = () => {
+    const el = editorRef.current
+    if (!el) return DEFAULT_EDITOR_FONT_SIZE_PX
+    return getRichTextFontSizePxAtSelection(el)
+  }
   api.hasTableContext = () => Boolean(getTableCtx())
   api.getTableContext = () => getRichTextTableContext(editorRef.current)
   api.insertTable = insertTable
@@ -523,7 +586,7 @@ export const BusinessPlanRichText = forwardRef<
     return canMergeTableCellRange(hit.table, hit.range)
   }
   api.mergeTableCells = () => {
-    snapshotBeforeTableMutation()
+    snapshotBeforeChange()
     if (mergeRichTextTableCellSelection(editorRef.current)) {
       emitChange()
       return true
@@ -536,7 +599,7 @@ export const BusinessPlanRichText = forwardRef<
   }
   api.applyTableCellFill = (color) => {
     const el = editorRef.current
-    snapshotBeforeTableMutation()
+    snapshotBeforeChange()
     const ok = applyTableStyleFromEditor(el, getTableCtx(), {
       type: "fill",
       color,
@@ -548,7 +611,7 @@ export const BusinessPlanRichText = forwardRef<
     return ok
   }
   api.applyTableBorder = (border) => {
-    snapshotBeforeTableMutation()
+    snapshotBeforeChange()
     const ok = applyTableStyleFromEditor(editorRef.current, getTableCtx(), {
       type: "border",
       border,
@@ -559,7 +622,7 @@ export const BusinessPlanRichText = forwardRef<
   api.applyTableBorderWhole = (border) => {
     const ctx = getTableCtx()
     if (!ctx) return false
-    snapshotBeforeTableMutation()
+    snapshotBeforeChange()
     applyWholeTableBorderStyle(ctx.table, border)
     emitChange()
     return true
@@ -577,6 +640,7 @@ export const BusinessPlanRichText = forwardRef<
       const range = sel.getRangeAt(0)
       if (el.contains(range.commonAncestorContainer)) {
         saveEditorSelection()
+        refreshToolbarFontSize()
       }
     }
 
@@ -589,7 +653,7 @@ export const BusinessPlanRichText = forwardRef<
       el.removeEventListener("mouseup", saveEditorSelection)
       document.removeEventListener("selectionchange", onSelectionChange)
     }
-  }, [editorDom, readOnly, sourceMode, saveEditorSelection])
+  }, [editorDom, readOnly, sourceMode, saveEditorSelection, refreshToolbarFontSize])
 
   useEffect(() => {
     if (readOnly || sourceMode) return
@@ -600,9 +664,49 @@ export const BusinessPlanRichText = forwardRef<
       () => {
         lastEmitted.current = el.innerHTML
       },
-      snapshotBeforeTableMutation,
+      snapshotBeforeChange,
     )
-  }, [value, readOnly, sourceMode, snapshotBeforeTableMutation])
+  }, [value, readOnly, sourceMode, snapshotBeforeChange])
+
+  useEffect(() => {
+    const el = editorDom
+    if (!el || readOnly || sourceMode) return
+
+    const onTabKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== "Tab" || e.defaultPrevented) return
+
+      const backward = e.shiftKey
+
+      if (isCursorInRichTextListItem(el)) {
+        e.preventDefault()
+        e.stopPropagation()
+        snapshotBeforeChange()
+        applyRichTextListCommand(el, backward ? "outdent" : "indent")
+        emitChange()
+        return
+      }
+
+      const inTableCell = getRichTextTableCellFromSelection(el)
+      if (inTableCell) {
+        e.preventDefault()
+        e.stopPropagation()
+        if (moveRichTextTableTabFocus(el, backward)) {
+          emitChange()
+        }
+      }
+    }
+
+    el.addEventListener("keydown", onTabKeyDown, true)
+    return () => el.removeEventListener("keydown", onTabKeyDown, true)
+  }, [editorDom, readOnly, sourceMode, snapshotBeforeChange, emitChange])
+
+  useEffect(() => {
+    const el = editorDom
+    if (!el || readOnly || sourceMode) return
+    const onFlush = () => emitChange()
+    el.addEventListener(RICH_TEXT_FLUSH_BEFORE_PRINT, onFlush)
+    return () => el.removeEventListener(RICH_TEXT_FLUSH_BEFORE_PRINT, onFlush)
+  }, [editorDom, readOnly, sourceMode, emitChange])
 
   useEffect(() => {
     const el = editorDom
@@ -649,6 +753,7 @@ export const BusinessPlanRichText = forwardRef<
             editor={api}
             orientation="horizontal"
             onPrepareCommand={saveEditorSelection}
+            fontSizeValue={`${toolbarFontSizePx}px`}
           />
         </div>
       ) : null}
@@ -669,6 +774,9 @@ export const BusinessPlanRichText = forwardRef<
             id={editorId}
             contentEditable
             suppressContentEditableWarning
+            onBeforeInput={handleEditorBeforeInput}
+            onCompositionStart={handleCompositionStart}
+            onCompositionEnd={handleCompositionEnd}
             onInput={emitChange}
             onBlur={emitChange}
             onKeyDown={handleEditorKeyDown}
@@ -686,7 +794,7 @@ export const BusinessPlanRichText = forwardRef<
           <RichTextTableContextMenuLayer
             editorRoot={editorDom}
             onChange={emitChange}
-            onBeforeMutation={snapshotBeforeTableMutation}
+            onBeforeMutation={snapshotBeforeChange}
           />
         </>
       )}
@@ -896,7 +1004,7 @@ export function CompactToolbar({
         <ToolbarButton
           title="가. 목록"
           onClick={() =>
-            onInsertHtml('<ol class="list-hangul"><li>항목</li></ol>')
+            onInsertHtml(buildRichTextListHtml("hangul"))
           }
         >
           <span className="text-xs font-semibold">가.</span>
@@ -948,7 +1056,7 @@ export function CompactToolbar({
             title="가. 목록"
             label="가."
             onClick={() =>
-              onInsertHtml('<ol class="list-hangul"><li>항목</li></ol>')
+              onInsertHtml(buildRichTextListHtml("hangul"))
             }
           >
             <span className="text-xs font-semibold">가.</span>
@@ -969,6 +1077,7 @@ export function HangulToolbar({
   editor,
   orientation = "horizontal",
   onPrepareCommand,
+  fontSizeValue,
 }: {
   onExec: (cmd: string, val?: string) => void
   onInsertHtml: (html: string) => void
@@ -977,6 +1086,7 @@ export function HangulToolbar({
   editor?: RichTextEditorHandle | null
   orientation?: ToolbarOrientation
   onPrepareCommand?: () => void
+  fontSizeValue?: string
 }) {
   const [tableToolsExpanded, setTableToolsExpanded] = useState(false)
   const inTable = editor?.hasTableContext() ?? false
@@ -993,6 +1103,7 @@ export function HangulToolbar({
         sourceMode={sourceMode}
         editor={editor}
         onPrepareCommand={onPrepareCommand}
+        fontSizeValue={fontSizeValue}
       />
     )
   }
@@ -1049,6 +1160,7 @@ export function HangulToolbar({
               orientation={orientation}
               onExec={onExec}
               onPrepareCommand={onPrepareCommand}
+              value={fontSizeValue}
             />
             <div
               className={cn(
@@ -1156,7 +1268,7 @@ export function HangulToolbar({
                 title="1) 형식"
                 label="1)"
                 onClick={() =>
-                  onInsertHtml('<ol class="list-decimal-paren"><li>항목</li></ol>')
+                  onInsertHtml(buildRichTextListHtml("decimal-paren"))
                 }
               >
                 <span className="text-xs font-semibold">1)</span>
@@ -1165,7 +1277,7 @@ export function HangulToolbar({
                 title="가. 형식"
                 label="가."
                 onClick={() =>
-                  onInsertHtml('<ol class="list-hangul"><li>항목</li></ol>')
+                  onInsertHtml(buildRichTextListHtml("hangul"))
                 }
               >
                 <span className="text-xs font-semibold">가.</span>
@@ -1174,7 +1286,7 @@ export function HangulToolbar({
                 title="가) 형식"
                 label="가)"
                 onClick={() =>
-                  onInsertHtml('<ol class="list-hangul-paren"><li>항목</li></ol>')
+                  onInsertHtml(buildRichTextListHtml("hangul-paren"))
                 }
               >
                 <span className="text-xs font-semibold">가)</span>
@@ -1182,9 +1294,7 @@ export function HangulToolbar({
               <ToolbarButton
                 title="○ 글머리"
                 label="○"
-                onClick={() =>
-                  onInsertHtml('<ul class="list-circle"><li>항목</li></ul>')
-                }
+                onClick={() => onInsertHtml(buildRichTextListHtml("circle"))}
               >
                 <span className="text-xs">○</span>
               </ToolbarButton>
@@ -1553,13 +1663,16 @@ function SizeSelect({
   onExec,
   orientation = "horizontal",
   onPrepareCommand,
+  value,
 }: {
   onExec: (cmd: string, val?: string) => void
   orientation?: ToolbarOrientation
   onPrepareCommand?: () => void
+  value?: string
 }) {
   return (
     <Select
+      value={value}
       onValueChange={(v) => {
         if (v) onExec("fontSize", v)
       }}

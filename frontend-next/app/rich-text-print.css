@@ -1,0 +1,113 @@
+/* 리치텍스트 — 인쇄·인쇄 iframe (화면과 동일한 목록·이미지·서식) */
+
+@media print {
+  .print-area .bp-rich-root {
+    border: none !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+  }
+
+  .print-area .bp-rich-editor {
+    min-height: 0 !important;
+    padding: 2px 4px !important;
+    border: none !important;
+    outline: none !important;
+    overflow: visible !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  /* 목록 — rich-text-lists.css 와 동일 (prose·인쇄 리셋보다 우선) */
+  .print-area .bp-rich-editor :is(ol, ul),
+  .print-area .bp-rich-editor table.bp-rt-table :is(td, th) :is(ol, ul) {
+    margin: 0.2em 0 !important;
+    padding-left: 1.65em !important;
+    list-style-position: outside !important;
+  }
+
+  .print-area .bp-rich-editor ol:not([class]),
+  .print-area .bp-rich-editor ol.bp-list-decimal {
+    list-style-type: decimal !important;
+  }
+
+  .print-area .bp-rich-editor ol.list-decimal-paren {
+    list-style: none !important;
+    counter-reset: bp-decimal-paren !important;
+    padding-left: 0 !important;
+  }
+
+  .print-area .bp-rich-editor ol.list-decimal-paren > li {
+    counter-increment: bp-decimal-paren !important;
+    position: relative !important;
+    padding-left: 1.75em !important;
+    list-style: none !important;
+  }
+
+  .print-area .bp-rich-editor ol.list-decimal-paren > li::before {
+    content: counter(bp-decimal-paren) ") " !important;
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+  }
+
+  .print-area .bp-rich-editor ol.list-hangul {
+    list-style: bp-hangul !important;
+  }
+
+  .print-area .bp-rich-editor ol.list-hangul-paren {
+    list-style: bp-hangul-paren !important;
+  }
+
+  .print-area .bp-rich-editor ul:not([class]),
+  .print-area .bp-rich-editor ul.bp-list-bullet {
+    list-style-type: disc !important;
+  }
+
+  .print-area .bp-rich-editor ul.list-circle {
+    list-style-type: circle !important;
+  }
+
+  .print-area .bp-rich-editor :is(ol, ul),
+  .print-area .bp-rich-editor table.bp-rt-table :is(td, th) :is(ol, ul) {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* 이미지 */
+  .print-area .bp-rt-image-wrap {
+    margin: 0.35rem 0 !important;
+    text-align: center !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .print-area .bp-rt-image {
+    display: inline-block !important;
+    max-width: 100% !important;
+    height: auto !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  /* 글자 크기·색·표 셀 배경 (인라인 스타일 유지) */
+  .print-area .bp-rich-editor span[style*="font-size"],
+  .print-area .bp-rich-editor font[size] {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .print-area .bp-rt-table :is(td, th)[style*="background"] {
+    print-color-adjust: exact !important;
+    -webkit-print-color-adjust: exact !important;
+  }
+
+  .print-area .bp-rt-table {
+    break-inside: auto;
+    page-break-inside: auto;
+  }
+
+  .print-area .bp-rt-col-resize,
+  .print-area .bp-rt-row-resize {
+    display: none !important;
+  }
+}

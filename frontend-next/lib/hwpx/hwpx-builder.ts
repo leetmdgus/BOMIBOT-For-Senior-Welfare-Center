@@ -1,11 +1,13 @@
 import JSZip from "jszip"
 
 import {
+  buildContainerXml,
   buildHeaderXml,
   buildManifestXml,
   buildMetaXml,
   buildSectionOpenParagraph,
   buildSettingsXml,
+  buildVersionXml,
   HWPX_BORDER,
   HWPX_CHAR,
   HWPX_PARA,
@@ -300,7 +302,8 @@ function buildContentHpf(title: string): string {
 <opf:package xmlns:opf="urn:oasis:names:tc:opendocument:xmlns:package"
              xmlns:ha="http://www.hancom.co.kr/hwpml/2011/app"
              xmlns:hpf="http://www.hancom.co.kr/schema/2011/hpf"
-             version="1.5">
+             version="1.5"
+             unique-identifier="bookid">
   <opf:metadata>
     <ha:title>${escapeXml(title)}</ha:title>
     <ha:subject>사업문서</ha:subject>
@@ -310,26 +313,9 @@ function buildContentHpf(title: string): string {
     <opf:item id="section0" href="section0.xml" media-type="application/hwpml-section+xml"/>
   </opf:manifest>
   <opf:spine>
-    <opf:itemref idref="header"/>
     <opf:itemref idref="section0"/>
   </opf:spine>
 </opf:package>`
-}
-
-function buildContainerXml(): string {
-  return `<?xml version="1.0" encoding="UTF-8"?>
-<container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">
-  <rootfiles>
-    <rootfile full-path="Contents/content.hpf" media-type="application/hwpml-package+xml"/>
-  </rootfiles>
-</container>`
-}
-
-function buildVersionXml(): string {
-  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<hv:HCFVersion xmlns:hv="http://www.hancom.co.kr/hwpml/2011/version"
-              tagetApplication="HWP"
-              major="5" minor="1" patch="1" revision="1"/>`
 }
 
 function buildPreviewText(doc: HwpxDocument): string {
@@ -353,14 +339,14 @@ export async function buildHwpxBlob(doc: HwpxDocument): Promise<Blob> {
   const title = doc.title || "문서"
 
   zip.file("mimetype", "application/hwp+zip", { compression: "STORE" })
-  zip.file("version.xml", buildVersionXml())
-  zip.file("settings.xml", buildSettingsXml())
   zip.file("META-INF/container.xml", buildContainerXml())
   zip.file("META-INF/manifest.xml", buildManifestXml())
-  zip.file("Meta/meta.xml", buildMetaXml(title))
+  zip.file("version.xml", buildVersionXml())
+  zip.file("settings.xml", buildSettingsXml())
   zip.file("Contents/content.hpf", buildContentHpf(title))
   zip.file("Contents/header.xml", buildHeaderXml(title))
   zip.file("Contents/section0.xml", buildSection0Xml(doc.sections))
+  zip.file("Meta/meta.xml", buildMetaXml(title))
   zip.file("Preview/PrvText.txt", buildPreviewText(doc))
 
   return zip.generateAsync({
@@ -382,7 +368,7 @@ export function downloadHwpxFile(filename: string, blob: Blob): void {
   window.setTimeout(() => {
     anchor.remove()
     URL.revokeObjectURL(url)
-  }, 200)
+  }, 5000)
 }
 
 export async function downloadHwpxDocument(

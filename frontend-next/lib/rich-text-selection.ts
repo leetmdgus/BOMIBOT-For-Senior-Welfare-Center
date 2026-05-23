@@ -78,14 +78,25 @@ export function shouldRestoreSavedSelection(
   root: HTMLElement,
   saved: SavedRichTextSelection | null,
 ): boolean {
-  if (!saved || saved.range.collapsed) return false
+  if (!saved) return false
 
   const sel = window.getSelection()
   if (!sel || sel.rangeCount === 0) return true
 
   const current = sel.getRangeAt(0)
   if (!root.contains(current.commonAncestorContainer)) return true
-  if (current.collapsed) return true
+
+  if (!saved.range.collapsed && current.collapsed) return true
+
+  if (saved.range.collapsed && current.collapsed) {
+    try {
+      return (
+        saved.range.compareBoundaryPoints(Range.START_TO_START, current) !== 0
+      )
+    } catch {
+      return true
+    }
+  }
 
   if (saved.fullEditor) {
     return !isFullEditorSelection(root, current)
