@@ -7,7 +7,7 @@ import {
   Users,
 } from "lucide-react"
 
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { EmployeeAvatar } from "@/components/organization/employee-avatar"
 import { Input } from "@/components/ui/input"
 
 import { cn } from "@/lib/utils"
@@ -18,21 +18,23 @@ import {
 } from "@/services/organization.types"
 
 interface EmployeeListPanelProps {
-  departments: Department[]
-  expandedDepts: string[]
+  groups: Department[]
+  expandedGroupIds: string[]
   selectedEmployee: Employee | null
   searchQuery: string
-  onToggleDepartment: (id: string) => void
+  groupByPosition?: boolean
+  onToggleGroup: (id: string) => void
   onSelectEmployee: (employee: Employee) => void
   onSearchChange: (value: string) => void
 }
 
 export function EmployeeListPanel({
-  departments,
-  expandedDepts,
+  groups,
+  expandedGroupIds,
   selectedEmployee,
   searchQuery,
-  onToggleDepartment,
+  groupByPosition = false,
+  onToggleGroup,
   onSelectEmployee,
   onSearchChange,
 }: EmployeeListPanelProps) {
@@ -59,63 +61,56 @@ export function EmployeeListPanel({
       </div>
 
       <div className="space-y-2">
-        {departments
+        {groups
           .filter(
-            (dept) =>
-              dept.id !== "all" &&
-              dept.employees.length > 0
+            (group) =>
+              group.id !== "all" && group.employees.length > 0,
           )
-          .map((dept) => (
-            <div key={dept.id}>
+          .map((group) => (
+            <div key={group.id}>
               <button
-                onClick={() =>
-                  onToggleDepartment(dept.id)
-                }
+                onClick={() => onToggleGroup(group.id)}
                 className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-sm font-medium hover:bg-muted"
               >
-                {expandedDepts.includes(dept.id) ? (
+                {expandedGroupIds.includes(group.id) ? (
                   <ChevronDown className="size-4 text-muted-foreground" />
                 ) : (
                   <ChevronRight className="size-4 text-muted-foreground" />
                 )}
 
-                <span>{dept.name}</span>
+                <span>{group.name}</span>
 
                 <span className="text-muted-foreground">
-                  ({dept.count}명)
+                  ({group.count}명)
                 </span>
               </button>
 
-              {expandedDepts.includes(dept.id) && (
+              {expandedGroupIds.includes(group.id) && (
                 <div className="ml-6 space-y-1">
-                  {dept.employees.map((emp) => (
+                  {group.employees.map((emp) => (
                     <button
                       key={emp.id}
-                      onClick={() =>
-                        onSelectEmployee(emp)
-                      }
+                      onClick={() => onSelectEmployee(emp)}
                       className={cn(
                         "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors",
                         selectedEmployee?.id === emp.id
                           ? "bg-primary/10"
-                          : "hover:bg-muted"
+                          : "hover:bg-muted",
                       )}
                     >
-                      <Avatar className="size-9">
-                        <AvatarFallback className="bg-primary/10 text-sm text-primary">
-                          {emp.name.slice(0, 1)}
-                        </AvatarFallback>
-                      </Avatar>
+                      <EmployeeAvatar
+                        employee={emp}
+                        className="size-9"
+                        fallbackClassName="text-sm"
+                      />
 
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="font-medium">
-                            {emp.name}
-                          </span>
+                          <span className="font-medium">{emp.name}</span>
                         </div>
 
                         <span className="text-xs text-muted-foreground">
-                          {emp.role}
+                          {groupByPosition ? emp.department : emp.role}
                         </span>
                       </div>
                     </button>

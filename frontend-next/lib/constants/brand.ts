@@ -3,6 +3,9 @@
  */
 export const BRAND_PRIMARY = "oklch(0.55 0.2 260)"
 
+/** public/ 기준 메인 로고 */
+export const BRAND_LOGO_SRC = "/BOMI_LOGO.jpg"
+
 /** 설문·차트 기본 테마 (미설정 시) */
 export const DEFAULT_SURVEY_THEME = BRAND_PRIMARY
 

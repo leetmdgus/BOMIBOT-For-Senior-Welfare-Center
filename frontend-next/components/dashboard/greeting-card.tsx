@@ -1,5 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { EmployeeAvatar } from "@/components/organization/employee-avatar"
+import { CURRENT_USER } from "@/lib/constants/current-user"
 
 interface GreetingCardProps {
   currentTime: Date
@@ -10,15 +11,15 @@ export function GreetingCard({ currentTime }: GreetingCardProps) {
     <Card className="mb-6 overflow-hidden">
       <CardContent className="flex items-center justify-between p-6">
         <div className="flex items-center gap-4">
-          <Avatar className="size-12 bg-primary/10">
-            <AvatarFallback className="text-lg text-primary">
-              이
-            </AvatarFallback>
-          </Avatar>
+          <EmployeeAvatar
+            employee={CURRENT_USER}
+            className="size-12"
+            fallbackClassName="text-lg"
+          />
 
           <div>
             <h3 className="text-xl font-semibold">
-              이승현 사회복지사님 안녕하세요.
+              {CURRENT_USER.name} {CURRENT_USER.role}님 안녕하세요.
             </h3>
 
             <p className="text-muted-foreground">

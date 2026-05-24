@@ -2,6 +2,8 @@ import type { ElementType } from "react"
 
 export type CalendarTab = "all" | "welfare" | "team"
 
+export type CalendarEventCategory = "welfare" | "team"
+
 export interface StatCardDataDTO {
   label: string
   labelEn: string
@@ -49,11 +51,13 @@ export interface CalendarEvent {
   day: number
   title: string
   color: string
+  category: CalendarEventCategory
 }
 
 export interface VolunteerEvent {
   id: string
-  title: string
-  date: string
-  type: string
+  name: string
+  program: string
+  day: number
+  status: "scheduled" | "completed"
 }

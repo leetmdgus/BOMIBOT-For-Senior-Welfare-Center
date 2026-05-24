@@ -16,7 +16,9 @@ import {
   ChevronLeft,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { BRAND_LOGO_SRC } from "@/lib/constants/brand"
+import { CURRENT_USER } from "@/lib/constants/current-user"
+import { EmployeeAvatar } from "@/components/organization/employee-avatar"
 import { Input } from "@/components/ui/input"
 
 interface MenuItem {
@@ -61,26 +63,26 @@ export function Sidebar() {
         "print-hide sticky top-0 z-40 flex h-dvh shrink-0 flex-col overflow-hidden",
         "border-r border-sidebar-border bg-sidebar",
         "transition-[width] duration-300 ease-in-out",
-        collapsed ? "w-20" : "w-64"
+        collapsed ? "w-20" : "w-64",
       )}
     >
       <div
         className={cn(
           "flex h-16 items-center border-b border-sidebar-border px-4",
-          collapsed ? "justify-center" : "justify-between"
+          collapsed ? "justify-center" : "justify-between",
         )}
       >
         <Link
           href="/dashboard"
           className={cn(
             "flex min-w-0 items-center overflow-hidden",
-            collapsed ? "w-8 justify-center" : "flex-1"
+            collapsed ? "w-8 justify-center" : "flex-1",
           )}
           title="대시보드"
         >
           <img
-            src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-rb6uhcZGZoHFd5DD3c4Dkk5xROg0xC.png"
-            alt="봄이봇"
+            src={BRAND_LOGO_SRC}
+            alt="BOMI"
             className="h-8 w-auto shrink-0 object-contain"
           />
         </Link>
@@ -91,13 +93,13 @@ export function Sidebar() {
           aria-label={collapsed ? "사이드바 펼치기" : "사이드바 접기"}
           className={cn(
             "flex size-8 shrink-0 items-center justify-center rounded-md transition-colors hover:bg-sidebar-accent",
-            collapsed && "absolute right-2 top-4"
+            collapsed && "absolute right-2 top-4",
           )}
         >
           <ChevronLeft
             className={cn(
               "size-5 text-sidebar-foreground transition-transform",
-              collapsed && "rotate-180"
+              collapsed && "rotate-180",
             )}
           />
         </button>
@@ -107,24 +109,33 @@ export function Sidebar() {
         <div
           className={cn(
             "overflow-hidden rounded-xl bg-gradient-to-br from-primary/20 to-primary/5",
-            collapsed ? "p-2" : "p-4"
+            collapsed ? "p-2" : "p-4",
           )}
         >
           <div className={cn("flex items-center", collapsed ? "justify-center" : "gap-3")}>
             <div className="relative shrink-0">
-              <Avatar className={cn("border-2 border-card", collapsed ? "size-10" : "size-12")}>
-                <AvatarImage src="/placeholder.svg" />
-                <AvatarFallback className="bg-primary/10 font-semibold text-primary">
-                  이
-                </AvatarFallback>
-              </Avatar>
+              <EmployeeAvatar
+                employee={CURRENT_USER}
+                className={cn(
+                  "border-2 border-card",
+                  collapsed ? "size-10" : "size-12",
+                )}
+                fallbackClassName={collapsed ? "text-sm" : "text-base"}
+              />
               <span className="absolute bottom-0 right-0 size-3 rounded-full border-2 border-card bg-success" />
             </div>
 
             {!collapsed && (
               <div className="min-w-0 flex-1">
-                <p className="truncate font-medium text-sidebar-foreground">이승현</p>
-                <p className="truncate text-xs text-muted-foreground">사회복지사</p>
+                <p className="truncate font-medium text-sidebar-foreground">
+                  {CURRENT_USER.name}{" "}
+                  <span className="font-normal text-muted-foreground">
+                    {CURRENT_USER.role}
+                  </span>
+                </p>
+                <p className="truncate text-xs text-muted-foreground">
+                  {CURRENT_USER.department}
+                </p>
               </div>
             )}
           </div>
@@ -162,7 +173,7 @@ export function Sidebar() {
                 collapsed ? "h-11 justify-center px-0" : "gap-3 px-3 py-2.5",
                 isActive
                   ? "bg-sidebar-accent font-medium text-sidebar-primary"
-                  : "text-sidebar-foreground hover:bg-sidebar-accent"
+                  : "text-sidebar-foreground hover:bg-sidebar-accent",
               )}
             >
               <Icon className="size-5 shrink-0" />

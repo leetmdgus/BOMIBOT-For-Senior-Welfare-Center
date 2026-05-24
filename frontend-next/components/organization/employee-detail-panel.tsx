@@ -7,8 +7,8 @@ import {
   Phone,
 } from "lucide-react"
 
+import { EmployeeAvatar } from "@/components/organization/employee-avatar"
 import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { cn } from "@/lib/utils"
 
 import {
@@ -60,11 +60,12 @@ export function EmployeeDetailPanel({
 function EmployeeProfileHeader({ employee }: { employee: Employee }) {
   return (
     <div className="mb-6 flex items-start gap-4">
-      <Avatar className="size-14">
-        <AvatarFallback className="bg-primary/10 text-lg text-primary">
-          {employee.name.slice(0, 1)}
-        </AvatarFallback>
-      </Avatar>
+      <EmployeeAvatar
+        employee={employee}
+        variant="square"
+        className="size-16 shrink-0"
+        fallbackClassName="text-xl"
+      />
 
       <div>
         <div className="flex items-center gap-2">

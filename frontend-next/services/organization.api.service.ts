@@ -1,4 +1,8 @@
-import type { Department, Employee } from "./organization.types"
+import type {
+  Department,
+  Employee,
+  OrganizationSearchResult,
+} from "./organization.types"
 
 export async function getDepartments(): Promise<Department[]> {
   const response = await fetch("/api/employees")
@@ -15,7 +19,7 @@ export async function getDepartments(): Promise<Department[]> {
 export async function searchEmployees(params?: {
   search?: string
   department?: string
-}): Promise<{ departments: Department[]; employees: Employee[] }> {
+}): Promise<OrganizationSearchResult> {
   const searchParams = new URLSearchParams()
 
   if (params?.search) searchParams.set("search", params.search)

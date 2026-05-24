@@ -14,18 +14,18 @@ import {
 
 interface GroupPanelProps {
   activeTab: TabType
-  selectedDepartment: string
-  departments: Department[]
+  selectedGroupId: string
+  groups: Department[]
   onTabChange: (tab: TabType) => void
-  onDepartmentSelect: (id: string) => void
+  onGroupSelect: (id: string) => void
 }
 
 export function GroupPanel({
   activeTab,
-  selectedDepartment,
-  departments,
+  selectedGroupId,
+  groups,
   onTabChange,
-  onDepartmentSelect,
+  onGroupSelect,
 }: GroupPanelProps) {
   return (
     <div className="rounded-xl border border-border bg-card p-6">
@@ -36,11 +36,7 @@ export function GroupPanel({
 
       <div className="mb-4 flex gap-2">
         <Button
-          variant={
-            activeTab === "department"
-              ? "default"
-              : "outline"
-          }
+          variant={activeTab === "department" ? "default" : "outline"}
           size="sm"
           onClick={() => onTabChange("department")}
         >
@@ -49,11 +45,7 @@ export function GroupPanel({
         </Button>
 
         <Button
-          variant={
-            activeTab === "position"
-              ? "default"
-              : "outline"
-          }
+          variant={activeTab === "position" ? "default" : "outline"}
           size="sm"
           onClick={() => onTabChange("position")}
         >
@@ -63,30 +55,28 @@ export function GroupPanel({
       </div>
 
       <div className="space-y-1">
-        {departments.map((dept) => (
+        {groups.map((group) => (
           <button
-            key={dept.id}
-            onClick={() =>
-              onDepartmentSelect(dept.id)
-            }
+            key={group.id}
+            onClick={() => onGroupSelect(group.id)}
             className={cn(
               "flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm transition-colors",
-              selectedDepartment === dept.id
+              selectedGroupId === group.id
                 ? "bg-primary/10 text-primary"
-                : "hover:bg-muted"
+                : "hover:bg-muted",
             )}
           >
-            <span>{dept.name}</span>
+            <span>{group.name}</span>
 
             <span
               className={cn(
                 "rounded-full px-2 py-0.5 text-xs font-medium",
-                selectedDepartment === dept.id
+                selectedGroupId === group.id
                   ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-muted-foreground"
+                  : "bg-muted text-muted-foreground",
               )}
             >
-              {dept.count}
+              {group.count}
             </span>
           </button>
         ))}
