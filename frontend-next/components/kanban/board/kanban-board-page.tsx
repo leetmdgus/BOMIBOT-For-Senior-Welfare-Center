@@ -1,8 +1,11 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useState } from "react"
-import { Briefcase, Search } from "lucide-react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { Briefcase, Loader2, Search } from "lucide-react"
 
+import { useAuth } from "@/components/auth/auth-provider"
+import { CollaborationLiveNotice } from "@/components/collaboration/collaboration-live-notice"
+import { CollaborationPresenceBar } from "@/components/collaboration/collaboration-presence-bar"
 import { Sidebar } from "@/components/common/sidebar"
 import {
   Empty,
@@ -36,14 +39,24 @@ import {
   Staff,
   Task,
 } from "@/services/kanban.board.types"
+import type { CollaborationMessage } from "@/lib/collaboration/types"
+import { invalidateApiGetCache } from "@/lib/api-get-cache"
+import { kanbanRoom } from "@/lib/collaboration/rooms"
+import { useCollaborationRoom } from "@/lib/collaboration/use-collaboration-room"
+import { isCollaborationAvailable } from "@/lib/collaboration/ws-url"
+import { getCurrentYearString } from "@/lib/current-year"
 
 
 export function KanbanBoardPage() {
-  const [year, setYear] = useState("2026")
+  const { session } = useAuth()
+  const [year, setYear] = useState(() => getCurrentYearString())
+  const [liveNotice, setLiveNotice] = useState<string | null>(null)
+  const clientIdRef = useRef<string | null>(null)
   const [projects, setProjects] = useState<KanbanProject[]>([])
   const [staffList, setStaffList] = useState<Staff[]>([])
   const [projectImages, setProjectImages] = useState<ProjectImageOption[]>([])
   const [isLoading, setIsLoading] = useState(false)
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
 
   const [editModalOpen, setEditModalOpen] = useState(false)
@@ -51,19 +64,103 @@ export function KanbanBoardPage() {
     null
   )
 
-  const refreshProjects = useCallback(async () => {
-    setIsLoading(true)
+  const loadBoardData = useCallback(
+    async (options?: { projectsOnly?: boolean; silent?: boolean }) => {
+      if (!options?.silent) {
+        setIsLoading(true)
+      }
+      try {
+        if (options?.projectsOnly) {
+          const newProjects = await getProjects(year)
+          setProjects(newProjects)
+          return
+        }
+        const [newProjects, staff, images] = await Promise.all([
+          getProjects(year),
+          getStaffList(),
+          getProjectImageOptions(),
+        ])
+        setProjects(newProjects)
+        setStaffList(staff)
+        setProjectImages(images)
+        setHasLoadedOnce(true)
+      } finally {
+        if (!options?.silent) {
+          setIsLoading(false)
+        }
+      }
+    },
+    [year],
+  )
 
-    try {
-      const newProjects = await getProjects(year)
-      setProjects(newProjects)
-    } finally {
-      setIsLoading(false)
-    }
-  }, [year])
+  const refreshProjects = useCallback(async () => {
+    invalidateApiGetCache("kanban")
+    await loadBoardData({ projectsOnly: true })
+  }, [loadBoardData])
+
+  /** 카드 이동 등 — 로딩 스피너 없이 서버와 맞춤 */
+  const refreshProjectsSilent = useCallback(async () => {
+    invalidateApiGetCache("kanban")
+    await loadBoardData({ projectsOnly: true, silent: true })
+  }, [loadBoardData])
+
+  const patchProjectCategories = useCallback(
+    (projectId: string, categories: KanbanProject["categories"]) => {
+      setProjects((prev) =>
+        prev.map((project) =>
+          project.id === projectId ? { ...project, categories } : project,
+        ),
+      )
+    },
+    [],
+  )
+
+  const collaborationRoom =
+    session?.regionId ? kanbanRoom(session.regionId, year) : null
+
+  const handleCollaborationMessage = useCallback(
+    (message: CollaborationMessage) => {
+      if (!message.clientId || message.clientId === clientIdRef.current) return
+      if (message.type === "kanban.refresh") {
+        invalidateApiGetCache("kanban")
+        void refreshProjects()
+        if (message.userName) {
+          const action = message.payload?.action as string | undefined
+          const label =
+            action === "move_task"
+              ? "카드를 이동했습니다"
+              : action === "update_task"
+                ? "업무를 수정했습니다"
+                : "칸반을 변경했습니다"
+          setLiveNotice(`${message.userName}님이 ${label}`)
+        }
+      }
+    },
+    [refreshProjects],
+  )
+
+  const { clientId, presence, isConnected } = useCollaborationRoom(
+    collaborationRoom,
+    {
+      enabled: isCollaborationAvailable(),
+      onMessage: handleCollaborationMessage,
+    },
+  )
 
   useEffect(() => {
-    refreshProjects()
+    clientIdRef.current = clientId
+  }, [clientId])
+
+  useEffect(() => {
+    void loadBoardData()
+  }, [loadBoardData])
+
+  useEffect(() => {
+    const onVersionRestored = () => {
+      void refreshProjects()
+    }
+    window.addEventListener("kanban-version-restored", onVersionRestored)
+    return () => window.removeEventListener("kanban-version-restored", onVersionRestored)
   }, [refreshProjects])
 
   useEffect(() => {
@@ -76,22 +173,6 @@ export function KanbanBoardPage() {
   )
 
   const hasSearchQuery = searchQuery.trim().length > 0
-
-  useEffect(() => {
-    const loadSharedModalData = async () => {
-      const [staff, images] = await Promise.all([
-        getStaffList(),
-        getProjectImageOptions(),
-      ])
-
-      setStaffList(staff)
-      setProjectImages(images)
-    }
-
-    loadSharedModalData().catch((error) => {
-      console.error("공통 모달 데이터 로드 실패:", error)
-    })
-  }, [])
 
   const normalizeTask = (task: Partial<Task>): Task => ({
     id: task.id ?? crypto.randomUUID(),
@@ -166,8 +247,15 @@ export function KanbanBoardPage() {
           />
 
           <main className="kanban-board-main flex-1 cursor-default overflow-y-auto p-6">
-            {isLoading ? (
-              <div className="text-sm text-muted-foreground">
+            <CollaborationPresenceBar
+              presence={presence}
+              isConnected={isConnected}
+              className="mb-4"
+            />
+            <CollaborationLiveNotice message={liveNotice} />
+            {isLoading && !hasLoadedOnce && projects.length === 0 ? (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Loader2 className="size-4 animate-spin" />
                 데이터를 불러오는 중입니다.
               </div>
             ) : projects.length === 0 ? (
@@ -197,7 +285,13 @@ export function KanbanBoardPage() {
                 </EmptyHeader>
               </Empty>
             ) : (
-              <div className="space-y-6">
+              <div className="relative space-y-6">
+                {isLoading ? (
+                  <div className="flex items-center gap-2 rounded-md border bg-card/90 px-3 py-1.5 text-xs text-muted-foreground shadow-sm">
+                    <Loader2 className="size-3.5 animate-spin" />
+                    보드 새로고침 중…
+                  </div>
+                ) : null}
                 {hasSearchQuery ? (
                   <p className="text-sm text-muted-foreground">
                     「{searchQuery.trim()}」 검색 — 사업{" "}
@@ -218,6 +312,8 @@ export function KanbanBoardPage() {
                     staffList={staffList}
                     projectImages={projectImages}
                     onRefresh={refreshProjects}
+                    onRefreshSilent={refreshProjectsSilent}
+                    onProjectCategoriesChange={patchProjectCategories}
                     onCreateTask={handleCreateTask}
                     onEditProject={() => handleOpenEditProject(project)}
                   />

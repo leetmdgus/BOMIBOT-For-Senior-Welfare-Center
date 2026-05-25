@@ -6,40 +6,31 @@ import type {
   CsTicketResponse,
   OntologyGraphApiResponse,
 } from "./chat.types"
+import { apiClient, resolveApiPath } from "@/lib/api-client"
 
-async function parseJson<T>(response: Response): Promise<T> {
-  if (!response.ok) {
-    const body = (await response.json().catch(() => ({}))) as { error?: string }
-    throw new Error(body.error ?? `API 요청 실패: ${response.status}`)
-  }
-  return response.json() as Promise<T>
-}
+const chatPath = (suffix: string) =>
+  resolveApiPath(`/api/chat${suffix}`, `/api/v1/chat${suffix}`)
 
 export async function getChatConfig(): Promise<ChatAppConfig> {
-  const response = await fetch("/api/chat/config")
-  return parseJson<ChatAppConfig>(response)
+  return apiClient.get<ChatAppConfig>(chatPath("/config"))
+}
+
+export async function saveChatConfig(
+  payload: Partial<ChatAppConfig>,
+): Promise<ChatAppConfig> {
+  return apiClient.patch<ChatAppConfig>(chatPath("/config"), payload)
 }
 
 export async function askAssistantQuestion(
   payload: AssistantQuestionRequest,
 ): Promise<AssistantQuestionResponse> {
-  const response = await fetch("/api/chat/assistant", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  })
-  return parseJson<AssistantQuestionResponse>(response)
+  return apiClient.post<AssistantQuestionResponse>(chatPath("/assistant"), payload)
 }
 
 export async function submitCsTicket(
   payload: CsTicketRequest,
 ): Promise<CsTicketResponse> {
-  const response = await fetch("/api/chat/cs-ticket", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  })
-  return parseJson<CsTicketResponse>(response)
+  return apiClient.post<CsTicketResponse>(chatPath("/cs-ticket"), payload)
 }
 
 export async function getOntologyGraph(
@@ -48,6 +39,5 @@ export async function getOntologyGraph(
   const params = question?.trim()
     ? `?q=${encodeURIComponent(question.trim())}`
     : ""
-  const response = await fetch(`/api/chat/ontology${params}`)
-  return parseJson<OntologyGraphApiResponse>(response)
+  return apiClient.get<OntologyGraphApiResponse>(`${chatPath("/ontology")}${params}`)
 }

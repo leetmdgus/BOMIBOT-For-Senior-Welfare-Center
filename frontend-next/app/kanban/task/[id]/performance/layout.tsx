@@ -1,17 +1,9 @@
-import { PerformanceProvider } from "@/components/kanban/task-detail/performance/performance-provider"
-import { PerformanceTabs } from "@/components/kanban/task-detail/performance/performance-tabs"
+import { PerformanceLayoutClient } from "@/components/kanban/task-detail/performance/performance-layout-client"
 
 export default function PerformanceLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  return (
-    <PerformanceProvider>
-      <div className="flex flex-col gap-4">
-        <PerformanceTabs />
-        {children}
-      </div>
-    </PerformanceProvider>
-  )
+  return <PerformanceLayoutClient>{children}</PerformanceLayoutClient>
 }

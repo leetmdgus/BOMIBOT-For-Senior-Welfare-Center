@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { getCurrentYearString } from "@/lib/current-year"
 import { cn } from "@/lib/utils"
 import {
   getProjectImageOptions,
@@ -89,7 +90,7 @@ export function TaskModal({
   defaultCategoryId,
   defaultProjectName,
   lockProjectSelect = false,
-  year = "2026",
+  year = getCurrentYearString(),
   onSubmit,
   onDelete,
 }: TaskModalProps) {

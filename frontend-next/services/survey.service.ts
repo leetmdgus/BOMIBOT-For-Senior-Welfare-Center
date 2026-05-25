@@ -9,3 +9,5 @@ export const getSurveyDetail = surveyService.getSurveyDetail
 export const saveSurvey = surveyService.saveSurvey
 export const getSurveyResults = surveyService.getSurveyResults
 export const submitSurveyResponse = surveyService.submitSurveyResponse
+export const deleteSurvey =
+  "deleteSurvey" in surveyService ? surveyService.deleteSurvey : undefined

@@ -1,16 +1,18 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { useParams } from "next/navigation"
 import { Loader2 } from "lucide-react"
 
+import { useAuth } from "@/components/auth/auth-provider"
+import { CollaborationLiveNotice } from "@/components/collaboration/collaboration-live-notice"
+import { CollaborationPresenceBar } from "@/components/collaboration/collaboration-presence-bar"
 import { HwpxDownloadButton } from "@/components/common/hwpx-download-button"
 import {
   PrintDocumentButton,
   PrintDocumentShell,
 } from "@/components/common/print-document"
 import { downloadBusinessPlanHwpx } from "@/lib/hwpx/export-business-plan"
-import { defaultBusinessPlanFormData } from "@/lib/mocks/kanban.business-plan.mock"
 import { getBusinessPlan, saveBusinessPlan } from "@/services/kanban.task-detail.service"
 import type {
   BusinessPlanDocument,
@@ -19,14 +21,28 @@ import type {
 } from "@/services/kanban.task-detail.types"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
+import type { CollaborationMessage } from "@/lib/collaboration/types"
+import { taskBusinessPlanRoom } from "@/lib/collaboration/rooms"
+import {
+  useCollaborationRoom,
+  useDebouncedCollaborationDraft,
+} from "@/lib/collaboration/use-collaboration-room"
+import { isCollaborationAvailable } from "@/lib/collaboration/ws-url"
 
 import { BusinessPlanEditor } from "./business-plan-editor"
 
-function cloneDefaultFormData(): BusinessPlanFormData {
+function emptyBusinessPlanFormData(): BusinessPlanFormData {
   return {
-    ...defaultBusinessPlanFormData,
-    goals: [...defaultBusinessPlanFormData.goals],
-    subProjects: defaultBusinessPlanFormData.subProjects.map((row) => ({ ...row })),
+    projectName: "",
+    purpose: "",
+    goals: [],
+    period: "",
+    target: "",
+    totalCount: "",
+    budget: "",
+    budgetCategory: "",
+    manager: "",
+    subProjects: [],
   }
 }
 
@@ -34,17 +50,80 @@ export function BusinessPlanTab() {
   const params = useParams()
   const taskId = typeof params.id === "string" ? params.id : ""
   const { toast } = useToast()
+  const { session } = useAuth()
+  const lastLocalEditRef = useRef(0)
+  const collaborationClientIdRef = useRef<string | null>(null)
+  const [liveNotice, setLiveNotice] = useState<string | null>(null)
 
   const [isLoading, setIsLoading] = useState(true)
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [isCompleted, setIsCompleted] = useState(false)
   const [previewMode, setPreviewMode] = useState(false)
-
   const [sections, setSections] = useState<BusinessPlanSection[]>([])
-  const [formData, setFormData] = useState<BusinessPlanFormData>(cloneDefaultFormData)
+  const [formData, setFormData] = useState<BusinessPlanFormData>(emptyBusinessPlanFormData)
 
   const readOnly = isCompleted || previewMode
+
+  const collaborationRoom =
+    session?.regionId && taskId
+      ? taskBusinessPlanRoom(session.regionId, taskId)
+      : null
+
+  const handleCollaborationMessage = useCallback(
+    (message: CollaborationMessage) => {
+      if (!message.clientId) return
+      const isRemote = message.clientId !== collaborationClientIdRef.current
+
+      if (
+        isRemote &&
+        (message.type === "document.draft" || message.type === "document.saved")
+      ) {
+        const payload = message.payload as Partial<BusinessPlanDocument> | undefined
+        if (!payload) return
+        if (
+          message.type === "document.draft" &&
+          Date.now() - lastLocalEditRef.current < 1600
+        ) {
+          return
+        }
+        if (payload.formData) setFormData(payload.formData)
+        if (payload.sections) setSections(payload.sections)
+        if (payload.isCompleted !== undefined) {
+          setIsCompleted(Boolean(payload.isCompleted))
+        }
+        if (message.type === "document.saved" && message.userName) {
+          setLiveNotice(`${message.userName}님이 사업계획서를 저장했습니다.`)
+        }
+      }
+    },
+    [],
+  )
+
+  const { clientId, presence, isConnected, publish, setFocus } =
+    useCollaborationRoom(collaborationRoom, {
+      enabled: isCollaborationAvailable(),
+      onMessage: handleCollaborationMessage,
+    })
+
+  useEffect(() => {
+    collaborationClientIdRef.current = clientId
+  }, [clientId])
+
+  useEffect(() => {
+    if (!readOnly && isConnected) {
+      setFocus("editing")
+      return () => setFocus(null)
+    }
+    setFocus(null)
+    return undefined
+  }, [readOnly, isConnected, setFocus])
+
+  useDebouncedCollaborationDraft(
+    publish,
+    { formData, sections, isCompleted },
+    { enabled: !readOnly, isConnected },
+  )
 
   const load = useCallback(async () => {
     if (!taskId) {
@@ -62,6 +141,14 @@ export function BusinessPlanTab() {
       setIsLoading(false)
       setHasLoadedOnce(true)
     }
+  }, [taskId])
+
+  useEffect(() => {
+    setHasLoadedOnce(false)
+    setFormData(emptyBusinessPlanFormData())
+    setSections([])
+    setIsCompleted(false)
+    setPreviewMode(false)
   }, [taskId])
 
   useEffect(() => {
@@ -122,8 +209,18 @@ export function BusinessPlanTab() {
     )
   }
 
+  const markLocalEdit = () => {
+    lastLocalEditRef.current = Date.now()
+  }
+
   return (
     <div className="relative space-y-4">
+      <CollaborationPresenceBar
+        presence={presence}
+        isConnected={isConnected}
+        className="mb-2"
+      />
+      <CollaborationLiveNotice message={liveNotice} />
       {isLoading ? (
         <p className="print-hide absolute right-0 top-0 z-10 flex items-center gap-2 rounded-md border bg-card/90 px-2 py-1 text-xs text-muted-foreground shadow-sm">
           <Loader2 className="size-3.5 animate-spin" />
@@ -167,8 +264,14 @@ export function BusinessPlanTab() {
           formData={formData}
           sections={sections}
           readOnly={readOnly}
-          onFormDataChange={setFormData}
-          onSectionsChange={setSections}
+          onFormDataChange={(next) => {
+            markLocalEdit()
+            setFormData(next)
+          }}
+          onSectionsChange={(next) => {
+            markLocalEdit()
+            setSections(next)
+          }}
           previewMode={previewMode}
           onPreview={() => setPreviewMode((prev) => !prev)}
         />

@@ -1,0 +1,282 @@
+{
+  "businessEvaluationData": {
+    "team": "복지1팀",
+    "manager": "복지1팀 김연수 사회복지사",
+    "period": "2026-01-01 ~ 2026-12-31",
+    "programName": "",
+    "target": "춘천시 거주 만 60세 이상 어르신 중 복지관 이용 희망자 및 이용자",
+    "planCount": "2,960명 / 2,965회",
+    "planBudget": "금 15,000,000원 (천오백만)",
+    "actualCount": "896명 / 896회",
+    "actualExpense": "-",
+    "purpose": "개별 욕구에 적합한 상담으로 정보 및 복지서비스를 제공하여 건강하고 안정적인 노후 생활 지원",
+    "goals": [
+      "초기상담을 통한 욕구 파악으로 이용자 편리성 증진",
+      "기관 사업 및 이용 규정에 대한 이해도 향상",
+      "전문지식 제공으로 노년기 문제 해결 능력 강화"
+    ],
+    "performanceIndicator": "",
+    "evaluationTool": "",
+    "keyFactorAnalysis": "",
+    "goalAppropriacy": "",
+    "suggestion": "",
+    "supervision": "",
+    "evaluationDate": "2026-01-15",
+    "isCompleted": false,
+    "detailRows": [
+      {
+        "label": "사업공간 확보",
+        "content": "상담실·프로그램실 등 사업 수행 공간 확보 및 운영"
+      },
+      {
+        "label": "사업 홍보",
+        "content": "기관 홈페이지, 안내문, 지역 네트워크를 통한 홍보"
+      },
+      {
+        "label": "운영 일정",
+        "content": "연간 운영 일정에 따른 상담·교육 프로그램 진행"
+      },
+      {
+        "label": "평가 방법",
+        "content": "만족도 조사, 실적 대비 목표 달성도, 슈퍼비전"
+      }
+    ],
+    "sections": [
+      {
+        "id": "sec-1",
+        "type": "heading",
+        "title": "I. 사업의 배경 및 필요성",
+        "content": ""
+      },
+      {
+        "id": "sec-2",
+        "type": "body",
+        "title": "",
+        "content": "1. 대상자 욕구 및 문제점\n통계청의 고령자 통계에 따르면 고령화 대응의 필요성이 더욱 증가할 것으로 예상됩니다.\n\n2. 지역사회 환경적 특성\n지역 내 복지 자원 연계를 통한 서비스 접근성 강화가 필요합니다."
+      }
+    ]
+  },
+  "filesData": [
+    {
+      "id": "eval-1",
+      "name": "2025 세대통합 사업 평가서",
+      "type": "평가서"
+    },
+    {
+      "id": "eval-2",
+      "name": "2025 세대통합 실적 내역서",
+      "type": "내역서"
+    },
+    {
+      "id": "eval-3",
+      "name": "2025 세대통합 운영 지침서",
+      "type": "지침서"
+    },
+    {
+      "id": "eval-4",
+      "name": "2025 세대통합 결과표",
+      "type": "결과표"
+    },
+    {
+      "id": "eval-5",
+      "name": "2025 세대통합 사업계획서",
+      "type": "계획서"
+    }
+  ],
+  "viewTogetherFixedFiles": [
+    {
+      "id": "fixed-template",
+      "name": "기본틀",
+      "type": "틀"
+    },
+    {
+      "id": "fixed-plan",
+      "name": "사업계획서",
+      "type": "계획서"
+    }
+  ],
+  "businessPlan": {
+    "defaultBusinessPlanDocument": {
+      "isCompleted": false,
+      "sections": [
+        {
+          "id": 1,
+          "type": "heading",
+          "title": "I. 사업의 배경 및 필요성"
+        },
+        {
+          "id": 2,
+          "type": "body",
+          "title": "",
+          "content": "<h3 class=\"doc-section\">1. 대상자 욕구 및 문제점</h3><p><br></p><p class=\"doc-body\">통계청의 고령자 통계에 따르면 고령화 대응의 필요성이 더욱 증가할 것으로 예상된다. 지역 내 어르신의 정보 접근성과 복지서비스 연계에 대한 상담 수요가 지속적으로 증가하고 있다.</p><p><br></p><h3 class=\"doc-section\">2. 사업 추진 필요성</h3><p><br></p><p class=\"doc-body\">초기상담을 통해 이용자 욕구를 파악하고 적합한 서비스를 안내함으로써 이용 편의성을 높이고, 기관 사업 이해도를 제고할 필요가 있다.</p><p><br></p>"
+        },
+        {
+          "id": 3,
+          "type": "heading",
+          "title": "II. 서비스 지역, 서비스 대상 및 실인원수"
+        },
+        {
+          "id": 4,
+          "type": "body",
+          "title": "",
+          "content": "<h3 class=\"doc-section\">1. 서비스 지역</h3><p><br></p><p class=\"doc-body\">춘천시 관내 (복지관이 위치한 관할 지역)</p><p><br></p><h3 class=\"doc-section\">2. 서비스 대상</h3><p><br></p><p class=\"doc-body\">춘천시 거주 만 60세 이상 어르신 중 복지관 이용 희망자 및 이용자</p><p><br></p><h3 class=\"doc-section-plain\">4. 실인원수</h3><p><br></p><table class=\"bp-rt-table bp-formal-table bp-staff-table w-full border-collapse border border-black text-[10px] my-2\"><colgroup><col style=\"width:28%\"><col style=\"width:52%\"><col style=\"width:20%\"></colgroup>\n<thead><tr>\n<th class=\"border border-black bg-[#e6e6e6] p-2 text-center text-[10px] font-semibold\">대상구분</th><th class=\"border border-black bg-[#e6e6e6] p-2 text-center text-[10px] font-semibold\">서비스대상자 산출근거</th><th class=\"border border-black bg-[#e6e6e6] p-2 text-center text-[10px] font-semibold\">단위수(명)</th>\n</tr></thead><tbody><tr>\n<td class=\"border border-black bg-white p-2 text-center align-middle text-[10px] font-medium\"><span class=\"doc-cell-num\">①</span> 신규회원 이용상담</td>\n<td class=\"border border-black bg-white p-2 align-top text-[10px] leading-relaxed\">월 80명 × 12개월</td>\n<td class=\"border border-black bg-white p-2 text-right align-middle text-[10px] doc-num\">960*</td>\n</tr><tr>\n<td class=\"border border-black bg-white p-2 text-center align-middle text-[10px] font-medium\"><span class=\"doc-cell-num\">②</span> 신규회원 가입</td>\n<td class=\"border border-black bg-white p-2 align-top text-[10px] leading-relaxed\">월 80명 × 12개월</td>\n<td class=\"border border-black bg-white p-2 text-right align-middle text-[10px] doc-num\">960**</td>\n</tr><tr>\n<td class=\"border border-black bg-white p-2 text-center align-middle text-[10px] font-medium\"><span class=\"doc-cell-num\">③</span> 신규회원 교육</td>\n<td class=\"border border-black bg-white p-2 align-top text-[10px] leading-relaxed\">월 80명 × 12개월 × 90%</td>\n<td class=\"border border-black bg-white p-2 text-right align-middle text-[10px] doc-num\">960**</td>\n</tr><tr>\n<td class=\"border border-black bg-white p-2 text-center align-middle text-[10px] font-medium\"><span class=\"doc-cell-num\">④</span> 정보제공상담</td>\n<td class=\"border border-black bg-white p-2 align-top text-[10px] leading-relaxed\">월 80명 × 1개월</td>\n<td class=\"border border-black bg-white p-2 text-right align-middle text-[10px] doc-num\">80***</td>\n</tr></tbody></table>\n<p class=\"doc-footnote\">* 신규회원 이용상담 산출 내역을 입력하세요.</p>\n<p class=\"doc-footnote\">** 신규회원 가입·교육 산출 내역을 입력하세요.</p>\n<p class=\"doc-footnote\">*** 정보제공상담 산출 내역을 입력하세요.</p>\n<p><br></p>"
+        },
+        {
+          "id": 5,
+          "type": "heading",
+          "title": "III. 사업 목적 및 평가방법"
+        },
+        {
+          "id": 6,
+          "type": "table",
+          "title": "1. 사업의 목적 및 목표",
+          "content": "{\"preset\":\"purpose-goals\"}"
+        },
+        {
+          "id": 7,
+          "type": "heading",
+          "title": "IV. 사업내용"
+        },
+        {
+          "id": 8,
+          "type": "body",
+          "title": "",
+          "content": "<h3 class=\"doc-section\">1. 사업 추진 개요</h3><p><br></p><p class=\"doc-body\">세부사업별 추진 일정·담당·횟수는 아래 사업내용 표에 기재합니다.</p><p><br></p><h3 class=\"doc-section\">2. 세부 사업</h3><p><br></p><p class=\"doc-body\">신규회원 이용상담, 신규회원 가입, 신규회원 교육, 정보제공상담 프로그램을 연중 운영합니다.</p><p><br></p>"
+        },
+        {
+          "id": 9,
+          "type": "file",
+          "title": ""
+        }
+      ],
+      "formData": {
+        "projectName": "일반상담 및 정보제공사업",
+        "purpose": "개별 욕구에 적합한 상담으로 정보 및 복지서비스를 제공하여 건강하고 안정적인 노후 생활 지원",
+        "goals": [
+          "초기상담을 통한 욕구 파악으로 이용자 편리성 증진",
+          "기관 사업 및 이용 규정에 대한 이해도 향상",
+          "전문지식 제공으로 노년기 문제 해결 능력 강화"
+        ],
+        "period": "2026-01-01 ~ 2026-12-31",
+        "target": "춘천시 거주 만 60세 이상 어르신 중 복지관 이용 희망자 및 이용자",
+        "totalCount": "2,960명 / 2,965회",
+        "budget": "금 15,000,000원 (천오백만)",
+        "budgetCategory": "사업비-사업비-상담사업비",
+        "manager": "복지1팀 김연수 사회복지사",
+        "subProjects": [
+          {
+            "name": "신규회원 이용상담",
+            "output": "신규회원 이용상담 (960명 / 960회)\n- 상반기 80명×6개월=480명 / 480회\n- 하반기 80명×6개월=480명 / 480회",
+            "outcome": "초기상담을 통한 이용자 편리성 증진"
+          },
+          {
+            "name": "신규회원 가입",
+            "output": "신규회원 가입 (960명 / 960회)\n- 상반기 80명×6개월=480명 / 480회\n- 하반기 80명×6개월=480명 / 480회",
+            "outcome": ""
+          },
+          {
+            "name": "신규회원 교육",
+            "output": "신규회원 교육 (960명 / 960회)\n- 상반기 80명×6개월×90%=480명 / 480회\n- 하반기 80명×6개월×90%=480명 / 480회",
+            "outcome": "기관 사업 및 이용 규정에 대한 이해도 향상"
+          },
+          {
+            "name": "정보제공상담",
+            "output": "정보제공상담 (80명 / 80회)",
+            "outcome": "전문지식 제공으로 노년기 문제 해결 능력 강화"
+          }
+        ]
+      }
+    },
+    "defaultBusinessPlanFormData": {
+      "projectName": "일반상담 및 정보제공사업",
+      "purpose": "개별 욕구에 적합한 상담으로 정보 및 복지서비스를 제공하여 건강하고 안정적인 노후 생활 지원",
+      "goals": [
+        "초기상담을 통한 욕구 파악으로 이용자 편리성 증진",
+        "기관 사업 및 이용 규정에 대한 이해도 향상",
+        "전문지식 제공으로 노년기 문제 해결 능력 강화"
+      ],
+      "period": "2026-01-01 ~ 2026-12-31",
+      "target": "춘천시 거주 만 60세 이상 어르신 중 복지관 이용 희망자 및 이용자",
+      "totalCount": "2,960명 / 2,965회",
+      "budget": "금 15,000,000원 (천오백만)",
+      "budgetCategory": "사업비-사업비-상담사업비",
+      "manager": "복지1팀 김연수 사회복지사",
+      "subProjects": [
+        {
+          "name": "신규회원 이용상담",
+          "output": "신규회원 이용상담 (960명 / 960회)\n- 상반기 80명×6개월=480명 / 480회\n- 하반기 80명×6개월=480명 / 480회",
+          "outcome": "초기상담을 통한 이용자 편리성 증진"
+        },
+        {
+          "name": "신규회원 가입",
+          "output": "신규회원 가입 (960명 / 960회)\n- 상반기 80명×6개월=480명 / 480회\n- 하반기 80명×6개월=480명 / 480회",
+          "outcome": ""
+        },
+        {
+          "name": "신규회원 교육",
+          "output": "신규회원 교육 (960명 / 960회)\n- 상반기 80명×6개월×90%=480명 / 480회\n- 하반기 80명×6개월×90%=480명 / 480회",
+          "outcome": "기관 사업 및 이용 규정에 대한 이해도 향상"
+        },
+        {
+          "name": "정보제공상담",
+          "output": "정보제공상담 (80명 / 80회)",
+          "outcome": "전문지식 제공으로 노년기 문제 해결 능력 강화"
+        }
+      ]
+    },
+    "businessPlanAiDraftBody": "1. 대상자 욕구 및 문제점\n고령 인구 증가에 따라 정보·복지서비스 상담 수요가 확대되고 있으며, 초기 상담을 통한 맞춤형 안내가 필요합니다.\n\n2. 사업 추진 필요성\n이용자 편의성 제고와 기관 사업 이해도 향상을 위해 체계적인 상담·정보제공 체계를 마련합니다."
+  },
+  "taskDetailSurveys": [
+    {
+      "id": "1",
+      "title": "공간 이용 만족도 조사",
+      "program": "상담 [1-1 일반상담]",
+      "date": "2026.03.01",
+      "status": "진행중",
+      "endDate": "2026-08-10",
+      "responseCount": 4,
+      "totalTarget": 30,
+      "satisfaction": 4.2
+    },
+    {
+      "id": "2",
+      "title": "스마트폰 활용 교육 만족도 조사",
+      "program": "디지털 역량강화 프로그램",
+      "status": "완료",
+      "endDate": "2026-06-30",
+      "responseCount": 189,
+      "totalTarget": 200,
+      "satisfaction": 4.5
+    },
+    {
+      "id": "3",
+      "title": "노년사회화교육 상반기 만족도 조사",
+      "program": "노년사회화교육 지원사업",
+      "status": "예정",
+      "endDate": "2026-09-15",
+      "responseCount": 0,
+      "totalTarget": 150,
+      "satisfaction": 0
+    },
+    {
+      "id": "4",
+      "title": "건강체조 프로그램 참여자 평가",
+      "program": "어르신 건강증진 프로그램",
+      "status": "진행중",
+      "endDate": "2026-08-31",
+      "responseCount": 87,
+      "totalTarget": 120,
+      "satisfaction": 4.1
+    },
+    {
+      "id": "5",
+      "title": "독거노인 정서지원 서비스 만족도 조사",
+      "program": "지역사회 통합돌봄 사업",
+      "status": "임시",
+      "endDate": "2026-10-01",
+      "responseCount": 12,
+      "totalTarget": 80,
+      "satisfaction": 3.8
+    }
+  ]
+}

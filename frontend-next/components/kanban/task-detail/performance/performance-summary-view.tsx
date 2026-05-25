@@ -24,6 +24,8 @@ import {
   FUNDING_SOURCE_COLORS,
   FUNDING_SOURCES,
   MONTH_OPTIONS,
+  type SummaryFundingSourceFilter,
+  type SummaryMonthFilter,
   VIEW_TITLES,
   VIEW_TOOLTIPS,
   formatFundingSourceLabel,
@@ -104,14 +106,18 @@ export function PerformanceSummaryView({
     planVersion,
     getProgressRate,
     getProgressColor,
+    summaryMonth: selectedMonth,
+    setSummaryMonth,
+    summaryFundingSource: selectedSource,
+    setSummaryFundingSource,
+    summaryViewMode: viewMode,
+    setSummaryViewMode: setViewMode,
+    summaryFocusedSubProject: focusedSubProject,
+    summaryFocusedDetailCategory: focusedDetailCategory,
+    setSummaryFocusedSubProject: setFocusedSubProject,
+    setSummaryFocusedDetailCategory: setFocusedDetailCategory,
+    resetSummaryRowFilter,
   } = usePerformance()
-  const [viewMode, setViewMode] = useState<PerformanceViewMode>("subProject")
-  const [selectedMonth, setSelectedMonth] = useState("전체")
-  const [selectedSource, setSelectedSource] = useState<string>("all")
-  const [focusedSubProject, setFocusedSubProject] = useState<string | null>(null)
-  const [focusedDetailCategory, setFocusedDetailCategory] = useState<string | null>(
-    null,
-  )
   const [isLoading] = useState(false)
 
   const sourceFilteredRows = useMemo(() => {
@@ -204,8 +210,7 @@ export function PerformanceSummaryView({
   }
 
   const resetRowFilter = () => {
-    setFocusedSubProject(null)
-    setFocusedDetailCategory(null)
+    resetSummaryRowFilter()
   }
 
   const handleSubProjectClick = (subProject: string) => {
@@ -267,7 +272,10 @@ export function PerformanceSummaryView({
 
       <div className="print-hide flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-5 py-3">
         <div className="flex flex-wrap items-center gap-2">
-          <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+          <Select
+            value={selectedMonth}
+            onValueChange={(value) => setSummaryMonth(value as SummaryMonthFilter)}
+          >
             <SelectTrigger className="h-9 w-[100px] bg-white">
               <SelectValue placeholder="월" />
             </SelectTrigger>
@@ -280,7 +288,12 @@ export function PerformanceSummaryView({
             </SelectContent>
           </Select>
 
-          <Select value={selectedSource} onValueChange={setSelectedSource}>
+          <Select
+            value={selectedSource}
+            onValueChange={(value) =>
+              setSummaryFundingSource(value as SummaryFundingSourceFilter)
+            }
+          >
             <SelectTrigger className="h-9 min-w-[140px] bg-white">
               <SelectValue placeholder="원천" />
             </SelectTrigger>

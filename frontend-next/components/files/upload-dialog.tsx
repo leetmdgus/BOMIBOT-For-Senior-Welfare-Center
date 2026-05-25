@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -18,18 +18,52 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
+import { TASK_FILTER_NONE } from "./task-filter-control"
 import type { TaskOption } from "./file-types"
 
 interface UploadDialogProps {
   open: boolean
   taskOptions: TaskOption[]
+  defaultTaskId?: string | null
   onOpenChange: (open: boolean) => void
-  onUpload: (files: File[], taskId: string) => void
+  onUpload: (files: File[], taskId: string) => void | Promise<void>
 }
 
-export function UploadDialog({ open, taskOptions, onOpenChange, onUpload }: UploadDialogProps) {
+function resolveDefaultTaskId(
+  taskOptions: TaskOption[],
+  defaultTaskId?: string | null,
+): string {
+  if (
+    defaultTaskId &&
+    defaultTaskId !== TASK_FILTER_NONE &&
+    taskOptions.some((t) => t.id === defaultTaskId)
+  ) {
+    return defaultTaskId
+  }
+  return taskOptions[0]?.id ?? ""
+}
+
+export function UploadDialog({
+  open,
+  taskOptions,
+  defaultTaskId,
+  onOpenChange,
+  onUpload,
+}: UploadDialogProps) {
   const [files, setFiles] = useState<File[]>([])
-  const [taskId, setTaskId] = useState(taskOptions[0]?.id ?? "")
+  const [isUploading, setIsUploading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [taskId, setTaskId] = useState(() =>
+    resolveDefaultTaskId(taskOptions, defaultTaskId),
+  )
+
+  useEffect(() => {
+    if (open) {
+      setTaskId(resolveDefaultTaskId(taskOptions, defaultTaskId))
+      setError(null)
+      setFiles([])
+    }
+  }, [open, defaultTaskId, taskOptions])
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -40,18 +74,25 @@ export function UploadDialog({ open, taskOptions, onOpenChange, onUpload }: Uplo
 
         <div className="space-y-4">
           <label className="block text-sm font-medium">담당 업무</label>
-          <Select value={taskId} onValueChange={setTaskId}>
-            <SelectTrigger>
-              <SelectValue placeholder="담당 업무 선택" />
-            </SelectTrigger>
-            <SelectContent>
-              {taskOptions.map((task) => (
-                <SelectItem key={task.id} value={task.id}>
-                  {task.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {taskOptions.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              칸반에 등록된 업무(카드)가 없습니다. 보드에 카드를 만든 뒤 업로드해
+              주세요.
+            </p>
+          ) : (
+            <Select value={taskId} onValueChange={setTaskId}>
+              <SelectTrigger>
+                <SelectValue placeholder="담당 업무 선택" />
+              </SelectTrigger>
+              <SelectContent>
+                {taskOptions.map((task) => (
+                  <SelectItem key={task.id} value={task.id}>
+                    {task.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
 
           <label className="block text-sm font-medium">파일</label>
           <input
@@ -62,19 +103,44 @@ export function UploadDialog({ open, taskOptions, onOpenChange, onUpload }: Uplo
           />
         </div>
 
+        {error && <p className="text-sm text-destructive">{error}</p>}
+
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button
+            variant="outline"
+            disabled={isUploading}
+            onClick={() => onOpenChange(false)}
+          >
             취소
           </Button>
           <Button
-            disabled={files.length === 0 || !taskId}
+            disabled={
+              isUploading ||
+              files.length === 0 ||
+              !taskId ||
+              taskOptions.length === 0
+            }
             onClick={() => {
-              onUpload(files, taskId)
-              setFiles([])
-              onOpenChange(false)
+              void (async () => {
+                setIsUploading(true)
+                setError(null)
+                try {
+                  await onUpload(files, taskId)
+                  setFiles([])
+                  onOpenChange(false)
+                } catch (err) {
+                  setError(
+                    err instanceof Error
+                      ? err.message
+                      : "파일 업로드에 실패했습니다.",
+                  )
+                } finally {
+                  setIsUploading(false)
+                }
+              })()
             }}
           >
-            업로드
+            {isUploading ? "업로드 중…" : "업로드"}
           </Button>
         </DialogFooter>
       </DialogContent>

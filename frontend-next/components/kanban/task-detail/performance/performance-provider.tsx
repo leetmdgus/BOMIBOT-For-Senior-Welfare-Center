@@ -9,14 +9,21 @@ import {
   useRef,
   useState,
 } from "react"
+import { isFastApiMode } from "@/lib/api-client"
 import {
   getInputManagementRows,
+  saveInputManagementRows,
 } from "@/services/kanban.performance.service"
 import type {
   PerformanceRow,
   PerformanceSummaryRow,
 } from "@/services/kanban.performance.types"
 
+import type {
+  PerformanceViewMode,
+  SummaryFundingSourceFilter,
+  SummaryMonthFilter,
+} from "./performance-summary.constants"
 import { inputRowsToSummaryRows } from "./input-rows-to-summary"
 import {
   clonePerformanceRows,
@@ -130,6 +137,17 @@ const PerformanceContext = createContext<{
   addSupplementaryBudget: () => void
   activeView: PerformanceView
   setActiveView: (view: PerformanceView) => void
+  summaryMonth: SummaryMonthFilter
+  setSummaryMonth: (month: SummaryMonthFilter) => void
+  summaryFundingSource: SummaryFundingSourceFilter
+  setSummaryFundingSource: (source: SummaryFundingSourceFilter) => void
+  summaryViewMode: PerformanceViewMode
+  setSummaryViewMode: (mode: PerformanceViewMode) => void
+  summaryFocusedSubProject: string | null
+  summaryFocusedDetailCategory: string | null
+  setSummaryFocusedSubProject: (value: string | null) => void
+  setSummaryFocusedDetailCategory: (value: string | null) => void
+  resetSummaryRowFilter: () => void
   handleCellClick: (rowId: string, column: CellKey) => void
   handleCellChange: (rowId: string, column: CellKey, value: string | number) => void
   toggleRowSelection: (rowId: string) => void
@@ -143,16 +161,35 @@ const PerformanceContext = createContext<{
 
 export function PerformanceProvider({
   children,
+  taskId,
 }: {
   children: React.ReactNode
+  taskId: string
 }) {
   const [rows, setRowsState] = useState<RowData[]>([])
+  const [defaultSubProject, setDefaultSubProject] = useState("신규 세목")
+  const taskIdRef = useRef(taskId)
   const rowsRef = useRef<RowData[]>([])
   const pastRef = useRef<RowData[][]>([])
   const futureRef = useRef<RowData[][]>([])
   const [historyTick, setHistoryTick] = useState(0)
 
   const [activeView, setActiveView] = useState<PerformanceView>("input")
+  const [summaryMonth, setSummaryMonth] = useState<SummaryMonthFilter>("전체")
+  const [summaryFundingSource, setSummaryFundingSource] =
+    useState<SummaryFundingSourceFilter>("all")
+  const [summaryViewMode, setSummaryViewMode] =
+    useState<PerformanceViewMode>("subProject")
+  const [summaryFocusedSubProject, setSummaryFocusedSubProject] = useState<
+    string | null
+  >(null)
+  const [summaryFocusedDetailCategory, setSummaryFocusedDetailCategory] =
+    useState<string | null>(null)
+
+  const resetSummaryRowFilter = useCallback(() => {
+    setSummaryFocusedSubProject(null)
+    setSummaryFocusedDetailCategory(null)
+  }, [])
   const [supplementVersions, setSupplementVersions] = useState<string[]>([
     "기본계획",
   ])
@@ -165,6 +202,10 @@ export function PerformanceProvider({
   const bumpHistory = useCallback(() => {
     setHistoryTick((n) => n + 1)
   }, [])
+
+  useEffect(() => {
+    taskIdRef.current = taskId
+  }, [taskId])
 
   const resetHistory = useCallback(() => {
     pastRef.current = []
@@ -189,6 +230,19 @@ export function PerformanceProvider({
       }
 
       applyRows(next)
+
+      if (
+        isFastApiMode() &&
+        record &&
+        !isSelectionOnlyRowsChange(prev, next)
+      ) {
+        const ownerTaskId = taskIdRef.current
+        if (!ownerTaskId) return
+        const payload = clonePerformanceRows(next)
+        void saveInputManagementRows(payload, ownerTaskId).catch((error) => {
+          console.error("실적 데이터 저장 실패:", error)
+        })
+      }
     },
     [applyRows, bumpHistory],
   )
@@ -214,12 +268,38 @@ export function PerformanceProvider({
   )
 
   useEffect(() => {
-    getInputManagementRows()
-      .then(setRowsWithoutHistory)
+    setRowsState([])
+    rowsRef.current = []
+    pastRef.current = []
+    futureRef.current = []
+    setHistoryTick((n) => n + 1)
+    setDefaultSubProject("신규 세목")
+    setActiveView("input")
+    setPlanVersion("기본계획")
+    setSupplementVersions(["기본계획"])
+    setSelectedCell(null)
+    setSummaryMonth("전체")
+    setSummaryFundingSource("all")
+    setSummaryViewMode("subProject")
+    setSummaryFocusedSubProject(null)
+    setSummaryFocusedDetailCategory(null)
+  }, [taskId])
+
+  useEffect(() => {
+    if (!taskId) return
+
+    const loadFor = taskId
+    getInputManagementRows(loadFor)
+      .then((loaded) => {
+        if (taskIdRef.current !== loadFor) return
+        setDefaultSubProject(loaded[0]?.subProject ?? "신규 세목")
+        setRowsWithoutHistory(loaded)
+      })
       .catch((error) => {
+        if (taskIdRef.current !== loadFor) return
         console.error("실적 데이터 로드 실패:", error)
       })
-  }, [setRowsWithoutHistory])
+  }, [setRowsWithoutHistory, taskId])
 
   const undoRows = useCallback(() => {
     const past = pastRef.current
@@ -373,18 +453,20 @@ export function PerformanceProvider({
           ...row,
           id: `copy-${Date.now()}-${index}`,
           selected: false,
+          taskId: taskIdRef.current || row.taskId,
         })),
       ]
     })
   }, [setRows])
 
   const addRow = useCallback(() => {
+    const ownerTaskId = taskIdRef.current
     setRows((prev) => [
       ...prev,
       {
         id: `new-${Date.now()}`,
         selected: false,
-        subProject: "신규회원 이용상담",
+        subProject: defaultSubProject,
         detailCategory: "",
         month: "1월",
         planPeople: 0,
@@ -394,9 +476,10 @@ export function PerformanceProvider({
         actualCount: 0,
         actualExpense: 0,
         content: "",
+        taskId: ownerTaskId,
       },
     ])
-  }, [setRows])
+  }, [defaultSubProject, setRows])
 
   const getProgressRate = useCallback((plan: number, actual: number) => {
     if (plan === 0) return "-"
@@ -437,6 +520,17 @@ export function PerformanceProvider({
         addSupplementaryBudget,
         activeView,
         setActiveView,
+        summaryMonth,
+        setSummaryMonth,
+        summaryFundingSource,
+        setSummaryFundingSource,
+        summaryViewMode,
+        setSummaryViewMode,
+        summaryFocusedSubProject,
+        summaryFocusedDetailCategory,
+        setSummaryFocusedSubProject,
+        setSummaryFocusedDetailCategory,
+        resetSummaryRowFilter,
         handleCellClick,
         handleCellChange,
         toggleRowSelection,

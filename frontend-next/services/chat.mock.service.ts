@@ -1,4 +1,10 @@
-import { chatAppConfigMock } from "@/lib/mocks/chat.mock"
+import { buildAssistantDataSnapshot } from "@/lib/chat/assistant-data"
+import { answerAssistantQuestion } from "@/lib/chat/assistant-engine"
+import { buildKnowledgeGraph } from "@/lib/chat/ontology/build-graph"
+import { queryKnowledgeGraph } from "@/lib/chat/ontology/query-graph"
+import { DOMAIN_NODE_IDS } from "@/lib/chat/ontology/vocabulary"
+import { loadRegionStore } from "@/lib/auth/load-region-store"
+import type { RegionId } from "@/lib/auth/regions"
 
 import type {
   AssistantQuestionRequest,
@@ -9,61 +15,68 @@ import type {
   OntologyGraphApiResponse,
 } from "./chat.types"
 
-/**
- * 브라우저 mock 모드: UI 설정은 인메모리, 어시스턴트·CS·온톨로지는 서버 API 경유
- * (LLM·SMTP·그래프 빌드는 서버 전용 — chat.server.service.ts)
- */
-export async function getChatConfig(): Promise<ChatAppConfig> {
-  return structuredClone(chatAppConfigMock)
+/** UI mock: region-store + ????? ?? ?? (Next /api ???) */
+export async function saveChatConfig(
+  payload: Partial<ChatAppConfig>,
+  regionId?: RegionId,
+): Promise<ChatAppConfig> {
+  const current = await getChatConfig(regionId)
+  return { ...current, ...payload }
+}
+
+export async function getChatConfig(regionId?: RegionId): Promise<ChatAppConfig> {
+  const store = await loadRegionStore({ regionId })
+  return store.chat.chatAppConfigMock
 }
 
 export async function askAssistantQuestion(
   payload: AssistantQuestionRequest,
 ): Promise<AssistantQuestionResponse> {
-  const response = await fetch("/api/chat/assistant", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  })
-
-  if (!response.ok) {
-    const body = (await response.json().catch(() => ({}))) as { error?: string }
-    throw new Error(body.error ?? `어시스턴트 응답 실패: ${response.status}`)
+  const message = payload.message?.trim()
+  if (!message) {
+    throw new Error("?? ??? ?????.")
   }
 
-  return response.json()
+  const snapshot = buildAssistantDataSnapshot()
+  const rule = answerAssistantQuestion(message, snapshot)
+
+  return {
+    answer: rule.content,
+    sources: rule.sources,
+    dataAsOf: snapshot.generatedAt,
+    ragCitations: [],
+  }
 }
 
 export async function submitCsTicket(
   payload: CsTicketRequest,
 ): Promise<CsTicketResponse> {
-  const response = await fetch("/api/chat/cs-ticket", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  })
-
-  const data = (await response.json()) as CsTicketResponse & { error?: string }
-
-  if (!response.ok) {
-    throw new Error(data.error ?? `CS 접수 실패: ${response.status}`)
+  const ticketId = `CS-MOCK-${Date.now().toString(36).toUpperCase()}`
+  return {
+    ticketId,
+    emailSent: false,
+    sentTo: "",
+    message: `?(mock) ??: ??? ???????. (${payload.subject ?? "??"})`,
   }
-
-  return data
 }
 
 export async function getOntologyGraph(
   question?: string,
 ): Promise<OntologyGraphApiResponse> {
-  const params = question?.trim()
-    ? `?q=${encodeURIComponent(question.trim())}`
-    : ""
-  const response = await fetch(`/api/chat/ontology${params}`)
-
-  if (!response.ok) {
-    const body = (await response.json().catch(() => ({}))) as { error?: string }
-    throw new Error(body.error ?? `온톨로지 조회 실패: ${response.status}`)
+  const graph = buildKnowledgeGraph()
+  const payload: OntologyGraphApiResponse = {
+    graph,
+    stats: {
+      nodeCount: graph.nodes.length,
+      edgeCount: graph.edges.length,
+      domainCount: Object.keys(DOMAIN_NODE_IDS).length,
+    },
   }
 
-  return response.json()
+  const q = question?.trim()
+  if (q) {
+    payload.query = queryKnowledgeGraph(q, graph)
+  }
+
+  return payload
 }

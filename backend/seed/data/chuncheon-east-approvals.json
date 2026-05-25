@@ -1,0 +1,14 @@
+{
+  "documents": [
+    {
+      "id": "appr-east-001",
+      "title": "동부관 프로그램 운영비 결재",
+      "type": "예산",
+      "status": "pending",
+      "requester": "박동부",
+      "department": "사업팀",
+      "createdAt": "2026-02-10",
+      "updatedAt": "2026-02-10"
+    }
+  ]
+}

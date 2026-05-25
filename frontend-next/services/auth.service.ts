@@ -1,25 +1,18 @@
-/**
- * 인증·세션 (FastAPI 연동 예정)
- *
- * 현재 UI는 인증 없이 목업으로 동작합니다.
- * 백엔드 연동 시 login / logout / getSession 을 api·mock 쌍으로 구현하세요.
- */
+import * as apiService from "./auth.api.service"
+import * as mockService from "./auth.mock.service"
 
-export type AuthSession = {
-  userId: string
-  name: string
-  email: string
-  role: "admin" | "manager" | "member"
-}
+const useMockApi = process.env.NEXT_PUBLIC_USE_MOCK_API === "true"
 
-export async function getSession(): Promise<AuthSession | null> {
-  return null
-}
+const authService = useMockApi ? mockService : apiService
 
-export async function login(_email: string, _password: string): Promise<AuthSession> {
-  throw new Error("인증 API가 아직 연결되지 않았습니다.")
-}
+export type {
+  AuthSession,
+  AuthRole,
+  LoginRequest,
+  SignupRequest,
+} from "./auth.types"
 
-export async function logout(): Promise<void> {
-  return
-}
+export const login = authService.login
+export const signup = authService.signup
+export const getSession = authService.getSession
+export const logout = authService.logout

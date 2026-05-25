@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
+import { getYearSelectOptions } from "@/lib/current-year"
 import { NewProjectModal } from "./new-project-modal"
 import type { TaskFormData } from "./task-modal"
 import type { ProjectImageOption, Staff } from "@/services/kanban.board.types"
@@ -44,6 +45,7 @@ export function SubHeader({
   projectImages,
 }: HeaderProps) {
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false)
+  const yearOptions = getYearSelectOptions()
 
   return (
     <header className="border-b border-border bg-card">
@@ -55,10 +57,11 @@ export function SubHeader({
             </SelectTrigger>
 
             <SelectContent className="z-50 bg-card text-card-foreground">
-              <SelectItem value="2024">2024</SelectItem>
-              <SelectItem value="2025">2025</SelectItem>
-              <SelectItem value="2026">2026</SelectItem>
-              <SelectItem value="2027">2027</SelectItem>
+              {yearOptions.map((option) => (
+                <SelectItem key={option} value={option}>
+                  {option}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
 

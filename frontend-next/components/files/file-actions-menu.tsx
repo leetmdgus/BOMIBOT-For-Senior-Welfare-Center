@@ -25,6 +25,7 @@ interface FileActionsMenuProps {
   onToggleStar: (item: FileItem) => void
   onDelete: (item: FileItem) => void
   onExport: (item: FileItem) => void
+  onDownload: (item: FileItem) => void
 }
 
 export function FileActionsMenu({
@@ -35,12 +36,17 @@ export function FileActionsMenu({
   onToggleStar,
   onDelete,
   onExport,
+  onDownload,
 }: FileActionsMenuProps) {
   return (
     <DropdownMenuContent align="end">
-      <DropdownMenuItem onClick={() => onExport(item)}>
+      <DropdownMenuItem
+        onClick={() =>
+          item.type === "folder" ? onExport(item) : onDownload(item)
+        }
+      >
         <Download className="mr-2 size-4" />
-        {item.type === "folder" ? "폴더 export" : "다운로드"}
+        {item.type === "folder" ? "폴더 export (ZIP)" : "다운로드"}
       </DropdownMenuItem>
       <DropdownMenuItem onClick={() => onCopy(item)}>
         <Copy className="mr-2 size-4" />

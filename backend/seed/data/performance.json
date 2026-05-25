@@ -1,0 +1,2701 @@
+{
+  "inputManagementRows": [
+    {
+      "id": "e31a9767-6c73-4092-84ef-884262548f64",
+      "selected": false,
+      "subProject": "선택",
+      "detailCategory": "기타",
+      "month": "4월",
+      "planPeople": 0,
+      "planCount": 0,
+      "planBudget": 0,
+      "actualPeople": 199,
+      "actualCount": 24,
+      "actualExpense": 898100,
+      "content": "웹매거진 제작 및 발송",
+      "fundingSources": [
+        "비"
+      ],
+      "actualFunding": [
+        {
+          "source": "비",
+          "amount": 898100
+        }
+      ]
+    },
+    {
+      "id": "1b0dee3d-e60b-464d-92bb-e40f7e892296",
+      "selected": false,
+      "subProject": "신규회원 이용상담",
+      "detailCategory": "홍보",
+      "month": "1월",
+      "planPeople": 0,
+      "planCount": 1,
+      "planBudget": 0,
+      "actualPeople": 0,
+      "actualCount": 1,
+      "actualExpense": 0,
+      "content": "온라인 게시물 관리대장"
+    },
+    {
+      "id": "390d34c9-496d-4f45-a127-b3f7ea1a201f",
+      "selected": false,
+      "subProject": "신규회원 이용상담",
+      "detailCategory": "설문조사",
+      "month": "1월",
+      "planPeople": 3000,
+      "planCount": 1,
+      "planBudget": 50000,
+      "actualPeople": 3481,
+      "actualCount": 1,
+      "actualExpense": 50000,
+      "content": "웹매거진 제작 및 발송",
+      "fundingSources": [
+        "비"
+      ],
+      "planFunding": [
+        {
+          "source": "비",
+          "amount": 50000
+        }
+      ],
+      "actualFunding": [
+        {
+          "source": "비",
+          "amount": 50000
+        }
+      ]
+    },
+    {
+      "id": "66d8b277-9f63-4460-b4a9-196a4919bb6f",
+      "selected": false,
+      "subProject": "신규회원 이용상담",
+      "detailCategory": "홍보",
+      "month": "2월",
+      "planPeople": 0,
+      "planCount": 1,
+      "planBudget": 0,
+      "actualPeople": 0,
+      "actualCount": 1,
+      "actualExpense": 0,
+      "content": "온라인 게시물 관리대장"
+    },
+    {
+      "id": "4966431e-9fb2-4d50-9aba-86cea4bb3a24",
+      "selected": false,
+      "subProject": "신규회원 이용상담",
+      "detailCategory": "설문조사",
+      "month": "2월",
+      "planPeople": 3000,
+      "planCount": 1,
+      "planBudget": 50000,
+      "actualPeople": 3396,
+      "actualCount": 1,
+      "actualExpense": 50000,
+      "content": "웹매거진 제작 및 발송",
+      "fundingSources": [
+        "비"
+      ],
+      "planFunding": [
+        {
+          "source": "비",
+          "amount": 50000
+        }
+      ],
+      "actualFunding": [
+        {
+          "source": "비",
+          "amount": 50000
+        }
+      ]
+    },
+    {
+      "id": "f3ea2190-5b89-4851-a73d-d2e463c55069",
+      "selected": false,
+      "subProject": "신규회원 이용상담",
+      "detailCategory": "홍보",
+      "month": "3월",
+      "planPeople": 0,
+      "planCount": 1,
+      "planBudget": 0,
+      "actualPeople": 0,
+      "actualCount": 1,
+      "actualExpense": 0,
+      "content": "온라인 게시물 관리대장"
+    },
+    {
+      "id": "5dde3e58-694a-4c78-8b1f-0d442ed0dfbc",
+      "selected": false,
+      "subProject": "신규회원 이용상담",
+      "detailCategory": "설문조사",
+      "month": "3월",
+      "planPeople": 3000,
+      "planCount": 1,
+      "planBudget": 50000,
+      "actualPeople": 3457,
+      "actualCount": 1,
+      "actualExpense": 50000,
+      "content": "웹매거진 제작 및 발송",
+      "fundingSources": [
+        "비"
+      ],
+      "planFunding": [
+        {
+          "source": "비",
+          "amount": 50000
+        }
+      ],
+      "actualFunding": [
+        {
+          "source": "비",
+          "amount": 50000
+        }
+      ]
+    },
+    {
+      "id": "418cc8d2-35bb-476f-9ffa-861b5d666f49",
+      "selected": false,
+      "subProject": "신규회원 이용상담",
+      "detailCategory": "홍보",
+      "month": "4월",
+      "planPeople": 0,
+      "planCount": 1,
+      "planBudget": 0,
+      "actualPeople": 0,
+      "actualCount": 1,
+      "actualExpense": 0,
+      "content": "온라인 게시물 관리대장"
+    },
+    {
+      "id": "7c7887b9-b1b9-434d-b18b-6675d2d544d3",
+      "selected": false,
+      "subProject": "신규회원 이용상담",
+      "detailCategory": "설문조사",
+      "month": "4월",
+      "planPeople": 3000,
+      "planCount": 1,
+      "planBudget": 50000,
+      "actualPeople": 3410,
+      "actualCount": 1,
+      "actualExpense": 50000,
+      "content": "웹매거진 제작 및 발송",
+      "fundingSources": [
+        "비"
+      ],
+      "planFunding": [
+        {
+          "source": "비",
+          "amount": 50000
+        }
+      ],
+      "actualFunding": [
+        {
+          "source": "비",
+          "amount": 50000
+        }
+      ]
+    },
+    {
+      "id": "a95b4e22-15bc-40eb-9ceb-aa8f57e7b801",
+      "selected": false,
+      "subProject": "신규회원 이용상담",
+      "detailCategory": "홍보",
+      "month": "5월",
+      "planPeople": 0,
+      "planCount": 1,
+      "planBudget": 0,
+      "actualPeople": 0,
+      "actualCount": 1,
+      "actualExpense": 0,
+      "content": "온라인 게시물 관리대장"
+    },
+    {
+      "id": "cea89604-6191-4f2a-b7f5-36655b5f8e0b",
+      "selected": false,
+      "subProject": "신규회원 이용상담",
+      "detailCategory": "설문조사",
+      "month": "5월",
+      "planPeople": 3000,
+      "planCount": 1,
+      "planBudget": 50000,
+      "actualPeople": 3512,
+      "actualCount": 1,
+      "actualExpense": 50000,
+      "content": "웹매거진 제작 및 발송",
+      "fundingSources": [
+        "비"
+      ],
+      "planFunding": [
+        {
+          "source": "비",
+          "amount": 50000
+        }
+      ],
+      "actualFunding": [
+        {
+          "source": "비",
+          "amount": 50000
+        }
+      ]
+    },
+    {
+      "id": "3892f2fa-81fb-4b8e-a141-776f2ddbcfb4",
+      "selected": false,
+      "subProject": "선택",
+      "detailCategory": "기타",
+      "month": "5월",
+      "planPeople": 0,
+      "planCount": 0,
+      "planBudget": 0,
+      "actualPeople": 210,
+      "actualCount": 26,
+      "actualExpense": 920000,
+      "content": "온라인 게시물 관리대장",
+      "fundingSources": [
+        "비"
+      ],
+      "actualFunding": [
+        {
+          "source": "비",
+          "amount": 920000
+        }
+      ]
+    },
+    {
+      "id": "55f97e85-90e6-4d66-8467-a5f722a78384",
+      "selected": false,
+      "subProject": "사진공모전",
+      "detailCategory": "홍보",
+      "month": "1월",
+      "planPeople": 10,
+      "planCount": 10,
+      "planBudget": 40000,
+      "actualPeople": 10,
+      "actualCount": 10,
+      "actualExpense": 38000,
+      "content": "",
+      "fundingSources": [
+        "비"
+      ]
+    },
+    {
+      "id": "57d55c63-a5c5-4835-a68c-e4ef4b862793",
+      "selected": false,
+      "subProject": "사진공모전",
+      "detailCategory": "홍보",
+      "month": "2월",
+      "planPeople": 10,
+      "planCount": 10,
+      "planBudget": 40000,
+      "actualPeople": 9,
+      "actualCount": 9,
+      "actualExpense": 38000,
+      "content": "",
+      "fundingSources": [
+        "비"
+      ]
+    },
+    {
+      "id": "4a7a0a0f-6ad6-4af4-a3c0-19737c09f34a",
+      "selected": false,
+      "subProject": "사진공모전",
+      "detailCategory": "홍보",
+      "month": "5월",
+      "planPeople": 11,
+      "planCount": 11,
+      "planBudget": 42000,
+      "actualPeople": 10,
+      "actualCount": 10,
+      "actualExpense": 39500,
+      "content": "",
+      "fundingSources": [
+        "비"
+      ]
+    },
+    {
+      "id": "a639dbb1-0d33-4cb0-aaac-08881b590773",
+      "selected": false,
+      "subProject": "나눔릴레이",
+      "detailCategory": "프로그램진행",
+      "month": "1월",
+      "planPeople": 16,
+      "planCount": 16,
+      "planBudget": 100000,
+      "actualPeople": 15,
+      "actualCount": 16,
+      "actualExpense": 95000,
+      "content": "",
+      "fundingSources": [
+        "지",
+        "비"
+      ]
+    },
+    {
+      "id": "5ba43980-2802-4cb5-a0cf-2629c5bd5299",
+      "selected": false,
+      "subProject": "나눔릴레이",
+      "detailCategory": "프로그램진행",
+      "month": "2월",
+      "planPeople": 17,
+      "planCount": 17,
+      "planBudget": 100000,
+      "actualPeople": 16,
+      "actualCount": 17,
+      "actualExpense": 96000,
+      "content": "",
+      "fundingSources": [
+        "지",
+        "비"
+      ]
+    },
+    {
+      "id": "1319ad62-3b88-474b-a20d-88ce1f083271",
+      "selected": false,
+      "subProject": "나눔릴레이",
+      "detailCategory": "프로그램진행",
+      "month": "5월",
+      "planPeople": 18,
+      "planCount": 18,
+      "planBudget": 105000,
+      "actualPeople": 17,
+      "actualCount": 18,
+      "actualExpense": 98000,
+      "content": "",
+      "fundingSources": [
+        "지",
+        "비"
+      ]
+    },
+    {
+      "id": "22f671bc-4f88-49e1-bf46-7cdb0af349ca",
+      "selected": false,
+      "subProject": "나눔릴레이",
+      "detailCategory": "홍보",
+      "month": "5월",
+      "planPeople": 5,
+      "planCount": 5,
+      "planBudget": 18000,
+      "actualPeople": 5,
+      "actualCount": 5,
+      "actualExpense": 17500,
+      "content": "",
+      "fundingSources": [
+        "비"
+      ]
+    },
+    {
+      "id": "4ab14d3e-6c36-4e99-aeb1-4262161558e4",
+      "selected": false,
+      "subProject": "지역사회 조직화",
+      "detailCategory": "프로그램진행",
+      "month": "5월",
+      "planPeople": 15,
+      "planCount": 15,
+      "planBudget": 75000,
+      "actualPeople": 14,
+      "actualCount": 15,
+      "actualExpense": 73000,
+      "content": "",
+      "fundingSources": [
+        "기"
+      ]
+    },
+    {
+      "id": "ed969c8f-8410-4e2b-9efe-18d32f318f25",
+      "selected": false,
+      "subProject": "나눔릴레이 홍보",
+      "detailCategory": "홍보",
+      "month": "5월",
+      "planPeople": 8,
+      "planCount": 8,
+      "planBudget": 28000,
+      "actualPeople": 8,
+      "actualCount": 8,
+      "actualExpense": 27000,
+      "content": "",
+      "fundingSources": [
+        "비"
+      ]
+    },
+    {
+      "id": "b06bd634-74c4-4894-b145-47e2078f1510",
+      "selected": false,
+      "subProject": "발대식",
+      "detailCategory": "프로그램진행",
+      "month": "5월",
+      "planPeople": 10,
+      "planCount": 10,
+      "planBudget": 50000,
+      "actualPeople": 10,
+      "actualCount": 10,
+      "actualExpense": 49000,
+      "content": "",
+      "fundingSources": [
+        "법"
+      ]
+    },
+    {
+      "id": "97d8cf5e-ca41-4891-8fed-0c9a34f5b178",
+      "selected": false,
+      "subProject": "모금 활동",
+      "detailCategory": "프로그램진행",
+      "month": "5월",
+      "planPeople": 12,
+      "planCount": 12,
+      "planBudget": 62000,
+      "actualPeople": 12,
+      "actualCount": 12,
+      "actualExpense": 60000,
+      "content": "",
+      "fundingSources": [
+        "지"
+      ]
+    },
+    {
+      "id": "44e2a8f6-8063-4fe2-a9f6-b4c13d4706a5",
+      "selected": false,
+      "subProject": "모금결과 안내",
+      "detailCategory": "홍보",
+      "month": "5월",
+      "planPeople": 7,
+      "planCount": 7,
+      "planBudget": 18000,
+      "actualPeople": 7,
+      "actualCount": 7,
+      "actualExpense": 18000,
+      "content": "",
+      "fundingSources": [
+        "사"
+      ]
+    }
+  ],
+  "defaultDetailCategories": [
+    "홍보",
+    "프로그램진행",
+    "설문조사",
+    "사후관리상담",
+    "기타"
+  ],
+  "performanceSubProjectChips": [
+    {
+      "id": 1,
+      "label": "신규회원 이용상담",
+      "color": "#8fd3ff"
+    },
+    {
+      "id": 2,
+      "label": "신규회원 가입",
+      "color": "#ffe58f"
+    },
+    {
+      "id": 3,
+      "label": "신규회원 교육",
+      "color": "#ff9c8f"
+    },
+    {
+      "id": 4,
+      "label": "정보제공상담",
+      "color": "#ff9cdf"
+    }
+  ],
+  "performanceSummarySeedRows": [
+    {
+      "id": "1",
+      "subProject": "사진공모전",
+      "detailCategory": "홍보",
+      "fundingSources": [
+        "비"
+      ],
+      "plan": {
+        "total": {
+          "people": 130,
+          "count": 130,
+          "budget": 500000
+        },
+        "monthly": {
+          "1월": {
+            "people": 10,
+            "count": 10,
+            "budget": 40000
+          },
+          "2월": {
+            "people": 10,
+            "count": 10,
+            "budget": 40000
+          },
+          "3월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "4월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "5월": {
+            "people": 11,
+            "count": 11,
+            "budget": 42000
+          },
+          "6월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "7월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "8월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "9월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "10월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "11월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "12월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          }
+        }
+      },
+      "actual": {
+        "total": {
+          "people": 128,
+          "count": 128,
+          "budget": 480000
+        },
+        "monthly": {
+          "1월": {
+            "people": 10,
+            "count": 10,
+            "budget": 38000
+          },
+          "2월": {
+            "people": 9,
+            "count": 9,
+            "budget": 38000
+          },
+          "3월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "4월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "5월": {
+            "people": 10,
+            "count": 10,
+            "budget": 39500
+          },
+          "6월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "7월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "8월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "9월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "10월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "11월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "12월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          }
+        }
+      }
+    },
+    {
+      "id": "2",
+      "subProject": "나눔릴레이",
+      "detailCategory": "프로그램진행",
+      "fundingSources": [
+        "지",
+        "비"
+      ],
+      "plan": {
+        "total": {
+          "people": 200,
+          "count": 200,
+          "budget": 1200000
+        },
+        "monthly": {
+          "1월": {
+            "people": 16,
+            "count": 16,
+            "budget": 100000
+          },
+          "2월": {
+            "people": 17,
+            "count": 17,
+            "budget": 100000
+          },
+          "3월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "4월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "5월": {
+            "people": 18,
+            "count": 18,
+            "budget": 105000
+          },
+          "6월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "7월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "8월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "9월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "10월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "11월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "12월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          }
+        }
+      },
+      "actual": {
+        "total": {
+          "people": 195,
+          "count": 198,
+          "budget": 1150000
+        },
+        "monthly": {
+          "1월": {
+            "people": 15,
+            "count": 16,
+            "budget": 95000
+          },
+          "2월": {
+            "people": 16,
+            "count": 17,
+            "budget": 96000
+          },
+          "3월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "4월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "5월": {
+            "people": 17,
+            "count": 18,
+            "budget": 98000
+          },
+          "6월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "7월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "8월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "9월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "10월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "11월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "12월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          }
+        }
+      }
+    },
+    {
+      "id": "2b",
+      "subProject": "나눔릴레이",
+      "detailCategory": "홍보",
+      "fundingSources": [
+        "비"
+      ],
+      "plan": {
+        "total": {
+          "people": 60,
+          "count": 60,
+          "budget": 200000
+        },
+        "monthly": {
+          "1월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "2월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "3월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "4월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "5월": {
+            "people": 5,
+            "count": 5,
+            "budget": 18000
+          },
+          "6월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "7월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "8월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "9월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "10월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "11월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "12월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          }
+        }
+      },
+      "actual": {
+        "total": {
+          "people": 58,
+          "count": 59,
+          "budget": 190000
+        },
+        "monthly": {
+          "1월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "2월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "3월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "4월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "5월": {
+            "people": 5,
+            "count": 5,
+            "budget": 17500
+          },
+          "6월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "7월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "8월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "9월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "10월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "11월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "12월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          }
+        }
+      }
+    },
+    {
+      "id": "3",
+      "subProject": "지역사회 조직화",
+      "detailCategory": "프로그램진행",
+      "fundingSources": [
+        "기"
+      ],
+      "plan": {
+        "total": {
+          "people": 180,
+          "count": 180,
+          "budget": 900000
+        },
+        "monthly": {
+          "1월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "2월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "3월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "4월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "5월": {
+            "people": 15,
+            "count": 15,
+            "budget": 75000
+          },
+          "6월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "7월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "8월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "9월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "10월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "11월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "12월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          }
+        }
+      },
+      "actual": {
+        "total": {
+          "people": 172,
+          "count": 175,
+          "budget": 880000
+        },
+        "monthly": {
+          "1월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "2월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "3월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "4월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "5월": {
+            "people": 14,
+            "count": 15,
+            "budget": 73000
+          },
+          "6월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "7월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "8월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "9월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "10월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "11월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "12월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          }
+        }
+      }
+    },
+    {
+      "id": "4",
+      "subProject": "나눔릴레이 홍보",
+      "detailCategory": "홍보",
+      "fundingSources": [
+        "비"
+      ],
+      "plan": {
+        "total": {
+          "people": 90,
+          "count": 90,
+          "budget": 300000
+        },
+        "monthly": {
+          "1월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "2월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "3월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "4월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "5월": {
+            "people": 8,
+            "count": 8,
+            "budget": 28000
+          },
+          "6월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "7월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "8월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "9월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "10월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "11월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "12월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          }
+        }
+      },
+      "actual": {
+        "total": {
+          "people": 88,
+          "count": 88,
+          "budget": 290000
+        },
+        "monthly": {
+          "1월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "2월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "3월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "4월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "5월": {
+            "people": 8,
+            "count": 8,
+            "budget": 27000
+          },
+          "6월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "7월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "8월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "9월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "10월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "11월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "12월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          }
+        }
+      }
+    },
+    {
+      "id": "5",
+      "subProject": "발대식",
+      "detailCategory": "프로그램진행",
+      "fundingSources": [
+        "법"
+      ],
+      "plan": {
+        "total": {
+          "people": 120,
+          "count": 120,
+          "budget": 600000
+        },
+        "monthly": {
+          "1월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "2월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "3월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "4월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "5월": {
+            "people": 10,
+            "count": 10,
+            "budget": 50000
+          },
+          "6월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "7월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "8월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "9월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "10월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "11월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "12월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          }
+        }
+      },
+      "actual": {
+        "total": {
+          "people": 118,
+          "count": 119,
+          "budget": 590000
+        },
+        "monthly": {
+          "1월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "2월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "3월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "4월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "5월": {
+            "people": 10,
+            "count": 10,
+            "budget": 49000
+          },
+          "6월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "7월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "8월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "9월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "10월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "11월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "12월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          }
+        }
+      }
+    },
+    {
+      "id": "6",
+      "subProject": "모금 활동",
+      "detailCategory": "프로그램진행",
+      "fundingSources": [
+        "지"
+      ],
+      "plan": {
+        "total": {
+          "people": 150,
+          "count": 150,
+          "budget": 750000
+        },
+        "monthly": {
+          "1월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "2월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "3월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "4월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "5월": {
+            "people": 12,
+            "count": 12,
+            "budget": 62000
+          },
+          "6월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "7월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "8월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "9월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "10월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "11월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "12월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          }
+        }
+      },
+      "actual": {
+        "total": {
+          "people": 145,
+          "count": 148,
+          "budget": 720000
+        },
+        "monthly": {
+          "1월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "2월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "3월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "4월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "5월": {
+            "people": 12,
+            "count": 12,
+            "budget": 60000
+          },
+          "6월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "7월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "8월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "9월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "10월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "11월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "12월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          }
+        }
+      }
+    },
+    {
+      "id": "7",
+      "subProject": "모금결과 안내",
+      "detailCategory": "홍보",
+      "fundingSources": [
+        "사"
+      ],
+      "plan": {
+        "total": {
+          "people": 80,
+          "count": 80,
+          "budget": 200000
+        },
+        "monthly": {
+          "1월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "2월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "3월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "4월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "5월": {
+            "people": 7,
+            "count": 7,
+            "budget": 18000
+          },
+          "6월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "7월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "8월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "9월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "10월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "11월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "12월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          }
+        }
+      },
+      "actual": {
+        "total": {
+          "people": 80,
+          "count": 80,
+          "budget": 200000
+        },
+        "monthly": {
+          "1월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "2월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "3월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "4월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "5월": {
+            "people": 7,
+            "count": 7,
+            "budget": 18000
+          },
+          "6월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "7월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "8월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "9월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "10월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "11월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          },
+          "12월": {
+            "people": 0,
+            "count": 0,
+            "budget": 0
+          }
+        }
+      }
+    }
+  ],
+  "monthlyPlanMonths": [
+    "1월",
+    "2월",
+    "3월",
+    "4월",
+    "5월",
+    "6월",
+    "7월",
+    "8월",
+    "9월",
+    "10월",
+    "11월",
+    "12월"
+  ],
+  "subProjects": [
+    {
+      "id": "sub1",
+      "projectId": "proj1",
+      "name": "신규회원 이용상담",
+      "category": "--",
+      "planPeople": 80,
+      "planCount": 80,
+      "planBudget": 0,
+      "actualPeople": 127,
+      "actualCount": 127,
+      "month": "1월"
+    },
+    {
+      "id": "sub2",
+      "projectId": "proj1",
+      "name": "신규회원 가입",
+      "category": "--",
+      "planPeople": 80,
+      "planCount": 80,
+      "planBudget": 0,
+      "actualPeople": 127,
+      "actualCount": 127,
+      "month": "1월"
+    },
+    {
+      "id": "sub3",
+      "projectId": "proj1",
+      "name": "신규회원 교육",
+      "category": "--",
+      "planPeople": 80,
+      "planCount": 80,
+      "planBudget": 0,
+      "actualPeople": 116,
+      "actualCount": 116,
+      "month": "1월"
+    },
+    {
+      "id": "sub4",
+      "projectId": "proj1",
+      "name": "정보제공상담",
+      "category": "--",
+      "planPeople": 0,
+      "planCount": 0,
+      "planBudget": 0,
+      "actualPeople": 0,
+      "actualCount": 0,
+      "month": "1월"
+    },
+    {
+      "id": "sub5",
+      "projectId": "proj1",
+      "name": "신규회원 이용상담",
+      "category": "--",
+      "planPeople": 80,
+      "planCount": 80,
+      "planBudget": 0,
+      "actualPeople": 93,
+      "actualCount": 93,
+      "month": "2월"
+    },
+    {
+      "id": "sub6",
+      "projectId": "proj1",
+      "name": "신규회원 가입",
+      "category": "--",
+      "planPeople": 80,
+      "planCount": 80,
+      "planBudget": 0,
+      "actualPeople": 93,
+      "actualCount": 93,
+      "month": "2월"
+    },
+    {
+      "id": "sub7",
+      "projectId": "proj1",
+      "name": "신규회원 교육",
+      "category": "--",
+      "planPeople": 80,
+      "planCount": 80,
+      "planBudget": 0,
+      "actualPeople": 124,
+      "actualCount": 124,
+      "month": "2월"
+    },
+    {
+      "id": "sub8",
+      "projectId": "proj1",
+      "name": "신규회원 이용상담",
+      "category": "--",
+      "planPeople": 80,
+      "planCount": 80,
+      "planBudget": 0,
+      "actualPeople": 73,
+      "actualCount": 73,
+      "month": "3월"
+    },
+    {
+      "id": "sub9",
+      "projectId": "proj1",
+      "name": "신규회원 가입",
+      "category": "--",
+      "planPeople": 80,
+      "planCount": 80,
+      "planBudget": 0,
+      "actualPeople": 73,
+      "actualCount": 73,
+      "month": "3월"
+    },
+    {
+      "id": "sub10",
+      "projectId": "proj1",
+      "name": "신규회원 교육",
+      "category": "--",
+      "planPeople": 80,
+      "planCount": 80,
+      "planBudget": 0,
+      "actualPeople": 62,
+      "actualCount": 62,
+      "month": "3월"
+    }
+  ],
+  "monthlyPlans": {
+    "기본계획": {
+      "months": [
+        "1월",
+        "2월",
+        "3월",
+        "4월",
+        "5월",
+        "6월",
+        "7월",
+        "8월",
+        "9월",
+        "10월",
+        "11월",
+        "12월"
+      ],
+      "data": {
+        "version": "기본계획",
+        "rows": [
+          {
+            "id": "1",
+            "name": "신규회원 이용상담",
+            "totalPeople": 960,
+            "totalCount": 960,
+            "totalBudget": 0,
+            "monthly": {
+              "1월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "2월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "3월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "4월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "5월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "6월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "7월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "8월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "9월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "10월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "11월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "12월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              }
+            }
+          },
+          {
+            "id": "2",
+            "name": "신규회원 가입",
+            "totalPeople": 960,
+            "totalCount": 965,
+            "totalBudget": 15000000,
+            "monthly": {
+              "1월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "2월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "3월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "4월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "5월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "6월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "7월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "8월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "9월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "10월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "11월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "12월": {
+                "people": 80,
+                "count": 85,
+                "budget": 15000000
+              }
+            }
+          },
+          {
+            "id": "3",
+            "name": "신규회원 교육",
+            "totalPeople": 960,
+            "totalCount": 960,
+            "totalBudget": 0,
+            "monthly": {
+              "1월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "2월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "3월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "4월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "5월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "6월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "7월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "8월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "9월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "10월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "11월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "12월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              }
+            }
+          },
+          {
+            "id": "4",
+            "name": "정보제공상담",
+            "totalPeople": 80,
+            "totalCount": 80,
+            "totalBudget": 0,
+            "monthly": {
+              "1월": {
+                "people": 8,
+                "count": 8,
+                "budget": 0
+              },
+              "2월": {
+                "people": 8,
+                "count": 8,
+                "budget": 0
+              },
+              "3월": {
+                "people": 8,
+                "count": 8,
+                "budget": 0
+              },
+              "4월": {
+                "people": 8,
+                "count": 8,
+                "budget": 0
+              },
+              "5월": {
+                "people": 8,
+                "count": 8,
+                "budget": 0
+              },
+              "6월": {
+                "people": 8,
+                "count": 8,
+                "budget": 0
+              },
+              "7월": {
+                "people": 8,
+                "count": 8,
+                "budget": 0
+              },
+              "8월": {
+                "people": 8,
+                "count": 8,
+                "budget": 0
+              },
+              "9월": {
+                "people": 8,
+                "count": 8,
+                "budget": 0
+              },
+              "10월": {
+                "people": 8,
+                "count": 8,
+                "budget": 0
+              },
+              "11월": {
+                "people": 8,
+                "count": 8,
+                "budget": 0
+              },
+              "12월": {
+                "people": 8,
+                "count": 8,
+                "budget": 0
+              }
+            }
+          }
+        ]
+      }
+    },
+    "1차추경": {
+      "months": [
+        "1월",
+        "2월",
+        "3월",
+        "4월",
+        "5월",
+        "6월",
+        "7월",
+        "8월",
+        "9월",
+        "10월",
+        "11월",
+        "12월"
+      ],
+      "data": {
+        "version": "1차추경",
+        "rows": [
+          {
+            "id": "1",
+            "name": "신규회원 이용상담",
+            "totalPeople": 960,
+            "totalCount": 965,
+            "totalBudget": 0,
+            "monthly": {
+              "1월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "2월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "3월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "4월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "5월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "6월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "7월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "8월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "9월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "10월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "11월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "12월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              }
+            }
+          },
+          {
+            "id": "2",
+            "name": "신규회원 가입",
+            "totalPeople": 960,
+            "totalCount": 970,
+            "totalBudget": 15000000,
+            "monthly": {
+              "1월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "2월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "3월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "4월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "5월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "6월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "7월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "8월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "9월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "10월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "11월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "12월": {
+                "people": 80,
+                "count": 85,
+                "budget": 15000000
+              }
+            }
+          },
+          {
+            "id": "3",
+            "name": "신규회원 교육",
+            "totalPeople": 960,
+            "totalCount": 965,
+            "totalBudget": 0,
+            "monthly": {
+              "1월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "2월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "3월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "4월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "5월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "6월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "7월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "8월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "9월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "10월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "11월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "12월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              }
+            }
+          },
+          {
+            "id": "4",
+            "name": "정보제공상담",
+            "totalPeople": 80,
+            "totalCount": 85,
+            "totalBudget": 0,
+            "monthly": {
+              "1월": {
+                "people": 8,
+                "count": 8,
+                "budget": 0
+              },
+              "2월": {
+                "people": 8,
+                "count": 8,
+                "budget": 0
+              },
+              "3월": {
+                "people": 8,
+                "count": 8,
+                "budget": 0
+              },
+              "4월": {
+                "people": 8,
+                "count": 8,
+                "budget": 0
+              },
+              "5월": {
+                "people": 8,
+                "count": 8,
+                "budget": 0
+              },
+              "6월": {
+                "people": 8,
+                "count": 8,
+                "budget": 0
+              },
+              "7월": {
+                "people": 8,
+                "count": 8,
+                "budget": 0
+              },
+              "8월": {
+                "people": 8,
+                "count": 8,
+                "budget": 0
+              },
+              "9월": {
+                "people": 8,
+                "count": 8,
+                "budget": 0
+              },
+              "10월": {
+                "people": 8,
+                "count": 8,
+                "budget": 0
+              },
+              "11월": {
+                "people": 8,
+                "count": 8,
+                "budget": 0
+              },
+              "12월": {
+                "people": 8,
+                "count": 8,
+                "budget": 0
+              }
+            }
+          }
+        ]
+      }
+    },
+    "2차추경": {
+      "months": [
+        "1월",
+        "2월",
+        "3월",
+        "4월",
+        "5월",
+        "6월",
+        "7월",
+        "8월",
+        "9월",
+        "10월",
+        "11월",
+        "12월"
+      ],
+      "data": {
+        "version": "2차추경",
+        "rows": [
+          {
+            "id": "1",
+            "name": "신규회원 이용상담",
+            "totalPeople": 960,
+            "totalCount": 970,
+            "totalBudget": 2000000,
+            "monthly": {
+              "1월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "2월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "3월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "4월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "5월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "6월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "7월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "8월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "9월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "10월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "11월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "12월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              }
+            }
+          },
+          {
+            "id": "2",
+            "name": "신규회원 가입",
+            "totalPeople": 960,
+            "totalCount": 975,
+            "totalBudget": 17000000,
+            "monthly": {
+              "1월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "2월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "3월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "4월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "5월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "6월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "7월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "8월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "9월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "10월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "11월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "12월": {
+                "people": 80,
+                "count": 85,
+                "budget": 15000000
+              }
+            }
+          },
+          {
+            "id": "3",
+            "name": "신규회원 교육",
+            "totalPeople": 960,
+            "totalCount": 970,
+            "totalBudget": 2000000,
+            "monthly": {
+              "1월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "2월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "3월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "4월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "5월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "6월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "7월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "8월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "9월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "10월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "11월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              },
+              "12월": {
+                "people": 80,
+                "count": 80,
+                "budget": 0
+              }
+            }
+          },
+          {
+            "id": "4",
+            "name": "정보제공상담",
+            "totalPeople": 80,
+            "totalCount": 90,
+            "totalBudget": 2000000,
+            "monthly": {
+              "1월": {
+                "people": 8,
+                "count": 8,
+                "budget": 0
+              },
+              "2월": {
+                "people": 8,
+                "count": 8,
+                "budget": 0
+              },
+              "3월": {
+                "people": 8,
+                "count": 8,
+                "budget": 0
+              },
+              "4월": {
+                "people": 8,
+                "count": 8,
+                "budget": 0
+              },
+              "5월": {
+                "people": 8,
+                "count": 8,
+                "budget": 0
+              },
+              "6월": {
+                "people": 8,
+                "count": 8,
+                "budget": 0
+              },
+              "7월": {
+                "people": 8,
+                "count": 8,
+                "budget": 0
+              },
+              "8월": {
+                "people": 8,
+                "count": 8,
+                "budget": 0
+              },
+              "9월": {
+                "people": 8,
+                "count": 8,
+                "budget": 0
+              },
+              "10월": {
+                "people": 8,
+                "count": 8,
+                "budget": 0
+              },
+              "11월": {
+                "people": 8,
+                "count": 8,
+                "budget": 0
+              },
+              "12월": {
+                "people": 8,
+                "count": 8,
+                "budget": 0
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

@@ -7,51 +7,43 @@ import type {
   SurveyListItem,
   SurveyResults,
 } from "./survey.types"
+import { apiClient, resolveApiPath } from "@/lib/api-client"
 
-async function apiFetch<T>(url: string, options?: RequestInit): Promise<T> {
-  const response = await fetch(url, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...options?.headers,
-    },
-  })
-
-  if (!response.ok) {
-    throw new Error(`API 요청 실패: ${response.status}`)
-  }
-
-  return response.json()
-}
+const surveysPath = (suffix = "") =>
+  resolveApiPath(`/api/surveys${suffix}`, `/api/v1/surveys${suffix}`)
 
 export async function getSurveyList(): Promise<SurveyListItem[]> {
-  return apiFetch<SurveyListItem[]>("/api/surveys")
+  return apiClient.get<SurveyListItem[]>(surveysPath())
 }
 
 export async function getSurveyDetail(id: string): Promise<SurveyDetail> {
-  return apiFetch<SurveyDetail>(`/api/surveys/${id}`)
+  return apiClient.get<SurveyDetail>(surveysPath(`/${id}`))
 }
 
 export async function saveSurvey(
   id: string,
-  payload: SaveSurveyPayload
+  payload: SaveSurveyPayload,
 ): Promise<SaveSurveyResult> {
-  return apiFetch<SaveSurveyResult>(`/api/surveys/${id}`, {
-    method: "POST",
-    body: JSON.stringify(payload),
-  })
+  return apiClient.post<SaveSurveyResult>(surveysPath(`/${id}`), payload)
 }
 
 export async function getSurveyResults(id: string): Promise<SurveyResults> {
-  return apiFetch<SurveyResults>(`/api/surveys/${id}/results`)
+  return apiClient.get<SurveyResults>(surveysPath(`/${id}/results`))
 }
 
 export async function submitSurveyResponse(
   id: string,
-  payload: SubmitSurveyResponsePayload
+  payload: SubmitSurveyResponsePayload,
 ): Promise<SubmitSurveyResponseResult> {
-  return apiFetch<SubmitSurveyResponseResult>(`/api/surveys/${id}/responses`, {
-    method: "POST",
-    body: JSON.stringify(payload),
-  })
+  return apiClient.post<SubmitSurveyResponseResult>(
+    surveysPath(`/${id}/responses`),
+    payload,
+  )
+}
+
+export async function deleteSurvey(id: string): Promise<{
+  success: boolean
+  deletedId: string
+}> {
+  return apiClient.delete(surveysPath(`/${id}`))
 }

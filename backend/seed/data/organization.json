@@ -1,0 +1,413 @@
+[
+  {
+    "id": "all",
+    "name": "전체 직원",
+    "count": 30,
+    "employees": []
+  },
+  {
+    "id": "management",
+    "name": "운영총괄",
+    "count": 3,
+    "employees": [
+      {
+        "id": "emp-management-1",
+        "name": "최기원",
+        "role": "관장",
+        "position": "관장",
+        "department": "운영총괄",
+        "email": "choi@welfare.org",
+        "phone": "010-1234-5678",
+        "joinDate": "2020-03-15",
+        "tenure": "6년 2개월",
+        "lastLogin": "2026-05-24 09:30"
+      },
+      {
+        "id": "emp-management-2",
+        "name": "이혜진",
+        "role": "부장",
+        "position": "부장",
+        "department": "운영총괄",
+        "email": "lee.hj@welfare.org",
+        "phone": "010-2345-6789",
+        "joinDate": "2018-07-02",
+        "tenure": "7년 10개월",
+        "lastLogin": "2026-05-24 11:05"
+      },
+      {
+        "id": "emp-management-3",
+        "name": "이승현",
+        "role": "사회복지사",
+        "position": "사회복지사",
+        "department": "운영총괄",
+        "email": "test@gmail.com",
+        "phone": "010-9804-8978",
+        "joinDate": "2026-04-29",
+        "tenure": "0년 0개월",
+        "lastLogin": "2026-05-24 14:11",
+        "isAdmin": true,
+        "profileImage": "/이승현_증명사진.jpg"
+      }
+    ]
+  },
+  {
+    "id": "support",
+    "name": "운영지원팀",
+    "count": 6,
+    "employees": [
+      {
+        "id": "emp-support-1",
+        "name": "김민수",
+        "role": "팀장",
+        "position": "팀장",
+        "department": "운영지원팀",
+        "email": "kim.ms@welfare.org",
+        "phone": "010-3456-7890",
+        "joinDate": "2019-01-10",
+        "tenure": "7년 4개월",
+        "lastLogin": "2026-05-23 17:42",
+        "isTeamLeader": true
+      },
+      {
+        "id": "emp-support-2",
+        "name": "박서연",
+        "role": "사무원",
+        "position": "사무원",
+        "department": "운영지원팀",
+        "email": "park.sy@welfare.org",
+        "phone": "010-4567-8901",
+        "joinDate": "2021-05-20",
+        "tenure": "5년 0개월",
+        "lastLogin": "2026-05-24 08:55"
+      },
+      {
+        "id": "emp-support-3",
+        "name": "정우진",
+        "role": "사무원",
+        "position": "사무원",
+        "department": "운영지원팀",
+        "email": "jung.wj@welfare.org",
+        "phone": "010-5678-9012",
+        "joinDate": "2022-03-07",
+        "tenure": "4년 2개월",
+        "lastLogin": "2026-05-22 16:20"
+      },
+      {
+        "id": "emp-support-4",
+        "name": "한지원",
+        "role": "사무원",
+        "position": "사무원",
+        "department": "운영지원팀",
+        "email": "han.jw@welfare.org",
+        "phone": "010-6789-0123",
+        "joinDate": "2023-08-14",
+        "tenure": "2년 9개월",
+        "lastLogin": "2026-05-24 10:18"
+      },
+      {
+        "id": "emp-support-5",
+        "name": "오현우",
+        "role": "사무원",
+        "position": "사무원",
+        "department": "운영지원팀",
+        "email": "oh.hw@welfare.org",
+        "phone": "010-7890-1234",
+        "joinDate": "2020-11-30",
+        "tenure": "5년 6개월",
+        "lastLogin": "2026-05-21 15:33"
+      },
+      {
+        "id": "emp-support-6",
+        "name": "송예린",
+        "role": "사회복지사",
+        "position": "사회복지사",
+        "department": "운영지원팀",
+        "email": "song.yr@welfare.org",
+        "phone": "010-8901-2345",
+        "joinDate": "2024-02-19",
+        "tenure": "2년 3개월",
+        "lastLogin": "2026-05-24 13:07"
+      }
+    ]
+  },
+  {
+    "id": "welfare1",
+    "name": "복지1팀",
+    "count": 5,
+    "employees": [
+      {
+        "id": "emp-welfare1-1",
+        "name": "강도현",
+        "role": "팀장",
+        "position": "팀장",
+        "department": "복지1팀",
+        "email": "kang.dh@welfare.org",
+        "phone": "010-9012-3456",
+        "joinDate": "2017-09-04",
+        "tenure": "8년 8개월",
+        "lastLogin": "2026-05-24 09:12"
+      },
+      {
+        "id": "emp-welfare1-2",
+        "name": "윤수빈",
+        "role": "사회복지사",
+        "position": "사회복지사",
+        "department": "복지1팀",
+        "email": "yoon.sb@welfare.org",
+        "phone": "010-0123-4567",
+        "joinDate": "2021-04-12",
+        "tenure": "5년 1개월",
+        "lastLogin": "2026-05-23 18:40"
+      },
+      {
+        "id": "emp-welfare1-3",
+        "name": "임재호",
+        "role": "사회복지사",
+        "position": "사회복지사",
+        "department": "복지1팀",
+        "email": "lim.jh@welfare.org",
+        "phone": "010-1122-3344",
+        "joinDate": "2022-06-01",
+        "tenure": "3년 11개월",
+        "lastLogin": "2026-05-24 11:50"
+      },
+      {
+        "id": "emp-welfare1-4",
+        "name": "지민영",
+        "role": "사회복지사",
+        "position": "사회복지사",
+        "department": "복지1팀",
+        "email": "bae.sy@welfare.org",
+        "phone": "010-2233-4455",
+        "joinDate": "2023-01-16",
+        "tenure": "3년 4개월",
+        "lastLogin": "2026-05-22 14:25"
+      },
+      {
+        "id": "emp-welfare1-5",
+        "name": "배소영",
+        "role": "물리치료사",
+        "position": "물리치료사",
+        "department": "복지1팀",
+        "email": "noh.jh@welfare.org",
+        "phone": "010-3344-5566",
+        "joinDate": "2024-07-08",
+        "tenure": "1년 10개월",
+        "lastLogin": "2026-05-24 08:30"
+      }
+    ]
+  },
+  {
+    "id": "welfare2",
+    "name": "복지2팀",
+    "count": 6,
+    "employees": [
+      {
+        "id": "emp-welfare2-1",
+        "name": "서민지",
+        "role": "팀장",
+        "position": "팀장",
+        "department": "복지2팀",
+        "email": "seo.mj@welfare.org",
+        "phone": "010-4455-6677",
+        "joinDate": "2018-02-26",
+        "tenure": "8년 3개월",
+        "lastLogin": "2026-05-24 10:05"
+      },
+      {
+        "id": "emp-welfare2-2",
+        "name": "유태영",
+        "role": "사회복지사",
+        "position": "사회복지사",
+        "department": "복지2팀",
+        "email": "yoo.ty@welfare.org",
+        "phone": "010-5566-7788",
+        "joinDate": "2020-08-03",
+        "tenure": "5년 9개월",
+        "lastLogin": "2026-05-23 16:55"
+      },
+      {
+        "id": "emp-welfare2-3",
+        "name": "홍성준",
+        "role": "사회복지사",
+        "position": "사회복지사",
+        "department": "복지2팀",
+        "email": "hong.sj@welfare.org",
+        "phone": "010-6677-8899",
+        "joinDate": "2021-11-15",
+        "tenure": "4년 6개월",
+        "lastLogin": "2026-05-24 12:40"
+      },
+      {
+        "id": "emp-welfare2-4",
+        "name": "정영인",
+        "role": "사회복지사",
+        "position": "사회복지사",
+        "department": "복지2팀",
+        "email": "kwak.eb@welfare.org",
+        "phone": "010-7788-9900",
+        "joinDate": "2022-09-19",
+        "tenure": "3년 8개월",
+        "lastLogin": "2026-05-21 09:48"
+      },
+      {
+        "id": "emp-welfare2-5",
+        "name": "곽은비",
+        "role": "영양사",
+        "position": "영양사",
+        "department": "복지2팀",
+        "email": "cha.ms@welfare.org",
+        "phone": "010-8899-0011",
+        "joinDate": "2023-12-04",
+        "tenure": "2년 5개월",
+        "lastLogin": "2026-05-24 07:58"
+      },
+      {
+        "id": "emp-welfare2-6",
+        "name": "노지훈",
+        "role": "물리치료사",
+        "position": "물리치료사",
+        "department": "복지2팀",
+        "email": "jeon.hn@welfare.org",
+        "phone": "010-9900-1122",
+        "joinDate": "2025-01-20",
+        "tenure": "1년 4개월",
+        "lastLogin": "2026-05-23 13:22"
+      }
+    ]
+  },
+  {
+    "id": "welfare3",
+    "name": "복지3팀",
+    "count": 8,
+    "employees": [
+      {
+        "id": "emp-welfare3-1",
+        "name": "문재윤",
+        "role": "팀장",
+        "position": "팀장",
+        "department": "복지3팀",
+        "email": "moon.jy@welfare.org",
+        "phone": "010-1010-2020",
+        "joinDate": "2016-06-13",
+        "tenure": "9년 11개월",
+        "lastLogin": "2026-05-24 08:15"
+      },
+      {
+        "id": "emp-welfare3-2",
+        "name": "권수진",
+        "role": "사회복지사",
+        "position": "사회복지사",
+        "department": "복지3팀",
+        "email": "kwon.sj@welfare.org",
+        "phone": "010-2020-3030",
+        "joinDate": "2019-10-21",
+        "tenure": "6년 7개월",
+        "lastLogin": "2026-05-24 11:28"
+      },
+      {
+        "id": "emp-welfare3-3",
+        "name": "신동욱",
+        "role": "사회복지사",
+        "position": "사회복지사",
+        "department": "복지3팀",
+        "email": "shin.dw@welfare.org",
+        "phone": "010-3030-4040",
+        "joinDate": "2021-02-01",
+        "tenure": "5년 3개월",
+        "lastLogin": "2026-05-22 17:10"
+      },
+      {
+        "id": "emp-welfare3-4",
+        "name": "조아린",
+        "role": "사회복지사",
+        "position": "사회복지사",
+        "department": "복지3팀",
+        "email": "cho.ar@welfare.org",
+        "phone": "010-4040-5050",
+        "joinDate": "2022-04-18",
+        "tenure": "4년 1개월",
+        "lastLogin": "2026-05-23 15:44"
+      },
+      {
+        "id": "emp-welfare3-5",
+        "name": "김연수",
+        "role": "사회복지사",
+        "position": "사회복지사",
+        "department": "복지3팀",
+        "email": "heo.jh@welfare.org",
+        "phone": "010-5050-6060",
+        "joinDate": "2023-03-27",
+        "tenure": "3년 2개월",
+        "lastLogin": "2026-05-24 09:52"
+      },
+      {
+        "id": "emp-welfare3-6",
+        "name": "허준호",
+        "role": "시설근무자",
+        "position": "시설근무자",
+        "department": "복지3팀",
+        "email": "ryu.jm@welfare.org",
+        "phone": "010-6060-7070",
+        "joinDate": "2023-09-11",
+        "tenure": "2년 8개월",
+        "lastLogin": "2026-05-21 14:05"
+      },
+      {
+        "id": "emp-welfare3-7",
+        "name": "류정민",
+        "role": "시설근무자",
+        "position": "시설근무자",
+        "department": "복지3팀",
+        "email": "nam.jy@welfare.org",
+        "phone": "010-7070-8080",
+        "joinDate": "2024-05-06",
+        "tenure": "2년 0개월",
+        "lastLogin": "2026-05-24 10:33"
+      },
+      {
+        "id": "emp-welfare3-8",
+        "name": "전하늘",
+        "role": "운전사",
+        "position": "운전사",
+        "department": "복지3팀",
+        "email": "pyo.sh@welfare.org",
+        "phone": "010-8080-9090",
+        "joinDate": "2025-03-03",
+        "tenure": "1년 2개월",
+        "lastLogin": "2026-05-23 12:18"
+      }
+    ]
+  },
+  {
+    "id": "resource",
+    "name": "자원개발팀",
+    "count": 2,
+    "employees": [
+      {
+        "id": "emp-resource-1",
+        "name": "장미래",
+        "role": "팀장",
+        "position": "팀장",
+        "department": "자원개발팀",
+        "email": "jang.mr@welfare.org",
+        "phone": "010-9090-0101",
+        "joinDate": "2019-04-22",
+        "tenure": "7년 1개월",
+        "lastLogin": "2026-05-24 13:45"
+      },
+      {
+        "id": "emp-resource-2",
+        "name": "고영수",
+        "role": "취업전문가",
+        "position": "취업전문가",
+        "department": "자원개발팀",
+        "email": "ko.ys@welfare.org",
+        "phone": "010-0101-1212",
+        "joinDate": "2022-07-25",
+        "tenure": "3년 10개월",
+        "lastLogin": "2026-05-22 11:30"
+      }
+    ]
+  }
+]

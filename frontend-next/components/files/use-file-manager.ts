@@ -1,11 +1,63 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
-import { getFileManagerState } from "@/services/files.service"
-import type { FileItem, Permission, SortKey, ViewMode } from "./file-types"
-import type { TaskOption } from "./file-types"
-import { canMoveItem, collectDescendantIds, exportItemsAsJson, getTypeByFileName, sortFiles } from "./file-utils"
+import { isFastApiMode } from "@/lib/api-client"
+import { triggerBlobDownload } from "@/lib/files/download-blob"
+import {
+  copyFile,
+  createFile,
+  deleteFile,
+  downloadFileBlob,
+  downloadFileToDisk,
+  exportFilesArchive,
+  getFileManagerState,
+  patchFile,
+  saveFileManagerState,
+  uploadFilesToServer,
+} from "@/services/files.service"
+import type { FileItem, Permission, SortKey, TaskOption, ViewMode } from "./file-types"
+import {
+  canMoveItem,
+  collectDescendantIds,
+  getTypeByFileName,
+  sortFiles,
+} from "./file-utils"
+import { syncFileTaskNames } from "@/lib/files/sync-file-task-names"
+import { TASK_FILTER_NONE } from "./task-filter-control"
+
+function matchesTaskFilter(item: FileItem, taskFilterId: string | null): boolean {
+  if (!taskFilterId) return true
+  if (taskFilterId === TASK_FILTER_NONE) return !item.taskId
+  return item.taskId === taskFilterId
+}
+
+function mapApiFile(raw: Record<string, unknown>): FileItem {
+  return {
+    id: String(raw.id),
+    name: String(raw.name),
+    type: raw.type as FileItem["type"],
+    parentId: (raw.parentId as string | null) ?? null,
+    size: raw.size ? String(raw.size) : undefined,
+    createdAt: String(raw.createdAt ?? new Date().toISOString()),
+    modifiedAt: String(raw.modifiedAt ?? new Date().toISOString()),
+    permission: (raw.permission as Permission) ?? "private",
+    shared: Boolean(raw.shared),
+    starred: Boolean(raw.starred),
+    taskId: raw.taskId ? String(raw.taskId) : undefined,
+    taskName: raw.taskName ? String(raw.taskName) : undefined,
+    storageKey: raw.storageKey ? String(raw.storageKey) : undefined,
+    mimeType: raw.mimeType ? String(raw.mimeType) : undefined,
+    hasContent: Boolean(raw.hasContent ?? raw.storageKey),
+  }
+}
+
+function isPreviewable(item: FileItem): boolean {
+  const mime = item.mimeType ?? ""
+  if (mime.startsWith("image/")) return true
+  if (mime === "application/pdf") return true
+  return item.type === "image" || item.type === "pdf"
+}
 
 export function useFileManager() {
   const [files, setFiles] = useState<FileItem[]>([])
@@ -13,21 +65,52 @@ export function useFileManager() {
   const [viewMode, setViewMode] = useState<ViewMode>("grid")
   const [sortKey, setSortKey] = useState<SortKey>("name")
   const [searchQuery, setSearchQuery] = useState("")
+  const [taskFilterId, setTaskFilterId] = useState<string | null>(null)
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [recentIds, setRecentIds] = useState<string[]>([])
   const [managerTaskOptions, setManagerTaskOptions] = useState<TaskOption[]>([])
+  const hydratedRef = useRef(false)
+
+  const refreshFromServer = useCallback(async () => {
+    const state = await getFileManagerState()
+    const options = state.taskOptions
+    setManagerTaskOptions(options)
+    setFiles(syncFileTaskNames(state.files, options))
+    setRecentIds(state.recentIds)
+    hydratedRef.current = true
+  }, [])
 
   useEffect(() => {
-    getFileManagerState()
-      .then((state) => {
-        setFiles(state.files)
-        setRecentIds(state.recentIds)
-        setManagerTaskOptions(state.taskOptions)
+    refreshFromServer().catch((error) => {
+      console.error("파일 관리 데이터 로드 실패:", error)
+    })
+  }, [refreshFromServer])
+
+  useEffect(() => {
+    if (!isFastApiMode() || !hydratedRef.current) return
+    const timer = setTimeout(() => {
+      void saveFileManagerState({
+        recentIds,
+      }).catch((error) => {
+        console.error("파일 관리 상태 저장 실패:", error)
       })
-      .catch((error) => {
-        console.error("파일 관리 데이터 로드 실패:", error)
+    }, 800)
+    return () => clearTimeout(timer)
+  }, [recentIds])
+
+  useEffect(() => {
+    if (isFastApiMode() || !hydratedRef.current || files.length === 0) return
+    const timer = setTimeout(() => {
+      void saveFileManagerState({
+        files,
+        recentIds,
+      }).catch((error) => {
+        console.error("파일 트리 저장 실패:", error)
       })
-  }, [])
+    }, 1200)
+    return () => clearTimeout(timer)
+  }, [files, recentIds])
+
   const [renameTarget, setRenameTarget] = useState<FileItem | null>(null)
   const [shareTarget, setShareTarget] = useState<FileItem | null>(null)
   const [uploadOpen, setUploadOpen] = useState(false)
@@ -37,15 +120,28 @@ export function useFileManager() {
     return files.find((item) => item.id === currentFolderId)?.parentId ?? null
   }, [files, currentFolderId])
 
+  const useFlatView = Boolean(searchQuery.trim()) || taskFilterId !== null
+
   const visibleFiles = useMemo(() => {
     const keyword = searchQuery.trim().toLowerCase()
 
-    const scopedFiles = keyword
-      ? files.filter((item) => item.name.toLowerCase().includes(keyword))
-      : files.filter((item) => item.parentId === currentFolderId)
+    const scopedFiles = files.filter((item) => {
+      if (!matchesTaskFilter(item, taskFilterId)) return false
+      if (useFlatView) {
+        if (keyword) return item.name.toLowerCase().includes(keyword)
+        return true
+      }
+      return item.parentId === currentFolderId
+    })
 
     return sortFiles(scopedFiles, sortKey)
-  }, [files, currentFolderId, searchQuery, sortKey])
+  }, [files, currentFolderId, searchQuery, sortKey, taskFilterId, useFlatView])
+
+  const taskFilterLabel = useMemo(() => {
+    if (!taskFilterId) return null
+    if (taskFilterId === TASK_FILTER_NONE) return "업무 미지정"
+    return managerTaskOptions.find((t) => t.id === taskFilterId)?.name ?? null
+  }, [taskFilterId, managerTaskOptions])
 
   const recentFiles = useMemo(() => {
     return recentIds
@@ -61,7 +157,37 @@ export function useFileManager() {
     setRecentIds((prev) => [id, ...prev.filter((itemId) => itemId !== id)].slice(0, 8))
   }
 
-  const openItem = (item: FileItem) => {
+  const downloadItem = async (item: FileItem) => {
+    if (item.type === "folder") {
+      await exportItem(item)
+      return
+    }
+
+    if (!item.hasContent) {
+      window.alert(
+        "이 항목은 예시 데이터입니다. 「파일 업로드」로 올린 파일만 다운로드할 수 있습니다.",
+      )
+      return
+    }
+
+    try {
+      if (downloadFileToDisk) {
+        await downloadFileToDisk(item.id, item.name)
+        return
+      }
+      if (downloadFileBlob) {
+        const blob = await downloadFileBlob(item.id)
+        triggerBlobDownload(blob, item.name)
+      }
+    } catch (error) {
+      console.error("파일 다운로드 실패:", error)
+      window.alert(
+        error instanceof Error ? error.message : "파일을 다운로드하지 못했습니다.",
+      )
+    }
+  }
+
+  const openItem = async (item: FileItem) => {
     addRecent(item.id)
 
     if (item.type === "folder") {
@@ -70,7 +196,31 @@ export function useFileManager() {
       return
     }
 
-    window.alert(`${item.name} 파일을 엽니다.`)
+    if (item.hasContent && downloadFileBlob) {
+      try {
+        const blob = await downloadFileBlob(item.id)
+
+        if (isPreviewable(item)) {
+          const url = URL.createObjectURL(blob)
+          window.open(url, "_blank", "noopener,noreferrer")
+          window.setTimeout(() => URL.revokeObjectURL(url), 120_000)
+          return
+        }
+
+        triggerBlobDownload(blob, item.name)
+        return
+      } catch (error) {
+        console.error("파일 열기 실패:", error)
+        window.alert(
+          error instanceof Error ? error.message : "파일을 열거나 다운로드하지 못했습니다.",
+        )
+        return
+      }
+    }
+
+    window.alert(
+      "이 항목은 예시 데이터입니다. 「파일 업로드」로 올린 파일부터 서버에 실제 파일로 저장·다운로드됩니다.",
+    )
   }
 
   const toggleSelect = (id: string, additive = true) => {
@@ -82,9 +232,20 @@ export function useFileManager() {
 
   const clearSelection = () => setSelectedIds([])
 
-  const copyItem = (item: FileItem) => {
-    const now = new Date().toISOString()
+  const copyItem = async (item: FileItem) => {
+    if (isFastApiMode() && copyFile) {
+      try {
+        const created = await copyFile(item.id, { parentId: currentFolderId })
+        setFiles((prev) => [...prev, mapApiFile(created as unknown as Record<string, unknown>)])
+        return
+      } catch (error) {
+        console.error("파일 복사 실패:", error)
+        window.alert("파일 복사에 실패했습니다.")
+        return
+      }
+    }
 
+    const now = new Date().toISOString()
     setFiles((prev) => [
       ...prev,
       {
@@ -98,97 +259,147 @@ export function useFileManager() {
     ])
   }
 
-  const copySelected = () => {
-    const now = new Date().toISOString()
-    setFiles((prev) => [
-      ...prev,
-      ...selectedItems.map((item) => ({
-        ...item,
-        id: crypto.randomUUID(),
-        name: `${item.name} 사본`,
-        createdAt: now,
-        modifiedAt: now,
-        parentId: currentFolderId,
-      })),
-    ])
+  const copySelected = async () => {
+    for (const item of selectedItems) {
+      await copyItem(item)
+    }
   }
 
-  const renameItem = (itemId: string, name: string) => {
+  const renameItem = async (itemId: string, name: string) => {
     const nextName = name.trim()
     if (!nextName) return
+
+    if (isFastApiMode() && patchFile) {
+      try {
+        const updated = await patchFile(itemId, { name: nextName })
+        const mapped = mapApiFile(updated)
+        setFiles((prev) =>
+          prev.map((item) => (item.id === itemId ? mapped : item)),
+        )
+        return
+      } catch (error) {
+        console.error("이름 변경 실패:", error)
+        window.alert("이름 변경에 실패했습니다.")
+        return
+      }
+    }
 
     setFiles((prev) =>
       prev.map((item) =>
         item.id === itemId
           ? { ...item, name: nextName, modifiedAt: new Date().toISOString() }
-          : item
-      )
+          : item,
+      ),
     )
   }
 
-  const updatePermissions = (itemId: string, permission: Permission) => {
+  const updatePermissions = async (itemId: string, permission: Permission) => {
+    const patch = {
+      permission,
+      shared: permission !== "private",
+    }
+
+    if (isFastApiMode() && patchFile) {
+      try {
+        const updated = await patchFile(itemId, patch)
+        const mapped = mapApiFile(updated)
+        setFiles((prev) =>
+          prev.map((item) => (item.id === itemId ? mapped : item)),
+        )
+        return
+      } catch (error) {
+        console.error("권한 변경 실패:", error)
+        window.alert("권한 변경에 실패했습니다.")
+        return
+      }
+    }
+
     setFiles((prev) =>
       prev.map((item) =>
         item.id === itemId
           ? {
               ...item,
-              permission,
-              shared: permission !== "private",
+              ...patch,
               modifiedAt: new Date().toISOString(),
             }
-          : item
-      )
+          : item,
+      ),
     )
   }
 
-  const updateSelectedPermissions = (permission: Permission) => {
-    setFiles((prev) =>
-      prev.map((item) =>
-        selectedIds.includes(item.id)
-          ? {
-              ...item,
-              permission,
-              shared: permission !== "private",
-              modifiedAt: new Date().toISOString(),
-            }
-          : item
-      )
-    )
+  const updateSelectedPermissions = async (permission: Permission) => {
+    for (const id of selectedIds) {
+      await updatePermissions(id, permission)
+    }
   }
 
-  const toggleStar = (item: FileItem) => {
+  const toggleStar = async (item: FileItem) => {
+    const next = !item.starred
+    if (isFastApiMode() && patchFile) {
+      try {
+        const updated = await patchFile(item.id, { starred: next })
+        const mapped = mapApiFile(updated)
+        setFiles((prev) =>
+          prev.map((file) => (file.id === item.id ? mapped : file)),
+        )
+        return
+      } catch (error) {
+        console.error("즐겨찾기 변경 실패:", error)
+        return
+      }
+    }
+
     setFiles((prev) =>
       prev.map((file) =>
         file.id === item.id
-          ? { ...file, starred: !file.starred, modifiedAt: new Date().toISOString() }
-          : file
-      )
+          ? { ...file, starred: next, modifiedAt: new Date().toISOString() }
+          : file,
+      ),
     )
   }
 
-  const toggleSelectedStar = () => {
-    setFiles((prev) =>
-      prev.map((item) =>
-        selectedIds.includes(item.id)
-          ? { ...item, starred: !item.starred, modifiedAt: new Date().toISOString() }
-          : item
-      )
-    )
+  const toggleSelectedStar = async () => {
+    for (const item of selectedItems) {
+      await toggleStar(item)
+    }
   }
 
-  const deleteItem = (item: FileItem) => {
+  const deleteItem = async (item: FileItem) => {
     const idsToDelete = new Set([item.id])
     if (item.type === "folder") {
       collectDescendantIds(files, item.id).forEach((id) => idsToDelete.add(id))
     }
 
+    if (isFastApiMode()) {
+      try {
+        await deleteFile(item.id)
+      } catch (error) {
+        console.error("파일 삭제 실패:", error)
+        window.alert("파일 삭제에 실패했습니다.")
+        return
+      }
+    }
+
     setFiles((prev) => prev.filter((file) => !idsToDelete.has(file.id)))
     setSelectedIds((prev) => prev.filter((id) => !idsToDelete.has(id)))
+    setRecentIds((prev) => prev.filter((id) => !idsToDelete.has(id)))
   }
 
-  const deleteSelected = () => {
-    const idsToDelete = new Set<string>()
+  const deleteSelected = async () => {
+    if (isFastApiMode()) {
+      for (const item of selectedItems) {
+        try {
+          await deleteFile(item.id)
+        } catch (error) {
+          console.error("파일 삭제 실패:", error)
+        }
+      }
+      await refreshFromServer()
+      setSelectedIds([])
+      return
+    }
 
+    const idsToDelete = new Set<string>()
     selectedItems.forEach((item) => {
       idsToDelete.add(item.id)
       if (item.type === "folder") {
@@ -200,26 +411,39 @@ export function useFileManager() {
     setSelectedIds([])
   }
 
-  const moveItem = (itemId: string, targetFolderId: string | null) => {
+  const moveItem = async (itemId: string, targetFolderId: string | null) => {
     if (!canMoveItem(files, itemId, targetFolderId)) return
+
+    if (isFastApiMode() && patchFile) {
+      try {
+        const updated = await patchFile(itemId, { parentId: targetFolderId })
+        const mapped = mapApiFile(updated)
+        setFiles((prev) =>
+          prev.map((item) => (item.id === itemId ? mapped : item)),
+        )
+        return
+      } catch (error) {
+        console.error("이동 실패:", error)
+        window.alert("파일 이동에 실패했습니다.")
+        return
+      }
+    }
 
     setFiles((prev) =>
       prev.map((item) =>
         item.id === itemId
           ? { ...item, parentId: targetFolderId, modifiedAt: new Date().toISOString() }
-          : item
-      )
+          : item,
+      ),
     )
   }
 
-  const moveSelected = (targetFolderId: string | null) => {
-    setFiles((prev) =>
-      prev.map((item) =>
-        selectedIds.includes(item.id) && canMoveItem(prev, item.id, targetFolderId)
-          ? { ...item, parentId: targetFolderId, modifiedAt: new Date().toISOString() }
-          : item
-      )
-    )
+  const moveSelected = async (targetFolderId: string | null) => {
+    for (const id of selectedIds) {
+      if (canMoveItem(files, id, targetFolderId)) {
+        await moveItem(id, targetFolderId)
+      }
+    }
   }
 
   const goToParentFolder = () => {
@@ -227,12 +451,31 @@ export function useFileManager() {
     setSelectedIds([])
   }
 
-  const createFolder = (name: string) => {
-    const now = new Date().toISOString()
+  const createFolder = async (name: string) => {
     const nextName = name.trim()
-
     if (!nextName) return
 
+    if (isFastApiMode() && createFile) {
+      try {
+        const created = await createFile({
+          name: nextName,
+          type: "folder",
+          parentId: currentFolderId,
+          permission: "private",
+        })
+        setFiles((prev) => [
+          ...prev,
+          mapApiFile(created as Record<string, unknown>),
+        ])
+        return
+      } catch (error) {
+        console.error("폴더 생성 실패:", error)
+        window.alert("폴더 생성에 실패했습니다.")
+        return
+      }
+    }
+
+    const now = new Date().toISOString()
     setFiles((prev) => [
       ...prev,
       {
@@ -247,7 +490,23 @@ export function useFileManager() {
     ])
   }
 
-  const uploadFiles = (uploadedFiles: File[], taskId: string) => {
+  const uploadFiles = async (uploadedFiles: File[], taskId: string) => {
+    if (isFastApiMode() && uploadFilesToServer) {
+      const created = await uploadFilesToServer({
+        files: uploadedFiles,
+        parentId: currentFolderId,
+        taskId: taskId || undefined,
+      })
+      const mapped = syncFileTaskNames(
+        created.map((raw) =>
+          mapApiFile(raw as unknown as Record<string, unknown>),
+        ),
+        managerTaskOptions,
+      )
+      setFiles((prev) => [...prev, ...mapped])
+      return
+    }
+
     const task = managerTaskOptions.find((item) => item.id === taskId)
     const now = new Date().toISOString()
 
@@ -264,17 +523,45 @@ export function useFileManager() {
         permission: "private" as const,
         taskId: task?.id,
         taskName: task?.name,
+        hasContent: true,
       })),
     ])
   }
 
-  const exportItem = (item: FileItem) => {
-    exportItemsAsJson(files, [item.id], `${item.name}.export.json`)
+  const exportItem = async (item: FileItem) => {
+    try {
+      if (exportFilesArchive) {
+        await exportFilesArchive([item.id], item.name)
+        return
+      }
+      window.alert("보내기를 사용할 수 없습니다.")
+    } catch (error) {
+      console.error("export 실패:", error)
+      window.alert(
+        error instanceof Error ? error.message : "보내기에 실패했습니다.",
+      )
+    }
   }
 
-  const exportSelected = () => {
+  const exportSelected = async () => {
     if (selectedIds.length === 0) return
-    exportItemsAsJson(files, selectedIds, `selected-files.export.json`)
+
+    const label =
+      selectedIds.length === 1
+        ? files.find((f) => f.id === selectedIds[0])?.name ?? "selected-files"
+        : "selected-files"
+
+    try {
+      if (exportFilesArchive) {
+        await exportFilesArchive(selectedIds, label)
+        return
+      }
+    } catch (error) {
+      console.error("선택 export 실패:", error)
+      window.alert(
+        error instanceof Error ? error.message : "보내기에 실패했습니다.",
+      )
+    }
   }
 
   return {
@@ -289,6 +576,10 @@ export function useFileManager() {
     viewMode,
     sortKey,
     searchQuery,
+    taskFilterId,
+    taskFilterLabel,
+    useFlatView,
+    setTaskFilterId,
     renameTarget,
     shareTarget,
     uploadOpen,
@@ -302,6 +593,7 @@ export function useFileManager() {
     setUploadOpen,
     setNewFolderOpen,
     openItem,
+    downloadItem,
     toggleSelect,
     clearSelection,
     copyItem,

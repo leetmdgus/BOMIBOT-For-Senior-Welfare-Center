@@ -27,6 +27,7 @@ interface FileListProps {
   onToggleStar: (item: FileItem) => void
   onDelete: (item: FileItem) => void
   onExport: (item: FileItem) => void
+  onDownload: (item: FileItem) => void
 }
 
 function FileRow({
@@ -40,6 +41,7 @@ function FileRow({
   onToggleStar,
   onDelete,
   onExport,
+  onDownload,
 }: FileListProps & { item: FileItem; selected: boolean }) {
   const Icon = fileIcons[item.type]
   const draggable = useDraggable({ id: item.id })
@@ -62,6 +64,7 @@ function FileRow({
       onToggleStar={onToggleStar}
       onDelete={onDelete}
       onExport={onExport}
+      onDownload={onDownload}
     >
       <tr
         ref={setRefs}
@@ -120,6 +123,7 @@ function FileRow({
               onToggleStar={onToggleStar}
               onDelete={onDelete}
               onExport={onExport}
+              onDownload={onDownload}
             />
           </DropdownMenu>
         </td>

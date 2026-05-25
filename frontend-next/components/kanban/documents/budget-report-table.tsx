@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { Loader2 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { getBudgetReportRows } from "@/services/kanban.documents.service"
@@ -15,15 +16,63 @@ function formatAmount(value: number) {
 export function BudgetReportTable() {
   const { year } = useDocuments()
   const [data, setData] = useState<BudgetReportRow[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [loadError, setLoadError] = useState<string | null>(null)
   const previousYear = year - 1
 
   useEffect(() => {
-    getBudgetReportRows()
-      .then(setData)
+    let cancelled = false
+    setIsLoading(true)
+    setLoadError(null)
+
+    getBudgetReportRows({ year })
+      .then((rows) => {
+        if (!cancelled) setData(rows)
+      })
       .catch((error) => {
         console.error("예산보고서 데이터 로드 실패:", error)
+        if (!cancelled) {
+          setData([])
+          setLoadError("예산보고서 데이터를 불러오지 못했습니다.")
+        }
       })
-  }, [])
+      .finally(() => {
+        if (!cancelled) setIsLoading(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [year])
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white py-24 text-muted-foreground">
+        <Loader2 className="size-8 animate-spin" />
+        <p className="text-sm">예산보고서 데이터를 불러오는 중입니다.</p>
+      </div>
+    )
+  }
+
+  if (loadError) {
+    return (
+      <div className="rounded-lg border border-slate-300 bg-white p-12 text-center text-sm text-muted-foreground">
+        {loadError}
+      </div>
+    )
+  }
+
+  if (data.length === 0) {
+    return (
+      <div className="rounded-lg border border-slate-300 bg-white p-12 text-center">
+        <p className="text-sm text-muted-foreground">
+          선택한 연도에 표시할 예산 데이터가 없습니다. 칸반 업무의
+          계획/실적 입력관리에서 연간 계획 예산·원천을 입력해 주세요.
+        </p>
+        <p className="mt-2 text-xs text-muted-foreground">{year}년 기준</p>
+      </div>
+    )
+  }
 
   return (
     <div className="kanban-documents-report overflow-hidden rounded-lg border border-slate-300 bg-white">

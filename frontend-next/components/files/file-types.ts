@@ -16,6 +16,10 @@ export interface FileItem {
   permission: Permission
   taskId?: string
   taskName?: string
+  /** 서버 디스크 저장 키 */
+  storageKey?: string
+  mimeType?: string
+  hasContent?: boolean
 }
 
 export interface TaskOption {

@@ -1,68 +1,185 @@
-# BOMIBOT Frontend API 명세서
+# BOMIBOT API 명세서
 
-> Base URL: `/api`  
-> Content-Type: `application/json` (파일·이미지 첨부 CS 티켓은 Base64 `dataUrl` 포함 JSON)  
-> 환경 변수 `NEXT_PUBLIC_USE_MOCK_API=true` 일 때 클라이언트는 API 대신 `services/*.mock.service.ts` 를 직접 호출합니다.  
-> `false` 일 때는 `services/*.api.service.ts` → `app/api/**` → 동일 `*.mock.service.ts` (백엔드 연동 전까지 서버 목업).
+> **최종 갱신:** 2026-05-24  
+> **대상:** 프론트엔드 `frontend-next` · Next.js interim API · (예정) FastAPI 백엔드  
+> **관련 문서:** [FRONTEND_REVIEW.md](./FRONTEND_REVIEW.md) · [DATABASE_SCHEMA.md](./DATABASE_SCHEMA.md) · [services/README.md](../services/README.md)
 
-## 데이터 레이어 구조
+---
+
+## 빠른 참조
+
+| 항목 | 값 |
+|------|-----|
+| Interim Base URL | `/api` (Next.js Route Handler, 로컬·mock 전환용) |
+| FastAPI Base URL | `NEXT_PUBLIC_API_BASE_URL` — 프로덕션: `https://api-workspace.bomi.ai.kr` (호스트만, 경로 `/api/v1/*`는 클라이언트가 조합) |
+| 배포 | [DEPLOYMENT.md](../../docs/DEPLOYMENT.md) |
+| Content-Type | `application/json` (CS 첨부는 Base64 `dataUrl` 포함 JSON) |
+| 지역(테넌트) | `chuncheon-north` (춘천 북부) · `chuncheon-east` (춘천 동부) |
+| 인증 | Cookie `bomi_session` + `Authorization: Bearer {token}` |
+
+### 환경 변수
+
+| 변수 | 기본 | 설명 |
+|------|------|------|
+| `NEXT_PUBLIC_USE_MOCK_API` | `true` | `true`: 브라우저가 `*.mock.service` 직접 호출 · `false`: `*.api.service` → `/api/*` |
+| `NEXT_PUBLIC_API_BASE_URL` | (없음) | FastAPI 직연동 시 base URL. 없으면 상대 경로 `/api` |
+| `GEMINI_API_KEY` 등 | — | 챗봇·CS 전용 ([§10 챗봇](#10-챗봇-cs--데이터--rag)) |
+
+### 데이터 호출 흐름
 
 ```
 components / pages
-    ↓  import
-services/*.service.ts          ← NEXT_PUBLIC_USE_MOCK_API 분기 (facade)
-    ↓                    ↓
-*.mock.service.ts      *.api.service.ts → fetch("/api/...")
-    ↓                    ↓
-lib/mocks/*.ts         app/api/**/route.ts → *.mock.service.ts
+    ↓  import (금지: lib/mocks 직접 import)
+services/*.service.ts              ← facade (mock / api 분기)
+    ↓                         ↓
+*.mock.service.ts          *.api.service.ts
+    ↓                         ↓
+loadRegionStore()          lib/api-client.ts → fetch
+    ↓                         ↓
+lib/mocks/region-store.ts  app/api/**/route.ts → *.mock.service (interim)
 ```
 
-| 계층 | 역할 |
-|------|------|
-| `lib/mocks/*.ts` | 정적 시드·상수·목업 비즈니스 데이터 (단일 출처) |
-| `services/*.types.ts` | 요청/응답 TypeScript 타입 |
-| `services/*.mock.service.ts` | 인메모리 저장·변환·집계 로직 |
-| `services/*.api.service.ts` | REST `fetch` 클라이언트 |
-| `services/*.service.ts` | UI가 import 하는 공개 API |
-| `app/api/**` | Next.js Route Handler (서버 목업) |
+| 계층 | 경로 | 역할 |
+|------|------|------|
+| UI | `components/`, `app/` | `services/*.service.ts` 만 사용 |
+| Facade | `services/*.service.ts` | `NEXT_PUBLIC_USE_MOCK_API` 분기 |
+| 타입 | `services/*.types.ts` | 요청/응답 TypeScript |
+| Mock | `services/*.mock.service.ts` | 지역별 인메모리 로직 |
+| API 클라이언트 | `services/*.api.service.ts` | REST 호출 |
+| HTTP 공통 | `lib/api-client.ts` | Bearer · `X-Region-Id` · `ApiError` |
+| 시드 데이터 | `lib/mocks/*.ts` | 정적 mock 상수 |
+| 지역 묶음 | `lib/mocks/region-store.ts` | 북부/동부별 데이터 스냅샷 |
+| Interim API | `app/api/**/route.ts` | Next 서버 목업 (FastAPI 전 BFF) |
 
-**UI 규칙:** 화면 컴포넌트는 `lib/mocks` 를 직접 import 하지 않고 `services/*.service.ts` 만 사용합니다.
+---
 
 ## 목차
 
 1. [공통](#공통)
-2. [대시보드](#1-대시보드)
-3. [조직/직원](#2-조직직원)
-4. [전자책](#3-전자책)
-5. [파일](#4-파일)
-6. [칸반 보드](#5-칸반-보드)
-7. [칸반 업무 상세](#6-칸반-업무-상세)
-8. [실적 관리](#7-실적-관리)
-9. [사업 문서](#8-사업-문서-보고서)
-10. [만족도 조사](#9-만족도-조사-survey)
-11. [챗봇 (CS · 데이터 · 온톨로지)](#10-챗봇-cs--데이터-어시스턴트--온톨로지)
-12. [업무 레거시](#11-업무task-레거시)
-13. [전체 API 엔드포인트 목록](#전체-api-엔드포인트-목록)
-14. [Service ↔ API 매핑](#service--api-매핑-요약)
-15. [Mock 데이터](#mock-데이터-위치)
+2. [인증 · 지역](#0-인증--지역)
+3. [대시보드](#1-대시보드)
+4. [조직/직원](#2-조직직원)
+5. [전자책](#3-전자책)
+6. [파일](#4-파일)
+7. [칸반 보드](#5-칸반-보드)
+8. [칸반 업무 상세](#6-칸반-업무-상세)
+9. [실적 관리](#7-실적-관리)
+10. [사업 문서](#8-사업-문서-보고서)
+11. [만족도 조사](#9-만족도-조사-survey)
+12. [챗봇](#10-챗봇-cs--데이터--rag)
+13. [업무 레거시](#11-업무task-레거시)
+14. [전체 엔드포인트](#전체-api-엔드포인트-목록)
+15. [Service 매핑](#service--api-매핑)
+16. [Mock · Region Store](#mock--region-store)
+17. [FastAPI 연동 가이드](#fastapi-연동-가이드)
+
+---
 
 ## 공통
 
-### 응답 규칙
+### HTTP 상태
 
-| HTTP 상태 | 설명 |
-|-----------|------|
+| 코드 | 설명 |
+|------|------|
 | 200 | 성공 |
 | 201 | 생성 성공 |
-| 400 | 잘못된 요청 (필수 파라미터 누락 등) |
+| 400 | 잘못된 요청 |
+| 401 | 미인증 (세션 없음/만료) |
 | 404 | 리소스 없음 |
 | 500 | 서버 오류 |
 
-### 에러 응답 예시
+### 에러 응답
 
 ```json
 { "error": "Project not found" }
 ```
+
+### 인증·지역 헤더 (API 모드)
+
+| 헤더 | 설명 |
+|------|------|
+| `Authorization` | `Bearer {token}` (`AuthSession.token`) |
+| `X-Region-Id` | `chuncheon-north` \| `chuncheon-east` |
+| `Cookie` | `bomi_session` (interim Next API, JSON URL-encoded) |
+
+> Interim `/api/*` 는 `middleware` + `requireRegionId(request)` 로 보호됩니다.  
+> 공개 예외: `/login`, `/signup`, `/api/auth/*`, `/api/chat/*`, `/survey/{id}/respond`.
+
+### DTO ↔ UI 변환
+
+일부 API는 아이콘 등을 문자열로 내려주고, 클라이언트에서 React 컴포넌트로 치환합니다.
+
+| API 필드 | UI 필드 | 유틸 |
+|----------|---------|------|
+| `iconName` | `icon` | `dashboard.utils.ts` → `hydrateDashboardOverview()` |
+
+---
+
+## 0. 인증 · 지역
+
+**타입:** `services/auth.types.ts` · **Facade:** `auth.service.ts`
+
+### 지역 ID
+
+| `regionId` | 라벨 | 기관명 |
+|------------|------|--------|
+| `chuncheon-north` | 춘천 북부 | 춘천북부노인복지관 |
+| `chuncheon-east` | 춘천 동부 | 춘천동부노인복지관 |
+
+### `POST /api/auth/login`
+
+**Request**
+
+```json
+{
+  "email": "admin@north.bomi.local",
+  "password": "bomi-north-2026",
+  "regionId": "chuncheon-north"
+}
+```
+
+**Response 200:** `AuthSession`
+
+```json
+{
+  "id": "admin-north",
+  "email": "admin@north.bomi.local",
+  "name": "이승현",
+  "role": "관리자",
+  "roleType": "admin",
+  "department": "운영총괄",
+  "regionId": "chuncheon-north",
+  "profileImage": "/이승현_증명사진.jpg",
+  "token": "mock-token-admin-north",
+  "regionLabel": "춘천 북부",
+  "orgName": "춘천북부노인복지관"
+}
+```
+
+**Response 401:** `{ "error": "이메일, 비밀번호 또는 지역이 올바르지 않습니다." }`
+
+### `POST /api/auth/signup`
+
+**Request:** `SignupRequest` — `email`, `password`, `name`, `department`, `regionId`
+
+**Response 201:** `AuthSession` (신규 사용자 `roleType: "user"`)
+
+### `GET /api/auth/session`
+
+**Response 200:** `AuthSession` · **401:** 미로그인
+
+### `POST /api/auth/logout`
+
+**Response 200:** `{ "ok": true }` — 세션 쿠키 삭제
+
+### 데모 관리자 계정 (mock)
+
+| 지역 | 이메일 | 비밀번호 |
+|------|--------|----------|
+| 북부 | `admin@north.bomi.local` | `bomi-north-2026` |
+| 동부 | `admin@east.bomi.local` | `bomi-east-2026` |
+
+**Service:** `login()`, `signup()`, `getSession()`, `logout()` → `auth.service.ts`
 
 ---
 
@@ -99,15 +216,45 @@ lib/mocks/*.ts         app/api/**/route.ts → *.mock.service.ts
     }
   ],
   "calendarEvents": [
-    { "day": 1, "title": "근로자의 날", "color": "bg-amber-400" }
+    {
+      "day": 4,
+      "title": "전체 주간업무회의",
+      "color": "bg-rose-500",
+      "category": "welfare"
+    },
+    {
+      "day": 7,
+      "title": "복지3팀 회의",
+      "color": "bg-emerald-500",
+      "category": "team"
+    }
   ],
   "volunteerEvents": [
-    { "id": "v1", "title": "치매예방 캠페인", "date": "2026.05.10", "type": "정기" }
+    {
+      "id": "v-today-1",
+      "name": "박서연",
+      "program": "치매예방 프로그램 보조",
+      "day": 24,
+      "status": "scheduled"
+    },
+    {
+      "id": "v1",
+      "name": "휴먼잡스",
+      "program": "스마트폰중급",
+      "day": 27,
+      "status": "completed"
+    }
   ]
 }
 ```
 
-**Service:** `getDashboardOverview()` → `dashboard.service.ts`
+| 필드 | 설명 |
+|------|------|
+| `calendarEvents[].category` | `welfare` (복지관) · `team` (복지3팀) |
+| `volunteerEvents[].status` | `scheduled` (오늘 예정) · `completed` (최근 완료) |
+
+**Service:** `getDashboardOverview()` → `dashboard.service.ts`  
+**인증:** 로그인 지역의 `region-store.dashboard` 데이터 반환
 
 ---
 
@@ -149,9 +296,12 @@ lib/mocks/*.ts         app/api/**/route.ts → *.mock.service.ts
       ]
     }
   ],
+  "positionGroups": [],
   "employees": []
 }
 ```
+
+> `search`·`department` 쿼리 사용 시 필터된 `departments`, `positionGroups`, `employees` 가 함께 반환됩니다.
 
 **Service:** `getDepartments()`, `searchEmployees()` → `organization.service.ts`
 
@@ -476,13 +626,13 @@ lib/mocks/*.ts         app/api/**/route.ts → *.mock.service.ts
 | 탭 | 데이터 소스 (현재) |
 |----|-------------------|
 | 계획/실적 입력관리 | `getInputManagementRows()` + `getPerformanceInputMeta()` |
-| 사업계획 | 입력관리 행 → `inputRowsToSummaryRows()` 클라이언트 집계 (`variant=plan`) |
+| 사업계획 | `PerformanceProvider` → `inputRowsToSummaryRows()` (`variant=plan`) |
 | 사업실적 | 동일 (`variant=actual`) |
-| 사업결과 | 동일 (`variant=result`, 계획 대비 진행률) |
+| 사업결과 | 동일 (`variant=result`) |
 
-> **단일 데이터 소스:** `lib/mocks/kanban.performance-input.mock.ts` 의 `inputManagementRows` 가 입력관리·사업계획·사업실적·사업결과 탭에 공통 반영됩니다.  
-> `kanban.performance-summary.mock.ts` 는 시드 집계용 보조 데이터입니다.  
-> `GET /api/performance/monthly-plan` 은 월별 계획 시트용 별도 목업(`kanban.monthly-plan.mock.ts`)이며, 현재 사업계획 탭 UI는 사용하지 않습니다.
+> **단일 데이터 소스:** `region-store.performanceInput.inputManagementRows` (시드: `kanban.performance-input.mock.ts`)  
+> `GET /api/performance/monthly-plan` 은 별도 목업(`kanban.monthly-plan.mock.ts`) — `MontlyPanView`와 역할 분리 검토 중  
+> **FastAPI TODO:** `GET /api/performance/summary` (요약 시트 전용) 미정의
 
 ### `GET /api/performance`
 
@@ -602,9 +752,9 @@ lib/mocks/*.ts         app/api/**/route.ts → *.mock.service.ts
 
 **Service:** `getPerformanceRows()`, `getInputManagementRows()`, `getPerformanceInputMeta()`, `getMonthlyPlan()` → `kanban.performance.service.ts`
 
-### 실적 요약 시트 (클라이언트 목업 타입)
+### 실적 요약 시트 (`PerformanceSummaryRow`)
 
-`PerformanceSummaryRow` (API 미연동, 참고용)
+클라이언트에서 입력관리 행을 집계해 생성. **전용 REST API 미연동** (FastAPI 연동 시 `GET /api/performance/summary` 권장)
 
 | 필드 | 설명 |
 |------|------|
@@ -1126,9 +1276,20 @@ CS 문의 접수 · SMTP 메일 발송.
 
 ## 전체 API 엔드포인트 목록
 
+### 인증
+
 | Method | Path | 설명 |
 |--------|------|------|
-| GET | `/api/dashboard` | 대시보드 통계 |
+| POST | `/api/auth/login` | 로그인 |
+| POST | `/api/auth/signup` | 회원가입 |
+| GET | `/api/auth/session` | 세션 조회 |
+| POST | `/api/auth/logout` | 로그아웃 |
+
+### 비즈니스
+
+| Method | Path | 설명 |
+|--------|------|------|
+| GET | `/api/dashboard` | 대시보드 통계·일정·봉사 |
 | GET | `/api/employees` | 조직·직원 |
 | GET | `/api/ebooks` | 전자책 목록 |
 | GET | `/api/ebooks/category-styles` | 카테고리 스타일 |
@@ -1175,80 +1336,152 @@ CS 문의 접수 · SMTP 메일 발송.
 | GET | `/api/tasks` | 업무 flat 목록 |
 | POST | `/api/tasks` | 업무 생성 |
 | PUT | `/api/tasks` | 업무 수정 |
-| DELETE | `/api/tasks` | 업무 삭제 |
+| DELETE | `/api/tasks` | 업무 삭제 (레거시, 칸반 nested API 권장) |
 
 ---
 
-## Service ↔ API 매핑 요약
+## Service ↔ API 매핑
 
-| 도메인 | Facade Service | Mock Service | API Prefix |
-|--------|----------------|--------------|------------|
-| 대시보드 | `dashboard.service` | `dashboard.mock.service` | `/api/dashboard` |
-| 조직 | `organization.service` | `organization.mock.service` | `/api/employees` |
-| 전자책 | `ebooks.service` | `ebooks.mock.service` | `/api/ebooks` |
-| 파일 | `files.service` | `files.mock.service` | `/api/files`, `/api/files/manager` |
-| 칸반 보드 | `kanban.board.service` | `kanban.board.mock.service` | `/api/kanban/boards`, … |
-| 버전 기록 | `kanban.version-history.service` | `kanban.version-history.mock.service` | `/api/kanban/version-history` |
-| 업무 상세 | `kanban.task-detail.service` | `kanban.task-detail.mock.service` | `/api/kanban/task-detail/*` |
-| 실적 | `kanban.performance.service` | `kanban.performance.mock.service` | `/api/performance`, `/api/performance/monthly-plan` |
-| 사업문서 | `kanban.documents.service` | `kanban.documents.mock.service` | `/api/reports` |
-| 만족도조사 | `survey.service` | `survey.mock.service` | `/api/surveys` |
-| 챗봇 | `chat.service` | `chat.mock.service` (+ `chat.server.service`) | `/api/chat/*` |
+| 도메인 | Facade | Mock | API (interim) | 비고 |
+|--------|--------|------|---------------|------|
+| **인증** | `auth.service` | `auth.mock.service` | `/api/auth/*` | `lib/api-client` 사용 |
+| 대시보드 | `dashboard.service` | `dashboard.mock.service` | `GET /api/dashboard` | |
+| 조직 | `organization.service` | `organization.mock.service` | `GET /api/employees` | |
+| 전자책 | `ebooks.service` | `ebooks.mock.service` | `/api/ebooks` | |
+| 파일 | `files.service` | `files.mock.service` | `/api/files`, `/manager` | mutation mock 비영속 |
+| 칸반 보드 | `kanban.board.service` | `kanban.board.mock.service` | `/api/kanban/boards/*` | |
+| 버전 기록 | `kanban.version-history.service` | `…mock…` | `/api/kanban/version-history` | |
+| 업무 상세 | `kanban.task-detail.service` | `…mock…` | `/api/kanban/task-detail/*` | 평가·계획서 |
+| 실적 | `kanban.performance.service` | `…mock…` | `/api/performance*` | |
+| 사업문서 | `kanban.documents.service` | `…mock…` | `GET /api/reports` | |
+| 만족도조사 | `survey.service` | `survey.mock.service` | `/api/surveys` | |
+| 챗봇 | `chat.service` | `chat.mock.service` | `/api/chat/*` | 서버: `chat.server.service` |
+
+**타입 정의:** 각 도메인 `services/*.types.ts` · 공통 인증 `auth.types.ts`
 
 ---
 
-## Mock 데이터 위치
+## Mock · Region Store
 
-| 파일 | 용도 | Mock Service |
-|------|------|----------------|
-| `lib/mocks/dashboard.mock.ts` | 대시보드 | `dashboard.mock.service.ts` |
-| `lib/mocks/organization.mock.ts` | 조직·직원 | `organization.mock.service.ts` |
-| `lib/mocks/ebooks.mock.ts` | 전자책 | `ebooks.mock.service.ts` |
-| `lib/mocks/files.mock.ts` | 파일 목록 API | `files.mock.service.ts` |
-| `lib/mocks/files-manager.mock.ts` | 파일 관리 UI | `files.mock.service.ts` |
-| `lib/mocks/kanban.board.mock.ts` | 칸반 보드·담당자·경로 | `kanban.board.mock.service.ts` |
-| `lib/mocks/kanban.task-detail.mock.ts` | 사업평가·첨부 파일 | `kanban.task-detail.mock.service.ts` |
-| `lib/mocks/kanban.business-plan.mock.ts` | 사업계획서 탭 | `kanban.task-detail.mock.service.ts` |
-| `lib/mocks/kanban.documents.mock.ts` | 사업문서 보고서 행 | `kanban.documents.mock.service.ts` |
-| `lib/mocks/kanban.performance-input.mock.ts` | 실적 입력·집계 단일 소스 | `kanban.performance.mock.service.ts` |
-| `lib/mocks/kanban.monthly-plan.mock.ts` | 월별 계획 시트(보조) | `kanban.performance.mock.service.ts` |
-| `lib/mocks/kanban.performance-summary.mock.ts` | 요약 시드(입력 mock 보조) | — |
-| `lib/mocks/kanban.version-history.mock.ts` | 버전 기록 | `kanban.version-history.mock.service.ts` |
-| `lib/mocks/survey.mock.ts` | 만족도 조사 전역 | `survey.mock.service.ts` |
-| `lib/mocks/chat.mock.ts` | 챗봇 UI 설정 (CS·어시스턴트) | `chat.mock.service.ts` / `chat.server.service.ts` |
-| `lib/chat/ontology/*` | 지식 그래프 빌드·질의 | `chat.server.service.ts` |
-| `lib/chat/assistant-*.ts` | 데이터 스냅샷·LLM·규칙 답변 | `chat.server.service.ts` |
-| `lib/chat/cs-*.ts` | CS SMTP 발송 | `chat.server.service.ts` |
+### 지역별 데이터 묶음
 
-**삭제·미사용:** 빈 `kanban.survey.*` 서비스 스텁, `kanban.survey.mock.ts` (설문은 `survey.mock.ts` + `getSurveys()` 로 통합).
+`lib/mocks/region-store.ts` — `getRegionStore(regionId)` 가 북부/동부별로 아래 mock을 `structuredClone` 후 기관명 등을 지역화합니다.
+
+| `RegionStore` 키 | 원본 mock |
+|------------------|-----------|
+| `dashboard` | `dashboard.mock.ts` |
+| `organization` | `organization.mock.ts` |
+| `kanban` | `kanban.board.mock.ts` |
+| `documents` | `kanban.documents.mock.ts` |
+| `taskDetail` / `businessPlan` | `kanban.task-detail.mock.ts`, `kanban.business-plan.mock.ts` |
+| `performanceInput` | `kanban.performance-input.mock.ts` |
+| `survey` | `survey.mock.ts` |
+| `files` / `filesManager` | `files.mock.ts`, `files-manager.mock.ts` |
+| `ebooks` | `ebooks.mock.ts` |
+| `versionHistory` | `kanban.version-history.mock.ts` |
+| `chat` | `chat.mock.ts` |
+
+**Mock Service 패턴**
+
+```typescript
+import { loadRegionStore } from "@/lib/auth/load-region-store"
+
+export async function getX(regionId?: RegionId) {
+  const store = await loadRegionStore({ regionId })
+  return store.someDomain.data
+}
+```
+
+**인증 사용자:** `lib/mocks/auth-users.mock.ts` (지역별 admin·회원가입 사용자)
+
+### mock 파일 ↔ Service (시드)
+
+| 파일 | Mock Service |
+|------|----------------|
+| `dashboard.mock.ts` | `dashboard.mock.service` |
+| `organization.mock.ts` | `organization.mock.service` |
+| `ebooks.mock.ts` | `ebooks.mock.service` |
+| `files.mock.ts`, `files-manager.mock.ts` | `files.mock.service` |
+| `kanban.board.mock.ts` | `kanban.board.mock.service` |
+| `kanban.task-detail.mock.ts`, `kanban.business-plan.mock.ts` | `kanban.task-detail.mock.service` |
+| `kanban.documents.mock.ts` | `kanban.documents.mock.service` |
+| `kanban.performance-input.mock.ts` | `kanban.performance.mock.service` |
+| `kanban.monthly-plan.mock.ts` | `getMonthlyPlan()` (보조) |
+| `kanban.version-history.mock.ts` | `kanban.version-history.mock.service` |
+| `survey.mock.ts` | `survey.mock.service` |
+| `chat.mock.ts` | `chat.mock.service` / `chat.server.service` |
+
+### UI에서 mock 직접 import 금지 (예외·미정리)
+
+| 파일 | 조치 |
+|------|------|
+| `business-plan-tab.tsx` | → `kanban.task-detail.service` 연동 필요 |
+| `lib/chat/ontology/build-graph.ts` | → API 스냅샷 또는 region-store |
+| `lib/chat/assistant-data.ts` | 동일 |
+
+---
+
+## FastAPI 연동 가이드
+
+### 1. 경로 전략
+
+| 방식 | 설명 |
+|------|------|
+| **A. 직접 연동** | `*.api.service.ts`의 base를 `NEXT_PUBLIC_API_BASE_URL` 로 변경 |
+| **B. BFF 유지** | Next `app/api/**` 가 FastAPI로 프록시 |
+
+### 2. FastAPI에 필요한 공통 사항
+
+- `POST/GET /auth/*` — JWT 또는 HttpOnly cookie
+- 모든 리소스에 `region_id` 스코프
+- 에러 JSON: `{ "error": string }`
+- OpenAPI ↔ `services/*.types.ts` 동기화
+
+### 3. 프론트 전환 체크리스트
+
+- [ ] `NEXT_PUBLIC_USE_MOCK_API=false`
+- [ ] `lib/api-client.ts`를 모든 `*.api.service.ts`에 적용
+- [ ] `app/api/**` 에 `requireRegionId` 전파 (현재 일부 route만 적용)
+- [ ] `region-store` 제거 후 API가 지역 필터링
+- [ ] mutation API 영속화 (실적·파일·전자책 POST)
+
+### 4. 권장 연동 순서
+
+1. 인증 · 지역  
+2. 칸반 보드  
+3. 대시보드 · 조직  
+4. 실적 · 사업문서 · 업무 상세  
+5. 설문 · 파일 · 전자책  
+6. 챗봇 (LLM·SMTP)
 
 ---
 
 ## 클라이언트 사용 예시
 
 ```typescript
+import { login } from "@/services/auth.service"
+import { getDashboardOverview } from "@/services/dashboard.service"
 import { getProjects } from "@/services/kanban.board.service"
-import {
-  askAssistantQuestion,
-  getOntologyGraph,
-  submitCsTicket,
-} from "@/services/chat.service"
+import { askAssistantQuestion } from "@/services/chat.service"
 
+// 1. 로그인 (지역 필수)
+await login({
+  email: "admin@north.bomi.local",
+  password: "bomi-north-2026",
+  regionId: "chuncheon-north",
+})
+
+// 2. 대시보드 (mock: region-store / api: GET /api/dashboard)
+const overview = await getDashboardOverview()
+
+// 3. 칸반
 const projects = await getProjects("2026")
 
+// 4. 챗봇 (mock 모드에서도 /api/chat/* 서버 호출)
 const answer = await askAssistantQuestion({
   message: "5월 계획 예산 합계는?",
   pageUrl: window.location.href,
 })
-
-const graph = await getOntologyGraph("온라인홍보 실적")
-
-await submitCsTicket({
-  message: "실적 화면 오류",
-  attachments: [{ name: "capture.png", type: "image/png", dataUrl: "data:image/png;base64,..." }],
-  pageUrl: window.location.href,
-  contactEmail: "user@example.com",
-})
 ```
 
-`NEXT_PUBLIC_USE_MOCK_API=false` 로 설정하면 동일 함수가 위 표의 API를 `fetch` 합니다.
+`NEXT_PUBLIC_USE_MOCK_API=false` 이면 `*.api.service` → `/api/*` (interim) 또는 FastAPI base URL 로 동일 facade를 호출합니다.

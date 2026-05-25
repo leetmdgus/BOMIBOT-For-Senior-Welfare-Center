@@ -1,43 +1,61 @@
-// services/kanban.mock.service.ts
-import {
-  categoryColumnTypeMapMock,
-  createDefaultProjectCategories,
-  defaultColumnTypeMock,
-  projectImageOptions,
-  projectsMock,
-  staffMock,
-  taskPathMapMock,
-} from "@/lib/mocks/kanban.board.mock"
-import { ColumnType, columnTypesMock, CreateProjectRequest, CreateProjectResponse, KanbanProject, ProjectImageOption, Staff, Task } from "./kanban.board.types"
+import { loadRegionStore } from "@/lib/auth/load-region-store"
+import type { RegionId } from "@/lib/auth/regions"
+import { columnTypesMock } from "./kanban.board.types"
+import type {
+  ColumnType,
+  CreateProjectRequest,
+  CreateProjectResponse,
+  KanbanProject,
+  ProjectImageOption,
+  Staff,
+  Task,
+} from "./kanban.board.types"
 
-export async function getProjects(year: string): Promise<KanbanProject[]> {
-  console.log("mock selected year:", year)
-
-  return projectsMock.filter(
-    (project) => project.year === year
-  )
+async function getKanban(regionId?: RegionId) {
+  const store = await loadRegionStore({ regionId })
+  return store.kanban
 }
-export async function getStaffList(): Promise<Staff[]> {
-  return staffMock
+
+export async function getProjects(
+  year: string,
+  regionId?: RegionId,
+): Promise<KanbanProject[]> {
+  const kanban = await getKanban(regionId)
+  return kanban.projectsMock.filter((project) => project.year === year)
+}
+
+export async function getStaffList(regionId?: RegionId): Promise<Staff[]> {
+  const kanban = await getKanban(regionId)
+  return kanban.staffMock
 }
 
 export async function getColumnTypes(): Promise<readonly ColumnType[]> {
   return columnTypesMock
 }
 
-export async function getTaskPathMap(): Promise<Record<ColumnType, string>> {
-  return taskPathMapMock
+export async function getTaskPathMap(
+  regionId?: RegionId,
+): Promise<Record<ColumnType, string>> {
+  const kanban = await getKanban(regionId)
+  return kanban.taskPathMapMock
 }
 
 export async function getColumnTypeByCategoryTitle(
-  categoryTitle: string
+  categoryTitle: string,
+  regionId?: RegionId,
 ): Promise<ColumnType> {
-  return categoryColumnTypeMapMock[categoryTitle.trim()] ?? defaultColumnTypeMock
+  const kanban = await getKanban(regionId)
+  return (
+    kanban.categoryColumnTypeMapMock[categoryTitle.trim()] ??
+    kanban.defaultColumnTypeMock
+  )
 }
 
 export async function createProject(
-  project: CreateProjectRequest
+  project: CreateProjectRequest,
+  regionId?: RegionId,
 ): Promise<CreateProjectResponse> {
+  const kanban = await getKanban(regionId)
   const now = new Date().toISOString()
   const projectId = crypto.randomUUID()
 
@@ -56,7 +74,7 @@ export async function createProject(
 
   const newBoardProject: KanbanProject = {
     id: projectId,
-    number: String(projectsMock.length + 1).padStart(2, "0"),
+    number: String(kanban.projectsMock.length + 1).padStart(2, "0"),
     title: project.project_name,
     team: project.assignees?.[0]?.team ?? "",
     manager: project.assignees?.[0]
@@ -64,7 +82,7 @@ export async function createProject(
       : "",
     image: project.project_image,
     year: project.year ?? new Date().getFullYear().toString(),
-    categories: createDefaultProjectCategories(
+    categories: kanban.createDefaultProjectCategories(
       taskTitle
         ? {
             initialTask: {
@@ -75,56 +93,61 @@ export async function createProject(
               totalCount: 0,
             },
           }
-        : undefined
+        : undefined,
     ),
   }
 
-  projectsMock.push(newBoardProject)
+  kanban.projectsMock.push(newBoardProject)
 
   return newProject
 }
 
 export async function updateProject(
   projectId: string,
-  updatedProject: Partial<KanbanProject>
+  updatedProject: Partial<KanbanProject>,
+  regionId?: RegionId,
 ): Promise<KanbanProject | null> {
-  const projectIndex = projectsMock.findIndex(
-    (project) => project.id === projectId
+  const kanban = await getKanban(regionId)
+  const projectIndex = kanban.projectsMock.findIndex(
+    (project) => project.id === projectId,
   )
 
   if (projectIndex === -1) return null
 
-  projectsMock[projectIndex] = {
-    ...projectsMock[projectIndex],
+  kanban.projectsMock[projectIndex] = {
+    ...kanban.projectsMock[projectIndex],
     ...updatedProject,
   }
 
-  return projectsMock[projectIndex]
+  return kanban.projectsMock[projectIndex]
 }
 
-export async function deleteProject(projectId: string): Promise<boolean> {
-  const projectIndex = projectsMock.findIndex(
-    (project) => project.id === projectId
+export async function deleteProject(
+  projectId: string,
+  regionId?: RegionId,
+): Promise<boolean> {
+  const kanban = await getKanban(regionId)
+  const projectIndex = kanban.projectsMock.findIndex(
+    (project) => project.id === projectId,
   )
 
   if (projectIndex === -1) return false
 
-  projectsMock.splice(projectIndex, 1)
-
+  kanban.projectsMock.splice(projectIndex, 1)
   return true
 }
 
 export async function createTask(
   projectId: string,
   categoryId: string,
-  task: Omit<Task, "id">
+  task: Omit<Task, "id">,
+  regionId?: RegionId,
 ): Promise<Task | null> {
-  const project = projectsMock.find((project) => project.id === projectId)
+  const kanban = await getKanban(regionId)
+  const project = kanban.projectsMock.find((item) => item.id === projectId)
   if (!project) return null
 
-  const category = project.categories.find(
-    (category) => category.id === categoryId
-  )
+  const category = project.categories.find((item) => item.id === categoryId)
   if (!category) return null
 
   const newTask: Task = {
@@ -133,7 +156,6 @@ export async function createTask(
   }
 
   category.tasks.push(newTask)
-
   return newTask
 }
 
@@ -141,17 +163,17 @@ export async function updateTask(
   projectId: string,
   categoryId: string,
   taskId: string,
-  updatedTask: Partial<Task>
+  updatedTask: Partial<Task>,
+  regionId?: RegionId,
 ): Promise<Task | null> {
-  const project = projectsMock.find((project) => project.id === projectId)
+  const kanban = await getKanban(regionId)
+  const project = kanban.projectsMock.find((item) => item.id === projectId)
   if (!project) return null
 
-  const category = project.categories.find(
-    (category) => category.id === categoryId
-  )
+  const category = project.categories.find((item) => item.id === categoryId)
   if (!category) return null
 
-  const taskIndex = category.tasks.findIndex((task) => task.id === taskId)
+  const taskIndex = category.tasks.findIndex((item) => item.id === taskId)
   if (taskIndex === -1) return null
 
   category.tasks[taskIndex] = {
@@ -162,27 +184,70 @@ export async function updateTask(
   return category.tasks[taskIndex]
 }
 
+export async function moveTask(
+  projectId: string,
+  payload: {
+    taskId: string
+    fromCategoryId: string
+    toCategoryId: string
+    overTaskId?: string
+  },
+  regionId?: RegionId,
+): Promise<Task | null> {
+  const kanban = await getKanban(regionId)
+  const project = kanban.projectsMock.find((item) => item.id === projectId)
+  if (!project) return null
+
+  const fromCategory = project.categories.find(
+    (item) => item.id === payload.fromCategoryId,
+  )
+  const toCategory = project.categories.find(
+    (item) => item.id === payload.toCategoryId,
+  )
+  if (!fromCategory || !toCategory) return null
+
+  const taskIndex = fromCategory.tasks.findIndex(
+    (item) => item.id === payload.taskId,
+  )
+  if (taskIndex === -1) return null
+
+  const [movingTask] = fromCategory.tasks.splice(taskIndex, 1)
+  const overIndex = payload.overTaskId
+    ? toCategory.tasks.findIndex((item) => item.id === payload.overTaskId)
+    : -1
+
+  if (overIndex >= 0) {
+    toCategory.tasks.splice(overIndex, 0, movingTask)
+  } else {
+    toCategory.tasks.push(movingTask)
+  }
+
+  return movingTask
+}
+
 export async function deleteTask(
   projectId: string,
   categoryId: string,
-  taskId: string
+  taskId: string,
+  regionId?: RegionId,
 ): Promise<boolean> {
-  const project = projectsMock.find((project) => project.id === projectId)
+  const kanban = await getKanban(regionId)
+  const project = kanban.projectsMock.find((item) => item.id === projectId)
   if (!project) return false
 
-  const category = project.categories.find(
-    (category) => category.id === categoryId
-  )
+  const category = project.categories.find((item) => item.id === categoryId)
   if (!category) return false
 
-  const taskIndex = category.tasks.findIndex((task) => task.id === taskId)
+  const taskIndex = category.tasks.findIndex((item) => item.id === taskId)
   if (taskIndex === -1) return false
 
   category.tasks.splice(taskIndex, 1)
-
   return true
 }
 
-export async function getProjectImageOptions(): Promise<ProjectImageOption[]> {
-  return projectImageOptions
+export async function getProjectImageOptions(
+  regionId?: RegionId,
+): Promise<ProjectImageOption[]> {
+  const kanban = await getKanban(regionId)
+  return kanban.projectImageOptions
 }

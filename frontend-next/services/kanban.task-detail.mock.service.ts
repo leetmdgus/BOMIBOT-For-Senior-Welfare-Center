@@ -1,13 +1,15 @@
+import { advanceTaskToNextProcess } from "@/lib/mocks/kanban.board.mock"
+import { loadRegionStore } from "@/lib/auth/load-region-store"
+import type { RegionId } from "@/lib/auth/regions"
 import {
-  advanceTaskToNextProcess,
-} from "@/lib/mocks/kanban.board.mock"
-import { defaultBusinessPlanDocument } from "@/lib/mocks/kanban.business-plan.mock"
+  bootstrapBusinessPlan,
+  bootstrapEvaluation,
+  bootstrapTaskSurveys,
+} from "@/lib/kanban/task-detail-bootstrap"
 import {
-  businessEvaluationData,
-  filesData,
-  viewTogetherFixedFiles,
-} from "@/lib/mocks/kanban.task-detail.mock"
-import { surveyListItemsMock } from "@/lib/mocks/survey.mock"
+  normalizeTaskId,
+  resolveKanbanCardTitle,
+} from "@/lib/kanban/resolve-card-title"
 import type {
   BusinessEvaluationData,
   BusinessEvaluationTemplate,
@@ -18,12 +20,35 @@ import type {
   Survey,
 } from "./kanban.task-detail.types"
 
-const evaluationByTaskId = new Map<string, BusinessEvaluationData>()
-const businessPlanByTaskId = new Map<string, BusinessPlanDocument>()
+type TaskDetailRuntime = {
+  evaluationByTaskId: Map<string, BusinessEvaluationData>
+  businessPlanByTaskId: Map<string, BusinessPlanDocument>
+  surveysByTaskId: Map<string, Survey[]>
+}
 
-function cloneEvaluation(
-  source: BusinessEvaluationData
-): BusinessEvaluationData {
+const runtimeByRegion = new Map<RegionId, TaskDetailRuntime>()
+
+async function getTaskDetailRuntime(regionId?: RegionId) {
+  const store = await loadRegionStore({ regionId })
+  let runtime = runtimeByRegion.get(store.regionId)
+
+  if (!runtime) {
+    runtime = {
+      evaluationByTaskId: new Map(),
+      businessPlanByTaskId: new Map(),
+      surveysByTaskId: new Map(),
+    }
+    runtimeByRegion.set(store.regionId, runtime)
+  }
+
+  return { store, runtime }
+}
+
+function tid(taskId: string) {
+  return normalizeTaskId(taskId)
+}
+
+function cloneEvaluation(source: BusinessEvaluationData): BusinessEvaluationData {
   return {
     ...source,
     goals: [...source.goals],
@@ -32,20 +57,35 @@ function cloneEvaluation(
   }
 }
 
-function getOrCreateEvaluation(taskId: string): BusinessEvaluationData {
-  const existing = evaluationByTaskId.get(taskId)
+async function resolveCardTitle(
+  taskId: string,
+  regionId?: RegionId,
+): Promise<string | null> {
+  const { store } = await getTaskDetailRuntime(regionId)
+  return resolveKanbanCardTitle(taskId, store.kanban.projectsMock)
+}
+
+async function getOrCreateEvaluation(
+  taskId: string,
+  regionId?: RegionId,
+): Promise<BusinessEvaluationData> {
+  const { store, runtime } = await getTaskDetailRuntime(regionId)
+  const key = tid(taskId)
+  const existing = runtime.evaluationByTaskId.get(key)
   if (existing) return existing
 
-  const created = cloneEvaluation({
-    ...businessEvaluationData,
-    evaluationDate: businessEvaluationData.evaluationDate,
-  })
-  evaluationByTaskId.set(taskId, created)
+  const cardTitle = await resolveCardTitle(taskId, regionId)
+  const created = bootstrapEvaluation(
+    store.taskDetail.businessEvaluationData,
+    key,
+    cardTitle,
+  )
+  runtime.evaluationByTaskId.set(key, created)
   return created
 }
 
-export async function getSurveys(): Promise<Survey[]> {
-  return surveyListItemsMock.map((item) => ({
+function surveyCatalogFromStore(store: Awaited<ReturnType<typeof loadRegionStore>>) {
+  return store.survey.surveyListItemsMock.map((item) => ({
     id: item.id,
     title: item.title,
     program: item.program,
@@ -55,14 +95,45 @@ export async function getSurveys(): Promise<Survey[]> {
   }))
 }
 
-export async function getEvaluationFiles(
-  _taskId?: string
-): Promise<EvaluationFile[]> {
-  return filesData
+async function getOrCreateTaskSurveys(
+  taskId: string,
+  regionId?: RegionId,
+): Promise<Survey[]> {
+  const { store, runtime } = await getTaskDetailRuntime(regionId)
+  const key = tid(taskId)
+  const existing = runtime.surveysByTaskId.get(key)
+  if (existing) return existing
+
+  const cardTitle = await resolveCardTitle(taskId, regionId)
+  const created = bootstrapTaskSurveys(
+    surveyCatalogFromStore(store),
+    key,
+    cardTitle,
+  )
+  runtime.surveysByTaskId.set(key, created)
+  return created
 }
 
-export async function getViewTogetherFixedFiles(): Promise<EvaluationFile[]> {
-  return [...viewTogetherFixedFiles]
+export async function getSurveys(
+  taskId: string,
+  regionId?: RegionId,
+): Promise<Survey[]> {
+  return [...(await getOrCreateTaskSurveys(taskId, regionId))]
+}
+
+export async function getEvaluationFiles(
+  _taskId: string,
+  regionId?: RegionId,
+): Promise<EvaluationFile[]> {
+  const { store } = await getTaskDetailRuntime(regionId)
+  return store.taskDetail.filesData
+}
+
+export async function getViewTogetherFixedFiles(
+  regionId?: RegionId,
+): Promise<EvaluationFile[]> {
+  const { store } = await getTaskDetailRuntime(regionId)
+  return [...store.taskDetail.viewTogetherFixedFiles]
 }
 
 function cloneEvaluationTemplate(
@@ -80,22 +151,28 @@ function cloneEvaluationTemplate(
 }
 
 export async function getBusinessEvaluationTemplate(
-  _taskId?: string,
+  taskId: string,
+  regionId?: RegionId,
 ): Promise<BusinessEvaluationTemplate> {
-  return cloneEvaluationTemplate(businessEvaluationData)
+  const evaluation = await getOrCreateEvaluation(taskId, regionId)
+  return cloneEvaluationTemplate(evaluation)
 }
 
 export async function getBusinessEvaluation(
-  taskId: string
+  taskId: string,
+  regionId?: RegionId,
 ): Promise<BusinessEvaluationData> {
-  return cloneEvaluation(getOrCreateEvaluation(taskId))
+  return cloneEvaluation(await getOrCreateEvaluation(taskId, regionId))
 }
 
 export async function saveBusinessEvaluation(
   taskId: string,
-  payload: SaveBusinessEvaluationPayload
+  payload: SaveBusinessEvaluationPayload,
+  regionId?: RegionId,
 ): Promise<BusinessEvaluationData> {
-  const current = getOrCreateEvaluation(taskId)
+  const { runtime } = await getTaskDetailRuntime(regionId)
+  const key = tid(taskId)
+  const current = await getOrCreateEvaluation(taskId, regionId)
   const next: BusinessEvaluationData = {
     ...current,
     ...payload,
@@ -108,22 +185,25 @@ export async function saveBusinessEvaluation(
       : current.sections,
   }
 
-  evaluationByTaskId.set(taskId, next)
+  runtime.evaluationByTaskId.set(key, next)
   return cloneEvaluation(next)
 }
 
 export async function completeBusinessEvaluation(
-  taskId: string
+  taskId: string,
+  regionId?: RegionId,
 ): Promise<BusinessEvaluationData> {
-  advanceTaskToNextProcess(taskId)
+  const { store, runtime } = await getTaskDetailRuntime(regionId)
+  const key = tid(taskId)
+  advanceTaskToNextProcess(taskId, store.kanban.projectsMock)
 
-  const current = getOrCreateEvaluation(taskId)
+  const current = await getOrCreateEvaluation(taskId, regionId)
   const next: BusinessEvaluationData = {
     ...current,
     isCompleted: true,
   }
 
-  evaluationByTaskId.set(taskId, next)
+  runtime.evaluationByTaskId.set(key, next)
   return cloneEvaluation(next)
 }
 
@@ -139,26 +219,40 @@ function cloneBusinessPlan(source: BusinessPlanDocument): BusinessPlanDocument {
   }
 }
 
-function getOrCreateBusinessPlan(taskId: string): BusinessPlanDocument {
-  const existing = businessPlanByTaskId.get(taskId)
+async function getOrCreateBusinessPlan(
+  taskId: string,
+  regionId?: RegionId,
+): Promise<BusinessPlanDocument> {
+  const { store, runtime } = await getTaskDetailRuntime(regionId)
+  const key = tid(taskId)
+  const existing = runtime.businessPlanByTaskId.get(key)
   if (existing) return existing
 
-  const created = cloneBusinessPlan(defaultBusinessPlanDocument)
-  businessPlanByTaskId.set(taskId, created)
+  const cardTitle = await resolveCardTitle(taskId, regionId)
+  const created = bootstrapBusinessPlan(
+    store.businessPlan.defaultBusinessPlanDocument,
+    key,
+    cardTitle,
+  )
+  runtime.businessPlanByTaskId.set(key, created)
   return created
 }
 
 export async function getBusinessPlan(
-  taskId: string
+  taskId: string,
+  regionId?: RegionId,
 ): Promise<BusinessPlanDocument> {
-  return cloneBusinessPlan(getOrCreateBusinessPlan(taskId))
+  return cloneBusinessPlan(await getOrCreateBusinessPlan(taskId, regionId))
 }
 
 export async function saveBusinessPlan(
   taskId: string,
-  payload: SaveBusinessPlanPayload
+  payload: SaveBusinessPlanPayload,
+  regionId?: RegionId,
 ): Promise<BusinessPlanDocument> {
-  const current = getOrCreateBusinessPlan(taskId)
+  const { runtime } = await getTaskDetailRuntime(regionId)
+  const key = tid(taskId)
+  const current = await getOrCreateBusinessPlan(taskId, regionId)
   const next: BusinessPlanDocument = {
     isCompleted:
       payload.isCompleted !== undefined
@@ -178,6 +272,6 @@ export async function saveBusinessPlan(
       : current.sections,
   }
 
-  businessPlanByTaskId.set(taskId, next)
+  runtime.businessPlanByTaskId.set(key, next)
   return cloneBusinessPlan(next)
 }

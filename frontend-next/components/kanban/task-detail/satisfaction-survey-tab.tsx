@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
+import { useParams } from "next/navigation"
 import {
   Calendar,
   ChevronDown,
@@ -32,6 +33,8 @@ import { getSurveyList } from "@/services/survey.service"
 import type { Survey } from "@/services/kanban.task-detail.types"
 
 export function SatisfactionSurveyTab() {
+  const params = useParams()
+  const taskId = typeof params.id === "string" ? params.id : ""
   const [surveys, setSurveys] = useState<Survey[]>([])
   const [stats, setStats] = useState({
     total: 0,
@@ -41,16 +44,26 @@ export function SatisfactionSurveyTab() {
   })
 
   useEffect(() => {
-    Promise.all([getSurveys(), getSurveyList()])
+    setSurveys([])
+    setStats({ total: 0, active: 0, responses: 0, satisfaction: 0 })
+  }, [taskId])
+
+  useEffect(() => {
+    if (!taskId) return
+
+    Promise.all([getSurveys(taskId), getSurveyList()])
       .then(([kanbanSurveys, list]) => {
         setSurveys(kanbanSurveys)
 
-        const active = list.filter((item) => item.status === "진행중").length
-        const responses = list.reduce(
+        const ids = new Set(kanbanSurveys.map((survey) => survey.id))
+        const scoped = list.filter((item) => ids.has(item.id))
+
+        const active = scoped.filter((item) => item.status === "진행중").length
+        const responses = scoped.reduce(
           (sum, item) => sum + (item.responseCount ?? 0),
-          0
+          0,
         )
-        const rated = list.filter((item) => (item.satisfaction ?? 0) > 0)
+        const rated = scoped.filter((item) => (item.satisfaction ?? 0) > 0)
         const satisfaction =
           rated.length > 0
             ? rated.reduce((sum, item) => sum + (item.satisfaction ?? 0), 0) /
@@ -58,7 +71,7 @@ export function SatisfactionSurveyTab() {
             : 0
 
         setStats({
-          total: list.length,
+          total: scoped.length,
           active,
           responses,
           satisfaction,
@@ -67,14 +80,20 @@ export function SatisfactionSurveyTab() {
       .catch((error) => {
         console.error("설문 데이터 로드 실패:", error)
       })
-  }, [])
+  }, [taskId])
 
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-xl font-semibold">만족도조사</h1>
 
-        <Link href="/survey/new?view=edit">
+        <Link
+          href={
+            taskId
+              ? `/survey/new?view=edit&taskId=${encodeURIComponent(taskId)}`
+              : "/survey/new?view=edit"
+          }
+        >
             <Button className="gap-2">
                 <Plus className="size-4" />
                 설문 만들기

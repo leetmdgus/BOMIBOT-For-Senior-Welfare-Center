@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
+import { Loader2 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { getPerformanceReportRows } from "@/services/kanban.documents.service"
@@ -21,14 +22,33 @@ function getPeriodLabel(quarter: number, periodMode: "quarter" | "month") {
 export function PerformanceReportTable() {
   const { year, quarter, periodMode } = useDocuments()
   const [data, setData] = useState<PerformanceReportRow[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [loadError, setLoadError] = useState<string | null>(null)
 
   useEffect(() => {
-    getPerformanceReportRows()
-      .then(setData)
+    let cancelled = false
+    setIsLoading(true)
+    setLoadError(null)
+
+    getPerformanceReportRows({ year, quarter, periodMode })
+      .then((rows) => {
+        if (!cancelled) setData(rows)
+      })
       .catch((error) => {
         console.error("실적보고서 데이터 로드 실패:", error)
+        if (!cancelled) {
+          setData([])
+          setLoadError("실적보고서 데이터를 불러오지 못했습니다.")
+        }
       })
-  }, [])
+      .finally(() => {
+        if (!cancelled) setIsLoading(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [year, quarter, periodMode])
 
   const periodLabel = useMemo(
     () => getPeriodLabel(quarter, periodMode),
@@ -37,6 +57,37 @@ export function PerformanceReportTable() {
 
   let categoryRowsLeft = 0
   let projectRowsLeft = 0
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white py-24 text-muted-foreground">
+        <Loader2 className="size-8 animate-spin" />
+        <p className="text-sm">실적보고서 데이터를 불러오는 중입니다.</p>
+      </div>
+    )
+  }
+
+  if (loadError) {
+    return (
+      <div className="rounded-lg border border-slate-300 bg-white p-12 text-center text-sm text-muted-foreground">
+        {loadError}
+      </div>
+    )
+  }
+
+  if (data.length === 0) {
+    return (
+      <div className="rounded-lg border border-slate-300 bg-white p-12 text-center">
+        <p className="text-sm text-muted-foreground">
+          선택한 기간에 표시할 실적 데이터가 없습니다. 칸반 업무의
+          계획/실적 입력관리에서 월별 계획·실적을 입력해 주세요.
+        </p>
+        <p className="mt-2 text-xs text-muted-foreground">
+          {year}년 · {quarter}분기 · {periodLabel} 기준
+        </p>
+      </div>
+    )
+  }
 
   return (
     <div className="kanban-documents-report overflow-hidden rounded-lg border border-slate-300 bg-white">

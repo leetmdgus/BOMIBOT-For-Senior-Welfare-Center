@@ -1,0 +1,851 @@
+{
+  "surveyListItemsMock": [
+    {
+      "id": "1",
+      "title": "공간 이용 만족도 조사",
+      "program": "상담 [1-1 일반상담]",
+      "date": "2026.03.01",
+      "status": "진행중",
+      "endDate": "2026-08-10",
+      "responseCount": 4,
+      "totalTarget": 30,
+      "satisfaction": 4.2
+    },
+    {
+      "id": "2",
+      "title": "스마트폰 활용 교육 만족도 조사",
+      "program": "디지털 역량강화 프로그램",
+      "status": "완료",
+      "endDate": "2026-06-30",
+      "responseCount": 189,
+      "totalTarget": 200,
+      "satisfaction": 4.5
+    },
+    {
+      "id": "3",
+      "title": "노년사회화교육 상반기 만족도 조사",
+      "program": "노년사회화교육 지원사업",
+      "status": "예정",
+      "endDate": "2026-09-15",
+      "responseCount": 0,
+      "totalTarget": 150,
+      "satisfaction": 0
+    },
+    {
+      "id": "4",
+      "title": "건강체조 프로그램 참여자 평가",
+      "program": "어르신 건강증진 프로그램",
+      "status": "진행중",
+      "endDate": "2026-08-31",
+      "responseCount": 87,
+      "totalTarget": 120,
+      "satisfaction": 4.1
+    },
+    {
+      "id": "5",
+      "title": "독거노인 정서지원 서비스 만족도 조사",
+      "program": "지역사회 통합돌봄 사업",
+      "status": "임시",
+      "endDate": "2026-10-01",
+      "responseCount": 12,
+      "totalTarget": 80,
+      "satisfaction": 3.8
+    }
+  ],
+  "surveyDetailsMock": {
+    "1": {
+      "id": "1",
+      "overview": {
+        "purpose": [
+          "이용 공간 및 서비스에 대한 만족도와 개선 의견을 파악한다."
+        ],
+        "limitations": [
+          "응답 표본 수가 제한적일 수 있으며, 주관적 평가가 포함됩니다."
+        ],
+        "name": "공간 이용 만족도 조사",
+        "startDate": "2026-03-01",
+        "endDate": "2026-12-31",
+        "target": "시설 이용 참여자",
+        "method": "온라인 설문 (네이버 폼 유형)",
+        "staff": "운영팀",
+        "sampleCount": "200",
+        "analysisMethod": "기술통계, 5점 척도, 교차분석"
+      },
+      "basicInfo": {
+        "title": "공간 이용 만족도 조사",
+        "description": "시설·환경·서비스에 대한 의견을 작성해 주세요.",
+        "category": "만족도조사",
+        "status": "active"
+      },
+      "questions": [
+        {
+          "id": "q-matrix-1",
+          "type": "matrix",
+          "title": "공간 내용 평가",
+          "description": "해당 부분에서 불편함을 느꼈다면 아래 개선 항목에서 꼭 적어주세요.",
+          "required": true,
+          "options": [],
+          "rows": [
+            "분위기",
+            "소음",
+            "청결",
+            "쾌적",
+            "동선/거리",
+            "스터디 환경",
+            "스피커"
+          ],
+          "columns": [
+            "매우 불만족",
+            "불만족",
+            "보통",
+            "만족",
+            "매우 만족"
+          ]
+        },
+        {
+          "id": "q-scale-1",
+          "type": "scale",
+          "title": "전반적인 만족도",
+          "description": "1점(매우 불만족) ~ 10점(매우 만족)",
+          "required": true,
+          "options": [],
+          "rows": [],
+          "columns": []
+        },
+        {
+          "id": "q-text-1",
+          "type": "text",
+          "title": "이용하면서 타 스터디룸, 파티룸에 비해 긍정적인 부분 구체적으로 적어주세요!",
+          "description": "",
+          "required": false,
+          "options": [],
+          "rows": [],
+          "columns": []
+        },
+        {
+          "id": "q-text-2",
+          "type": "text",
+          "title": "이용하면서 타 스터디룸, 파티룸에 비해 부정적인 부분 구체적으로 적어주세요!",
+          "description": "",
+          "required": false,
+          "options": [],
+          "rows": [],
+          "columns": []
+        },
+        {
+          "id": "q-choice-price",
+          "type": "choice",
+          "title": "해당 공간을 실제로 구매하신다면 납득할 만한 최대 가격은 얼마인가요?",
+          "description": "",
+          "required": false,
+          "options": [
+            "5,000원 미만",
+            "5,000원",
+            "7,000원",
+            "9,000원",
+            "12,000원 이상"
+          ],
+          "rows": [],
+          "columns": []
+        }
+      ],
+      "style": {
+        "themeColor": "oklch(0.55 0.2 260)",
+        "coverTitle": "매우 주관적으로 설문 부탁드립니다.",
+        "coverDescription": "스터디·영화 공간, 스튜디오 등 이용 경험에 대한 솔직한 의견을 남겨주세요. 응답은 서비스 개선에만 활용됩니다.",
+        "coverPeriodLabel": "2023.07.27. 오후 05:36 ~ 제한 없음",
+        "thankYouMessage": "설문에 참여해 주셔서 감사합니다."
+      },
+      "settings": {
+        "acceptResponses": true,
+        "allowDuplicate": false,
+        "showProgress": true
+      },
+      "taskId": "1"
+    },
+    "2": {
+      "id": "2",
+      "overview": {
+        "purpose": [
+          "이용 공간 및 서비스에 대한 만족도와 개선 의견을 파악한다."
+        ],
+        "limitations": [
+          "응답 표본 수가 제한적일 수 있으며, 주관적 평가가 포함됩니다."
+        ],
+        "name": "공간 이용 만족도 조사",
+        "startDate": "2026-03-01",
+        "endDate": "2026-12-31",
+        "target": "시설 이용 참여자",
+        "method": "온라인 설문 (네이버 폼 유형)",
+        "staff": "운영팀",
+        "sampleCount": "200",
+        "analysisMethod": "기술통계, 5점 척도, 교차분석"
+      },
+      "basicInfo": {
+        "title": "스마트폰 활용 교육 만족도 조사",
+        "description": "교육 내용과 강사, 교재에 대한 의견을 작성해 주세요.",
+        "category": "만족도조사",
+        "status": "closed"
+      },
+      "questions": [
+        {
+          "id": "q-matrix-1",
+          "type": "matrix",
+          "title": "공간 내용 평가",
+          "description": "해당 부분에서 불편함을 느꼈다면 아래 개선 항목에서 꼭 적어주세요.",
+          "required": true,
+          "options": [],
+          "rows": [
+            "분위기",
+            "소음",
+            "청결",
+            "쾌적",
+            "동선/거리",
+            "스터디 환경",
+            "스피커"
+          ],
+          "columns": [
+            "매우 불만족",
+            "불만족",
+            "보통",
+            "만족",
+            "매우 만족"
+          ]
+        },
+        {
+          "id": "q-scale-1",
+          "type": "scale",
+          "title": "전반적인 만족도",
+          "description": "1점(매우 불만족) ~ 10점(매우 만족)",
+          "required": true,
+          "options": [],
+          "rows": [],
+          "columns": []
+        },
+        {
+          "id": "q-text-1",
+          "type": "text",
+          "title": "이용하면서 타 스터디룸, 파티룸에 비해 긍정적인 부분 구체적으로 적어주세요!",
+          "description": "",
+          "required": false,
+          "options": [],
+          "rows": [],
+          "columns": []
+        },
+        {
+          "id": "q-text-2",
+          "type": "text",
+          "title": "이용하면서 타 스터디룸, 파티룸에 비해 부정적인 부분 구체적으로 적어주세요!",
+          "description": "",
+          "required": false,
+          "options": [],
+          "rows": [],
+          "columns": []
+        },
+        {
+          "id": "q-choice-price",
+          "type": "choice",
+          "title": "해당 공간을 실제로 구매하신다면 납득할 만한 최대 가격은 얼마인가요?",
+          "description": "",
+          "required": false,
+          "options": [
+            "5,000원 미만",
+            "5,000원",
+            "7,000원",
+            "9,000원",
+            "12,000원 이상"
+          ],
+          "rows": [],
+          "columns": []
+        }
+      ],
+      "style": {
+        "themeColor": "oklch(0.55 0.2 260)",
+        "coverTitle": "스마트폰 활용 교육 만족도 조사",
+        "coverDescription": "참여하신 프로그램에 대한 솔직한 의견을 남겨주세요. 응답 내용은 서비스 개선 목적으로만 활용됩니다.",
+        "coverPeriodLabel": "2025.12.01 ~ 2025.12.15",
+        "thankYouMessage": "설문에 참여해 주셔서 감사합니다."
+      },
+      "settings": {
+        "acceptResponses": false,
+        "allowDuplicate": false,
+        "showProgress": true
+      }
+    },
+    "3": {
+      "id": "3",
+      "overview": {
+        "purpose": [
+          "이용 공간 및 서비스에 대한 만족도와 개선 의견을 파악한다."
+        ],
+        "limitations": [
+          "응답 표본 수가 제한적일 수 있으며, 주관적 평가가 포함됩니다."
+        ],
+        "name": "공간 이용 만족도 조사",
+        "startDate": "2026-03-01",
+        "endDate": "2026-12-31",
+        "target": "시설 이용 참여자",
+        "method": "온라인 설문 (네이버 폼 유형)",
+        "staff": "운영팀",
+        "sampleCount": "200",
+        "analysisMethod": "기술통계, 5점 척도, 교차분석"
+      },
+      "basicInfo": {
+        "title": "노년사회화교육 상반기 만족도 조사",
+        "description": "교육 프로그램에 대한 의견을 작성해 주세요.",
+        "category": "만족도조사",
+        "status": "draft"
+      },
+      "questions": [
+        {
+          "id": "q-matrix-1",
+          "type": "matrix",
+          "title": "공간 내용 평가",
+          "description": "해당 부분에서 불편함을 느꼈다면 아래 개선 항목에서 꼭 적어주세요.",
+          "required": true,
+          "options": [],
+          "rows": [
+            "분위기",
+            "소음",
+            "청결",
+            "쾌적",
+            "동선/거리",
+            "스터디 환경",
+            "스피커"
+          ],
+          "columns": [
+            "매우 불만족",
+            "불만족",
+            "보통",
+            "만족",
+            "매우 만족"
+          ]
+        },
+        {
+          "id": "q-scale-1",
+          "type": "scale",
+          "title": "전반적인 만족도",
+          "description": "1점(매우 불만족) ~ 10점(매우 만족)",
+          "required": true,
+          "options": [],
+          "rows": [],
+          "columns": []
+        },
+        {
+          "id": "q-text-1",
+          "type": "text",
+          "title": "이용하면서 타 스터디룸, 파티룸에 비해 긍정적인 부분 구체적으로 적어주세요!",
+          "description": "",
+          "required": false,
+          "options": [],
+          "rows": [],
+          "columns": []
+        },
+        {
+          "id": "q-text-2",
+          "type": "text",
+          "title": "이용하면서 타 스터디룸, 파티룸에 비해 부정적인 부분 구체적으로 적어주세요!",
+          "description": "",
+          "required": false,
+          "options": [],
+          "rows": [],
+          "columns": []
+        },
+        {
+          "id": "q-choice-price",
+          "type": "choice",
+          "title": "해당 공간을 실제로 구매하신다면 납득할 만한 최대 가격은 얼마인가요?",
+          "description": "",
+          "required": false,
+          "options": [
+            "5,000원 미만",
+            "5,000원",
+            "7,000원",
+            "9,000원",
+            "12,000원 이상"
+          ],
+          "rows": [],
+          "columns": []
+        }
+      ],
+      "style": {
+        "themeColor": "oklch(0.55 0.2 260)",
+        "coverTitle": "노년사회화교육 상반기 만족도 조사",
+        "coverDescription": "참여하신 프로그램에 대한 솔직한 의견을 남겨주세요. 응답 내용은 서비스 개선 목적으로만 활용됩니다.",
+        "coverPeriodLabel": "2026.09.15 마감 예정",
+        "thankYouMessage": "설문에 참여해 주셔서 감사합니다."
+      },
+      "settings": {
+        "acceptResponses": false,
+        "allowDuplicate": false,
+        "showProgress": true
+      }
+    },
+    "4": {
+      "id": "4",
+      "overview": {
+        "purpose": [
+          "이용 공간 및 서비스에 대한 만족도와 개선 의견을 파악한다."
+        ],
+        "limitations": [
+          "응답 표본 수가 제한적일 수 있으며, 주관적 평가가 포함됩니다."
+        ],
+        "name": "공간 이용 만족도 조사",
+        "startDate": "2026-03-01",
+        "endDate": "2026-12-31",
+        "target": "시설 이용 참여자",
+        "method": "온라인 설문 (네이버 폼 유형)",
+        "staff": "운영팀",
+        "sampleCount": "200",
+        "analysisMethod": "기술통계, 5점 척도, 교차분석"
+      },
+      "basicInfo": {
+        "title": "건강체조 프로그램 참여자 평가",
+        "description": "프로그램 운영 및 강사에 대한 의견을 작성해 주세요.",
+        "category": "만족도조사",
+        "status": "active"
+      },
+      "questions": [
+        {
+          "id": "q-matrix-1",
+          "type": "matrix",
+          "title": "공간 내용 평가",
+          "description": "해당 부분에서 불편함을 느꼈다면 아래 개선 항목에서 꼭 적어주세요.",
+          "required": true,
+          "options": [],
+          "rows": [
+            "분위기",
+            "소음",
+            "청결",
+            "쾌적",
+            "동선/거리",
+            "스터디 환경",
+            "스피커"
+          ],
+          "columns": [
+            "매우 불만족",
+            "불만족",
+            "보통",
+            "만족",
+            "매우 만족"
+          ]
+        },
+        {
+          "id": "q-scale-1",
+          "type": "scale",
+          "title": "전반적인 만족도",
+          "description": "1점(매우 불만족) ~ 10점(매우 만족)",
+          "required": true,
+          "options": [],
+          "rows": [],
+          "columns": []
+        },
+        {
+          "id": "q-text-1",
+          "type": "text",
+          "title": "이용하면서 타 스터디룸, 파티룸에 비해 긍정적인 부분 구체적으로 적어주세요!",
+          "description": "",
+          "required": false,
+          "options": [],
+          "rows": [],
+          "columns": []
+        },
+        {
+          "id": "q-text-2",
+          "type": "text",
+          "title": "이용하면서 타 스터디룸, 파티룸에 비해 부정적인 부분 구체적으로 적어주세요!",
+          "description": "",
+          "required": false,
+          "options": [],
+          "rows": [],
+          "columns": []
+        }
+      ],
+      "style": {
+        "themeColor": "oklch(0.55 0.2 260)",
+        "coverTitle": "건강체조 프로그램 참여자 평가",
+        "coverDescription": "참여하신 건강체조 프로그램에 대한 솔직한 의견을 남겨주세요.",
+        "coverPeriodLabel": "2026.03.01 ~ 2026.08.31",
+        "thankYouMessage": "설문에 참여해 주셔서 감사합니다."
+      },
+      "settings": {
+        "acceptResponses": true,
+        "allowDuplicate": false,
+        "showProgress": true
+      }
+    },
+    "5": {
+      "id": "5",
+      "overview": {
+        "purpose": [
+          "이용 공간 및 서비스에 대한 만족도와 개선 의견을 파악한다."
+        ],
+        "limitations": [
+          "응답 표본 수가 제한적일 수 있으며, 주관적 평가가 포함됩니다."
+        ],
+        "name": "공간 이용 만족도 조사",
+        "startDate": "2026-03-01",
+        "endDate": "2026-12-31",
+        "target": "시설 이용 참여자",
+        "method": "온라인 설문 (네이버 폼 유형)",
+        "staff": "운영팀",
+        "sampleCount": "200",
+        "analysisMethod": "기술통계, 5점 척도, 교차분석"
+      },
+      "basicInfo": {
+        "title": "독거노인 정서지원 서비스 만족도 조사",
+        "description": "서비스 만족도와 개선 의견을 작성해 주세요.",
+        "category": "만족도조사",
+        "status": "draft"
+      },
+      "questions": [
+        {
+          "id": "q-matrix-1",
+          "type": "matrix",
+          "title": "공간 내용 평가",
+          "description": "해당 부분에서 불편함을 느꼈다면 아래 개선 항목에서 꼭 적어주세요.",
+          "required": true,
+          "options": [],
+          "rows": [
+            "분위기",
+            "소음",
+            "청결",
+            "쾌적",
+            "동선/거리",
+            "스터디 환경",
+            "스피커"
+          ],
+          "columns": [
+            "매우 불만족",
+            "불만족",
+            "보통",
+            "만족",
+            "매우 만족"
+          ]
+        },
+        {
+          "id": "q-scale-1",
+          "type": "scale",
+          "title": "전반적인 만족도",
+          "description": "1점(매우 불만족) ~ 10점(매우 만족)",
+          "required": true,
+          "options": [],
+          "rows": [],
+          "columns": []
+        },
+        {
+          "id": "q-text-1",
+          "type": "text",
+          "title": "이용하면서 타 스터디룸, 파티룸에 비해 긍정적인 부분 구체적으로 적어주세요!",
+          "description": "",
+          "required": false,
+          "options": [],
+          "rows": [],
+          "columns": []
+        },
+        {
+          "id": "q-text-2",
+          "type": "text",
+          "title": "이용하면서 타 스터디룸, 파티룸에 비해 부정적인 부분 구체적으로 적어주세요!",
+          "description": "",
+          "required": false,
+          "options": [],
+          "rows": [],
+          "columns": []
+        },
+        {
+          "id": "q-choice-price",
+          "type": "choice",
+          "title": "해당 공간을 실제로 구매하신다면 납득할 만한 최대 가격은 얼마인가요?",
+          "description": "",
+          "required": false,
+          "options": [
+            "5,000원 미만",
+            "5,000원",
+            "7,000원",
+            "9,000원",
+            "12,000원 이상"
+          ],
+          "rows": [],
+          "columns": []
+        }
+      ],
+      "style": {
+        "themeColor": "oklch(0.55 0.2 260)",
+        "coverTitle": "독거노인 정서지원 서비스 만족도 조사",
+        "coverDescription": "참여하신 프로그램에 대한 솔직한 의견을 남겨주세요. 응답 내용은 서비스 개선 목적으로만 활용됩니다.",
+        "coverPeriodLabel": "2026.10.01 마감 예정",
+        "thankYouMessage": "설문에 참여해 주셔서 감사합니다."
+      },
+      "settings": {
+        "acceptResponses": false,
+        "allowDuplicate": false,
+        "showProgress": true
+      }
+    },
+    "new": {
+      "id": "new",
+      "overview": {
+        "purpose": [
+          "이용 공간 및 서비스에 대한 만족도와 개선 의견을 파악한다."
+        ],
+        "limitations": [
+          "응답 표본 수가 제한적일 수 있으며, 주관적 평가가 포함됩니다."
+        ],
+        "name": "공간 이용 만족도 조사",
+        "startDate": "2026-03-01",
+        "endDate": "2026-12-31",
+        "target": "시설 이용 참여자",
+        "method": "온라인 설문 (네이버 폼 유형)",
+        "staff": "운영팀",
+        "sampleCount": "200",
+        "analysisMethod": "기술통계, 5점 척도, 교차분석"
+      },
+      "basicInfo": {
+        "title": "",
+        "description": "",
+        "category": "만족도조사",
+        "status": "draft"
+      },
+      "questions": [],
+      "style": {
+        "themeColor": "oklch(0.55 0.2 260)",
+        "coverTitle": "새 설문",
+        "coverDescription": "설문 제목과 설명을 입력해 주세요.",
+        "coverPeriodLabel": "기간 미설정",
+        "thankYouMessage": "설문에 참여해 주셔서 감사합니다."
+      },
+      "settings": {
+        "acceptResponses": true,
+        "allowDuplicate": false,
+        "showProgress": true
+      }
+    }
+  },
+  "surveyResultsMock": {
+    "1": {
+      "surveyId": "1",
+      "summary": {
+        "totalResponses": 4,
+        "totalTarget": 30,
+        "averageSatisfaction": 4.2,
+        "completionRate": 100
+      },
+      "questions": [
+        {
+          "questionId": "q-matrix-1",
+          "type": "matrix",
+          "title": "1. 공연 내용 평가",
+          "subtitle": "공간·프로그램 내용에 대한 평가",
+          "answeredCount": 4,
+          "skippedCount": 0,
+          "matrixChart": [
+            {
+              "name": "상반기",
+              "매우불만족": 0,
+              "불만족": 0,
+              "보통": 1,
+              "만족": 2,
+              "매우만족": 1
+            },
+            {
+              "name": "하반기",
+              "매우불만족": 0,
+              "불만족": 1,
+              "보통": 0,
+              "만족": 2,
+              "매우만족": 1
+            }
+          ]
+        },
+        {
+          "questionId": "q-text-2",
+          "type": "text",
+          "title": "5. 개선되어야 할 부분",
+          "subtitle": "부정적 경험 및 개선 요청",
+          "answeredCount": 4,
+          "skippedCount": 0,
+          "textResponses": [
+            {
+              "id": "t1",
+              "text": "스피커 음량이 조금 커서 집중이 어려웠습니다. 시간대별 볼륨 조절이 있으면 좋겠어요.",
+              "votes": 1
+            },
+            {
+              "id": "t2",
+              "text": "주말에는 예약 대기가 길어서 이용이 불편했습니다.",
+              "votes": 1
+            },
+            {
+              "id": "t3",
+              "text": "전반적으로 만족하지만 환기가 더 잘 되면 좋겠습니다.",
+              "votes": 1
+            },
+            {
+              "id": "t4",
+              "text": "청결 상태는 좋았으나 휴게 공간 의자가 부족했습니다.",
+              "votes": 1
+            }
+          ]
+        },
+        {
+          "questionId": "q-choice-price",
+          "type": "choice",
+          "title": "6. 해당 공간을 실제로 구매하신다면 납득할만한 최대 가격은?",
+          "answeredCount": 4,
+          "skippedCount": 0,
+          "pieData": [
+            {
+              "name": "5,000원 미만",
+              "value": 1,
+              "color": "#3b82f6"
+            },
+            {
+              "name": "5,000원",
+              "value": 1,
+              "color": "#22c55e"
+            },
+            {
+              "name": "7,000원",
+              "value": 1,
+              "color": "#f59e0b"
+            },
+            {
+              "name": "9,000원",
+              "value": 0,
+              "color": "#ef4444"
+            },
+            {
+              "name": "12,000원 이상",
+              "value": 0,
+              "color": "#8b5cf6"
+            },
+            {
+              "name": "기타",
+              "value": 1,
+              "color": "#64748b"
+            }
+          ],
+          "otherText": "8000원",
+          "otherCount": 1
+        }
+      ]
+    }
+  },
+  "defaultSurveyStyle": {
+    "themeColor": "oklch(0.55 0.2 260)",
+    "coverTitle": "춘천북부노인복지관 프로그램 만족도 조사",
+    "coverDescription": "참여하신 프로그램에 대한 솔직한 의견을 남겨주세요. 응답 내용은 서비스 개선 목적으로만 활용됩니다.",
+    "coverPeriodLabel": "2026.03.01 ~ 2026.03.31",
+    "thankYouMessage": "설문에 참여해 주셔서 감사합니다."
+  },
+  "defaultSurveyTemplate": {
+    "id": "new",
+    "overview": {
+      "purpose": [
+        "이용 공간 및 서비스에 대한 만족도와 개선 의견을 파악한다."
+      ],
+      "limitations": [
+        "응답 표본 수가 제한적일 수 있으며, 주관적 평가가 포함됩니다."
+      ],
+      "name": "공간 이용 만족도 조사",
+      "startDate": "2026-03-01",
+      "endDate": "2026-12-31",
+      "target": "시설 이용 참여자",
+      "method": "온라인 설문 (네이버 폼 유형)",
+      "staff": "운영팀",
+      "sampleCount": "200",
+      "analysisMethod": "기술통계, 5점 척도, 교차분석"
+    },
+    "basicInfo": {
+      "title": "공간 이용 만족도 조사",
+      "description": "스터디·파티 공간 이용 경험에 대한 솔직한 의견을 남겨주세요.",
+      "category": "만족도조사",
+      "status": "active"
+    },
+    "questions": [
+      {
+        "id": "q-matrix-1-1779629145852",
+        "type": "matrix",
+        "title": "공간 내용 평가",
+        "description": "해당 부분에서 불편함을 느꼈다면 아래 개선 항목에서 꼭 적어주세요.",
+        "required": true,
+        "options": [],
+        "rows": [
+          "분위기",
+          "소음",
+          "청결",
+          "쾌적",
+          "동선/거리",
+          "스터디 환경",
+          "스피커"
+        ],
+        "columns": [
+          "매우 불만족",
+          "불만족",
+          "보통",
+          "만족",
+          "매우 만족"
+        ]
+      },
+      {
+        "id": "q-scale-1-1779629145852",
+        "type": "scale",
+        "title": "전반적인 만족도",
+        "description": "1점(매우 불만족) ~ 10점(매우 만족)",
+        "required": true,
+        "options": [],
+        "rows": [],
+        "columns": []
+      },
+      {
+        "id": "q-text-1-1779629145852",
+        "type": "text",
+        "title": "이용하면서 타 스터디룸, 파티룸에 비해 긍정적인 부분 구체적으로 적어주세요!",
+        "description": "",
+        "required": false,
+        "options": [],
+        "rows": [],
+        "columns": []
+      },
+      {
+        "id": "q-text-2-1779629145852",
+        "type": "text",
+        "title": "이용하면서 타 스터디룸, 파티룸에 비해 부정적인 부분 구체적으로 적어주세요!",
+        "description": "",
+        "required": false,
+        "options": [],
+        "rows": [],
+        "columns": []
+      },
+      {
+        "id": "q-choice-price-1779629145852",
+        "type": "choice",
+        "title": "해당 공간을 실제로 구매하신다면 납득할 만한 최대 가격은 얼마인가요?",
+        "description": "",
+        "required": false,
+        "options": [
+          "5,000원 미만",
+          "5,000원",
+          "7,000원",
+          "9,000원",
+          "12,000원 이상"
+        ],
+        "rows": [],
+        "columns": []
+      }
+    ],
+    "style": {
+      "themeColor": "oklch(0.55 0.2 260)",
+      "coverTitle": "춘천북부노인복지관 프로그램 만족도 조사",
+      "coverDescription": "참여하신 프로그램에 대한 솔직한 의견을 남겨주세요. 응답 내용은 서비스 개선 목적으로만 활용됩니다.",
+      "coverPeriodLabel": "2026.03.01 ~ 2026.03.31",
+      "thankYouMessage": "설문에 참여해 주셔서 감사합니다."
+    },
+    "settings": {
+      "acceptResponses": true,
+      "allowDuplicate": false,
+      "showProgress": true
+    }
+  }
+}

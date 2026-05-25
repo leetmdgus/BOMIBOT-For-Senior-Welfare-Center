@@ -1,18 +1,10 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { resolveProfileImageSrc } from "@/lib/organization/profile-image-src"
 import { cn } from "@/lib/utils"
 import type { Employee } from "@/services/organization.types"
 
 function getEmployeeSurname(name: string): string {
   return name.trim().slice(0, 1) || "?"
-}
-
-/** public/ 한글 파일명 등 경로 인코딩 */
-function toPublicAssetUrl(path: string): string {
-  if (!path.startsWith("/")) return path
-  return path
-    .split("/")
-    .map((segment, index) => (index === 0 ? segment : encodeURIComponent(segment)))
-    .join("/")
 }
 
 interface EmployeeAvatarProps {
@@ -31,7 +23,7 @@ export function EmployeeAvatar({
   const isSquare = variant === "square"
   const shapeClass = isSquare ? "rounded-xl" : "rounded-full"
   const profileSrc = employee.profileImage
-    ? toPublicAssetUrl(employee.profileImage)
+    ? resolveProfileImageSrc(employee.profileImage)
     : undefined
 
   return (

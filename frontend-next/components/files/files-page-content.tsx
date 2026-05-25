@@ -30,6 +30,7 @@ import { ParentFolderCard, ParentFolderRow } from "./parent-folder-entry"
 import { RenameDialog } from "./rename-dialog"
 import { ShareDialog } from "./share-dialog"
 import { SortControl } from "./sort-control"
+import { TaskFilterControl } from "./task-filter-control"
 import { SelectionToolbar } from "./selection-toolbar"
 import { UploadDialog } from "./upload-dialog"
 import { NewFolderDialog } from "./new-folder-dialog"
@@ -97,7 +98,12 @@ export function FilesPageContent() {
     onShare: manager.setShareTarget,
     onToggleStar: manager.toggleStar,
     onDelete: manager.deleteItem,
-    onExport: manager.exportItem,
+    onExport: (item) => {
+      void manager.exportItem(item)
+    },
+    onDownload: (item) => {
+      void manager.downloadItem(item)
+    },
   }
 
   return (
@@ -135,6 +141,11 @@ export function FilesPageContent() {
                     className="w-64 pl-9"
                   />
                 </div>
+                <TaskFilterControl
+                  value={manager.taskFilterId}
+                  taskOptions={manager.taskOptions}
+                  onChange={manager.setTaskFilterId}
+                />
                 <SortControl value={manager.sortKey} onChange={manager.setSortKey} />
               </div>
 
@@ -156,13 +167,23 @@ export function FilesPageContent() {
               </div>
             </div>
 
+            {manager.taskFilterLabel && (
+              <p className="mb-4 text-sm text-muted-foreground">
+                업무 「{manager.taskFilterLabel}」 기준으로{" "}
+                {manager.visibleFiles.length}개 항목을 표시합니다.
+                {manager.useFlatView ? " (폴더 구분 없이 전체 경로)" : ""}
+              </p>
+            )}
+
             <SelectionToolbar
               count={manager.selectedIds.length}
               onClear={manager.clearSelection}
               onCopy={manager.copySelected}
               onToggleStar={manager.toggleSelectedStar}
               onDelete={manager.deleteSelected}
-              onExport={manager.exportSelected}
+              onExport={() => {
+                void manager.exportSelected()
+              }}
               onUpdatePermissions={manager.updateSelectedPermissions}
             />
 
@@ -187,7 +208,7 @@ export function FilesPageContent() {
 
             {manager.viewMode === "grid" ? (
               <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-                {manager.currentFolderId && !manager.searchQuery && (
+                {manager.currentFolderId && !manager.useFlatView && (
                   <ParentFolderCard onOpen={manager.goToParentFolder} />
                 )}
                 {manager.visibleFiles.map((item) => (
@@ -204,7 +225,7 @@ export function FilesPageContent() {
                 items={manager.visibleFiles}
                 selectedIds={manager.selectedIds}
                 parentRow={
-                  manager.currentFolderId && !manager.searchQuery ? (
+                  manager.currentFolderId && !manager.useFlatView ? (
                     <ParentFolderRow onOpen={manager.goToParentFolder} />
                   ) : null
                 }
@@ -228,6 +249,7 @@ export function FilesPageContent() {
       <UploadDialog
         open={manager.uploadOpen}
         taskOptions={manager.taskOptions}
+        defaultTaskId={manager.taskFilterId}
         onOpenChange={manager.setUploadOpen}
         onUpload={manager.uploadFiles}
       />

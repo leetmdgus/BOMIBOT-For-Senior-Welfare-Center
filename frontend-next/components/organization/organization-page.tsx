@@ -1,29 +1,81 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useState } from "react"
+import { useSearchParams } from "next/navigation"
+import { Loader2 } from "lucide-react"
 
+import { useAuth } from "@/components/auth/auth-provider"
 import { Sidebar } from "@/components/common/sidebar"
 import { Header } from "@/components/common/header"
 
 import { GroupPanel } from "./group-panel"
 import { EmployeeListPanel } from "./employee-list-panel"
 import { EmployeeDetailPanel } from "./employee-detail-panel"
+import { OrganizationEmployeeCreateDialog } from "./organization-employee-create-dialog"
 
-import { searchEmployees } from "@/services/organization.service"
+import { isFastApiMode } from "@/lib/api-client"
+import {
+  getOrganizationContext,
+  searchEmployees,
+} from "@/services/organization.service"
 import {
   Department,
   DetailTabType,
   Employee,
+  OrganizationContext,
   TabType,
 } from "@/services/organization.types"
 
 const DEFAULT_DEPARTMENT_GROUP = "management"
 const DEFAULT_POSITION_GROUP = "position-social-worker"
 
+function patchEmployeeInGroups(
+  groups: Department[],
+  updated: Employee,
+): Department[] {
+  return groups.map((group) => ({
+    ...group,
+    employees: group.employees.map((employee) =>
+      employee.id === updated.id ? { ...employee, ...updated } : employee,
+    ),
+  }))
+}
+
+function addEmployeeToGroups(
+  groups: Department[],
+  created: Employee,
+): Department[] {
+  return groups.map((group) => {
+    const deptId = created.departmentId
+    const matches =
+      group.id === deptId ||
+      group.name === created.department ||
+      (!deptId && group.id !== "all" && group.employees.length === 0)
+
+    if (!matches && group.id !== "all") {
+      return group
+    }
+
+    if (group.employees.some((e) => e.id === created.id)) {
+      return group
+    }
+
+    return {
+      ...group,
+      count: group.count + 1,
+      employees: [...group.employees, created],
+    }
+  })
+}
+
 export function OrganizationPage() {
+  const searchParams = useSearchParams()
+  const { session, refresh: refreshAuth } = useAuth()
   const [activeTab, setActiveTab] = useState<TabType>("department")
   const [departments, setDepartments] = useState<Department[]>([])
   const [positionGroups, setPositionGroups] = useState<Department[]>([])
+  const [organizationContext, setOrganizationContext] =
+    useState<OrganizationContext | null>(null)
   const [selectedGroupId, setSelectedGroupId] = useState(DEFAULT_DEPARTMENT_GROUP)
   const [expandedGroupIds, setExpandedGroupIds] = useState<string[]>([
     DEFAULT_DEPARTMENT_GROUP,
@@ -31,24 +83,20 @@ export function OrganizationPage() {
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null)
   const [detailTab, setDetailTab] = useState<DetailTabType>("contact")
   const [searchQuery, setSearchQuery] = useState("")
+  const [createDialogOpen, setCreateDialogOpen] = useState(false)
+  const [openSelfEdit, setOpenSelfEdit] = useState(false)
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false)
+  const [isRefreshing, setIsRefreshing] = useState(false)
 
-  useEffect(() => {
-    let cancelled = false
-
-    searchEmployees({ search: searchQuery })
-      .then((result) => {
-        if (cancelled) return
-
-        setDepartments(result.departments)
-        setPositionGroups(result.positionGroups)
-        setSelectedEmployee((current) => {
-          if (
-            current &&
-            result.employees.some((employee) => employee.id === current.id)
-          ) {
-            return current
-          }
-
+  const reload = useCallback(async () => {
+    setIsRefreshing(true)
+    try {
+      const result = await searchEmployees({ search: searchQuery })
+      setDepartments(result.departments)
+      setPositionGroups(result.positionGroups)
+      setHasLoadedOnce(true)
+      setSelectedEmployee((current) => {
+        if (!current) {
           return (
             result.employees.find(
               (employee) => employee.id === "emp-management-3",
@@ -56,26 +104,106 @@ export function OrganizationPage() {
             result.employees[0] ??
             null
           )
-        })
+        }
+        return (
+          result.employees.find((employee) => employee.id === current.id) ??
+          result.employees[0] ??
+          null
+        )
       })
+    } finally {
+      setIsRefreshing(false)
+    }
+  }, [searchQuery])
+
+  useEffect(() => {
+    let cancelled = false
+
+    reload()
       .catch((error) => {
         console.error("조직 데이터 로드 실패:", error)
+      })
+
+    getOrganizationContext()
+      .then((context) => {
+        if (!cancelled) {
+          setOrganizationContext(context)
+          if (searchParams.get("me") === "1" && context.employeeId) {
+            void searchEmployees({}).then((result) => {
+              const me = result.employees.find(
+                (e) => e.id === context.employeeId,
+              )
+              if (me) {
+                setSelectedEmployee(me)
+                setOpenSelfEdit(true)
+              }
+            })
+          }
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setOrganizationContext(null)
       })
 
     return () => {
       cancelled = true
     }
-  }, [searchQuery])
+  }, [reload, searchParams])
 
   const sidebarGroups =
     activeTab === "department" ? departments : positionGroups
 
   const listGroups = useMemo(() => {
     const source = activeTab === "department" ? departments : positionGroups
+    const canAdd = organizationContext?.permissions.canCreateEmployee
     return source.filter(
-      (group) => group.id !== "all" && group.employees.length > 0,
+      (group) =>
+        group.id !== "all" &&
+        (group.employees.length > 0 || (canAdd && activeTab === "department")),
     )
-  }, [activeTab, departments, positionGroups])
+  }, [activeTab, departments, positionGroups, organizationContext])
+
+  const handleEmployeeUpdated = useCallback(
+    async (updated: Employee) => {
+      setDepartments((prev) => patchEmployeeInGroups(prev, updated))
+      setPositionGroups((prev) => patchEmployeeInGroups(prev, updated))
+      setSelectedEmployee(updated)
+
+      if (
+        organizationContext?.employeeId === updated.id ||
+        session?.email === updated.email
+      ) {
+        await refreshAuth()
+      }
+    },
+    [organizationContext?.employeeId, refreshAuth, session?.email],
+  )
+
+  const handleEmployeeCreated = useCallback(
+    async (created: Employee) => {
+      if (isFastApiMode()) {
+        await reload()
+      } else {
+        setDepartments((prev) => addEmployeeToGroups(prev, created))
+        setPositionGroups((prev) =>
+          addEmployeeToGroups(prev, { ...created, department: created.department }),
+        )
+      }
+      setSelectedEmployee(created)
+      if (created.departmentId) {
+        setExpandedGroupIds((prev) =>
+          prev.includes(created.departmentId!)
+            ? prev
+            : [...prev, created.departmentId!],
+        )
+      }
+    },
+    [reload],
+  )
+
+  const handleDepartmentRenamed = useCallback(() => {
+    void reload()
+  }, [reload])
 
   const handleTabChange = useCallback((tab: TabType) => {
     setActiveTab(tab)
@@ -109,11 +237,12 @@ export function OrganizationPage() {
     )
   }, [])
 
-  if (departments.length === 0) {
+  if (!hasLoadedOnce && departments.length === 0) {
     return (
       <div className="flex min-h-screen bg-background">
         <Sidebar />
-        <main className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
+        <main className="flex flex-1 items-center justify-center gap-2 text-sm text-muted-foreground">
+          <Loader2 className="size-4 animate-spin" />
           데이터를 불러오는 중입니다.
         </main>
       </div>
@@ -124,16 +253,30 @@ export function OrganizationPage() {
     <div className="flex min-h-screen bg-background">
       <Sidebar />
 
-      <main className="flex-1 overflow-auto">
+      <main className="relative flex-1 overflow-auto">
         <Header />
 
-        <div className="grid grid-cols-[320px_1fr_400px] gap-6 p-6">
+        {isRefreshing ? (
+          <div className="pointer-events-none absolute right-6 top-[4.5rem] z-20 flex items-center gap-2 rounded-md border bg-card/95 px-3 py-1.5 text-xs text-muted-foreground shadow-sm">
+            <Loader2 className="size-3.5 animate-spin" />
+            목록 새로고침 중…
+          </div>
+        ) : null}
+
+        <div
+          className={
+            isRefreshing ? "grid grid-cols-[320px_1fr_400px] gap-6 p-6 opacity-90" : "grid grid-cols-[320px_1fr_400px] gap-6 p-6"
+          }
+        >
           <GroupPanel
             activeTab={activeTab}
             selectedGroupId={selectedGroupId}
             groups={sidebarGroups}
+            organizationContext={organizationContext}
             onTabChange={handleTabChange}
             onGroupSelect={handleGroupSelect}
+            onDepartmentRenamed={handleDepartmentRenamed}
+            onAddEmployee={() => setCreateDialogOpen(true)}
           />
 
           <EmployeeListPanel
@@ -142,17 +285,32 @@ export function OrganizationPage() {
             selectedEmployee={selectedEmployee}
             searchQuery={searchQuery}
             groupByPosition={activeTab === "position"}
+            organizationContext={organizationContext}
             onToggleGroup={toggleGroup}
             onSelectEmployee={setSelectedEmployee}
             onSearchChange={setSearchQuery}
+            onAddEmployee={() => setCreateDialogOpen(true)}
           />
 
           <EmployeeDetailPanel
             employee={selectedEmployee}
             detailTab={detailTab}
+            organizationContext={organizationContext}
+            autoOpenEdit={openSelfEdit}
+            onAutoOpenEditHandled={() => setOpenSelfEdit(false)}
             onDetailTabChange={setDetailTab}
+            onEmployeeUpdated={handleEmployeeUpdated}
           />
         </div>
+
+        {organizationContext && (
+          <OrganizationEmployeeCreateDialog
+            context={organizationContext}
+            open={createDialogOpen}
+            onOpenChange={setCreateDialogOpen}
+            onCreated={handleEmployeeCreated}
+          />
+        )}
       </main>
     </div>
   )

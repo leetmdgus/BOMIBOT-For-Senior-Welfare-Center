@@ -58,6 +58,7 @@ export function NewProjectModal({
     projectImagesProp ?? []
   )
   const [isLoadingOptions, setIsLoadingOptions] = useState(false)
+  const [optionsLoadError, setOptionsLoadError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!open) return
@@ -71,6 +72,7 @@ export function NewProjectModal({
 
     let cancelled = false
     setIsLoadingOptions(true)
+    setOptionsLoadError(null)
 
     Promise.all([
       staffListProp?.length ? Promise.resolve(staffListProp) : getStaffList(),
@@ -83,9 +85,19 @@ export function NewProjectModal({
         setStaffList(staff)
         setProjectImages(images)
         if (images.length === 1) setProjectImage(images[0].value)
+        if (images.length === 0) {
+          setOptionsLoadError(
+            "사업 이미지 목록을 불러오지 못했습니다. 새로고침 후 다시 시도해 주세요.",
+          )
+        }
       })
       .catch((error) => {
         console.error("신규 사업 모달 데이터 로드 실패:", error)
+        if (!cancelled) {
+          setOptionsLoadError(
+            "모달 데이터를 불러오지 못했습니다. API(8020) 실행 여부를 확인해 주세요.",
+          )
+        }
       })
       .finally(() => {
         if (!cancelled) setIsLoadingOptions(false)
@@ -184,7 +196,7 @@ export function NewProjectModal({
               }}
               disabled={isSubmitting}
               isLoading={isLoadingOptions}
-              error={errors.projectImage}
+              error={errors.projectImage ?? optionsLoadError ?? undefined}
             />
           </div>
 

@@ -1,0 +1,278 @@
+{
+  "performanceReportRows": [
+    {
+      "majorCategory": "상담",
+      "majorCategoryRowSpan": 12,
+      "projectName": "일반상담 및 정보제공사업",
+      "projectNameRowSpan": 11,
+      "subProjectName": "신규회원 이용상담",
+      "detailCategory": "홍보",
+      "planPeople": 40,
+      "actualPeople": 45,
+      "planCount": 40,
+      "actualCount": 45,
+      "planBudget": 0,
+      "rowType": "data"
+    },
+    {
+      "majorCategory": "",
+      "projectName": "",
+      "subProjectName": "신규회원 이용상담",
+      "detailCategory": "프로그램진행",
+      "planPeople": 40,
+      "actualPeople": 82,
+      "planCount": 40,
+      "actualCount": 82,
+      "planBudget": 0,
+      "rowType": "data"
+    },
+    {
+      "majorCategory": "",
+      "projectName": "",
+      "subProjectName": "신규회원 가입",
+      "detailCategory": "홍보",
+      "planPeople": 40,
+      "actualPeople": 45,
+      "planCount": 40,
+      "actualCount": 45,
+      "planBudget": 0,
+      "rowType": "data"
+    },
+    {
+      "majorCategory": "",
+      "projectName": "",
+      "subProjectName": "신규회원 가입",
+      "detailCategory": "프로그램진행",
+      "planPeople": 40,
+      "actualPeople": 82,
+      "planCount": 40,
+      "actualCount": 82,
+      "planBudget": 0,
+      "rowType": "data"
+    },
+    {
+      "majorCategory": "",
+      "projectName": "",
+      "subProjectName": "신규회원 교육",
+      "detailCategory": "홍보",
+      "planPeople": 40,
+      "actualPeople": 38,
+      "planCount": 40,
+      "actualCount": 38,
+      "planBudget": 0,
+      "rowType": "data"
+    },
+    {
+      "majorCategory": "",
+      "projectName": "",
+      "subProjectName": "신규회원 교육",
+      "detailCategory": "프로그램진행",
+      "planPeople": 40,
+      "actualPeople": 78,
+      "planCount": 40,
+      "actualCount": 78,
+      "planBudget": 0,
+      "rowType": "data"
+    },
+    {
+      "majorCategory": "",
+      "projectName": "사업 소계 > 일반상담 및 정보제공사업 소계",
+      "subProjectName": "",
+      "detailCategory": "",
+      "planPeople": 240,
+      "actualPeople": 370,
+      "planCount": 240,
+      "actualCount": 370,
+      "planBudget": 0,
+      "rowType": "subtotal"
+    },
+    {
+      "majorCategory": "",
+      "projectName": "전문상담사업",
+      "projectNameRowSpan": 4,
+      "subProjectName": "전문상담",
+      "detailCategory": "프로그램진행",
+      "planPeople": 80,
+      "actualPeople": 95,
+      "planCount": 80,
+      "actualCount": 95,
+      "planBudget": 3738000,
+      "rowType": "data"
+    },
+    {
+      "majorCategory": "",
+      "projectName": "",
+      "subProjectName": "전문상담",
+      "detailCategory": "사례관리",
+      "planPeople": 80,
+      "actualPeople": 88,
+      "planCount": 80,
+      "actualCount": 88,
+      "planBudget": 0,
+      "rowType": "data"
+    },
+    {
+      "majorCategory": "",
+      "projectName": "사업 소계 > 전문상담사업 소계",
+      "subProjectName": "",
+      "detailCategory": "",
+      "planPeople": 160,
+      "actualPeople": 183,
+      "planCount": 160,
+      "actualCount": 183,
+      "planBudget": 3738000,
+      "rowType": "subtotal"
+    }
+  ],
+  "budgetReportRows": [
+    {
+      "gwan": "",
+      "hang": "",
+      "mok": "합계",
+      "budgetCurrent": 6867906003,
+      "budgetPrevious": 0,
+      "income": 700310188,
+      "subsidy": 5901551500,
+      "sponsor": 260784315,
+      "transfer": 4600000,
+      "misc": 660000,
+      "amount": 6867906003,
+      "ratio": "100%",
+      "rowType": "total"
+    },
+    {
+      "gwan": "사업비",
+      "hang": "사업비",
+      "mok": "일반상담 및 정보제공사업",
+      "budgetCurrent": 15000000,
+      "budgetPrevious": 0,
+      "income": 15000000,
+      "subsidy": 0,
+      "sponsor": 0,
+      "transfer": 0,
+      "misc": 0,
+      "amount": 15000000,
+      "ratio": "100%",
+      "rowType": "data"
+    },
+    {
+      "gwan": "사업비",
+      "hang": "사업비",
+      "mok": "전문상담사업",
+      "budgetCurrent": 2880000,
+      "budgetPrevious": 0,
+      "income": 2880000,
+      "subsidy": 0,
+      "sponsor": 0,
+      "transfer": 0,
+      "misc": 0,
+      "amount": 2880000,
+      "ratio": "77%",
+      "rowType": "data"
+    },
+    {
+      "gwan": "",
+      "hang": "",
+      "mok": "전문상담사업",
+      "budgetCurrent": 858000,
+      "budgetPrevious": 0,
+      "income": 0,
+      "subsidy": 858000,
+      "sponsor": 0,
+      "transfer": 0,
+      "misc": 0,
+      "amount": 858000,
+      "ratio": "23%",
+      "rowType": "data"
+    },
+    {
+      "gwan": "사업비",
+      "hang": "사업비",
+      "mok": "정보제공상담",
+      "budgetCurrent": 5000000,
+      "budgetPrevious": 0,
+      "income": 3000000,
+      "subsidy": 2000000,
+      "sponsor": 0,
+      "transfer": 0,
+      "misc": 0,
+      "amount": 5000000,
+      "ratio": "100%",
+      "rowType": "data"
+    }
+  ],
+  "businessPlanReportMock": {
+    "stats": [
+      {
+        "label": "총 사업 수",
+        "value": "30",
+        "color": "text-sky-600"
+      },
+      {
+        "label": "총 연인원",
+        "value": "808,039",
+        "unit": "명",
+        "color": "text-emerald-600"
+      },
+      {
+        "label": "총 연횟수",
+        "value": "199,908",
+        "unit": "회",
+        "color": "text-violet-600"
+      },
+      {
+        "label": "총 예산",
+        "value": "6,867,246,003",
+        "unit": "원",
+        "color": "text-amber-600"
+      }
+    ],
+    "projects": [
+      {
+        "category": "1",
+        "subCategory": "일반상담 및 정보제공사업",
+        "subtotal": {
+          "people": 2960,
+          "count": 2965,
+          "budget": 15000000,
+          "content": "사업수입 15,000,000"
+        },
+        "items": [
+          {
+            "name": "신규회원 이용상담",
+            "people": 960,
+            "count": 960,
+            "budget": 0,
+            "purpose": "초기상담을 통한 욕구별 서비스 안내",
+            "target": "복지관 신규등록 회원",
+            "period": "2026.01.01 ~ 2026.12.31",
+            "method": "초기상담 및 복지관 이용 관련 상담",
+            "evaluation": "내부기안(실적보고서), 이용자 명부, 상담일지"
+          },
+          {
+            "name": "신규회원 가입",
+            "people": 960,
+            "count": 965,
+            "budget": 15000000,
+            "purpose": "신규회원 등록 및 서비스 연계",
+            "target": "복지관 신규등록 회원",
+            "period": "2026.01.01 ~ 2026.12.31",
+            "method": "회원 등록 및 서비스 안내",
+            "evaluation": "내부기안(실적보고서), 이용자 명부"
+          },
+          {
+            "name": "신규회원 교육",
+            "people": 960,
+            "count": 960,
+            "budget": 0,
+            "purpose": "신규회원 대상 복지관 이용 교육",
+            "target": "복지관 신규등록 회원",
+            "period": "2026.01.01 ~ 2026.12.31",
+            "method": "교육 프로그램 운영",
+            "evaluation": "내부기안(실적보고서), 교육일지"
+          }
+        ]
+      }
+    ]
+  }
+}

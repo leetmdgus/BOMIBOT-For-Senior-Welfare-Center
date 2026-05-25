@@ -20,5 +20,6 @@ export const deleteProject = kanbanService.deleteProject
 export const createTask = kanbanService.createTask
 export const updateTask = kanbanService.updateTask
 export const deleteTask = kanbanService.deleteTask
+export const moveTask = kanbanService.moveTask
 
 export const getProjectImageOptions = kanbanService.getProjectImageOptions

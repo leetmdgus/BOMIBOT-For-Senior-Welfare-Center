@@ -7,86 +7,89 @@ import type {
   SaveBusinessPlanPayload,
   Survey,
 } from "./kanban.task-detail.types"
+import { apiClient, resolveApiPath } from "@/lib/api-client"
+import { invalidateApiGetCache } from "@/lib/api-get-cache"
 
-async function apiFetch<T>(url: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(url, {
-    headers: { "Content-Type": "application/json" },
-    ...init,
-  })
-
-  if (!response.ok) {
-    throw new Error(`API 요청 실패: ${response.status}`)
-  }
-
-  return response.json()
+function invalidateTaskDetailCache(taskId: string) {
+  const tid = taskId.trim()
+  invalidateApiGetCache(`taskId=${encodeURIComponent(tid)}`)
+  invalidateApiGetCache(`performance:input:${tid}`)
 }
 
-export async function getSurveys(): Promise<Survey[]> {
-  return apiFetch<Survey[]>("/api/kanban/task-detail/surveys")
+const base = (path: string) =>
+  resolveApiPath(`/api/kanban/task-detail${path}`, `/api/v1/kanban/task-detail${path}`)
+
+export async function getSurveys(taskId: string): Promise<Survey[]> {
+  return apiClient.get<Survey[]>(
+    `${base("/surveys")}?taskId=${encodeURIComponent(taskId)}`,
+  )
 }
 
 export async function getEvaluationFiles(taskId: string): Promise<EvaluationFile[]> {
-  return apiFetch<EvaluationFile[]>(
-    `/api/kanban/task-detail/files?taskId=${encodeURIComponent(taskId)}`
+  return apiClient.get<EvaluationFile[]>(
+    `${base("/files")}?taskId=${encodeURIComponent(taskId)}`,
   )
 }
 
 export async function getViewTogetherFixedFiles(): Promise<EvaluationFile[]> {
-  return apiFetch<EvaluationFile[]>("/api/kanban/task-detail/view-together-files")
+  return apiClient.get<EvaluationFile[]>(base("/view-together-files"))
 }
 
 export async function getBusinessEvaluationTemplate(
   taskId: string,
 ): Promise<BusinessEvaluationTemplate> {
-  return apiFetch<BusinessEvaluationTemplate>(
-    `/api/kanban/task-detail/evaluation/template?taskId=${encodeURIComponent(taskId)}`,
+  return apiClient.get<BusinessEvaluationTemplate>(
+    `${base("/evaluation/template")}?taskId=${encodeURIComponent(taskId)}`,
   )
 }
 
 export async function getBusinessEvaluation(
-  taskId: string
+  taskId: string,
 ): Promise<BusinessEvaluationData> {
-  return apiFetch<BusinessEvaluationData>(
-    `/api/kanban/task-detail/evaluation?taskId=${encodeURIComponent(taskId)}`
+  return apiClient.get<BusinessEvaluationData>(
+    `${base("/evaluation")}?taskId=${encodeURIComponent(taskId)}`,
   )
 }
 
 export async function saveBusinessEvaluation(
   taskId: string,
-  payload: SaveBusinessEvaluationPayload
+  payload: SaveBusinessEvaluationPayload,
 ): Promise<BusinessEvaluationData> {
-  return apiFetch<BusinessEvaluationData>("/api/kanban/task-detail/evaluation", {
-    method: "PATCH",
-    body: JSON.stringify({ taskId, ...payload }),
+  const result = await apiClient.patch<BusinessEvaluationData>(base("/evaluation"), {
+    taskId,
+    ...payload,
   })
+  invalidateTaskDetailCache(taskId)
+  return result
 }
 
 export async function completeBusinessEvaluation(
-  taskId: string
+  taskId: string,
 ): Promise<BusinessEvaluationData> {
-  return apiFetch<BusinessEvaluationData>(
-    "/api/kanban/task-detail/evaluation/complete",
-    {
-      method: "POST",
-      body: JSON.stringify({ taskId }),
-    }
+  const result = await apiClient.post<BusinessEvaluationData>(
+    base("/evaluation/complete"),
+    { taskId },
   )
+  invalidateTaskDetailCache(taskId)
+  return result
 }
 
 export async function getBusinessPlan(
-  taskId: string
+  taskId: string,
 ): Promise<BusinessPlanDocument> {
-  return apiFetch<BusinessPlanDocument>(
-    `/api/kanban/task-detail/business-plan?taskId=${encodeURIComponent(taskId)}`
+  return apiClient.get<BusinessPlanDocument>(
+    `${base("/business-plan")}?taskId=${encodeURIComponent(taskId)}`,
   )
 }
 
 export async function saveBusinessPlan(
   taskId: string,
-  payload: SaveBusinessPlanPayload
+  payload: SaveBusinessPlanPayload,
 ): Promise<BusinessPlanDocument> {
-  return apiFetch<BusinessPlanDocument>("/api/kanban/task-detail/business-plan", {
-    method: "PATCH",
-    body: JSON.stringify({ taskId, ...payload }),
+  const result = await apiClient.patch<BusinessPlanDocument>(base("/business-plan"), {
+    taskId,
+    ...payload,
   })
+  invalidateTaskDetailCache(taskId)
+  return result
 }

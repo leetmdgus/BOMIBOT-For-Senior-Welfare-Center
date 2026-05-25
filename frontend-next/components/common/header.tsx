@@ -5,6 +5,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { ChevronRight } from "lucide-react"
 
+import { UserMenu } from "@/components/common/user-menu"
 import { VersionHistorySheet } from "@/components/kanban/version-history/version-history-sheet"
 
 type BreadcrumbItem = {
@@ -25,6 +26,8 @@ const pageLinks: PageLink[] = [
   { title: "문서자동화", path: "/automation" },
   { title: "파일들", path: "/files" },
   { title: "전자책자", path: "/ebooks" },
+  { title: "메뉴 관리", path: "/settings/menu" },
+  { title: "전자결재", path: "/approvals" },
 
   {
     title: "사업문서",
@@ -137,7 +140,7 @@ interface HeaderProps {
   kanbanYear?: string
 }
 
-export function Header({ kanbanYear = "2026" }: HeaderProps) {
+export function Header({ kanbanYear }: HeaderProps) {
   const pathname = usePathname()
 
   const currentPage = useMemo(() => getCurrentPage(pathname), [pathname])
@@ -195,7 +198,10 @@ export function Header({ kanbanYear = "2026" }: HeaderProps) {
           </nav>
         </div>
         
-        {isKanbanPage ? <VersionHistorySheet year={kanbanYear} /> : null}
+        <div className="flex items-center gap-2">
+          {isKanbanPage ? <VersionHistorySheet year={kanbanYear} /> : null}
+          <UserMenu />
+        </div>
       </div>
     </header>
   )

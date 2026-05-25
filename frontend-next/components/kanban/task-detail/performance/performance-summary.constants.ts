@@ -66,6 +66,10 @@ export const MONTH_OPTIONS = [
   "12월",
 ] as const
 
+export type SummaryMonthFilter = (typeof MONTH_OPTIONS)[number]
+
+export type SummaryFundingSourceFilter = FundingSourceCode | "all"
+
 export const DISPLAY_MONTHS = MONTH_OPTIONS.slice(1)
 
 export function formatFundingSourceLabel(source: (typeof FUNDING_SOURCES)[number]) {

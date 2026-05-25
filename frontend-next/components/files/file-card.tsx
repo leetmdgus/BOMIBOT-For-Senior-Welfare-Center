@@ -25,6 +25,7 @@ interface FileCardProps {
   onToggleStar: (item: FileItem) => void
   onDelete: (item: FileItem) => void
   onExport: (item: FileItem) => void
+  onDownload: (item: FileItem) => void
 }
 
 export function FileCard({
@@ -38,6 +39,7 @@ export function FileCard({
   onToggleStar,
   onDelete,
   onExport,
+  onDownload,
 }: FileCardProps) {
   const Icon = fileIcons[item.type]
   const draggable = useDraggable({ id: item.id })
@@ -60,6 +62,7 @@ export function FileCard({
       onToggleStar={onToggleStar}
       onDelete={onDelete}
       onExport={onExport}
+      onDownload={onDownload}
     >
       <div
         ref={setRefs}
@@ -111,6 +114,7 @@ export function FileCard({
               onToggleStar={onToggleStar}
               onDelete={onDelete}
               onExport={onExport}
+              onDownload={onDownload}
             />
           </DropdownMenu>
         </div>
@@ -127,6 +131,11 @@ export function FileCard({
           <span className="text-xs text-muted-foreground">
             {item.modifiedAt.slice(0, 10)}
           </span>
+          {item.type !== "folder" && item.hasContent && (
+            <Badge variant="outline" className="text-[10px]">
+              실제 파일
+            </Badge>
+          )}
           {item.shared && (
             <Badge variant="secondary" className="text-[10px]">
               공유됨

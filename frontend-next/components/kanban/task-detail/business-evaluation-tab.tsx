@@ -49,6 +49,12 @@ export function BusinessEvaluationTab() {
   }, [taskId])
 
   useEffect(() => {
+    setHasLoadedOnce(false)
+    setEvaluationData(null)
+    setIsEditMode(false)
+  }, [taskId])
+
+  useEffect(() => {
     void load()
   }, [load])
 
@@ -74,7 +80,7 @@ export function BusinessEvaluationTab() {
     }
   }
 
-  if (isLoading && !evaluationData) {
+  if (isLoading && !hasLoadedOnce) {
     return (
       <div className="flex flex-col items-center justify-center gap-2 py-24 text-muted-foreground">
         <Loader2 className="size-8 animate-spin" />
@@ -94,7 +100,13 @@ export function BusinessEvaluationTab() {
   const canEditEvaluation = isEditMode && !isSaving
 
   return (
-    <div className="space-y-6">
+    <div className="relative space-y-6">
+      {isLoading ? (
+        <p className="print-hide absolute right-0 top-0 z-10 flex items-center gap-2 rounded-md border bg-card/90 px-2 py-1 text-xs text-muted-foreground shadow-sm">
+          <Loader2 className="size-3.5 animate-spin" />
+          새로고침 중…
+        </p>
+      ) : null}
       <div className="print-hide flex flex-wrap items-center justify-end gap-2">
         <PrintDocumentButton />
         <HwpxDownloadButton

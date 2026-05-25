@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import Image from "next/image"
+import { usePathname } from "next/navigation"
 import {
   AlertCircle,
   BarChart3,
@@ -148,14 +149,18 @@ function CsAttachmentPreview({
   )
 }
 
+const CS_ONLY_PATHS = ["/login", "/signup"]
+
 export function Chatbot() {
   const { toast } = useToast()
+  const pathname = usePathname()
+  const csOnlyMode = CS_ONLY_PATHS.some((path) => pathname?.startsWith(path))
   const fileInputRef = useRef<HTMLInputElement>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   const [isOpen, setIsOpen] = useState(false)
   const [isExpanded, setIsExpanded] = useState(false)
-  const [mode, setMode] = useState<ChatPanelMode>("assistant")
+  const [mode, setMode] = useState<ChatPanelMode>(csOnlyMode ? "cs" : "assistant")
   const [csMessages, setCsMessages] = useState<Message[]>([])
   const [assistantMessages, setAssistantMessages] = useState<Message[]>([])
   const [csSuggestions, setCsSuggestions] = useState<ChatSuggestion[]>([])
@@ -190,6 +195,12 @@ export function Chatbot() {
   const suggestions = mode === "cs" ? csSuggestions : assistantSuggestions
   const showQuickMenu = messages.length === 1 && suggestions.length > 0
   const canResetToQuickMenu = messages.length > 1
+
+  useEffect(() => {
+    if (csOnlyMode) {
+      setMode("cs")
+    }
+  }, [csOnlyMode])
 
   useEffect(() => {
     getChatConfig()
@@ -516,23 +527,28 @@ export function Chatbot() {
   if (!isOpen) {
     return (
       <div className="fixed bottom-0 right-0 z-50 flex flex-col items-end gap-2 p-4 pb-5 print:hidden">
-        <Button
-          onClick={() => {
-            setMode("assistant")
-            setIsOpen(true)
-          }}
-          className="h-11 gap-2 rounded-full px-4 shadow-lg"
-        >
-          <Bot className="size-5" />
-          데이터 챗봇
-        </Button>
+        {!csOnlyMode ? (
+          <Button
+            onClick={() => {
+              setMode("assistant")
+              setIsOpen(true)
+            }}
+            className="h-11 gap-2 rounded-full px-4 shadow-lg"
+          >
+            <Bot className="size-5" />
+            데이터 챗봇
+          </Button>
+        ) : null}
         <Button
           onClick={() => {
             setMode("cs")
             setIsOpen(true)
           }}
-          variant="outline"
-          className="h-10 gap-2 rounded-full bg-card px-4 shadow-md"
+          variant={csOnlyMode ? "default" : "outline"}
+          className={cn(
+            "h-10 gap-2 rounded-full px-4 shadow-md",
+            csOnlyMode && "h-11 shadow-lg",
+          )}
         >
           <Headphones className="size-4" />
           CS 문의
@@ -851,7 +867,10 @@ export function Chatbot() {
               문의·사진·동영상은{" "}
               <span className="font-medium">{csEmail}</span>로 메일 접수됩니다.
               이미지 {maxImageSizeMb}MB·동영상 {maxVideoSizeMb}MB 이하, 첨부 최대{" "}
-              {maxAttachments}개. 다른 문의는 창을 닫은 뒤 데이터 챗봇 버튼을 이용해 주세요.
+              {maxAttachments}개.
+              {!csOnlyMode
+                ? " 다른 문의는 창을 닫은 뒤 데이터 챗봇 버튼을 이용해 주세요."
+                : " 로그인 후 데이터 챗봇을 이용할 수 있습니다."}
             </>
           ) : (
             <>

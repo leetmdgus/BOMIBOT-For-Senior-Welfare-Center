@@ -31,7 +31,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
+import { ApiError } from "@/lib/api-client"
 import { cn } from "@/lib/utils"
+import { toast } from "@/hooks/use-toast"
 import { Button } from "@/components/ui/button"
 import { TaskFormData, TaskModal } from "./task-modal"
 import { KanbanColumn } from "./kanban-column"
@@ -44,10 +46,12 @@ import {
   Staff,
   Task,
 } from "@/services/kanban.board.types"
+import { getCurrentYearString } from "@/lib/current-year"
+import { resolveColumnTypeForCategoryTitle } from "@/lib/kanban/static-config"
 import {
   deleteProject,
   deleteTask,
-  getColumnTypeByCategoryTitle,
+  moveTask,
   updateTask,
 } from "@/services/kanban.board.service"
 
@@ -57,6 +61,12 @@ interface ProjectSectionProps {
   staffList?: Staff[]
   projectImages?: ProjectImageOption[]
   onRefresh?: () => Promise<void>
+  /** 카드 이동 후 전체 로딩 없이 서버 동기화 */
+  onRefreshSilent?: () => Promise<void>
+  onProjectCategoriesChange?: (
+    projectId: string,
+    categories: Category[],
+  ) => void
   onCreateTask: (
     projectId: string,
     categoryId: string,
@@ -67,10 +77,12 @@ interface ProjectSectionProps {
 
 export function ProjectSection({
   project,
-  year = "2026",
+  year = getCurrentYearString(),
   staffList,
   projectImages,
   onRefresh,
+  onRefreshSilent,
+  onProjectCategoriesChange,
   onCreateTask,
   onEditProject,
 }: ProjectSectionProps) {
@@ -90,6 +102,9 @@ export function ProjectSection({
 
   const [categories, setCategories] = useState<Category[]>(project.categories)
   const [activeTask, setActiveTask] = useState<Task | null>(null)
+  const [dragFromCategoryId, setDragFromCategoryId] = useState<string | null>(
+    null,
+  )
   const [activeColumnType, setActiveColumnType] =
     useState<ColumnType>("실적관리")
   const [columnTypeMap, setColumnTypeMap] = useState<Record<string, ColumnType>>(
@@ -106,18 +121,13 @@ export function ProjectSection({
   }, [project.categories])
 
   useEffect(() => {
-    const loadColumnTypes = async () => {
-      const entries = await Promise.all(
-        project.categories.map(async (category) => [
-          category.id,
-          await getColumnTypeByCategoryTitle(category.title),
-        ])
-      )
-
-      setColumnTypeMap(Object.fromEntries(entries))
-    }
-
-    loadColumnTypes()
+    const map = Object.fromEntries(
+      project.categories.map((category) => [
+        category.id,
+        resolveColumnTypeForCategoryTitle(category.title),
+      ]),
+    )
+    setColumnTypeMap(map)
   }, [project.categories])
 
   const sensors = useSensors(
@@ -192,9 +202,10 @@ export function ProjectSection({
         )
       )
 
-      await onRefresh?.()
     } catch (error) {
       console.error("업무 수정 실패:", error)
+      setCategories(project.categories)
+      onProjectCategoriesChange?.(project.id, project.categories)
     }
   }
 
@@ -240,6 +251,7 @@ export function ProjectSection({
     if (!task) return
 
     setActiveTask(task)
+    setDragFromCategoryId(category.id)
     setActiveColumnType(columnTypeMap[category.id] ?? "실적관리")
   }
 
@@ -298,6 +310,60 @@ export function ProjectSection({
     })
   }
 
+  const applyCategoriesMove = useCallback(
+    (
+      prev: Category[],
+      activeId: string,
+      fromCategoryId: string,
+      overCategory: Category,
+      overId: string,
+    ): Category[] => {
+      const movingTask = prev
+        .flatMap((category) => category.tasks)
+        .find((task) => task.id === activeId)
+
+      if (!movingTask) return prev
+
+      const insertBeforeTaskId = overCategory.tasks.some(
+        (task) => task.id === overId,
+      )
+        ? overId
+        : undefined
+
+      return prev.map((category) => {
+        if (category.id === fromCategoryId) {
+          return {
+            ...category,
+            tasks: category.tasks.filter((task) => task.id !== activeId),
+          }
+        }
+
+        if (category.id === overCategory.id) {
+          const without = category.tasks.filter((task) => task.id !== activeId)
+          const nextTasks = [...without]
+
+          if (insertBeforeTaskId) {
+            const overIndex = nextTasks.findIndex(
+              (task) => task.id === insertBeforeTaskId,
+            )
+            if (overIndex >= 0) {
+              nextTasks.splice(overIndex, 0, movingTask)
+            } else {
+              nextTasks.push(movingTask)
+            }
+          } else {
+            nextTasks.push(movingTask)
+          }
+
+          return { ...category, tasks: nextTasks }
+        }
+
+        return category
+      })
+    },
+    [],
+  )
+
   const handleDragEnd = (event: DragEndEvent) => {
     resetDragCursor()
 
@@ -305,35 +371,92 @@ export function ProjectSection({
 
     setActiveTask(null)
 
-    if (!over) return
+    if (!over) {
+      setDragFromCategoryId(null)
+      return
+    }
 
     const activeId = active.id as string
     const overId = over.id as string
 
-    if (activeId === overId) return
+    if (activeId === overId) {
+      setDragFromCategoryId(null)
+      return
+    }
 
-    const activeCategory = findCategoryByTaskId(activeId)
-    const overCategory = findCategoryByTaskId(overId)
+    const overCategory =
+      findCategoryByTaskId(overId) ||
+      categories.find((category) => category.id === overId)
 
-    if (!activeCategory || !overCategory) return
-    if (activeCategory.id !== overCategory.id) return
+    const fromCategoryId = dragFromCategoryId ?? findCategoryByTaskId(activeId)?.id
 
-    setCategories((prevCategories) =>
-      prevCategories.map((category) => {
-        if (category.id !== activeCategory.id) return category
+    setDragFromCategoryId(null)
 
-        const oldIndex = category.tasks.findIndex(
-          (task) => task.id === activeId
-        )
+    if (!overCategory || !fromCategoryId) return
 
-        const newIndex = category.tasks.findIndex((task) => task.id === overId)
+    const overTaskId = overCategory.tasks.some((task) => task.id === overId)
+      ? overId
+      : undefined
+
+    let nextCategories = categories
+
+    if (fromCategoryId === overCategory.id) {
+      const column = categories.find((category) => category.id === fromCategoryId)
+      if (!column) return
+
+      const oldIndex = column.tasks.findIndex((task) => task.id === activeId)
+      const newIndex = column.tasks.findIndex((task) => task.id === overId)
+
+      if (oldIndex < 0 || newIndex < 0 || oldIndex === newIndex) return
+
+      nextCategories = categories.map((category) => {
+        if (category.id !== fromCategoryId) return category
 
         return {
           ...category,
           tasks: arrayMove(category.tasks, oldIndex, newIndex),
         }
       })
-    )
+    } else {
+      const taskStillInSource = categories
+        .find((category) => category.id === fromCategoryId)
+        ?.tasks.some((task) => task.id === activeId)
+
+      if (taskStillInSource) {
+        nextCategories = applyCategoriesMove(
+          categories,
+          activeId,
+          fromCategoryId,
+          overCategory,
+          overId,
+        )
+      }
+    }
+
+    setCategories(nextCategories)
+    onProjectCategoriesChange?.(project.id, nextCategories)
+
+    void moveTask(project.id, {
+      taskId: activeId,
+      fromCategoryId,
+      toCategoryId: overCategory.id,
+      overTaskId,
+    })
+      .then(() => onRefreshSilent?.())
+      .catch((error) => {
+        console.error("카드 이동 저장 실패:", error)
+        setCategories(project.categories)
+        onProjectCategoriesChange?.(project.id, project.categories)
+        const message =
+          error instanceof ApiError
+            ? error.message
+            : "카드 위치를 서버에 저장하지 못했습니다."
+        toast({
+          variant: "destructive",
+          title: "저장 실패",
+          description: message,
+        })
+      })
   }
 
   const totalTaskCount = categories.reduce(

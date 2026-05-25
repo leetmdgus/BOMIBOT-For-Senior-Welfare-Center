@@ -4,6 +4,9 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { FileStack } from "lucide-react"
 
+import { useAuth } from "@/components/auth/auth-provider"
+import { CollaborationLiveNotice } from "@/components/collaboration/collaboration-live-notice"
+import { CollaborationPresenceBar } from "@/components/collaboration/collaboration-presence-bar"
 import { HwpxDownloadButton } from "@/components/common/hwpx-download-button"
 import { BusinessEvaluationEditor } from "@/components/kanban/task-detail/business-evaluation-editor"
 import { BusinessPlanFloatingPanel } from "@/components/kanban/task-detail/business-plan-floating-panel"
@@ -21,6 +24,13 @@ import {
   saveBusinessEvaluation,
   saveBusinessPlan,
 } from "@/services/kanban.task-detail.service"
+import type { CollaborationMessage } from "@/lib/collaboration/types"
+import { taskBusinessPlanRoom, taskEvaluationRoom } from "@/lib/collaboration/rooms"
+import {
+  useCollaborationRoom,
+  useDebouncedCollaborationDraft,
+} from "@/lib/collaboration/use-collaboration-room"
+import { isCollaborationAvailable } from "@/lib/collaboration/ws-url"
 import type {
   BusinessEvaluationData,
   BusinessPlanDocument,
@@ -51,6 +61,11 @@ export function BusinessPlanEvaluationWorkspace({
   onEvaluationSaved,
 }: BusinessPlanEvaluationWorkspaceProps) {
   const router = useRouter()
+  const { session } = useAuth()
+  const lastLocalEditRef = useRef(0)
+  const collaborationClientIdRef = useRef<string | null>(null)
+  const [liveNotice, setLiveNotice] = useState<string | null>(null)
+
   const [planDocument, setPlanDocument] = useState<BusinessPlanDocument | null>(
     null,
   )
@@ -101,6 +116,12 @@ export function BusinessPlanEvaluationWorkspace({
     } finally {
       setPlanLoading(false)
     }
+  }, [taskId])
+
+  useEffect(() => {
+    setPlanDocument(null)
+    setDocumentFiles([])
+    setPlanLoading(true)
   }, [taskId])
 
   useEffect(() => {
@@ -156,7 +177,7 @@ export function BusinessPlanEvaluationWorkspace({
 
     try {
       const template = await getBusinessEvaluationTemplate(taskId)
-      onEvaluationChange({
+      handleEvaluationChange({
         ...evaluationData,
         performanceIndicator: template.performanceIndicator,
         evaluationTool: template.evaluationTool,
@@ -177,7 +198,7 @@ export function BusinessPlanEvaluationWorkspace({
 
   const handleImportFromPlan = () => {
     if (!planDocument) return
-    onEvaluationChange({
+    handleEvaluationChange({
       ...evaluationData,
       programName: planDocument.formData.projectName,
       purpose: planDocument.formData.purpose,
@@ -196,7 +217,7 @@ export function BusinessPlanEvaluationWorkspace({
       title: type === "heading" ? "제목을 입력하세요" : "",
       content: type === "body" ? "" : "",
     }
-    onEvaluationChange({
+    handleEvaluationChange({
       ...evaluationData,
       sections: [...evaluationData.sections, section],
     })
@@ -205,8 +226,95 @@ export function BusinessPlanEvaluationWorkspace({
 
   const planReadOnly = planDocument?.isCompleted ?? false
 
+  const evaluationRoom =
+    session?.regionId && taskId
+      ? taskEvaluationRoom(session.regionId, taskId)
+      : null
+  const planRoom =
+    session?.regionId && taskId
+      ? taskBusinessPlanRoom(session.regionId, taskId)
+      : null
+
+  const handleCollaborationMessage = useCallback(
+    (message: CollaborationMessage) => {
+      if (!message.clientId) return
+      if (message.clientId === collaborationClientIdRef.current) return
+
+      if (message.type === "document.draft" || message.type === "document.saved") {
+        const payload = message.payload as {
+          evaluation?: BusinessEvaluationData
+          plan?: BusinessPlanDocument | null
+        } | undefined
+        if (!payload) return
+        if (
+          message.type === "document.draft" &&
+          Date.now() - lastLocalEditRef.current < 1600
+        ) {
+          return
+        }
+        if (payload.evaluation) onEvaluationChange(payload.evaluation)
+        if (payload.plan !== undefined) setPlanDocument(payload.plan)
+        if (message.type === "document.saved" && message.userName) {
+          setLiveNotice(`${message.userName}님이 사업평가를 저장했습니다.`)
+        }
+      }
+    },
+    [onEvaluationChange],
+  )
+
+  const { clientId, presence, isConnected, publish, setFocus } =
+    useCollaborationRoom(evaluationRoom, {
+      enabled: isCollaborationAvailable(),
+      onMessage: handleCollaborationMessage,
+    })
+
+  useCollaborationRoom(planRoom, {
+    enabled: isCollaborationAvailable(),
+    onMessage: (message) => {
+      if (!message.clientId || message.clientId === collaborationClientIdRef.current) {
+        return
+      }
+      if (message.type === "document.saved" || message.type === "document.draft") {
+        const payload = message.payload as BusinessPlanDocument | undefined
+        if (payload?.formData) setPlanDocument(payload)
+        if (message.type === "document.saved" && message.userName) {
+          setLiveNotice(`${message.userName}님이 사업계획서를 저장했습니다.`)
+        }
+      }
+    },
+  })
+
+  useEffect(() => {
+    collaborationClientIdRef.current = clientId
+  }, [clientId])
+
+  useEffect(() => {
+    if (canEditEvaluation && isConnected) {
+      setFocus("editing")
+      return () => setFocus(null)
+    }
+    setFocus(null)
+    return undefined
+  }, [canEditEvaluation, isConnected, setFocus])
+
+  useDebouncedCollaborationDraft(
+    publish,
+    { evaluation: evaluationData, plan: planDocument },
+    { enabled: canEditEvaluation, isConnected },
+  )
+
+  const handleEvaluationChange = (next: BusinessEvaluationData) => {
+    lastLocalEditRef.current = Date.now()
+    onEvaluationChange(next)
+  }
+
   return (
     <div className="space-y-4">
+      <CollaborationPresenceBar
+        presence={presence}
+        isConnected={isConnected}
+      />
+      <CollaborationLiveNotice message={liveNotice} />
       <div className="evaluation-workspace-chrome print-hide flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border/50 bg-card px-4 py-3">
         <p className="text-sm text-muted-foreground">
           {canEditEvaluation
@@ -267,7 +375,7 @@ export function BusinessPlanEvaluationWorkspace({
               canEdit={canEditEvaluation}
               datePickerOpen={datePickerOpen}
               onDatePickerOpenChange={setDatePickerOpen}
-              onEvaluationChange={onEvaluationChange}
+              onEvaluationChange={handleEvaluationChange}
               setSectionRef={setSectionRef}
               onAddHeading={() => addSection("heading")}
               onAddBody={() => addSection("body")}

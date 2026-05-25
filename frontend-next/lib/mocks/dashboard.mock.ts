@@ -1,26 +1,19 @@
-import {
-  Calendar as CalendarIcon,
-  DollarSign,
-  Layers,
-  TrendingUp,
-  Users,
-} from "lucide-react"
-
-import {
+import type {
   CalendarEvent,
-  ProgressCardData,
-  StatCardData,
+  ProgressCardDataDTO,
+  StatCardDataDTO,
   VolunteerEvent,
 } from "@/services/dashboard.types"
 
-export const statsData: StatCardData[] = [
+/** region-store / structuredClone 호환 (React icon 컴포넌트 없음) */
+export const statsData: StatCardDataDTO[] = [
   {
     label: "인원 현황",
     labelEn: "PERSONNEL STATUS",
     value: "45",
     unit: "명",
     description: "전년 대비 2명 증가 (신규 채용 포함)",
-    icon: Users,
+    iconName: "Users",
     color: "bg-primary/10 text-primary",
     link: "전체 직원 현황 보기",
     goto: "/organization",
@@ -31,7 +24,7 @@ export const statsData: StatCardData[] = [
     value: "12",
     unit: "개",
     description: "2026년도 사업계획 승인 완료 기준",
-    icon: Layers,
+    iconName: "Layers",
     color: "bg-primary/10 text-primary",
     link: "사업계획 및 실적 관리",
     goto: "/kanban",
@@ -42,31 +35,31 @@ export const statsData: StatCardData[] = [
     value: "8,420",
     unit: "명",
     description: "최근 3개월 누적 이용자 추이",
-    icon: TrendingUp,
+    iconName: "TrendingUp",
     color: "bg-primary/10 text-primary",
     showChart: true,
   },
 ]
 
-export const progressData: ProgressCardData[] = [
+export const progressData: ProgressCardDataDTO[] = [
   {
     label: "인원 달성률",
     value: 85,
-    icon: Users,
+    iconName: "Users",
     color: "bg-primary",
     textColor: "text-primary",
   },
   {
     label: "횟수 달성률",
     value: 92,
-    icon: CalendarIcon,
+    iconName: "Calendar",
     color: "bg-success",
     textColor: "text-success",
   },
   {
     label: "예산 집행률",
     value: 74,
-    icon: DollarSign,
+    iconName: "DollarSign",
     color: "bg-[hsl(280,60%,50%)]",
     textColor: "text-[hsl(280,60%,50%)]",
   },

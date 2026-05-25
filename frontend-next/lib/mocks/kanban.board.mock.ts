@@ -41,13 +41,16 @@ export function findCategoryIdByTitle(
   return categories.find((category) => category.title === title)?.id
 }
 
-export function findTaskLocation(taskId: string): {
+export function findTaskLocation(
+  taskId: string,
+  projects: KanbanProject[] = projectsMock,
+): {
   projectId: string
   categoryId: string
   categoryTitle: ColumnType
   task: Task
 } | null {
-  for (const project of projectsMock) {
+  for (const project of projects) {
     for (const category of project.categories) {
       const task = category.tasks.find((item) => item.id === taskId)
       if (task) {
@@ -72,12 +75,15 @@ const COLUMN_PIPELINE: ColumnType[] = [
 ]
 
 /** 완료 시 다음 칸반 컬럼으로 이동. 사업평가는 보드에서 완료 표시만 합니다. */
-export function advanceTaskToNextProcess(taskId: string): boolean {
-  const location = findTaskLocation(taskId)
+export function advanceTaskToNextProcess(
+  taskId: string,
+  projects: KanbanProject[] = projectsMock,
+): boolean {
+  const location = findTaskLocation(taskId, projects)
   if (!location) return false
 
   const { projectId, categoryId, categoryTitle, task } = location
-  const project = projectsMock.find((item) => item.id === projectId)
+  const project = projects.find((item) => item.id === projectId)
   if (!project) return false
 
   const columnIndex = COLUMN_PIPELINE.indexOf(categoryTitle)
@@ -325,7 +331,7 @@ export const projectsMock: KanbanProject[] = [
 export const staffMock: Staff[] = [
   { id: "1", name: "김태민", team: "복지 1팀", position: "사회복지사" },
   { id: "2", name: "이창환", team: "복지 1팀", position: "사회복지사" },
-  { id: "3", name: "이승현", team: "복지 3팀", position: "개발자" },
+  { id: "3", name: "이승현", team: "복지 1팀", position: "사회복지사" },
   { id: "4", name: "김영수", team: "복지 2팀", position: "사회복지사" },
   { id: "5", name: "박지연", team: "복지 2팀", position: "사회복지사" },
   { id: "6", name: "최민수", team: "운영지원팀", position: "사회복지사" },

@@ -203,7 +203,11 @@ export async function downloadDocumentsExcel(options: {
   const book = XLSX.utils.book_new()
 
   if (activeView === "performance") {
-    const rows = await getPerformanceReportRows()
+    const rows = await getPerformanceReportRows({
+      year,
+      quarter,
+      periodMode,
+    })
     const periodLabel = getPerformancePeriodLabel(quarter, periodMode)
     const sheet = XLSX.utils.json_to_sheet(
       buildPerformanceSheetRows(rows, periodLabel),
@@ -222,7 +226,7 @@ export async function downloadDocumentsExcel(options: {
   }
 
   if (activeView === "budget") {
-    const rows = await getBudgetReportRows()
+    const rows = await getBudgetReportRows({ year })
     const sheet = buildBudgetSheet(rows, year)
     XLSX.utils.book_append_sheet(book, sheet, "예산보고서")
     XLSX.writeFile(
@@ -232,7 +236,7 @@ export async function downloadDocumentsExcel(options: {
     return
   }
 
-  const report = await getBusinessPlanReport()
+  const report = await getBusinessPlanReport({ year })
   const { statsSheet, planSheet } = buildBusinessPlanSheets(report)
   XLSX.utils.book_append_sheet(book, statsSheet, "연도별통계")
   XLSX.utils.book_append_sheet(book, planSheet, "사업계획")
