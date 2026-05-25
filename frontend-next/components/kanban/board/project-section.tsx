@@ -364,7 +364,7 @@ export function ProjectSection({
     [],
   )
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd = async (event: DragEndEvent) => {
     resetDragCursor()
 
     const { active, over } = event
@@ -414,7 +414,7 @@ export function ProjectSection({
 
         return {
           ...category,
-          tasks: arrayMove(category.tasks, oldIndex, newIndex),
+          tasks: arrayMove(column.tasks, oldIndex, newIndex),
         }
       })
     } else {
@@ -433,30 +433,30 @@ export function ProjectSection({
       }
     }
 
-    setCategories(nextCategories)
-    onProjectCategoriesChange?.(project.id, nextCategories)
-
-    void moveTask(project.id, {
-      taskId: activeId,
-      fromCategoryId,
-      toCategoryId: overCategory.id,
-      overTaskId,
-    })
-      .then(() => onRefreshSilent?.())
-      .catch((error) => {
-        console.error("카드 이동 저장 실패:", error)
-        setCategories(project.categories)
-        onProjectCategoriesChange?.(project.id, project.categories)
-        const message =
-          error instanceof ApiError
-            ? error.message
-            : "카드 위치를 서버에 저장하지 못했습니다."
-        toast({
-          variant: "destructive",
-          title: "저장 실패",
-          description: message,
-        })
+    try {
+      await moveTask(project.id, {
+        taskId: activeId,
+        fromCategoryId,
+        toCategoryId: overCategory.id,
+        overTaskId,
       })
+      setCategories(nextCategories)
+      onProjectCategoriesChange?.(project.id, nextCategories)
+      await onRefreshSilent?.()
+    } catch (error) {
+      console.error("카드 이동 저장 실패:", error)
+      setCategories(project.categories)
+      onProjectCategoriesChange?.(project.id, project.categories)
+      const message =
+        error instanceof ApiError
+          ? error.message
+          : "카드 위치를 서버에 저장하지 못했습니다."
+      toast({
+        variant: "destructive",
+        title: "저장 실패",
+        description: message,
+      })
+    }
   }
 
   const totalTaskCount = categories.reduce(

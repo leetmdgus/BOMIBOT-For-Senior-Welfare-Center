@@ -9,7 +9,7 @@ from app.domain.repositories.kanban_repository import (
     KanbanProjectRecord,
     KanbanTaskRecord,
 )
-from app.domain.scoped_ids import scope_id
+from app.domain.scoped_ids import scope_id, strip_scope
 from app.infrastructure.kanban.static_config import COLUMN_COLORS, COLUMN_TYPES
 from app.infrastructure.persistence.models.kanban import (
     KanbanCategoryModel,
@@ -246,15 +246,17 @@ class SqlAlchemyKanbanBoardRepository(KanbanBoardRepository):
         over_task_id: str | None = None,
     ) -> KanbanTaskRecord | None:
         scoped_project_id = scope_id(region_id, project_id)
-        task = self._session.get(KanbanTaskModel, scope_id(region_id, task_id))
+        scoped_task_id = scope_id(region_id, strip_scope(task_id))
+        scoped_from_category_id = scope_id(region_id, strip_scope(from_category_id))
+        scoped_to_category_id = scope_id(region_id, strip_scope(to_category_id))
+
+        task = self._session.get(KanbanTaskModel, scoped_task_id)
         if not task or task.category.project_id != scoped_project_id:
             return None
-        if task.category_id != scope_id(region_id, from_category_id):
+        if task.category_id != scoped_from_category_id:
             return None
 
-        to_category = self._session.get(
-            KanbanCategoryModel, scope_id(region_id, to_category_id)
-        )
+        to_category = self._session.get(KanbanCategoryModel, scoped_to_category_id)
         if not to_category or to_category.project_id != scoped_project_id:
             return None
 
@@ -269,7 +271,7 @@ class SqlAlchemyKanbanBoardRepository(KanbanBoardRepository):
 
         insert_index = len(target_tasks)
         if over_task_id:
-            scoped_over_id = scope_id(region_id, over_task_id)
+            scoped_over_id = scope_id(region_id, strip_scope(over_task_id))
             over_index = next(
                 (index for index, item in enumerate(target_tasks) if item.id == scoped_over_id),
                 None,

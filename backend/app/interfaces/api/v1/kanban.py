@@ -1,9 +1,11 @@
 from typing import Any
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, status
+from sqlalchemy.orm import Session
 
 from app.application.services.collaboration_broadcast import broadcast_kanban_refresh
 from app.application.services.kanban_board_service import KanbanBoardService
+from app.core.database import get_db
 from app.domain.scoped_ids import strip_scope
 from app.interfaces.api.deps import (
     get_kanban_service,
@@ -223,10 +225,12 @@ def move_task(
     region_id: str = Depends(require_region_id),
     kanban_service: KanbanBoardService = Depends(get_kanban_service),
     user: str = Depends(optional_user_display_name),
+    db: Session = Depends(get_db),
 ):
     task = kanban_service.move_task(region_id, project_id, body, user=user)
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
+    db.commit()
     background_tasks.add_task(
         _emit_kanban_refresh,
         region_id,

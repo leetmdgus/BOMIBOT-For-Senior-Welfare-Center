@@ -569,23 +569,25 @@ class KanbanBoardService:
         if not existing or not from_category:
             return None
 
+        scoped_to_category_id = strip_scope(str(to_category_id))
         to_category = next(
             (
                 category
                 for category in (project.categories if project else [])
-                if strip_scope(category.id) == to_category_id
+                if strip_scope(category.id) == scoped_to_category_id
             ),
             None,
         )
         if not to_category:
             return None
 
+        scoped_from_category_id = strip_scope(str(from_category_id))
         moved = self._kanban_repo.move_task(
             region_id,
             project_id,
             task_id,
-            from_category_id=from_category_id,
-            to_category_id=to_category_id,
+            from_category_id=scoped_from_category_id,
+            to_category_id=scoped_to_category_id,
             over_task_id=over_task_id,
         )
         if not moved:
@@ -593,9 +595,14 @@ class KanbanBoardService:
 
         project_name = project.title if project else ""
         project_year = str(project.year) if project else str(datetime.now(UTC).year)
+        same_column = scoped_from_category_id == scoped_to_category_id
         self._log_version(
             region_id,
-            action="카드를 다른 칸반으로 이동했습니다.",
+            action=(
+                "카드 순서를 변경했습니다."
+                if same_column
+                else "카드를 다른 칸반으로 이동했습니다."
+            ),
             target=moved.title,
             action_type="move_card",
             project_name=project_name,
@@ -603,7 +610,7 @@ class KanbanBoardService:
             year=project_year,
             changes=[
                 {
-                    "label": "칸반",
+                    "label": "순서" if same_column else "칸반",
                     "before": from_category.title,
                     "after": to_category.title,
                 }
@@ -612,8 +619,9 @@ class KanbanBoardService:
             meta={
                 "projectId": strip_scope(project_id),
                 "taskId": strip_scope(task_id),
-                "fromCategoryId": strip_scope(from_category_id),
-                "toCategoryId": strip_scope(to_category_id),
+                "fromCategoryId": scoped_from_category_id,
+                "toCategoryId": scoped_to_category_id,
+                "overTaskId": strip_scope(over_task_id) if over_task_id else None,
                 "year": project_year,
             },
         )
