@@ -2,6 +2,99 @@
 
 봄이봇 **Next.js** 프론트엔드입니다. 개발 서버는 **`frontend-next` 폴더에서만** 실행하세요.
 
+## 배포
+
+| 구분 | URL |
+|------|-----|
+| 프론트 (Vercel) | Vercel 프로젝트 Production 도메인 |
+| API (FastAPI) | `https://api-workspace.bomi.ai.kr` |
+
+**로컬 시작:** [QUICKSTART.md](./QUICKSTART.md) · `npm run dev` (루트) · 환경 변수: [docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md)
+
+## 백엔드(FastAPI) 연결 상황
+
+프론트는 `services/*.service.ts` facade에서 mock / API를 분기합니다. FastAPI는 **`backend/`** (DDD)에 있으며, 브라우저가 Vercel 앱에서 API를 **직접** 호출합니다(CORS, Next BFF 프록시 없음).
+
+```
+UI (Next.js)
+  → services/*.service.ts
+       ├─ NEXT_PUBLIC_USE_MOCK_API=true  → *.mock.service → lib/mocks/region-store
+       └─ false + NEXT_PUBLIC_API_BASE_URL 설정
+            → *.api.service → lib/api-client.ts
+                 ├─ (base 없음)     → /api/*  Next catch-all → FastAPI 프록시(선택)
+                 └─ (base 있음)     → https://api-workspace.bomi.ai.kr/api/v1/* (권장)
+```
+
+| 환경 | API Base URL | 비고 |
+|------|----------------|------|
+| 로컬 | `http://127.0.0.1:8020` | `backend/scripts/run-dev.ps1` 또는 Docker |
+| 프로덕션 | `https://api-workspace.bomi.ai.kr` | Vercel env에 동일 값 설정 |
+
+### 도메인별 연동 현황
+
+| 도메인 | FastAPI | 프론트 `*.api.service` | DB 시드 |
+|--------|---------|------------------------|---------|
+| Auth, Dashboard, Org, Kanban, Performance, Survey, Files, Ebooks, Reports, Version history, Chat | ✅ `/api/v1/*` | ✅ | ✅ |
+
+레거시 `/api/*` 호출은 `app/api/[[...path]]` catch-all이 FastAPI로 프록시합니다. 브라우저는 **`NEXT_PUBLIC_API_BASE_URL` 직연동**을 권장합니다.
+
+로컬 점검: `.\scripts\verify-stack.ps1` · 프로덕션 최초 DB: `backend/scripts/prod-bootstrap.ps1 -Force`
+
+### 프론트에서 FastAPI 켜기
+
+`frontend-next/.env.local`:
+
+```env
+NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8020
+NEXT_PUBLIC_USE_MOCK_API=false
+```
+
+프로덕션(Vercel):
+
+```env
+NEXT_PUBLIC_API_BASE_URL=https://api-workspace.bomi.ai.kr
+NEXT_PUBLIC_USE_MOCK_API=false
+```
+
+공통 HTTP 클라이언트: `frontend-next/lib/api-client.ts` (`Authorization`, `X-Region-Id`, `resolveApiPath`)
+
+### 백엔드 실행 · 시드
+
+**Docker (권장):**
+
+```bash
+cd backend
+cp .env.docker.example .env
+docker compose up -d --build --remove-orphans
+# API http://127.0.0.1:8020/health
+```
+
+**venv (SQLite):**
+
+```powershell
+cd backend
+.\scripts\run-dev.ps1
+.\.venv\Scripts\python.exe scripts\seed.py
+```
+
+상세: [backend/README.md](./backend/README.md)
+
+| 지역 | Admin 이메일 | 비밀번호 |
+|------|--------------|----------|
+| 북부 | `admin@north.bomi.local` | `bomi-north-2026` |
+| 동부 | `admin@east.bomi.local` | `bomi-east-2026` |
+
+### 관련 문서
+
+| 문서 | 내용 |
+|------|------|
+| [backend/README.md](./backend/README.md) | DDD 구조, uvicorn, 시드 재생성 |
+| [docs/BACKEND_TODO.md](./docs/BACKEND_TODO.md) | 도메인별 체크리스트(진행률) |
+| [docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md) | Vercel + CORS + 프로덕션 env |
+| [docs/VERCEL_ENV.md](./docs/VERCEL_ENV.md) | Vercel Environment Variables |
+| [frontend-next/docs/API_SPEC.md](./frontend-next/docs/API_SPEC.md) | REST 명세 |
+| [frontend-next/docs/DATABASE_SCHEMA.md](./frontend-next/docs/DATABASE_SCHEMA.md) | PostgreSQL ERD |
+
 ## 실행 (Next.js)
 
 ```powershell

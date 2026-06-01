@@ -14,7 +14,7 @@ import {
   LineSlotInput,
 } from "@/components/kanban/task-detail/line-slot-input"
 import { Input } from "@/components/ui/input"
-import { cn } from "@/lib/utils"
+import { PLAN_HWPX_TEMPLATE_TITLE } from "@/lib/kanban/task-reference-documents"
 import type { BusinessPlanFormData } from "@/services/kanban.task-detail.types"
 
 type BusinessPlanSummaryFormProps = {
@@ -43,7 +43,7 @@ export function BusinessPlanSummaryForm({
 
   return (
     <HwpxDocument compact={compact}>
-      <HwpxDocumentTitle>사회복지사업 단위사업계획서</HwpxDocumentTitle>
+      <HwpxDocumentTitle>{PLAN_HWPX_TEMPLATE_TITLE}</HwpxDocumentTitle>
 
       <HwpxTable>
         <tbody>

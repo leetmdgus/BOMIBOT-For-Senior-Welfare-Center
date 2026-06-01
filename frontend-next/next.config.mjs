@@ -16,6 +16,10 @@ const watchIgnored = [
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   outputFileTracingRoot: workspaceRoot,
+  experimental: {
+    // .hwp/.hwpx 업로드 — proxy 기본 10MB 초과 시 본문 잘림 → 프록시 502
+    proxyClientMaxBodySize: "50mb",
+  },
   turbopack: {
     root: projectRoot,
   },

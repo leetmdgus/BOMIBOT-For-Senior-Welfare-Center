@@ -1,7 +1,22 @@
 "use client"
 
-import { useMemo, useState } from "react"
-import { Download, HelpCircle, Loader2 } from "lucide-react"
+import { useEffect, useMemo, useState, type CSSProperties } from "react"
+import {
+  DndContext,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core"
+import {
+  SortableContext,
+  arrayMove,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable"
+import { CSS } from "@dnd-kit/utilities"
+import { useSortable } from "@dnd-kit/sortable"
+import { Download, GripVertical, HelpCircle, Loader2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -17,13 +32,18 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
-import type { PerformanceSummaryRow } from "@/services/kanban.performance.types"
+import type {
+  PerformanceRow,
+  PerformanceSummaryRow,
+} from "@/services/kanban.performance.types"
 
 import {
   DISPLAY_MONTHS,
   FUNDING_SOURCE_COLORS,
   FUNDING_SOURCES,
   MONTH_OPTIONS,
+  type SummaryFundingSourceFilter,
+  type SummaryMonthFilter,
   VIEW_TITLES,
   VIEW_TOOLTIPS,
   formatFundingSourceLabel,
@@ -31,9 +51,98 @@ import {
   type PerformanceSummaryVariant,
   type PerformanceViewMode,
 } from "./performance-summary.constants"
+import { normalizeDetailCategory } from "./input-rows-to-summary"
 import { usePerformance } from "./performance-provider"
 
 type Metrics = { people: number; count: number; budget: number }
+
+const STICKY_LABEL_WIDTH_PX = 330
+const STICKY_METRIC_WIDTH_PX = 110
+
+type StickyColumnIndex = 0 | 1 | 2 | 3
+
+function stickyLeftStyle(
+  index: StickyColumnIndex,
+  compact: boolean,
+  dataColumnCount: number,
+): CSSProperties | undefined {
+  if (index === 0) {
+    return compact ? { left: 0 } : { left: 0, minWidth: STICKY_LABEL_WIDTH_PX }
+  }
+
+  if (compact) {
+    const labelPct = 30
+    const metricPct = 70 / dataColumnCount
+    const offset = labelPct + metricPct * (index - 1)
+    return { left: `${offset}%` }
+  }
+
+  const left =
+    STICKY_LABEL_WIDTH_PX + STICKY_METRIC_WIDTH_PX * (index - 1)
+  return { left, minWidth: STICKY_METRIC_WIDTH_PX }
+}
+
+function stickySpanStyle(
+  compact: boolean,
+  dataColumnCount: number,
+): CSSProperties {
+  if (compact) {
+    const metricPct = (70 / dataColumnCount) * 3
+    return { left: "30%", width: `${metricPct}%` }
+  }
+  return {
+    left: STICKY_LABEL_WIDTH_PX,
+    minWidth: STICKY_METRIC_WIDTH_PX * 3,
+  }
+}
+
+function reorderInputRowsBySummaryOrder(
+  inputRows: PerformanceRow[],
+  orderedKeys: string[],
+  aggregate: boolean,
+): PerformanceRow[] {
+  const getKey = (row: PerformanceRow) => {
+    if (!row.subProject || row.subProject === "선택") return null
+    return aggregate
+      ? `agg-${row.subProject}`
+      : `${row.subProject}::${normalizeDetailCategory(row.detailCategory)}`
+  }
+
+  const blocks = new Map<string, PerformanceRow[]>()
+  const remainingKeys: string[] = []
+  const noKeyRows: PerformanceRow[] = []
+
+  for (const row of inputRows) {
+    const key = getKey(row)
+    if (!key) {
+      noKeyRows.push(row)
+      continue
+    }
+    if (!blocks.has(key)) {
+      blocks.set(key, [])
+      remainingKeys.push(key)
+    }
+    blocks.get(key)!.push(row)
+  }
+
+  const seen = new Set<string>()
+  const result: PerformanceRow[] = []
+
+  for (const key of orderedKeys) {
+    if (!blocks.has(key)) continue
+    result.push(...blocks.get(key)!)
+    seen.add(key)
+  }
+
+  for (const key of remainingKeys) {
+    if (!seen.has(key)) {
+      result.push(...blocks.get(key)!)
+    }
+  }
+
+  result.push(...noKeyRows)
+  return result
+}
 
 function mergeMetrics(a: Metrics, b: Metrics): Metrics {
   return {
@@ -101,18 +210,24 @@ export function PerformanceSummaryView({
 }) {
   const {
     summaryRows: summarySourceRows,
+    setRows,
     planVersion,
     getProgressRate,
     getProgressColor,
+    summaryMonth: selectedMonth,
+    setSummaryMonth,
+    summaryFundingSource: selectedSource,
+    setSummaryFundingSource,
+    summaryViewMode: viewMode,
+    setSummaryViewMode: setViewMode,
+    summaryFocusedSubProject: focusedSubProject,
+    summaryFocusedDetailCategory: focusedDetailCategory,
+    setSummaryFocusedSubProject: setFocusedSubProject,
+    setSummaryFocusedDetailCategory: setFocusedDetailCategory,
+    resetSummaryRowFilter,
   } = usePerformance()
-  const [viewMode, setViewMode] = useState<PerformanceViewMode>("subProject")
-  const [selectedMonth, setSelectedMonth] = useState("전체")
-  const [selectedSource, setSelectedSource] = useState<string>("all")
-  const [focusedSubProject, setFocusedSubProject] = useState<string | null>(null)
-  const [focusedDetailCategory, setFocusedDetailCategory] = useState<string | null>(
-    null,
-  )
   const [isLoading] = useState(false)
+  const [rowOrderIds, setRowOrderIds] = useState<string[]>([])
 
   const sourceFilteredRows = useMemo(() => {
     return summarySourceRows.filter((row) => {
@@ -146,6 +261,49 @@ export function PerformanceSummaryView({
     viewMode,
   ])
 
+  const displayRowIds = useMemo(
+    () => displayRows.map((row) => row.id),
+    [displayRows],
+  )
+
+  useEffect(() => {
+    setRowOrderIds(displayRowIds)
+  }, [displayRowIds])
+
+  const orderedDisplayRows = useMemo(() => {
+    const byId = new Map(displayRows.map((row) => [row.id, row]))
+    return rowOrderIds
+      .map((id) => byId.get(id))
+      .filter((row): row is PerformanceSummaryRow => row != null)
+  }, [displayRows, rowOrderIds])
+
+  const isAggregateView =
+    viewMode === "subProject" && !focusedSubProject
+  const enableRowReorder = orderedDisplayRows.length > 1
+
+  const dragSensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 6 },
+    }),
+  )
+
+  const handleRowDragEnd = (event: DragEndEvent) => {
+    if (!enableRowReorder) return
+
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+
+    const oldIndex = rowOrderIds.indexOf(String(active.id))
+    const newIndex = rowOrderIds.indexOf(String(over.id))
+    if (oldIndex < 0 || newIndex < 0) return
+
+    const nextOrder = arrayMove(rowOrderIds, oldIndex, newIndex)
+    setRowOrderIds(nextOrder)
+    setRows((prev) =>
+      reorderInputRowsBySummaryOrder(prev, nextOrder, isAggregateView),
+    )
+  }
+
   const displayMonths = useMemo(() => {
     if (selectedMonth === "전체") return [...DISPLAY_MONTHS]
     return [selectedMonth]
@@ -159,7 +317,7 @@ export function PerformanceSummaryView({
     : undefined
 
   const totals = useMemo(() => {
-    return displayRows.reduce(
+    return orderedDisplayRows.reduce(
       (acc, row) => {
         const plan = row.plan.total
         const actual = row.actual.total
@@ -191,7 +349,7 @@ export function PerformanceSummaryView({
         ) as Record<string, Metrics>,
       },
     )
-  }, [displayRows, displayMonths])
+  }, [orderedDisplayRows, displayMonths])
 
   const getMetrics = (row: PerformanceSummaryRow, month?: string): Metrics => {
     if (variant === "plan") {
@@ -204,8 +362,7 @@ export function PerformanceSummaryView({
   }
 
   const resetRowFilter = () => {
-    setFocusedSubProject(null)
-    setFocusedDetailCategory(null)
+    resetSummaryRowFilter()
   }
 
   const handleSubProjectClick = (subProject: string) => {
@@ -267,7 +424,10 @@ export function PerformanceSummaryView({
 
       <div className="print-hide flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-5 py-3">
         <div className="flex flex-wrap items-center gap-2">
-          <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+          <Select
+            value={selectedMonth}
+            onValueChange={(value) => setSummaryMonth(value as SummaryMonthFilter)}
+          >
             <SelectTrigger className="h-9 w-[100px] bg-white">
               <SelectValue placeholder="월" />
             </SelectTrigger>
@@ -280,7 +440,12 @@ export function PerformanceSummaryView({
             </SelectContent>
           </Select>
 
-          <Select value={selectedSource} onValueChange={setSelectedSource}>
+          <Select
+            value={selectedSource}
+            onValueChange={(value) =>
+              setSummaryFundingSource(value as SummaryFundingSourceFilter)
+            }
+          >
             <SelectTrigger className="h-9 min-w-[140px] bg-white">
               <SelectValue placeholder="원천" />
             </SelectTrigger>
@@ -351,6 +516,11 @@ export function PerformanceSummaryView({
             isCompactMonthView ? "overflow-x-visible" : "overflow-x-auto",
           )}
         >
+          <DndContext
+            sensors={dragSensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleRowDragEnd}
+          >
           <table
             className={cn(
               "w-full border-collapse text-sm",
@@ -369,16 +539,20 @@ export function PerformanceSummaryView({
               <tr>
                 <Th
                   rowSpan={2}
-                  className={cn(
-                    "bg-slate-100 text-left",
-                    isCompactMonthView
-                      ? "min-w-0"
-                      : "sticky left-0 z-20 min-w-[330px]",
-                  )}
+                  stickyIndex={0}
+                  compact={isCompactMonthView}
+                  dataColumnCount={dataColumnCount}
+                  className="bg-slate-100 text-left"
                 >
                   세부사업명 · 상세분류
                 </Th>
-                <Th colSpan={3} className="bg-slate-100">
+                <Th
+                  colSpan={3}
+                  stickyTotalSpan
+                  compact={isCompactMonthView}
+                  dataColumnCount={dataColumnCount}
+                  className="bg-slate-100"
+                >
                   총계
                 </Th>
                 {displayMonths.map((month, index) => (
@@ -392,7 +566,11 @@ export function PerformanceSummaryView({
                 ))}
               </tr>
               <tr>
-                <SubHeader />
+                <SubHeader
+                  stickyMetricIndices={[1, 2, 3]}
+                  compact={isCompactMonthView}
+                  dataColumnCount={dataColumnCount}
+                />
                 {displayMonths.map((month, index) => (
                   <SubHeader key={month} blue={index % 2 === 0} />
                 ))}
@@ -401,7 +579,14 @@ export function PerformanceSummaryView({
 
             <tbody>
               <tr className="bg-sky-100 font-bold">
-                <StickyTd compact={isCompactMonthView}>합계</StickyTd>
+                <StickyTd
+                  compact={isCompactMonthView}
+                  stickyIndex={0}
+                  dataColumnCount={dataColumnCount}
+                  className="bg-sky-100"
+                >
+                  합계
+                </StickyTd>
                 <MetricCells
                   metrics={summaryMetrics}
                   variant={variant}
@@ -409,6 +594,10 @@ export function PerformanceSummaryView({
                   getProgressRate={getProgressRate}
                   getProgressColor={getProgressColor}
                   strong
+                  stickyMetrics
+                  stickyCellClassName="bg-sky-100"
+                  compact={isCompactMonthView}
+                  dataColumnCount={dataColumnCount}
                 />
                 {displayMonths.map((month) => (
                   <MetricCells
@@ -423,52 +612,43 @@ export function PerformanceSummaryView({
                 ))}
               </tr>
 
-              {displayRows.map((row) => {
-                const total = getMetrics(row)
-                const planTotal = row.plan.total
-                const isAggregate =
-                  viewMode === "subProject" &&
-                  !isDrillDown &&
-                  !row.detailCategory
+              <SortableContext
+                items={rowOrderIds}
+                strategy={verticalListSortingStrategy}
+              >
+                {orderedDisplayRows.map((row) => {
+                  const total = getMetrics(row)
+                  const planTotal = row.plan.total
+                  const isAggregate =
+                    viewMode === "subProject" &&
+                    !isDrillDown &&
+                    !row.detailCategory
 
-                return (
-                  <tr key={row.id} className="hover:bg-sky-50/40">
-                    <StickyTd
+                  return (
+                    <SortableSummaryRow
+                      key={row.id}
+                      row={row}
+                      enableDrag={enableRowReorder}
                       compact={isCompactMonthView}
-                      className="font-semibold"
-                    >
-                      <RowLabelCell
-                        row={row}
-                        showDetailRows={showDetailRows}
-                        isAggregate={isAggregate}
-                        onSubProjectClick={handleSubProjectClick}
-                        onDetailClick={handleDetailClick}
-                      />
-                    </StickyTd>
-                    <MetricCells
-                      metrics={total}
+                      dataColumnCount={dataColumnCount}
+                      showDetailRows={showDetailRows}
+                      isAggregate={isAggregate}
                       variant={variant}
-                      planMetrics={planTotal}
-                      fundingSources={row.fundingSources}
+                      displayMonths={displayMonths}
+                      total={total}
+                      planTotal={planTotal}
+                      getMetrics={getMetrics}
                       getProgressRate={getProgressRate}
                       getProgressColor={getProgressColor}
+                      onSubProjectClick={handleSubProjectClick}
+                      onDetailClick={handleDetailClick}
                     />
-                    {displayMonths.map((month) => (
-                      <MetricCells
-                        key={month}
-                        metrics={getMetrics(row, month)}
-                        variant={variant}
-                        planMetrics={row.plan.monthly[month]}
-                        fundingSources={row.fundingSources}
-                        getProgressRate={getProgressRate}
-                        getProgressColor={getProgressColor}
-                      />
-                    ))}
-                  </tr>
-                )
-              })}
+                  )
+                })}
+              </SortableContext>
             </tbody>
           </table>
+          </DndContext>
         </div>
       </div>
 
@@ -480,6 +660,120 @@ export function PerformanceSummaryView({
         </div>
       ) : null}
     </div>
+  )
+}
+
+function SortableSummaryRow({
+  row,
+  enableDrag,
+  compact,
+  dataColumnCount,
+  showDetailRows,
+  isAggregate,
+  variant,
+  displayMonths,
+  total,
+  planTotal,
+  getMetrics,
+  getProgressRate,
+  getProgressColor,
+  onSubProjectClick,
+  onDetailClick,
+}: {
+  row: PerformanceSummaryRow
+  enableDrag: boolean
+  compact: boolean
+  dataColumnCount: number
+  showDetailRows: boolean
+  isAggregate: boolean
+  variant: PerformanceSummaryVariant
+  displayMonths: string[]
+  total: Metrics
+  planTotal: Metrics
+  getMetrics: (row: PerformanceSummaryRow, month?: string) => Metrics
+  getProgressRate: (plan: number, actual: number) => string
+  getProgressColor: (plan: number, actual: number) => string
+  onSubProjectClick: (subProject: string) => void
+  onDetailClick: (subProject: string, detailCategory: string) => void
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    setActivatorNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: row.id,
+    disabled: !enableDrag,
+  })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  }
+
+  return (
+    <tr
+      ref={setNodeRef}
+      style={style}
+      className={cn(
+        "hover:bg-sky-50/40",
+        isDragging && "relative z-20 bg-sky-100/90 shadow-md",
+      )}
+      {...attributes}
+    >
+      <StickyTd
+        compact={compact}
+        stickyIndex={0}
+        dataColumnCount={dataColumnCount}
+        className="font-semibold"
+      >
+        <div className="flex items-start gap-1.5">
+          {enableDrag ? (
+            <button
+              type="button"
+              ref={setActivatorNodeRef}
+              className="mt-0.5 shrink-0 cursor-grab text-muted-foreground hover:text-foreground active:cursor-grabbing"
+              aria-label="행 순서 변경"
+              {...listeners}
+            >
+              <GripVertical className="size-4" />
+            </button>
+          ) : null}
+          <RowLabelCell
+            row={row}
+            showDetailRows={showDetailRows}
+            isAggregate={isAggregate}
+            onSubProjectClick={onSubProjectClick}
+            onDetailClick={onDetailClick}
+          />
+        </div>
+      </StickyTd>
+      <MetricCells
+        metrics={total}
+        variant={variant}
+        planMetrics={planTotal}
+        fundingSources={row.fundingSources}
+        getProgressRate={getProgressRate}
+        getProgressColor={getProgressColor}
+        stickyMetrics
+        compact={compact}
+        dataColumnCount={dataColumnCount}
+      />
+      {displayMonths.map((month) => (
+        <MetricCells
+          key={month}
+          metrics={getMetrics(row, month)}
+          variant={variant}
+          planMetrics={row.plan.monthly[month]}
+          fundingSources={row.fundingSources}
+          getProgressRate={getProgressRate}
+          getProgressColor={getProgressColor}
+        />
+      ))}
+    </tr>
   )
 }
 
@@ -574,6 +868,10 @@ function MetricCells({
   getProgressRate,
   getProgressColor,
   strong,
+  stickyMetrics,
+  stickyCellClassName = "bg-white",
+  compact = false,
+  dataColumnCount = 3,
 }: {
   metrics: Metrics
   variant: PerformanceSummaryVariant
@@ -582,17 +880,27 @@ function MetricCells({
   getProgressRate: (plan: number, actual: number) => string
   getProgressColor: (plan: number, actual: number) => string
   strong?: boolean
+  stickyMetrics?: boolean
+  stickyCellClassName?: string
+  compact?: boolean
+  dataColumnCount?: number
 }) {
+  const stickyIndices: StickyColumnIndex[] = stickyMetrics ? [1, 2, 3] : []
+
   return (
     <>
       <Td
         right
         strong={strong}
-        className={
+        stickyIndex={stickyIndices[0]}
+        compact={compact}
+        dataColumnCount={dataColumnCount}
+        className={cn(
+          stickyIndices[0] !== undefined && stickyCellClassName,
           variant === "result"
             ? getProgressColor(planMetrics.people, metrics.people)
-            : undefined
-        }
+            : undefined,
+        )}
       >
         {metrics.people.toLocaleString()}
         {variant === "result" ? (
@@ -606,11 +914,15 @@ function MetricCells({
       <Td
         right
         strong={strong}
-        className={
+        stickyIndex={stickyIndices[1]}
+        compact={compact}
+        dataColumnCount={dataColumnCount}
+        className={cn(
+          stickyIndices[1] !== undefined && stickyCellClassName,
           variant === "result"
             ? getProgressColor(planMetrics.count, metrics.count)
-            : undefined
-        }
+            : undefined,
+        )}
       >
         {metrics.count.toLocaleString()}
         {variant === "result" ? (
@@ -621,7 +933,14 @@ function MetricCells({
           />
         ) : null}
       </Td>
-      <Td right strong={strong}>
+      <Td
+        right
+        strong={strong}
+        stickyIndex={stickyIndices[2]}
+        compact={compact}
+        dataColumnCount={dataColumnCount}
+        className={stickyIndices[2] !== undefined ? stickyCellClassName : undefined}
+      >
         <BudgetCell
           value={metrics.budget}
           fundingSources={fundingSources}
@@ -693,14 +1012,33 @@ function BudgetCell({
   )
 }
 
-function SubHeader({ blue }: { blue?: boolean }) {
+function SubHeader({
+  blue,
+  stickyMetricIndices,
+  compact = false,
+  dataColumnCount = 3,
+}: {
+  blue?: boolean
+  stickyMetricIndices?: StickyColumnIndex[]
+  compact?: boolean
+  dataColumnCount?: number
+}) {
   const bg = blue ? "bg-blue-50" : "bg-sky-50"
+  const labels = ["인원(명)", "횟수(회)", "예산(원)"] as const
 
   return (
     <>
-      <Th className={bg}>인원(명)</Th>
-      <Th className={bg}>횟수(회)</Th>
-      <Th className={bg}>예산(원)</Th>
+      {labels.map((label, index) => (
+        <Th
+          key={label}
+          className={bg}
+          stickyIndex={stickyMetricIndices?.[index]}
+          compact={compact}
+          dataColumnCount={dataColumnCount}
+        >
+          {label}
+        </Th>
+      ))}
     </>
   )
 }
@@ -710,18 +1048,36 @@ function Th({
   className = "",
   colSpan,
   rowSpan,
+  stickyIndex,
+  stickyTotalSpan,
+  compact = false,
+  dataColumnCount = 3,
 }: {
   children?: React.ReactNode
   className?: string
   colSpan?: number
   rowSpan?: number
+  stickyIndex?: StickyColumnIndex
+  stickyTotalSpan?: boolean
+  compact?: boolean
+  dataColumnCount?: number
 }) {
+  const stickyStyle = stickyTotalSpan
+    ? stickySpanStyle(compact, dataColumnCount)
+    : stickyIndex !== undefined
+      ? stickyLeftStyle(stickyIndex, compact, dataColumnCount)
+      : undefined
+
   return (
     <th
       colSpan={colSpan}
       rowSpan={rowSpan}
+      style={stickyStyle}
       className={cn(
         "border border-slate-300 px-4 py-3 text-center font-bold whitespace-nowrap",
+        (stickyIndex !== undefined || stickyTotalSpan) &&
+          "sticky z-20 shadow-[2px_0_0_0_rgba(226,232,240,1)]",
+        stickyIndex === 0 && !compact && "min-w-[330px]",
         className,
       )}
     >
@@ -735,18 +1091,32 @@ function Td({
   className = "",
   right,
   strong,
+  stickyIndex,
+  compact = false,
+  dataColumnCount = 3,
 }: {
   children?: React.ReactNode
   className?: string
   right?: boolean
   strong?: boolean
+  stickyIndex?: StickyColumnIndex
+  compact?: boolean
+  dataColumnCount?: number
 }) {
+  const stickyStyle =
+    stickyIndex !== undefined
+      ? stickyLeftStyle(stickyIndex, compact, dataColumnCount)
+      : undefined
+
   return (
     <td
+      style={stickyStyle}
       className={cn(
         "border border-slate-300 px-4 py-4 whitespace-nowrap align-middle",
         right && "text-right",
         strong && "font-bold",
+        stickyIndex !== undefined &&
+          "sticky z-10 bg-white shadow-[2px_0_0_0_rgba(226,232,240,1)]",
         className,
       )}
     >
@@ -759,18 +1129,24 @@ function StickyTd({
   children,
   className = "",
   compact = false,
+  stickyIndex = 0,
+  dataColumnCount = 3,
 }: {
   children?: React.ReactNode
   className?: string
   compact?: boolean
+  stickyIndex?: StickyColumnIndex
+  dataColumnCount?: number
 }) {
   return (
     <td
+      style={stickyLeftStyle(stickyIndex, compact, dataColumnCount)}
       className={cn(
         "border border-slate-300 bg-white px-4 py-4 text-left",
+        "sticky z-10 shadow-[2px_0_0_0_rgba(226,232,240,1)]",
         compact
           ? "min-w-0 whitespace-normal break-words"
-          : "sticky left-0 z-10 min-w-[330px] whitespace-nowrap",
+          : "min-w-[330px] whitespace-nowrap",
         className,
       )}
     >

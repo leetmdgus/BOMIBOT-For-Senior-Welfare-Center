@@ -66,10 +66,8 @@ export function BusinessPlanFloatingPanel({
             sections={planDocument.sections}
             readOnly
             referenceMode
-            previewMode
             onFormDataChange={() => {}}
             onSectionsChange={() => {}}
-            onPreview={() => {}}
           />
         )}
       </div>

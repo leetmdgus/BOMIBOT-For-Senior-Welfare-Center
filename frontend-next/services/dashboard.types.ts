@@ -2,7 +2,7 @@ import type { ElementType } from "react"
 
 export type CalendarTab = "all" | "welfare" | "team"
 
-export type CalendarEventCategory = "welfare" | "team"
+export type CalendarEventCategory = "welfare" | "team" | "google"
 
 export interface StatCardDataDTO {
   label: string
@@ -52,6 +52,8 @@ export interface CalendarEvent {
   title: string
   color: string
   category: CalendarEventCategory
+  source?: "local" | "google"
+  htmlLink?: string
 }
 
 export interface VolunteerEvent {

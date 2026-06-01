@@ -1,15 +1,25 @@
-import type { DashboardOverview } from "./dashboard.types"
+import type { DashboardOverview, DashboardOverviewDTO } from "./dashboard.types"
+import { cachedApiGet, invalidateApiGetCache } from "@/lib/api-get-cache"
+import { apiClient, resolveApiPath } from "@/lib/api-client"
+import { getCurrentYearString } from "@/lib/current-year"
 import { hydrateDashboardOverview } from "./dashboard.utils"
-import type { DashboardOverviewDTO } from "./dashboard.types"
 
-export async function getDashboardOverview(): Promise<DashboardOverview> {
-  const response = await fetch("/api/dashboard")
+const dashboardPath = resolveApiPath("/api/dashboard", "/api/v1/dashboard")
 
-  if (!response.ok) {
-    throw new Error(`API 요청 실패: ${response.status}`)
-  }
+export async function getDashboardOverview(
+  year: string = getCurrentYearString(),
+): Promise<DashboardOverview> {
+  const path = `${dashboardPath}?year=${encodeURIComponent(year)}`
+  return cachedApiGet(
+    path,
+    async () => {
+      const dto = await apiClient.get<DashboardOverviewDTO>(path)
+      return hydrateDashboardOverview(dto)
+    },
+    { key: `dashboard:overview:${year}`, ttlMs: 60_000 },
+  )
+}
 
-  const dto = (await response.json()) as DashboardOverviewDTO
-
-  return hydrateDashboardOverview(dto)
+export function invalidateDashboardCache(): void {
+  invalidateApiGetCache("dashboard")
 }

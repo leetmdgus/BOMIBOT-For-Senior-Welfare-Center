@@ -56,19 +56,19 @@ export function SurveyOutlineSidebar({
             active={selectedTab === "outline"}
             onClick={() => onChange("outline")}
           >
-            ??
+            개요
           </OutlineTab>
           <OutlineTab
             active={selectedTab === "style"}
             onClick={() => onChange("style")}
           >
-            ???
+            스타일
           </OutlineTab>
           <OutlineTab
             active={selectedTab === "settings"}
             onClick={() => onChange("settings")}
           >
-            ?? ??
+            설정
           </OutlineTab>
         </div>
 
@@ -93,17 +93,17 @@ export function SurveyOutlineSidebar({
                 )}
               >
                 <p className="text-xs font-medium text-primary">
-                  1/{pageCount} ???
+                  1/{pageCount} 표지
                 </p>
                 <p className="mt-1 text-sm font-medium text-foreground">
-                  {basicInfoTitle || "?? ?? ??"}
+                  {basicInfoTitle || "설문 제목"}
                 </p>
               </button>
 
               <div className="space-y-0.5 pl-1">
                 {sections.length === 0 ? (
                   <p className="py-4 text-center text-xs text-muted-foreground">
-                    ??? ???? ??? ?????.
+                    질문을 추가하면 목차에 표시됩니다.
                   </p>
                 ) : (
                   sections.map((section) => {
@@ -139,19 +139,19 @@ export function SurveyOutlineSidebar({
               </div>
 
               <p className="mt-6 text-center text-xs text-muted-foreground">
-                ??? ??? ??? ?????.
+                항목을 클릭하면 해당 위치로 이동합니다.
               </p>
             </div>
           )}
 
           {selectedTab === "style" && (
             <div className="space-y-3 text-sm text-muted-foreground">
-              <p>?? ??�??�?? ??? ?? ? ?????.</p>
+              <p>표지 색상·글꼴 등 응답 화면 스타일을 설정할 수 있습니다.</p>
               <p className="text-xs">
-                ?? ??? BOMIBOT ???? ??(Primary)? ?????.
+                기본 테마는 BOMIBOT 브랜드 색(Primary)을 따릅니다.
               </p>
               <Button variant="outline" size="sm" type="button" disabled>
-                ?? ?? ??
+                스타일 편집 (준비 중)
               </Button>
             </div>
           )}
@@ -159,15 +159,15 @@ export function SurveyOutlineSidebar({
           {selectedTab === "settings" && (
             <div className="space-y-4 text-sm">
               <div className="flex items-center justify-between">
-                <span className="text-foreground">?? ??</span>
+                <span className="text-foreground">응답 수집</span>
                 <Switch defaultChecked />
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-foreground">?? ?? ??</span>
+                <span className="text-foreground">중복 응답 허용</span>
                 <Switch />
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-foreground">??? ??</span>
+                <span className="text-foreground">진행률 표시</span>
                 <Switch defaultChecked />
               </div>
             </div>

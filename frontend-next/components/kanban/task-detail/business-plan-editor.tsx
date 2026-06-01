@@ -1,30 +1,31 @@
 "use client"
 
 import { useCallback, useEffect } from "react"
-import { Eye, Upload } from "lucide-react"
 
 import {
   A4DocumentViewport,
   DOCUMENT_VIEWPORT_WIDTH_SINGLE_MM,
 } from "@/components/common/a4-document-viewport"
-import { AddDocumentBlocksBar } from "@/components/kanban/task-detail/add-document-blocks-bar"
-import { BusinessPlanTableBlock } from "@/components/kanban/task-detail/business-plan-table-block"
+import { DocumentMediaSections } from "@/components/kanban/task-detail/document-media-sections"
+import { DocumentSectionsTable } from "@/components/kanban/task-detail/document-sections-table"
 import {
   formalEmptyDocumentHtml,
   nextFormalHeadingTitle,
 } from "@/lib/formal-document-html"
 import {
-  HwpxBodyContentBlock,
-  HwpxContentBlock,
   HwpxDocument,
   HwpxDocumentTitle,
   HwpxLabel,
   HwpxTable,
-  HwpxTextarea,
   HwpxValue,
 } from "@/components/kanban/task-detail/hwpx-document-ui"
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import {
+  findSectionIndex,
+  isDocumentSectionType,
+  mergeDocumentSectionsInOrder,
+} from "@/lib/kanban/document-section-blocks"
+import { PLAN_HWPX_TEMPLATE_TITLE } from "@/lib/kanban/task-reference-documents"
 import { cn } from "@/lib/utils"
 import type {
   BusinessPlanFormData,
@@ -39,17 +40,14 @@ import {
   RichTextToolbarProvider,
   useRichTextToolbarOptional,
 } from "@/components/kanban/task-detail/rich-text-toolbar-context"
-import { DocumentSectionControls } from "@/components/kanban/task-detail/document-section-controls"
-import { BusinessPlanRichText } from "./business-plan-rich-text"
 
 type BusinessPlanEditorProps = {
   formData: BusinessPlanFormData
   sections: BusinessPlanSection[]
   readOnly: boolean
+  taskId?: string
   onFormDataChange: (next: BusinessPlanFormData) => void
   onSectionsChange: (next: BusinessPlanSection[]) => void
-  onPreview: () => void
-  previewMode?: boolean
   /** 사업평가 우측 참고 패널 — 읽기 전용 전체 계획서 */
   referenceMode?: boolean
 }
@@ -93,28 +91,15 @@ export function BusinessPlanEditor({
   formData,
   sections,
   readOnly,
+  taskId,
   onFormDataChange,
   onSectionsChange,
-  onPreview,
-  previewMode = false,
   referenceMode = false,
 }: BusinessPlanEditorProps) {
   const isReference = referenceMode
   const effectiveReadOnly = readOnly || isReference
   const updateForm = (patch: Partial<BusinessPlanFormData>) => {
     onFormDataChange({ ...formData, ...patch })
-  }
-
-  const moveSection = (index: number, direction: "up" | "down") => {
-    const next = [...sections]
-    const targetIndex = direction === "up" ? index - 1 : index + 1
-    if (targetIndex < 0 || targetIndex >= next.length) return
-    ;[next[index], next[targetIndex]] = [next[targetIndex], next[index]]
-    onSectionsChange(next)
-  }
-
-  const deleteSection = (index: number) => {
-    onSectionsChange(sections.filter((_, i) => i !== index))
   }
 
   const addHeading = () => {
@@ -151,273 +136,217 @@ export function BusinessPlanEditor({
   }
 
   const activateBlock = usePlanFieldBlocks(formData.subProjects)
+  const docSections = sections.filter(isDocumentSectionType)
+
+  const handleDocSectionsChange = (nextDocSections: BusinessPlanSection[]) => {
+    onSectionsChange(mergeDocumentSectionsInOrder(sections, nextDocSections))
+  }
 
   return (
     <RichTextToolbarProvider enabled={!effectiveReadOnly}>
       <div
         className={cn(
-          "business-plan-editor space-y-4",
+          "business-plan-editor min-w-0 space-y-4",
           isReference && "reference-plan-editor",
         )}
       >
-      <A4DocumentViewport
-        fitToViewport={false}
-        pageWidthMm={DOCUMENT_VIEWPORT_WIDTH_SINGLE_MM}
-      >
-      <HwpxDocument compact={isReference}>
-        <HwpxDocumentTitle>사회복지사업 단위사업계획서</HwpxDocumentTitle>
-
-        {isReference ? (
-          <p className="print-hide border-b border-black/15 bg-[#f5f5f5] px-3 py-1.5 text-center text-[10px] text-neutral-600">
-            참고용 사업계획서 · 읽기 전용
-          </p>
-        ) : !effectiveReadOnly ? (
-          <p className="print-hide border-b border-black/15 bg-[#fafafa] px-4 py-2 text-center text-[11px] text-neutral-600">
-            요약 표·본문은 칸을 클릭해 입력합니다. 본문(고급 서식) 블록마다
-            상단 툴바로 편집하며, 「추가 본문」으로 섹션을 더할 수 있습니다.
-          </p>
-        ) : null}
-
-        <HwpxTable className="table-fixed w-full">
-          <colgroup>
-            <col className="w-[12rem]" />
-            <col />
-            <col />
-            <col />
-          </colgroup>
-          <tbody>
-            <FormRow label="사 업 명">
-              {effectiveReadOnly ? (
-                <span>{formData.projectName}</span>
-              ) : (
-                <Input
-                  value={formData.projectName}
-                  onChange={(e) => updateForm({ projectName: e.target.value })}
-                  onFocus={activateBlock("plan-project-name")}
-                  className="hwpx-inline-input w-full"
-                />
-              )}
-            </FormRow>
-            <FormRow label="목 적">
-              <LineSlotInput
-                value={formData.purpose}
-                onChange={(purpose) => updateForm({ purpose })}
-                readOnly={effectiveReadOnly}
-                minRows={2}
-                onFocus={activateBlock("plan-purpose")}
-              />
-            </FormRow>
-            <FormRow label="목 표">
-              <LineSlotGoalsInput
-                goals={formData.goals}
-                onChange={(goals) => updateForm({ goals })}
-                readOnly={effectiveReadOnly}
-                onFocus={activateBlock("plan-goals")}
-              />
-            </FormRow>
-            <FormRow
-              label="사 업 기 간"
-              value={formData.period}
-              readOnly={effectiveReadOnly}
-              field="period"
-              onForm={updateForm}
-              onFocus={activateBlock("plan-period")}
-            />
-            <FormRow
-              label="사 업 대 상"
-              value={formData.target}
-              readOnly={effectiveReadOnly}
-              field="target"
-              onForm={updateForm}
-              onFocus={activateBlock("plan-target")}
-            />
-            <FormRow
-              label="연 인 원 수 / 횟 수"
-              value={formData.totalCount}
-              readOnly={effectiveReadOnly}
-              field="totalCount"
-              onForm={updateForm}
-              labelClassName="w-[12rem]"
-              valueClassName="min-w-0"
-              onFocus={activateBlock("plan-total-count")}
-            />
-            <FormRow
-              label="소 요 예 산"
-              value={formData.budget}
-              readOnly={effectiveReadOnly}
-              field="budget"
-              onForm={updateForm}
-              onFocus={activateBlock("plan-budget")}
-            />
-            <FormRow
-              label="예 산 과 목"
-              value={formData.budgetCategory}
-              readOnly={effectiveReadOnly}
-              field="budgetCategory"
-              onForm={updateForm}
-              onFocus={activateBlock("plan-budget-category")}
-            />
-            <FormRow
-              label="담 당"
-              value={formData.manager}
-              readOnly={effectiveReadOnly}
-              field="manager"
-              onForm={updateForm}
-              onFocus={activateBlock("plan-manager")}
-            />
-          </tbody>
-        </HwpxTable>
-
-        <div className="border-x border-t border-black bg-[#ececec] px-2 py-2 text-center text-sm font-semibold">
-          세부사업
-        </div>
-
-        <HwpxTable>
-          <thead>
-            <tr>
-              <HwpxLabel className="w-[28%]">세부사업명</HwpxLabel>
-              <HwpxLabel>내용</HwpxLabel>
-            </tr>
-          </thead>
-          <tbody>
-            {formData.subProjects.map((sub, index) => (
-              <tr key={sub.name}>
-                <HwpxValue className="align-top font-medium">{sub.name}</HwpxValue>
-                <HwpxValue className="align-top">
-                  <LineSlotInput
-                    value={sub.output}
-                    onChange={(output) => {
-                      const subProjects = [...formData.subProjects]
-                      subProjects[index] = { ...sub, output }
-                      updateForm({ subProjects })
-                    }}
-                    readOnly={effectiveReadOnly}
-                    minRows={2}
-                    onFocus={activateBlock(`plan-sub-${index}`)}
-                  />
-                </HwpxValue>
-              </tr>
-            ))}
-          </tbody>
-        </HwpxTable>
-        {sections.map((section, index) => {
-          const bodyIndex =
-            section.type === "body"
-              ? sections
-                  .slice(0, index + 1)
-                  .filter((s) => s.type === "body").length
-              : 0
-
-          return (
-          <div
-            key={section.id}
-            className={cn(
-              "hwpx-doc-section-row",
-              section.type === "heading" && "hwpx-doc-section-row--heading",
-            )}
+        <section aria-label="사업계획 요약">
+          <A4DocumentViewport
+            fitToViewport={false}
+            pageWidthMm={DOCUMENT_VIEWPORT_WIDTH_SINGLE_MM}
           >
-            <div className="w-full min-w-0">
-              {section.type === "file" && (
-                <div className="p-4">
-                <div className="print-hide flex items-center gap-4 rounded-lg border border-dashed border-gray-300 bg-gray-50 p-4">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    disabled={effectiveReadOnly}
-                  >
-                    <Upload className="mr-2 size-4" />
-                    사진 및 파일 첨부
-                  </Button>
-                  <span className="text-sm text-muted-foreground">
-                    여기에 파일을 끌어 놓거나 왼쪽의 버튼을 클릭하세요.
-                  </span>
-                </div>
-                </div>
-              )}
+            <HwpxDocument compact={isReference}>
+              <HwpxDocumentTitle>{PLAN_HWPX_TEMPLATE_TITLE}</HwpxDocumentTitle>
 
-              {section.type === "heading" && (
-                <HwpxContentBlock
-                  label="대목차"
-                  embedded
-                  toolbar={
-                    effectiveReadOnly ? undefined : (
-                      <DocumentSectionControls
-                        layout="bar"
-                        onMoveUp={() => moveSection(index, "up")}
-                        onMoveDown={() => moveSection(index, "down")}
-                        onDelete={() => deleteSection(index)}
+              {isReference ? (
+                <p className="print-hide border-b border-black/15 bg-[#f5f5f5] px-3 py-1.5 text-center text-[10px] text-neutral-600">
+                  참고용 사업계획서 · 읽기 전용
+                </p>
+              ) : !effectiveReadOnly ? (
+                <p className="print-hide border-b border-black/15 bg-[#fafafa] px-4 py-2 text-center text-[11px] text-neutral-600">
+                  요약 표는 칸을 클릭해 입력합니다. 대목차·본문은 아래
+                  「추가 본문」에서 추가합니다.
+                </p>
+              ) : null}
+
+              <HwpxTable className="table-fixed w-full">
+                <colgroup>
+                  <col className="w-[12rem]" />
+                  <col />
+                  <col />
+                  <col />
+                </colgroup>
+                <tbody>
+                  <FormRow label="사 업 명">
+                    {effectiveReadOnly ? (
+                      <span>{formData.projectName}</span>
+                    ) : (
+                      <Input
+                        value={formData.projectName}
+                        onChange={(e) => updateForm({ projectName: e.target.value })}
+                        onFocus={activateBlock("plan-project-name")}
+                        className="hwpx-inline-input w-full"
                       />
-                    )
-                  }
-                >
-                  {effectiveReadOnly ? (
-                    <h3 className="text-base font-semibold">{section.title}</h3>
-                  ) : (
-                    <Input
-                      value={section.title}
-                      onChange={(e) =>
-                        updateSection(index, { title: e.target.value })
-                      }
-                      className="hwpx-inline-input w-full text-base font-semibold"
-                      placeholder="대목차 제목"
+                    )}
+                  </FormRow>
+                  <FormRow label="목 적">
+                    <LineSlotInput
+                      value={formData.purpose}
+                      onChange={(purpose) => updateForm({ purpose })}
+                      readOnly={effectiveReadOnly}
+                      minRows={2}
+                      onFocus={activateBlock("plan-purpose")}
                     />
-                  )}
-                </HwpxContentBlock>
-              )}
+                  </FormRow>
+                  <FormRow label="목 표">
+                    <LineSlotGoalsInput
+                      goals={formData.goals}
+                      onChange={(goals) => updateForm({ goals })}
+                      readOnly={effectiveReadOnly}
+                      onFocus={activateBlock("plan-goals")}
+                    />
+                  </FormRow>
+                  <FormRow
+                    label="사 업 기 간"
+                    value={formData.period}
+                    readOnly={effectiveReadOnly}
+                    field="period"
+                    onForm={updateForm}
+                    onFocus={activateBlock("plan-period")}
+                  />
+                  <FormRow
+                    label="사 업 대 상"
+                    value={formData.target}
+                    readOnly={effectiveReadOnly}
+                    field="target"
+                    onForm={updateForm}
+                    onFocus={activateBlock("plan-target")}
+                  />
+                  <FormRow
+                    label="연 인 원 수 / 횟 수"
+                    value={formData.totalCount}
+                    readOnly={effectiveReadOnly}
+                    field="totalCount"
+                    onForm={updateForm}
+                    labelClassName="w-[12rem]"
+                    valueClassName="min-w-0"
+                    onFocus={activateBlock("plan-total-count")}
+                  />
+                  <FormRow
+                    label="소 요 예 산"
+                    value={formData.budget}
+                    readOnly={effectiveReadOnly}
+                    field="budget"
+                    onForm={updateForm}
+                    onFocus={activateBlock("plan-budget")}
+                  />
+                  <FormRow
+                    label="예 산 과 목"
+                    value={formData.budgetCategory}
+                    readOnly={effectiveReadOnly}
+                    field="budgetCategory"
+                    onForm={updateForm}
+                    onFocus={activateBlock("plan-budget-category")}
+                  />
+                  <FormRow
+                    label="담 당"
+                    value={formData.manager}
+                    readOnly={effectiveReadOnly}
+                    field="manager"
+                    onForm={updateForm}
+                    onFocus={activateBlock("plan-manager")}
+                  />
+                </tbody>
+              </HwpxTable>
 
-              {section.type === "body" && (
-                <BusinessPlanBodyBlock
-                  section={section}
-                  bodyIndex={bodyIndex}
-                  readOnly={effectiveReadOnly}
-                  onTitleChange={(title) => updateSection(index, { title })}
-                  onContentChange={(content) =>
-                    updateSection(index, { content })
-                  }
-                />
-              )}
+              <div className="border-x border-t border-black bg-[#ececec] px-2 py-2 text-center text-sm font-semibold">
+                세부사업
+              </div>
 
-              {/* {section.type === "table" && (
-                <BusinessPlanTableBlock
-                  section={section}
-                  formData={formData}
-                  readOnly={effectiveReadOnly}
-                  onSectionChange={(patch) => updateSection(index, patch)}
-                  onFormDataChange={onFormDataChange}
-                />
-              )} */}
-            </div>
+              <HwpxTable>
+                <thead>
+                  <tr>
+                    <HwpxLabel className="w-[28%]">세부사업명</HwpxLabel>
+                    <HwpxLabel>내용</HwpxLabel>
+                  </tr>
+                </thead>
+                <tbody>
+                  {formData.subProjects.map((sub, index) => (
+                    <tr key={sub.name}>
+                      <HwpxValue className="align-top font-medium">{sub.name}</HwpxValue>
+                      <HwpxValue className="align-top">
+                        <LineSlotInput
+                          value={sub.output}
+                          onChange={(output) => {
+                            const subProjects = [...formData.subProjects]
+                            subProjects[index] = { ...sub, output }
+                            updateForm({ subProjects })
+                          }}
+                          readOnly={effectiveReadOnly}
+                          minRows={2}
+                          onFocus={activateBlock(`plan-sub-${index}`)}
+                        />
+                      </HwpxValue>
+                    </tr>
+                  ))}
+                </tbody>
+              </HwpxTable>
+            </HwpxDocument>
+          </A4DocumentViewport>
+        </section>
 
-            {!effectiveReadOnly && section.type !== "heading" ? (
-              <DocumentSectionControls
-                onMoveUp={() => moveSection(index, "up")}
-                onMoveDown={() => moveSection(index, "down")}
-                onDelete={() => deleteSection(index)}
-                className="hwpx-doc-section-row__controls"
+        <section aria-label="첨부 자료" className="print-hide space-y-2">
+          <A4DocumentViewport
+            fitToViewport={false}
+            pageWidthMm={DOCUMENT_VIEWPORT_WIDTH_SINGLE_MM}
+          >
+            <HwpxDocument className="shadow-none">
+              <DocumentMediaSections
+                sections={sections}
+                readOnly={effectiveReadOnly}
+                taskId={taskId}
+                createSectionId={createSectionId}
+                onSectionsChange={onSectionsChange}
               />
-            ) : null}
-          </div>
-          )
-        })}
-      </HwpxDocument>
-      </A4DocumentViewport>
+            </HwpxDocument>
+          </A4DocumentViewport>
+        </section>
 
-      {!isReference ? (
-        <div className="print-hide space-y-3 pt-2">
-          <Button type="button" variant="outline" size="sm" onClick={onPreview}>
-            <Eye className="mr-2 size-4" />
-            {previewMode ? "편집으로" : "미리보기"}
-          </Button>
-          <AddDocumentBlocksBar
-            readOnly={effectiveReadOnly}
-            onAddHeading={addHeading}
-            onAddBody={addBody}
-            sectionCount={sections.length}
-            bodyCount={sections.filter((s) => s.type === "body").length}
-          />
-        </div>
-      ) : null}
+        <section aria-label="추가 본문" className="space-y-2">
+          <div className="flex items-center justify-between gap-2 border border-b-0 border-black bg-[#f5f5f5] px-3 py-2">
+            <h3 className="text-sm font-medium text-neutral-700">추가 본문</h3>
+            {!effectiveReadOnly ? (
+              <p className="text-[11px] text-muted-foreground">
+                「대목차」 또는 「목차·본문」으로 섹션을 추가합니다.
+              </p>
+            ) : (
+              <p className="text-[11px] text-muted-foreground">읽기 전용</p>
+            )}
+          </div>
+
+          <A4DocumentViewport
+            fitToViewport={false}
+            pageWidthMm={DOCUMENT_VIEWPORT_WIDTH_SINGLE_MM}
+          >
+            <HwpxDocument className="shadow-none">
+              <DocumentSectionsTable
+                sections={docSections}
+                readOnly={effectiveReadOnly}
+                onHeadingChange={(sectionId, title) => {
+                  const index = findSectionIndex(sections, sectionId)
+                  if (index >= 0) updateSection(index, { title })
+                }}
+                onBodyChange={(sectionId, patch) => {
+                  const index = findSectionIndex(sections, sectionId)
+                  if (index >= 0) updateSection(index, patch)
+                }}
+                onSectionsChange={handleDocSectionsChange}
+                onAddHeading={isReference ? undefined : addHeading}
+                onAddBody={isReference ? undefined : addBody}
+              />
+            </HwpxDocument>
+          </A4DocumentViewport>
+        </section>
       </div>
     </RichTextToolbarProvider>
   )
@@ -472,38 +401,6 @@ function FormRow({
           ))}
       </HwpxValue>
     </tr>
-  )
-}
-
-function BusinessPlanBodyBlock({
-  section,
-  bodyIndex,
-  readOnly,
-  onTitleChange,
-  onContentChange,
-}: {
-  section: BusinessPlanSection
-  bodyIndex: number
-  readOnly: boolean
-  onTitleChange: (title: string) => void
-  onContentChange: (content: string) => void
-}) {
-  return (
-    <HwpxBodyContentBlock
-      title={section.title ?? ""}
-      onTitleChange={onTitleChange}
-      readOnly={readOnly}
-      embedded
-    >
-      <BusinessPlanRichText
-        value={section.content ?? ""}
-        onChange={onContentChange}
-        readOnly={readOnly}
-        variant="full"
-        inlineToolbar
-        minHeight={280}
-      />
-    </HwpxBodyContentBlock>
   )
 }
 

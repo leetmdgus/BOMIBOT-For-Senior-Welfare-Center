@@ -1,0 +1,2996 @@
+{
+  "version": "1.0.0",
+  "generatedAt": "2026-05-26T05:27:12.528Z",
+  "nodes": [
+    {
+      "id": "platform:bomibot",
+      "type": "Platform",
+      "label": "봄이봇",
+      "properties": {
+        "description": "사회복지 사업관리 플랫폼"
+      }
+    },
+    {
+      "id": "domain:performance",
+      "type": "Domain",
+      "label": "계획/실적",
+      "properties": {
+        "domainKey": "performance"
+      },
+      "aliases": [
+        "계획/실적",
+        "performance"
+      ]
+    },
+    {
+      "id": "domain:dashboard",
+      "type": "Domain",
+      "label": "대시보드",
+      "properties": {
+        "domainKey": "dashboard"
+      },
+      "aliases": [
+        "대시보드",
+        "dashboard"
+      ]
+    },
+    {
+      "id": "domain:kanban",
+      "type": "Domain",
+      "label": "칸반",
+      "properties": {
+        "domainKey": "kanban"
+      },
+      "aliases": [
+        "칸반",
+        "kanban"
+      ]
+    },
+    {
+      "id": "domain:organization",
+      "type": "Domain",
+      "label": "조직",
+      "properties": {
+        "domainKey": "organization"
+      },
+      "aliases": [
+        "조직",
+        "organization"
+      ]
+    },
+    {
+      "id": "domain:ebooks",
+      "type": "Domain",
+      "label": "전자책",
+      "properties": {
+        "domainKey": "ebooks"
+      },
+      "aliases": [
+        "전자책",
+        "ebooks"
+      ]
+    },
+    {
+      "id": "domain:survey",
+      "type": "Domain",
+      "label": "설문",
+      "properties": {
+        "domainKey": "survey"
+      },
+      "aliases": [
+        "설문",
+        "survey"
+      ]
+    },
+    {
+      "id": "subProject:신규회원_이용상담",
+      "type": "SubProject",
+      "label": "신규회원 이용상담",
+      "aliases": [
+        "신규회원 이용상담",
+        "세목"
+      ]
+    },
+    {
+      "id": "detail:신규회원_이용상담:홍보",
+      "type": "DetailCategory",
+      "label": "홍보",
+      "aliases": [
+        "세세목",
+        "홍보"
+      ]
+    },
+    {
+      "id": "month:1월",
+      "type": "TimePeriod",
+      "label": "1월",
+      "properties": {
+        "month": "1월"
+      }
+    },
+    {
+      "id": "perf:4054e0b7-3e67-47e0-8026-594f866c56cd",
+      "type": "PerformanceRecord",
+      "label": "신규회원 이용상담 · 1월",
+      "properties": {
+        "planPeople": 0,
+        "planCount": 1,
+        "planBudget": 0,
+        "actualPeople": 0,
+        "actualCount": 1,
+        "actualExpense": 0,
+        "detailCategory": "홍보"
+      }
+    },
+    {
+      "id": "metric:perf:4054e0b7-3e67-47e0-8026-594f866c56cd",
+      "type": "MetricBundle",
+      "label": "계획/실적 지표",
+      "properties": {
+        "planBudget": 0,
+        "actualExpense": 0
+      }
+    },
+    {
+      "id": "detail:신규회원_이용상담:설문조사",
+      "type": "DetailCategory",
+      "label": "설문조사",
+      "aliases": [
+        "세세목",
+        "설문조사"
+      ]
+    },
+    {
+      "id": "perf:48e9b878-c1c5-4677-bb6f-7473be5260e0",
+      "type": "PerformanceRecord",
+      "label": "신규회원 이용상담 · 1월",
+      "properties": {
+        "planPeople": 3000,
+        "planCount": 1,
+        "planBudget": 50000,
+        "actualPeople": 3481,
+        "actualCount": 1,
+        "actualExpense": 50000,
+        "detailCategory": "설문조사"
+      }
+    },
+    {
+      "id": "metric:perf:48e9b878-c1c5-4677-bb6f-7473be5260e0",
+      "type": "MetricBundle",
+      "label": "계획/실적 지표",
+      "properties": {
+        "planBudget": 50000,
+        "actualExpense": 50000
+      }
+    },
+    {
+      "id": "month:2월",
+      "type": "TimePeriod",
+      "label": "2월",
+      "properties": {
+        "month": "2월"
+      }
+    },
+    {
+      "id": "perf:a30ded44-df85-4146-9d3d-8c978bfaf8b1",
+      "type": "PerformanceRecord",
+      "label": "신규회원 이용상담 · 2월",
+      "properties": {
+        "planPeople": 0,
+        "planCount": 1,
+        "planBudget": 0,
+        "actualPeople": 0,
+        "actualCount": 1,
+        "actualExpense": 0,
+        "detailCategory": "홍보"
+      }
+    },
+    {
+      "id": "metric:perf:a30ded44-df85-4146-9d3d-8c978bfaf8b1",
+      "type": "MetricBundle",
+      "label": "계획/실적 지표",
+      "properties": {
+        "planBudget": 0,
+        "actualExpense": 0
+      }
+    },
+    {
+      "id": "perf:150d903d-43af-4d3d-a907-1ea5e55e0bbf",
+      "type": "PerformanceRecord",
+      "label": "신규회원 이용상담 · 2월",
+      "properties": {
+        "planPeople": 3000,
+        "planCount": 1,
+        "planBudget": 50000,
+        "actualPeople": 3396,
+        "actualCount": 1,
+        "actualExpense": 50000,
+        "detailCategory": "설문조사"
+      }
+    },
+    {
+      "id": "metric:perf:150d903d-43af-4d3d-a907-1ea5e55e0bbf",
+      "type": "MetricBundle",
+      "label": "계획/실적 지표",
+      "properties": {
+        "planBudget": 50000,
+        "actualExpense": 50000
+      }
+    },
+    {
+      "id": "month:3월",
+      "type": "TimePeriod",
+      "label": "3월",
+      "properties": {
+        "month": "3월"
+      }
+    },
+    {
+      "id": "perf:2f888616-85fd-4624-954e-6c465730e97b",
+      "type": "PerformanceRecord",
+      "label": "신규회원 이용상담 · 3월",
+      "properties": {
+        "planPeople": 0,
+        "planCount": 1,
+        "planBudget": 0,
+        "actualPeople": 0,
+        "actualCount": 1,
+        "actualExpense": 0,
+        "detailCategory": "홍보"
+      }
+    },
+    {
+      "id": "metric:perf:2f888616-85fd-4624-954e-6c465730e97b",
+      "type": "MetricBundle",
+      "label": "계획/실적 지표",
+      "properties": {
+        "planBudget": 0,
+        "actualExpense": 0
+      }
+    },
+    {
+      "id": "perf:7bb5477c-e84f-4e85-8407-bdae9bf349c3",
+      "type": "PerformanceRecord",
+      "label": "신규회원 이용상담 · 3월",
+      "properties": {
+        "planPeople": 3000,
+        "planCount": 1,
+        "planBudget": 50000,
+        "actualPeople": 3457,
+        "actualCount": 1,
+        "actualExpense": 50000,
+        "detailCategory": "설문조사"
+      }
+    },
+    {
+      "id": "metric:perf:7bb5477c-e84f-4e85-8407-bdae9bf349c3",
+      "type": "MetricBundle",
+      "label": "계획/실적 지표",
+      "properties": {
+        "planBudget": 50000,
+        "actualExpense": 50000
+      }
+    },
+    {
+      "id": "month:4월",
+      "type": "TimePeriod",
+      "label": "4월",
+      "properties": {
+        "month": "4월"
+      }
+    },
+    {
+      "id": "perf:e652762e-7c95-4124-ba17-8c45f80779ba",
+      "type": "PerformanceRecord",
+      "label": "신규회원 이용상담 · 4월",
+      "properties": {
+        "planPeople": 0,
+        "planCount": 1,
+        "planBudget": 0,
+        "actualPeople": 0,
+        "actualCount": 1,
+        "actualExpense": 0,
+        "detailCategory": "홍보"
+      }
+    },
+    {
+      "id": "metric:perf:e652762e-7c95-4124-ba17-8c45f80779ba",
+      "type": "MetricBundle",
+      "label": "계획/실적 지표",
+      "properties": {
+        "planBudget": 0,
+        "actualExpense": 0
+      }
+    },
+    {
+      "id": "perf:8a0cf110-0934-4a7f-9f36-5083fb36f29e",
+      "type": "PerformanceRecord",
+      "label": "신규회원 이용상담 · 4월",
+      "properties": {
+        "planPeople": 3000,
+        "planCount": 1,
+        "planBudget": 50000,
+        "actualPeople": 3410,
+        "actualCount": 1,
+        "actualExpense": 50000,
+        "detailCategory": "설문조사"
+      }
+    },
+    {
+      "id": "metric:perf:8a0cf110-0934-4a7f-9f36-5083fb36f29e",
+      "type": "MetricBundle",
+      "label": "계획/실적 지표",
+      "properties": {
+        "planBudget": 50000,
+        "actualExpense": 50000
+      }
+    },
+    {
+      "id": "month:5월",
+      "type": "TimePeriod",
+      "label": "5월",
+      "properties": {
+        "month": "5월"
+      }
+    },
+    {
+      "id": "perf:8913befb-99e5-45cd-bca5-e277e5cfe01c",
+      "type": "PerformanceRecord",
+      "label": "신규회원 이용상담 · 5월",
+      "properties": {
+        "planPeople": 0,
+        "planCount": 1,
+        "planBudget": 0,
+        "actualPeople": 0,
+        "actualCount": 1,
+        "actualExpense": 0,
+        "detailCategory": "홍보"
+      }
+    },
+    {
+      "id": "metric:perf:8913befb-99e5-45cd-bca5-e277e5cfe01c",
+      "type": "MetricBundle",
+      "label": "계획/실적 지표",
+      "properties": {
+        "planBudget": 0,
+        "actualExpense": 0
+      }
+    },
+    {
+      "id": "perf:c176a917-2a87-478e-9b17-dc8d3a467c62",
+      "type": "PerformanceRecord",
+      "label": "신규회원 이용상담 · 5월",
+      "properties": {
+        "planPeople": 3000,
+        "planCount": 1,
+        "planBudget": 50000,
+        "actualPeople": 3512,
+        "actualCount": 1,
+        "actualExpense": 50000,
+        "detailCategory": "설문조사"
+      }
+    },
+    {
+      "id": "metric:perf:c176a917-2a87-478e-9b17-dc8d3a467c62",
+      "type": "MetricBundle",
+      "label": "계획/실적 지표",
+      "properties": {
+        "planBudget": 50000,
+        "actualExpense": 50000
+      }
+    },
+    {
+      "id": "subProject:사진공모전",
+      "type": "SubProject",
+      "label": "사진공모전",
+      "aliases": [
+        "사진공모전",
+        "세목"
+      ]
+    },
+    {
+      "id": "detail:사진공모전:홍보",
+      "type": "DetailCategory",
+      "label": "홍보",
+      "aliases": [
+        "세세목",
+        "홍보"
+      ]
+    },
+    {
+      "id": "perf:9c4673e6-eabe-4bbe-8b3e-165d70e5dc91",
+      "type": "PerformanceRecord",
+      "label": "사진공모전 · 1월",
+      "properties": {
+        "planPeople": 10,
+        "planCount": 10,
+        "planBudget": 40000,
+        "actualPeople": 10,
+        "actualCount": 10,
+        "actualExpense": 38000,
+        "detailCategory": "홍보"
+      }
+    },
+    {
+      "id": "metric:perf:9c4673e6-eabe-4bbe-8b3e-165d70e5dc91",
+      "type": "MetricBundle",
+      "label": "계획/실적 지표",
+      "properties": {
+        "planBudget": 40000,
+        "actualExpense": 38000
+      }
+    },
+    {
+      "id": "perf:cc27a9ae-9deb-413b-a48c-275e81e4e9bc",
+      "type": "PerformanceRecord",
+      "label": "사진공모전 · 2월",
+      "properties": {
+        "planPeople": 10,
+        "planCount": 10,
+        "planBudget": 40000,
+        "actualPeople": 9,
+        "actualCount": 9,
+        "actualExpense": 38000,
+        "detailCategory": "홍보"
+      }
+    },
+    {
+      "id": "metric:perf:cc27a9ae-9deb-413b-a48c-275e81e4e9bc",
+      "type": "MetricBundle",
+      "label": "계획/실적 지표",
+      "properties": {
+        "planBudget": 40000,
+        "actualExpense": 38000
+      }
+    },
+    {
+      "id": "perf:13496455-c6f6-4c0b-8287-b52982e5ce69",
+      "type": "PerformanceRecord",
+      "label": "사진공모전 · 5월",
+      "properties": {
+        "planPeople": 11,
+        "planCount": 11,
+        "planBudget": 42000,
+        "actualPeople": 10,
+        "actualCount": 10,
+        "actualExpense": 39500,
+        "detailCategory": "홍보"
+      }
+    },
+    {
+      "id": "metric:perf:13496455-c6f6-4c0b-8287-b52982e5ce69",
+      "type": "MetricBundle",
+      "label": "계획/실적 지표",
+      "properties": {
+        "planBudget": 42000,
+        "actualExpense": 39500
+      }
+    },
+    {
+      "id": "subProject:나눔릴레이",
+      "type": "SubProject",
+      "label": "나눔릴레이",
+      "aliases": [
+        "나눔릴레이",
+        "세목"
+      ]
+    },
+    {
+      "id": "detail:나눔릴레이:프로그램진행",
+      "type": "DetailCategory",
+      "label": "프로그램진행",
+      "aliases": [
+        "세세목",
+        "프로그램진행"
+      ]
+    },
+    {
+      "id": "perf:40f11edb-96ff-4ebd-a1d4-485bf3f8d25e",
+      "type": "PerformanceRecord",
+      "label": "나눔릴레이 · 1월",
+      "properties": {
+        "planPeople": 16,
+        "planCount": 16,
+        "planBudget": 100000,
+        "actualPeople": 15,
+        "actualCount": 16,
+        "actualExpense": 95000,
+        "detailCategory": "프로그램진행"
+      }
+    },
+    {
+      "id": "metric:perf:40f11edb-96ff-4ebd-a1d4-485bf3f8d25e",
+      "type": "MetricBundle",
+      "label": "계획/실적 지표",
+      "properties": {
+        "planBudget": 100000,
+        "actualExpense": 95000
+      }
+    },
+    {
+      "id": "perf:d10c5382-f541-4747-afc7-e64273dfa21c",
+      "type": "PerformanceRecord",
+      "label": "나눔릴레이 · 2월",
+      "properties": {
+        "planPeople": 17,
+        "planCount": 17,
+        "planBudget": 100000,
+        "actualPeople": 16,
+        "actualCount": 17,
+        "actualExpense": 96000,
+        "detailCategory": "프로그램진행"
+      }
+    },
+    {
+      "id": "metric:perf:d10c5382-f541-4747-afc7-e64273dfa21c",
+      "type": "MetricBundle",
+      "label": "계획/실적 지표",
+      "properties": {
+        "planBudget": 100000,
+        "actualExpense": 96000
+      }
+    },
+    {
+      "id": "perf:da344efc-7ea6-447f-aa05-8033575e5637",
+      "type": "PerformanceRecord",
+      "label": "나눔릴레이 · 5월",
+      "properties": {
+        "planPeople": 18,
+        "planCount": 18,
+        "planBudget": 105000,
+        "actualPeople": 17,
+        "actualCount": 18,
+        "actualExpense": 98000,
+        "detailCategory": "프로그램진행"
+      }
+    },
+    {
+      "id": "metric:perf:da344efc-7ea6-447f-aa05-8033575e5637",
+      "type": "MetricBundle",
+      "label": "계획/실적 지표",
+      "properties": {
+        "planBudget": 105000,
+        "actualExpense": 98000
+      }
+    },
+    {
+      "id": "detail:나눔릴레이:홍보",
+      "type": "DetailCategory",
+      "label": "홍보",
+      "aliases": [
+        "세세목",
+        "홍보"
+      ]
+    },
+    {
+      "id": "perf:3d0447eb-e5da-44f4-ba8b-b13419eeb3d5",
+      "type": "PerformanceRecord",
+      "label": "나눔릴레이 · 5월",
+      "properties": {
+        "planPeople": 5,
+        "planCount": 5,
+        "planBudget": 18000,
+        "actualPeople": 5,
+        "actualCount": 5,
+        "actualExpense": 17500,
+        "detailCategory": "홍보"
+      }
+    },
+    {
+      "id": "metric:perf:3d0447eb-e5da-44f4-ba8b-b13419eeb3d5",
+      "type": "MetricBundle",
+      "label": "계획/실적 지표",
+      "properties": {
+        "planBudget": 18000,
+        "actualExpense": 17500
+      }
+    },
+    {
+      "id": "subProject:지역사회_조직화",
+      "type": "SubProject",
+      "label": "지역사회 조직화",
+      "aliases": [
+        "지역사회 조직화",
+        "세목"
+      ]
+    },
+    {
+      "id": "detail:지역사회_조직화:프로그램진행",
+      "type": "DetailCategory",
+      "label": "프로그램진행",
+      "aliases": [
+        "세세목",
+        "프로그램진행"
+      ]
+    },
+    {
+      "id": "perf:ac390549-5941-43b4-8b4a-82d82febbd0d",
+      "type": "PerformanceRecord",
+      "label": "지역사회 조직화 · 5월",
+      "properties": {
+        "planPeople": 15,
+        "planCount": 15,
+        "planBudget": 75000,
+        "actualPeople": 14,
+        "actualCount": 15,
+        "actualExpense": 73000,
+        "detailCategory": "프로그램진행"
+      }
+    },
+    {
+      "id": "metric:perf:ac390549-5941-43b4-8b4a-82d82febbd0d",
+      "type": "MetricBundle",
+      "label": "계획/실적 지표",
+      "properties": {
+        "planBudget": 75000,
+        "actualExpense": 73000
+      }
+    },
+    {
+      "id": "subProject:나눔릴레이_홍보",
+      "type": "SubProject",
+      "label": "나눔릴레이 홍보",
+      "aliases": [
+        "나눔릴레이 홍보",
+        "세목"
+      ]
+    },
+    {
+      "id": "detail:나눔릴레이_홍보:홍보",
+      "type": "DetailCategory",
+      "label": "홍보",
+      "aliases": [
+        "세세목",
+        "홍보"
+      ]
+    },
+    {
+      "id": "perf:42473e1c-a5b6-4be5-8165-3511abc95510",
+      "type": "PerformanceRecord",
+      "label": "나눔릴레이 홍보 · 5월",
+      "properties": {
+        "planPeople": 8,
+        "planCount": 8,
+        "planBudget": 28000,
+        "actualPeople": 8,
+        "actualCount": 8,
+        "actualExpense": 27000,
+        "detailCategory": "홍보"
+      }
+    },
+    {
+      "id": "metric:perf:42473e1c-a5b6-4be5-8165-3511abc95510",
+      "type": "MetricBundle",
+      "label": "계획/실적 지표",
+      "properties": {
+        "planBudget": 28000,
+        "actualExpense": 27000
+      }
+    },
+    {
+      "id": "subProject:발대식",
+      "type": "SubProject",
+      "label": "발대식",
+      "aliases": [
+        "발대식",
+        "세목"
+      ]
+    },
+    {
+      "id": "detail:발대식:프로그램진행",
+      "type": "DetailCategory",
+      "label": "프로그램진행",
+      "aliases": [
+        "세세목",
+        "프로그램진행"
+      ]
+    },
+    {
+      "id": "perf:275cf8f0-9214-4858-ad9f-24f6520a5306",
+      "type": "PerformanceRecord",
+      "label": "발대식 · 5월",
+      "properties": {
+        "planPeople": 10,
+        "planCount": 10,
+        "planBudget": 50000,
+        "actualPeople": 10,
+        "actualCount": 10,
+        "actualExpense": 49000,
+        "detailCategory": "프로그램진행"
+      }
+    },
+    {
+      "id": "metric:perf:275cf8f0-9214-4858-ad9f-24f6520a5306",
+      "type": "MetricBundle",
+      "label": "계획/실적 지표",
+      "properties": {
+        "planBudget": 50000,
+        "actualExpense": 49000
+      }
+    },
+    {
+      "id": "subProject:모금_활동",
+      "type": "SubProject",
+      "label": "모금 활동",
+      "aliases": [
+        "모금 활동",
+        "세목"
+      ]
+    },
+    {
+      "id": "detail:모금_활동:프로그램진행",
+      "type": "DetailCategory",
+      "label": "프로그램진행",
+      "aliases": [
+        "세세목",
+        "프로그램진행"
+      ]
+    },
+    {
+      "id": "perf:bff8eb05-7acb-46e0-8cca-b8e9354cd33c",
+      "type": "PerformanceRecord",
+      "label": "모금 활동 · 5월",
+      "properties": {
+        "planPeople": 12,
+        "planCount": 12,
+        "planBudget": 62000,
+        "actualPeople": 12,
+        "actualCount": 12,
+        "actualExpense": 60000,
+        "detailCategory": "프로그램진행"
+      }
+    },
+    {
+      "id": "metric:perf:bff8eb05-7acb-46e0-8cca-b8e9354cd33c",
+      "type": "MetricBundle",
+      "label": "계획/실적 지표",
+      "properties": {
+        "planBudget": 62000,
+        "actualExpense": 60000
+      }
+    },
+    {
+      "id": "subProject:모금결과_안내",
+      "type": "SubProject",
+      "label": "모금결과 안내",
+      "aliases": [
+        "모금결과 안내",
+        "세목"
+      ]
+    },
+    {
+      "id": "detail:모금결과_안내:홍보",
+      "type": "DetailCategory",
+      "label": "홍보",
+      "aliases": [
+        "세세목",
+        "홍보"
+      ]
+    },
+    {
+      "id": "perf:303a346a-8943-43b2-b093-99d56182b726",
+      "type": "PerformanceRecord",
+      "label": "모금결과 안내 · 5월",
+      "properties": {
+        "planPeople": 7,
+        "planCount": 7,
+        "planBudget": 18000,
+        "actualPeople": 7,
+        "actualCount": 7,
+        "actualExpense": 18000,
+        "detailCategory": "홍보"
+      }
+    },
+    {
+      "id": "metric:perf:303a346a-8943-43b2-b093-99d56182b726",
+      "type": "MetricBundle",
+      "label": "계획/실적 지표",
+      "properties": {
+        "planBudget": 18000,
+        "actualExpense": 18000
+      }
+    },
+    {
+      "id": "indicator:인원_현황",
+      "type": "DashboardIndicator",
+      "label": "인원 현황",
+      "properties": {
+        "value": "45",
+        "unit": "명",
+        "description": "전년 대비 2명 증가 (신규 채용 포함)"
+      }
+    },
+    {
+      "id": "indicator:활성_프로젝트",
+      "type": "DashboardIndicator",
+      "label": "활성 프로젝트",
+      "properties": {
+        "value": "12",
+        "unit": "개",
+        "description": "2026년도 사업계획 승인 완료 기준"
+      }
+    },
+    {
+      "id": "indicator:서비스_이용자",
+      "type": "DashboardIndicator",
+      "label": "서비스 이용자",
+      "properties": {
+        "value": "8,420",
+        "unit": "명",
+        "description": "최근 3개월 누적 이용자 추이"
+      }
+    },
+    {
+      "id": "progress:인원_달성률",
+      "type": "ProgressIndicator",
+      "label": "인원 달성률",
+      "properties": {
+        "value": 85
+      }
+    },
+    {
+      "id": "progress:횟수_달성률",
+      "type": "ProgressIndicator",
+      "label": "횟수 달성률",
+      "properties": {
+        "value": 92
+      }
+    },
+    {
+      "id": "progress:예산_집행률",
+      "type": "ProgressIndicator",
+      "label": "예산 집행률",
+      "properties": {
+        "value": 74
+      }
+    },
+    {
+      "id": "project:proj1",
+      "type": "KanbanProject",
+      "label": "상담",
+      "properties": {
+        "team": "복지1팀",
+        "manager": "김영수 사회복지사",
+        "year": "2026"
+      }
+    },
+    {
+      "id": "column:cat1",
+      "type": "KanbanColumn",
+      "label": "실적관리"
+    },
+    {
+      "id": "task:task1",
+      "type": "Task",
+      "label": "일반상담 및 정보제공사업",
+      "properties": {
+        "assignee": "김영수",
+        "completedCount": 15,
+        "totalCount": 20
+      }
+    },
+    {
+      "id": "column:cat2",
+      "type": "KanbanColumn",
+      "label": "사업계획"
+    },
+    {
+      "id": "task:task2",
+      "type": "Task",
+      "label": "전문상담사업",
+      "properties": {
+        "assignee": "김영수",
+        "completedCount": 8,
+        "totalCount": 12
+      }
+    },
+    {
+      "id": "column:cat3",
+      "type": "KanbanColumn",
+      "label": "만족도조사"
+    },
+    {
+      "id": "task:task3",
+      "type": "Task",
+      "label": "이용자관리 및 이용자권리증진사업",
+      "properties": {
+        "assignee": "김영수",
+        "completedCount": 45,
+        "totalCount": 100
+      }
+    },
+    {
+      "id": "column:cat4",
+      "type": "KanbanColumn",
+      "label": "사업평가"
+    },
+    {
+      "id": "task:task4",
+      "type": "Task",
+      "label": "평생교육지원사업",
+      "properties": {
+        "assignee": "김영수",
+        "completedCount": 3,
+        "totalCount": 10
+      }
+    },
+    {
+      "id": "project:proj2",
+      "type": "KanbanProject",
+      "label": "교육",
+      "properties": {
+        "team": "노인 정보화 교육",
+        "manager": "박미영",
+        "year": "2026"
+      }
+    },
+    {
+      "id": "column:cat5",
+      "type": "KanbanColumn",
+      "label": "실적관리"
+    },
+    {
+      "id": "task:task5",
+      "type": "Task",
+      "label": "취미여가지원사업",
+      "properties": {
+        "assignee": "박미영",
+        "completedCount": 28,
+        "totalCount": 30
+      }
+    },
+    {
+      "id": "column:cat6",
+      "type": "KanbanColumn",
+      "label": "사업계획"
+    },
+    {
+      "id": "task:task6",
+      "type": "Task",
+      "label": "문화예술지원사업",
+      "properties": {
+        "assignee": "박미영",
+        "completedCount": 5,
+        "totalCount": 15
+      }
+    },
+    {
+      "id": "column:cat7",
+      "type": "KanbanColumn",
+      "label": "만족도조사"
+    },
+    {
+      "id": "column:cat8",
+      "type": "KanbanColumn",
+      "label": "사업평가"
+    },
+    {
+      "id": "project:proj3",
+      "type": "KanbanProject",
+      "label": "교육",
+      "properties": {
+        "team": "노인 정보화 교육",
+        "manager": "박미영",
+        "year": "2025"
+      }
+    },
+    {
+      "id": "column:cat9",
+      "type": "KanbanColumn",
+      "label": "실적관리"
+    },
+    {
+      "id": "task:task7",
+      "type": "Task",
+      "label": "읍면동평생학습지원사업",
+      "properties": {
+        "assignee": "박미영",
+        "completedCount": 28,
+        "totalCount": 30
+      }
+    },
+    {
+      "id": "column:cat10",
+      "type": "KanbanColumn",
+      "label": "사업계획"
+    },
+    {
+      "id": "task:task8",
+      "type": "Task",
+      "label": "노인복지증진사업",
+      "properties": {
+        "assignee": "박미영",
+        "completedCount": 5,
+        "totalCount": 15
+      }
+    },
+    {
+      "id": "column:cat11",
+      "type": "KanbanColumn",
+      "label": "만족도조사"
+    },
+    {
+      "id": "column:cat12",
+      "type": "KanbanColumn",
+      "label": "사업평가"
+    },
+    {
+      "id": "dept:management",
+      "type": "Department",
+      "label": "운영총괄",
+      "properties": {
+        "count": 3
+      }
+    },
+    {
+      "id": "emp:emp-management-1",
+      "type": "Employee",
+      "label": "최기원",
+      "properties": {
+        "role": "관장",
+        "position": "관장"
+      }
+    },
+    {
+      "id": "emp:emp-management-2",
+      "type": "Employee",
+      "label": "이혜진",
+      "properties": {
+        "role": "부장",
+        "position": "부장"
+      }
+    },
+    {
+      "id": "emp:emp-management-3",
+      "type": "Employee",
+      "label": "이승현",
+      "properties": {
+        "role": "사회복지사",
+        "position": "사회복지사"
+      }
+    },
+    {
+      "id": "dept:support",
+      "type": "Department",
+      "label": "운영지원팀",
+      "properties": {
+        "count": 6
+      }
+    },
+    {
+      "id": "emp:emp-support-1",
+      "type": "Employee",
+      "label": "김민수",
+      "properties": {
+        "role": "팀장",
+        "position": "팀장"
+      }
+    },
+    {
+      "id": "emp:emp-support-2",
+      "type": "Employee",
+      "label": "박서연",
+      "properties": {
+        "role": "사무원",
+        "position": "사무원"
+      }
+    },
+    {
+      "id": "emp:emp-support-3",
+      "type": "Employee",
+      "label": "정우진",
+      "properties": {
+        "role": "사무원",
+        "position": "사무원"
+      }
+    },
+    {
+      "id": "emp:emp-support-4",
+      "type": "Employee",
+      "label": "한지원",
+      "properties": {
+        "role": "사무원",
+        "position": "사무원"
+      }
+    },
+    {
+      "id": "emp:emp-support-5",
+      "type": "Employee",
+      "label": "오현우",
+      "properties": {
+        "role": "사무원",
+        "position": "사무원"
+      }
+    },
+    {
+      "id": "emp:emp-support-6",
+      "type": "Employee",
+      "label": "송예린",
+      "properties": {
+        "role": "사회복지사",
+        "position": "사회복지사"
+      }
+    },
+    {
+      "id": "dept:welfare1",
+      "type": "Department",
+      "label": "복지1팀",
+      "properties": {
+        "count": 5
+      }
+    },
+    {
+      "id": "emp:emp-welfare1-1",
+      "type": "Employee",
+      "label": "강도현",
+      "properties": {
+        "role": "팀장",
+        "position": "팀장"
+      }
+    },
+    {
+      "id": "emp:emp-welfare1-2",
+      "type": "Employee",
+      "label": "윤수빈",
+      "properties": {
+        "role": "사회복지사",
+        "position": "사회복지사"
+      }
+    },
+    {
+      "id": "emp:emp-welfare1-3",
+      "type": "Employee",
+      "label": "임재호",
+      "properties": {
+        "role": "사회복지사",
+        "position": "사회복지사"
+      }
+    },
+    {
+      "id": "emp:emp-welfare1-4",
+      "type": "Employee",
+      "label": "지민영",
+      "properties": {
+        "role": "사회복지사",
+        "position": "사회복지사"
+      }
+    },
+    {
+      "id": "emp:emp-welfare1-5",
+      "type": "Employee",
+      "label": "배소영",
+      "properties": {
+        "role": "물리치료사",
+        "position": "물리치료사"
+      }
+    },
+    {
+      "id": "dept:welfare2",
+      "type": "Department",
+      "label": "복지2팀",
+      "properties": {
+        "count": 6
+      }
+    },
+    {
+      "id": "emp:emp-welfare2-1",
+      "type": "Employee",
+      "label": "서민지",
+      "properties": {
+        "role": "팀장",
+        "position": "팀장"
+      }
+    },
+    {
+      "id": "emp:emp-welfare2-2",
+      "type": "Employee",
+      "label": "유태영",
+      "properties": {
+        "role": "사회복지사",
+        "position": "사회복지사"
+      }
+    },
+    {
+      "id": "emp:emp-welfare2-3",
+      "type": "Employee",
+      "label": "홍성준",
+      "properties": {
+        "role": "사회복지사",
+        "position": "사회복지사"
+      }
+    },
+    {
+      "id": "emp:emp-welfare2-4",
+      "type": "Employee",
+      "label": "정영인",
+      "properties": {
+        "role": "사회복지사",
+        "position": "사회복지사"
+      }
+    },
+    {
+      "id": "emp:emp-welfare2-5",
+      "type": "Employee",
+      "label": "곽은비",
+      "properties": {
+        "role": "영양사",
+        "position": "영양사"
+      }
+    },
+    {
+      "id": "emp:emp-welfare2-6",
+      "type": "Employee",
+      "label": "노지훈",
+      "properties": {
+        "role": "물리치료사",
+        "position": "물리치료사"
+      }
+    },
+    {
+      "id": "dept:welfare3",
+      "type": "Department",
+      "label": "복지3팀",
+      "properties": {
+        "count": 8
+      }
+    },
+    {
+      "id": "emp:emp-welfare3-1",
+      "type": "Employee",
+      "label": "문재윤",
+      "properties": {
+        "role": "팀장",
+        "position": "팀장"
+      }
+    },
+    {
+      "id": "emp:emp-welfare3-2",
+      "type": "Employee",
+      "label": "권수진",
+      "properties": {
+        "role": "사회복지사",
+        "position": "사회복지사"
+      }
+    },
+    {
+      "id": "emp:emp-welfare3-3",
+      "type": "Employee",
+      "label": "신동욱",
+      "properties": {
+        "role": "사회복지사",
+        "position": "사회복지사"
+      }
+    },
+    {
+      "id": "emp:emp-welfare3-4",
+      "type": "Employee",
+      "label": "조아린",
+      "properties": {
+        "role": "사회복지사",
+        "position": "사회복지사"
+      }
+    },
+    {
+      "id": "emp:emp-welfare3-5",
+      "type": "Employee",
+      "label": "김연수",
+      "properties": {
+        "role": "사회복지사",
+        "position": "사회복지사"
+      }
+    },
+    {
+      "id": "emp:emp-welfare3-6",
+      "type": "Employee",
+      "label": "허준호",
+      "properties": {
+        "role": "시설근무자",
+        "position": "시설근무자"
+      }
+    },
+    {
+      "id": "emp:emp-welfare3-7",
+      "type": "Employee",
+      "label": "류정민",
+      "properties": {
+        "role": "시설근무자",
+        "position": "시설근무자"
+      }
+    },
+    {
+      "id": "emp:emp-welfare3-8",
+      "type": "Employee",
+      "label": "전하늘",
+      "properties": {
+        "role": "운전사",
+        "position": "운전사"
+      }
+    },
+    {
+      "id": "dept:resource",
+      "type": "Department",
+      "label": "자원개발팀",
+      "properties": {
+        "count": 2
+      }
+    },
+    {
+      "id": "emp:emp-resource-1",
+      "type": "Employee",
+      "label": "장미래",
+      "properties": {
+        "role": "팀장",
+        "position": "팀장"
+      }
+    },
+    {
+      "id": "emp:emp-resource-2",
+      "type": "Employee",
+      "label": "고영수",
+      "properties": {
+        "role": "취업전문가",
+        "position": "취업전문가"
+      }
+    },
+    {
+      "id": "ebook:1",
+      "type": "Ebook",
+      "label": "2025년도 운영계획보고서",
+      "properties": {
+        "category": "운영보고서"
+      }
+    },
+    {
+      "id": "survey:1",
+      "type": "Survey",
+      "label": "공간 이용 만족도 조사",
+      "properties": {
+        "program": "상담 [1-1 일반상담]",
+        "status": "진행중",
+        "responseCount": 4,
+        "totalTarget": 30
+      },
+      "aliases": [
+        "공간 이용 만족도 조사",
+        "설문"
+      ]
+    },
+    {
+      "id": "survey:2",
+      "type": "Survey",
+      "label": "스마트폰 활용 교육 만족도 조사",
+      "properties": {
+        "program": "디지털 역량강화 프로그램",
+        "status": "완료",
+        "responseCount": 189,
+        "totalTarget": 200
+      },
+      "aliases": [
+        "스마트폰 활용 교육 만족도 조사",
+        "설문"
+      ]
+    },
+    {
+      "id": "survey:3",
+      "type": "Survey",
+      "label": "노년사회화교육 상반기 만족도 조사",
+      "properties": {
+        "program": "노년사회화교육 지원사업",
+        "status": "예정",
+        "responseCount": 0,
+        "totalTarget": 150
+      },
+      "aliases": [
+        "노년사회화교육 상반기 만족도 조사",
+        "설문"
+      ]
+    },
+    {
+      "id": "survey:4",
+      "type": "Survey",
+      "label": "건강체조 프로그램 참여자 평가",
+      "properties": {
+        "program": "어르신 건강증진 프로그램",
+        "status": "진행중",
+        "responseCount": 87,
+        "totalTarget": 120
+      },
+      "aliases": [
+        "건강체조 프로그램 참여자 평가",
+        "설문"
+      ]
+    },
+    {
+      "id": "survey:5",
+      "type": "Survey",
+      "label": "독거노인 정서지원 서비스 만족도 조사",
+      "properties": {
+        "program": "지역사회 통합돌봄 사업",
+        "status": "임시",
+        "responseCount": 12,
+        "totalTarget": 80
+      },
+      "aliases": [
+        "독거노인 정서지원 서비스 만족도 조사",
+        "설문"
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "id": "e:domain:performance->platform:bomibot:partOf",
+      "source": "domain:performance",
+      "target": "platform:bomibot",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:domain:dashboard->platform:bomibot:partOf",
+      "source": "domain:dashboard",
+      "target": "platform:bomibot",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:domain:kanban->platform:bomibot:partOf",
+      "source": "domain:kanban",
+      "target": "platform:bomibot",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:domain:organization->platform:bomibot:partOf",
+      "source": "domain:organization",
+      "target": "platform:bomibot",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:domain:ebooks->platform:bomibot:partOf",
+      "source": "domain:ebooks",
+      "target": "platform:bomibot",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:domain:survey->platform:bomibot:partOf",
+      "source": "domain:survey",
+      "target": "platform:bomibot",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:subProject:신규회원_이용상담->domain:performance:partOf",
+      "source": "subProject:신규회원_이용상담",
+      "target": "domain:performance",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:domain:performance->subProject:신규회원_이용상담:hasSubProject",
+      "source": "domain:performance",
+      "target": "subProject:신규회원_이용상담",
+      "predicate": "hasSubProject"
+    },
+    {
+      "id": "e:detail:신규회원_이용상담:홍보->subProject:신규회원_이용상담:partOf",
+      "source": "detail:신규회원_이용상담:홍보",
+      "target": "subProject:신규회원_이용상담",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:subProject:신규회원_이용상담->detail:신규회원_이용상담:홍보:hasDetailCategory",
+      "source": "subProject:신규회원_이용상담",
+      "target": "detail:신규회원_이용상담:홍보",
+      "predicate": "hasDetailCategory"
+    },
+    {
+      "id": "e:perf:4054e0b7-3e67-47e0-8026-594f866c56cd->domain:performance:partOf",
+      "source": "perf:4054e0b7-3e67-47e0-8026-594f866c56cd",
+      "target": "domain:performance",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:perf:4054e0b7-3e67-47e0-8026-594f866c56cd->subProject:신규회원_이용상담:partOf",
+      "source": "perf:4054e0b7-3e67-47e0-8026-594f866c56cd",
+      "target": "subProject:신규회원_이용상담",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:perf:4054e0b7-3e67-47e0-8026-594f866c56cd->month:1월:occursIn",
+      "source": "perf:4054e0b7-3e67-47e0-8026-594f866c56cd",
+      "target": "month:1월",
+      "predicate": "occursIn"
+    },
+    {
+      "id": "e:perf:4054e0b7-3e67-47e0-8026-594f866c56cd->metric:perf:4054e0b7-3e67-47e0-8026-594f866c56cd:hasMetric",
+      "source": "perf:4054e0b7-3e67-47e0-8026-594f866c56cd",
+      "target": "metric:perf:4054e0b7-3e67-47e0-8026-594f866c56cd",
+      "predicate": "hasMetric"
+    },
+    {
+      "id": "e:detail:신규회원_이용상담:설문조사->subProject:신규회원_이용상담:partOf",
+      "source": "detail:신규회원_이용상담:설문조사",
+      "target": "subProject:신규회원_이용상담",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:subProject:신규회원_이용상담->detail:신규회원_이용상담:설문조사:hasDetailCategory",
+      "source": "subProject:신규회원_이용상담",
+      "target": "detail:신규회원_이용상담:설문조사",
+      "predicate": "hasDetailCategory"
+    },
+    {
+      "id": "e:perf:48e9b878-c1c5-4677-bb6f-7473be5260e0->domain:performance:partOf",
+      "source": "perf:48e9b878-c1c5-4677-bb6f-7473be5260e0",
+      "target": "domain:performance",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:perf:48e9b878-c1c5-4677-bb6f-7473be5260e0->subProject:신규회원_이용상담:partOf",
+      "source": "perf:48e9b878-c1c5-4677-bb6f-7473be5260e0",
+      "target": "subProject:신규회원_이용상담",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:perf:48e9b878-c1c5-4677-bb6f-7473be5260e0->month:1월:occursIn",
+      "source": "perf:48e9b878-c1c5-4677-bb6f-7473be5260e0",
+      "target": "month:1월",
+      "predicate": "occursIn"
+    },
+    {
+      "id": "e:perf:48e9b878-c1c5-4677-bb6f-7473be5260e0->metric:perf:48e9b878-c1c5-4677-bb6f-7473be5260e0:hasMetric",
+      "source": "perf:48e9b878-c1c5-4677-bb6f-7473be5260e0",
+      "target": "metric:perf:48e9b878-c1c5-4677-bb6f-7473be5260e0",
+      "predicate": "hasMetric"
+    },
+    {
+      "id": "e:perf:a30ded44-df85-4146-9d3d-8c978bfaf8b1->domain:performance:partOf",
+      "source": "perf:a30ded44-df85-4146-9d3d-8c978bfaf8b1",
+      "target": "domain:performance",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:perf:a30ded44-df85-4146-9d3d-8c978bfaf8b1->subProject:신규회원_이용상담:partOf",
+      "source": "perf:a30ded44-df85-4146-9d3d-8c978bfaf8b1",
+      "target": "subProject:신규회원_이용상담",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:perf:a30ded44-df85-4146-9d3d-8c978bfaf8b1->month:2월:occursIn",
+      "source": "perf:a30ded44-df85-4146-9d3d-8c978bfaf8b1",
+      "target": "month:2월",
+      "predicate": "occursIn"
+    },
+    {
+      "id": "e:perf:a30ded44-df85-4146-9d3d-8c978bfaf8b1->metric:perf:a30ded44-df85-4146-9d3d-8c978bfaf8b1:hasMetric",
+      "source": "perf:a30ded44-df85-4146-9d3d-8c978bfaf8b1",
+      "target": "metric:perf:a30ded44-df85-4146-9d3d-8c978bfaf8b1",
+      "predicate": "hasMetric"
+    },
+    {
+      "id": "e:perf:150d903d-43af-4d3d-a907-1ea5e55e0bbf->domain:performance:partOf",
+      "source": "perf:150d903d-43af-4d3d-a907-1ea5e55e0bbf",
+      "target": "domain:performance",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:perf:150d903d-43af-4d3d-a907-1ea5e55e0bbf->subProject:신규회원_이용상담:partOf",
+      "source": "perf:150d903d-43af-4d3d-a907-1ea5e55e0bbf",
+      "target": "subProject:신규회원_이용상담",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:perf:150d903d-43af-4d3d-a907-1ea5e55e0bbf->month:2월:occursIn",
+      "source": "perf:150d903d-43af-4d3d-a907-1ea5e55e0bbf",
+      "target": "month:2월",
+      "predicate": "occursIn"
+    },
+    {
+      "id": "e:perf:150d903d-43af-4d3d-a907-1ea5e55e0bbf->metric:perf:150d903d-43af-4d3d-a907-1ea5e55e0bbf:hasMetric",
+      "source": "perf:150d903d-43af-4d3d-a907-1ea5e55e0bbf",
+      "target": "metric:perf:150d903d-43af-4d3d-a907-1ea5e55e0bbf",
+      "predicate": "hasMetric"
+    },
+    {
+      "id": "e:perf:2f888616-85fd-4624-954e-6c465730e97b->domain:performance:partOf",
+      "source": "perf:2f888616-85fd-4624-954e-6c465730e97b",
+      "target": "domain:performance",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:perf:2f888616-85fd-4624-954e-6c465730e97b->subProject:신규회원_이용상담:partOf",
+      "source": "perf:2f888616-85fd-4624-954e-6c465730e97b",
+      "target": "subProject:신규회원_이용상담",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:perf:2f888616-85fd-4624-954e-6c465730e97b->month:3월:occursIn",
+      "source": "perf:2f888616-85fd-4624-954e-6c465730e97b",
+      "target": "month:3월",
+      "predicate": "occursIn"
+    },
+    {
+      "id": "e:perf:2f888616-85fd-4624-954e-6c465730e97b->metric:perf:2f888616-85fd-4624-954e-6c465730e97b:hasMetric",
+      "source": "perf:2f888616-85fd-4624-954e-6c465730e97b",
+      "target": "metric:perf:2f888616-85fd-4624-954e-6c465730e97b",
+      "predicate": "hasMetric"
+    },
+    {
+      "id": "e:perf:7bb5477c-e84f-4e85-8407-bdae9bf349c3->domain:performance:partOf",
+      "source": "perf:7bb5477c-e84f-4e85-8407-bdae9bf349c3",
+      "target": "domain:performance",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:perf:7bb5477c-e84f-4e85-8407-bdae9bf349c3->subProject:신규회원_이용상담:partOf",
+      "source": "perf:7bb5477c-e84f-4e85-8407-bdae9bf349c3",
+      "target": "subProject:신규회원_이용상담",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:perf:7bb5477c-e84f-4e85-8407-bdae9bf349c3->month:3월:occursIn",
+      "source": "perf:7bb5477c-e84f-4e85-8407-bdae9bf349c3",
+      "target": "month:3월",
+      "predicate": "occursIn"
+    },
+    {
+      "id": "e:perf:7bb5477c-e84f-4e85-8407-bdae9bf349c3->metric:perf:7bb5477c-e84f-4e85-8407-bdae9bf349c3:hasMetric",
+      "source": "perf:7bb5477c-e84f-4e85-8407-bdae9bf349c3",
+      "target": "metric:perf:7bb5477c-e84f-4e85-8407-bdae9bf349c3",
+      "predicate": "hasMetric"
+    },
+    {
+      "id": "e:perf:e652762e-7c95-4124-ba17-8c45f80779ba->domain:performance:partOf",
+      "source": "perf:e652762e-7c95-4124-ba17-8c45f80779ba",
+      "target": "domain:performance",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:perf:e652762e-7c95-4124-ba17-8c45f80779ba->subProject:신규회원_이용상담:partOf",
+      "source": "perf:e652762e-7c95-4124-ba17-8c45f80779ba",
+      "target": "subProject:신규회원_이용상담",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:perf:e652762e-7c95-4124-ba17-8c45f80779ba->month:4월:occursIn",
+      "source": "perf:e652762e-7c95-4124-ba17-8c45f80779ba",
+      "target": "month:4월",
+      "predicate": "occursIn"
+    },
+    {
+      "id": "e:perf:e652762e-7c95-4124-ba17-8c45f80779ba->metric:perf:e652762e-7c95-4124-ba17-8c45f80779ba:hasMetric",
+      "source": "perf:e652762e-7c95-4124-ba17-8c45f80779ba",
+      "target": "metric:perf:e652762e-7c95-4124-ba17-8c45f80779ba",
+      "predicate": "hasMetric"
+    },
+    {
+      "id": "e:perf:8a0cf110-0934-4a7f-9f36-5083fb36f29e->domain:performance:partOf",
+      "source": "perf:8a0cf110-0934-4a7f-9f36-5083fb36f29e",
+      "target": "domain:performance",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:perf:8a0cf110-0934-4a7f-9f36-5083fb36f29e->subProject:신규회원_이용상담:partOf",
+      "source": "perf:8a0cf110-0934-4a7f-9f36-5083fb36f29e",
+      "target": "subProject:신규회원_이용상담",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:perf:8a0cf110-0934-4a7f-9f36-5083fb36f29e->month:4월:occursIn",
+      "source": "perf:8a0cf110-0934-4a7f-9f36-5083fb36f29e",
+      "target": "month:4월",
+      "predicate": "occursIn"
+    },
+    {
+      "id": "e:perf:8a0cf110-0934-4a7f-9f36-5083fb36f29e->metric:perf:8a0cf110-0934-4a7f-9f36-5083fb36f29e:hasMetric",
+      "source": "perf:8a0cf110-0934-4a7f-9f36-5083fb36f29e",
+      "target": "metric:perf:8a0cf110-0934-4a7f-9f36-5083fb36f29e",
+      "predicate": "hasMetric"
+    },
+    {
+      "id": "e:perf:8913befb-99e5-45cd-bca5-e277e5cfe01c->domain:performance:partOf",
+      "source": "perf:8913befb-99e5-45cd-bca5-e277e5cfe01c",
+      "target": "domain:performance",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:perf:8913befb-99e5-45cd-bca5-e277e5cfe01c->subProject:신규회원_이용상담:partOf",
+      "source": "perf:8913befb-99e5-45cd-bca5-e277e5cfe01c",
+      "target": "subProject:신규회원_이용상담",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:perf:8913befb-99e5-45cd-bca5-e277e5cfe01c->month:5월:occursIn",
+      "source": "perf:8913befb-99e5-45cd-bca5-e277e5cfe01c",
+      "target": "month:5월",
+      "predicate": "occursIn"
+    },
+    {
+      "id": "e:perf:8913befb-99e5-45cd-bca5-e277e5cfe01c->metric:perf:8913befb-99e5-45cd-bca5-e277e5cfe01c:hasMetric",
+      "source": "perf:8913befb-99e5-45cd-bca5-e277e5cfe01c",
+      "target": "metric:perf:8913befb-99e5-45cd-bca5-e277e5cfe01c",
+      "predicate": "hasMetric"
+    },
+    {
+      "id": "e:perf:c176a917-2a87-478e-9b17-dc8d3a467c62->domain:performance:partOf",
+      "source": "perf:c176a917-2a87-478e-9b17-dc8d3a467c62",
+      "target": "domain:performance",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:perf:c176a917-2a87-478e-9b17-dc8d3a467c62->subProject:신규회원_이용상담:partOf",
+      "source": "perf:c176a917-2a87-478e-9b17-dc8d3a467c62",
+      "target": "subProject:신규회원_이용상담",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:perf:c176a917-2a87-478e-9b17-dc8d3a467c62->month:5월:occursIn",
+      "source": "perf:c176a917-2a87-478e-9b17-dc8d3a467c62",
+      "target": "month:5월",
+      "predicate": "occursIn"
+    },
+    {
+      "id": "e:perf:c176a917-2a87-478e-9b17-dc8d3a467c62->metric:perf:c176a917-2a87-478e-9b17-dc8d3a467c62:hasMetric",
+      "source": "perf:c176a917-2a87-478e-9b17-dc8d3a467c62",
+      "target": "metric:perf:c176a917-2a87-478e-9b17-dc8d3a467c62",
+      "predicate": "hasMetric"
+    },
+    {
+      "id": "e:subProject:사진공모전->domain:performance:partOf",
+      "source": "subProject:사진공모전",
+      "target": "domain:performance",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:domain:performance->subProject:사진공모전:hasSubProject",
+      "source": "domain:performance",
+      "target": "subProject:사진공모전",
+      "predicate": "hasSubProject"
+    },
+    {
+      "id": "e:detail:사진공모전:홍보->subProject:사진공모전:partOf",
+      "source": "detail:사진공모전:홍보",
+      "target": "subProject:사진공모전",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:subProject:사진공모전->detail:사진공모전:홍보:hasDetailCategory",
+      "source": "subProject:사진공모전",
+      "target": "detail:사진공모전:홍보",
+      "predicate": "hasDetailCategory"
+    },
+    {
+      "id": "e:perf:9c4673e6-eabe-4bbe-8b3e-165d70e5dc91->domain:performance:partOf",
+      "source": "perf:9c4673e6-eabe-4bbe-8b3e-165d70e5dc91",
+      "target": "domain:performance",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:perf:9c4673e6-eabe-4bbe-8b3e-165d70e5dc91->subProject:사진공모전:partOf",
+      "source": "perf:9c4673e6-eabe-4bbe-8b3e-165d70e5dc91",
+      "target": "subProject:사진공모전",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:perf:9c4673e6-eabe-4bbe-8b3e-165d70e5dc91->month:1월:occursIn",
+      "source": "perf:9c4673e6-eabe-4bbe-8b3e-165d70e5dc91",
+      "target": "month:1월",
+      "predicate": "occursIn"
+    },
+    {
+      "id": "e:perf:9c4673e6-eabe-4bbe-8b3e-165d70e5dc91->metric:perf:9c4673e6-eabe-4bbe-8b3e-165d70e5dc91:hasMetric",
+      "source": "perf:9c4673e6-eabe-4bbe-8b3e-165d70e5dc91",
+      "target": "metric:perf:9c4673e6-eabe-4bbe-8b3e-165d70e5dc91",
+      "predicate": "hasMetric"
+    },
+    {
+      "id": "e:perf:cc27a9ae-9deb-413b-a48c-275e81e4e9bc->domain:performance:partOf",
+      "source": "perf:cc27a9ae-9deb-413b-a48c-275e81e4e9bc",
+      "target": "domain:performance",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:perf:cc27a9ae-9deb-413b-a48c-275e81e4e9bc->subProject:사진공모전:partOf",
+      "source": "perf:cc27a9ae-9deb-413b-a48c-275e81e4e9bc",
+      "target": "subProject:사진공모전",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:perf:cc27a9ae-9deb-413b-a48c-275e81e4e9bc->month:2월:occursIn",
+      "source": "perf:cc27a9ae-9deb-413b-a48c-275e81e4e9bc",
+      "target": "month:2월",
+      "predicate": "occursIn"
+    },
+    {
+      "id": "e:perf:cc27a9ae-9deb-413b-a48c-275e81e4e9bc->metric:perf:cc27a9ae-9deb-413b-a48c-275e81e4e9bc:hasMetric",
+      "source": "perf:cc27a9ae-9deb-413b-a48c-275e81e4e9bc",
+      "target": "metric:perf:cc27a9ae-9deb-413b-a48c-275e81e4e9bc",
+      "predicate": "hasMetric"
+    },
+    {
+      "id": "e:perf:13496455-c6f6-4c0b-8287-b52982e5ce69->domain:performance:partOf",
+      "source": "perf:13496455-c6f6-4c0b-8287-b52982e5ce69",
+      "target": "domain:performance",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:perf:13496455-c6f6-4c0b-8287-b52982e5ce69->subProject:사진공모전:partOf",
+      "source": "perf:13496455-c6f6-4c0b-8287-b52982e5ce69",
+      "target": "subProject:사진공모전",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:perf:13496455-c6f6-4c0b-8287-b52982e5ce69->month:5월:occursIn",
+      "source": "perf:13496455-c6f6-4c0b-8287-b52982e5ce69",
+      "target": "month:5월",
+      "predicate": "occursIn"
+    },
+    {
+      "id": "e:perf:13496455-c6f6-4c0b-8287-b52982e5ce69->metric:perf:13496455-c6f6-4c0b-8287-b52982e5ce69:hasMetric",
+      "source": "perf:13496455-c6f6-4c0b-8287-b52982e5ce69",
+      "target": "metric:perf:13496455-c6f6-4c0b-8287-b52982e5ce69",
+      "predicate": "hasMetric"
+    },
+    {
+      "id": "e:subProject:나눔릴레이->domain:performance:partOf",
+      "source": "subProject:나눔릴레이",
+      "target": "domain:performance",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:domain:performance->subProject:나눔릴레이:hasSubProject",
+      "source": "domain:performance",
+      "target": "subProject:나눔릴레이",
+      "predicate": "hasSubProject"
+    },
+    {
+      "id": "e:detail:나눔릴레이:프로그램진행->subProject:나눔릴레이:partOf",
+      "source": "detail:나눔릴레이:프로그램진행",
+      "target": "subProject:나눔릴레이",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:subProject:나눔릴레이->detail:나눔릴레이:프로그램진행:hasDetailCategory",
+      "source": "subProject:나눔릴레이",
+      "target": "detail:나눔릴레이:프로그램진행",
+      "predicate": "hasDetailCategory"
+    },
+    {
+      "id": "e:perf:40f11edb-96ff-4ebd-a1d4-485bf3f8d25e->domain:performance:partOf",
+      "source": "perf:40f11edb-96ff-4ebd-a1d4-485bf3f8d25e",
+      "target": "domain:performance",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:perf:40f11edb-96ff-4ebd-a1d4-485bf3f8d25e->subProject:나눔릴레이:partOf",
+      "source": "perf:40f11edb-96ff-4ebd-a1d4-485bf3f8d25e",
+      "target": "subProject:나눔릴레이",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:perf:40f11edb-96ff-4ebd-a1d4-485bf3f8d25e->month:1월:occursIn",
+      "source": "perf:40f11edb-96ff-4ebd-a1d4-485bf3f8d25e",
+      "target": "month:1월",
+      "predicate": "occursIn"
+    },
+    {
+      "id": "e:perf:40f11edb-96ff-4ebd-a1d4-485bf3f8d25e->metric:perf:40f11edb-96ff-4ebd-a1d4-485bf3f8d25e:hasMetric",
+      "source": "perf:40f11edb-96ff-4ebd-a1d4-485bf3f8d25e",
+      "target": "metric:perf:40f11edb-96ff-4ebd-a1d4-485bf3f8d25e",
+      "predicate": "hasMetric"
+    },
+    {
+      "id": "e:perf:d10c5382-f541-4747-afc7-e64273dfa21c->domain:performance:partOf",
+      "source": "perf:d10c5382-f541-4747-afc7-e64273dfa21c",
+      "target": "domain:performance",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:perf:d10c5382-f541-4747-afc7-e64273dfa21c->subProject:나눔릴레이:partOf",
+      "source": "perf:d10c5382-f541-4747-afc7-e64273dfa21c",
+      "target": "subProject:나눔릴레이",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:perf:d10c5382-f541-4747-afc7-e64273dfa21c->month:2월:occursIn",
+      "source": "perf:d10c5382-f541-4747-afc7-e64273dfa21c",
+      "target": "month:2월",
+      "predicate": "occursIn"
+    },
+    {
+      "id": "e:perf:d10c5382-f541-4747-afc7-e64273dfa21c->metric:perf:d10c5382-f541-4747-afc7-e64273dfa21c:hasMetric",
+      "source": "perf:d10c5382-f541-4747-afc7-e64273dfa21c",
+      "target": "metric:perf:d10c5382-f541-4747-afc7-e64273dfa21c",
+      "predicate": "hasMetric"
+    },
+    {
+      "id": "e:perf:da344efc-7ea6-447f-aa05-8033575e5637->domain:performance:partOf",
+      "source": "perf:da344efc-7ea6-447f-aa05-8033575e5637",
+      "target": "domain:performance",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:perf:da344efc-7ea6-447f-aa05-8033575e5637->subProject:나눔릴레이:partOf",
+      "source": "perf:da344efc-7ea6-447f-aa05-8033575e5637",
+      "target": "subProject:나눔릴레이",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:perf:da344efc-7ea6-447f-aa05-8033575e5637->month:5월:occursIn",
+      "source": "perf:da344efc-7ea6-447f-aa05-8033575e5637",
+      "target": "month:5월",
+      "predicate": "occursIn"
+    },
+    {
+      "id": "e:perf:da344efc-7ea6-447f-aa05-8033575e5637->metric:perf:da344efc-7ea6-447f-aa05-8033575e5637:hasMetric",
+      "source": "perf:da344efc-7ea6-447f-aa05-8033575e5637",
+      "target": "metric:perf:da344efc-7ea6-447f-aa05-8033575e5637",
+      "predicate": "hasMetric"
+    },
+    {
+      "id": "e:detail:나눔릴레이:홍보->subProject:나눔릴레이:partOf",
+      "source": "detail:나눔릴레이:홍보",
+      "target": "subProject:나눔릴레이",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:subProject:나눔릴레이->detail:나눔릴레이:홍보:hasDetailCategory",
+      "source": "subProject:나눔릴레이",
+      "target": "detail:나눔릴레이:홍보",
+      "predicate": "hasDetailCategory"
+    },
+    {
+      "id": "e:perf:3d0447eb-e5da-44f4-ba8b-b13419eeb3d5->domain:performance:partOf",
+      "source": "perf:3d0447eb-e5da-44f4-ba8b-b13419eeb3d5",
+      "target": "domain:performance",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:perf:3d0447eb-e5da-44f4-ba8b-b13419eeb3d5->subProject:나눔릴레이:partOf",
+      "source": "perf:3d0447eb-e5da-44f4-ba8b-b13419eeb3d5",
+      "target": "subProject:나눔릴레이",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:perf:3d0447eb-e5da-44f4-ba8b-b13419eeb3d5->month:5월:occursIn",
+      "source": "perf:3d0447eb-e5da-44f4-ba8b-b13419eeb3d5",
+      "target": "month:5월",
+      "predicate": "occursIn"
+    },
+    {
+      "id": "e:perf:3d0447eb-e5da-44f4-ba8b-b13419eeb3d5->metric:perf:3d0447eb-e5da-44f4-ba8b-b13419eeb3d5:hasMetric",
+      "source": "perf:3d0447eb-e5da-44f4-ba8b-b13419eeb3d5",
+      "target": "metric:perf:3d0447eb-e5da-44f4-ba8b-b13419eeb3d5",
+      "predicate": "hasMetric"
+    },
+    {
+      "id": "e:subProject:지역사회_조직화->domain:performance:partOf",
+      "source": "subProject:지역사회_조직화",
+      "target": "domain:performance",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:domain:performance->subProject:지역사회_조직화:hasSubProject",
+      "source": "domain:performance",
+      "target": "subProject:지역사회_조직화",
+      "predicate": "hasSubProject"
+    },
+    {
+      "id": "e:detail:지역사회_조직화:프로그램진행->subProject:지역사회_조직화:partOf",
+      "source": "detail:지역사회_조직화:프로그램진행",
+      "target": "subProject:지역사회_조직화",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:subProject:지역사회_조직화->detail:지역사회_조직화:프로그램진행:hasDetailCategory",
+      "source": "subProject:지역사회_조직화",
+      "target": "detail:지역사회_조직화:프로그램진행",
+      "predicate": "hasDetailCategory"
+    },
+    {
+      "id": "e:perf:ac390549-5941-43b4-8b4a-82d82febbd0d->domain:performance:partOf",
+      "source": "perf:ac390549-5941-43b4-8b4a-82d82febbd0d",
+      "target": "domain:performance",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:perf:ac390549-5941-43b4-8b4a-82d82febbd0d->subProject:지역사회_조직화:partOf",
+      "source": "perf:ac390549-5941-43b4-8b4a-82d82febbd0d",
+      "target": "subProject:지역사회_조직화",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:perf:ac390549-5941-43b4-8b4a-82d82febbd0d->month:5월:occursIn",
+      "source": "perf:ac390549-5941-43b4-8b4a-82d82febbd0d",
+      "target": "month:5월",
+      "predicate": "occursIn"
+    },
+    {
+      "id": "e:perf:ac390549-5941-43b4-8b4a-82d82febbd0d->metric:perf:ac390549-5941-43b4-8b4a-82d82febbd0d:hasMetric",
+      "source": "perf:ac390549-5941-43b4-8b4a-82d82febbd0d",
+      "target": "metric:perf:ac390549-5941-43b4-8b4a-82d82febbd0d",
+      "predicate": "hasMetric"
+    },
+    {
+      "id": "e:subProject:나눔릴레이_홍보->domain:performance:partOf",
+      "source": "subProject:나눔릴레이_홍보",
+      "target": "domain:performance",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:domain:performance->subProject:나눔릴레이_홍보:hasSubProject",
+      "source": "domain:performance",
+      "target": "subProject:나눔릴레이_홍보",
+      "predicate": "hasSubProject"
+    },
+    {
+      "id": "e:detail:나눔릴레이_홍보:홍보->subProject:나눔릴레이_홍보:partOf",
+      "source": "detail:나눔릴레이_홍보:홍보",
+      "target": "subProject:나눔릴레이_홍보",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:subProject:나눔릴레이_홍보->detail:나눔릴레이_홍보:홍보:hasDetailCategory",
+      "source": "subProject:나눔릴레이_홍보",
+      "target": "detail:나눔릴레이_홍보:홍보",
+      "predicate": "hasDetailCategory"
+    },
+    {
+      "id": "e:perf:42473e1c-a5b6-4be5-8165-3511abc95510->domain:performance:partOf",
+      "source": "perf:42473e1c-a5b6-4be5-8165-3511abc95510",
+      "target": "domain:performance",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:perf:42473e1c-a5b6-4be5-8165-3511abc95510->subProject:나눔릴레이_홍보:partOf",
+      "source": "perf:42473e1c-a5b6-4be5-8165-3511abc95510",
+      "target": "subProject:나눔릴레이_홍보",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:perf:42473e1c-a5b6-4be5-8165-3511abc95510->month:5월:occursIn",
+      "source": "perf:42473e1c-a5b6-4be5-8165-3511abc95510",
+      "target": "month:5월",
+      "predicate": "occursIn"
+    },
+    {
+      "id": "e:perf:42473e1c-a5b6-4be5-8165-3511abc95510->metric:perf:42473e1c-a5b6-4be5-8165-3511abc95510:hasMetric",
+      "source": "perf:42473e1c-a5b6-4be5-8165-3511abc95510",
+      "target": "metric:perf:42473e1c-a5b6-4be5-8165-3511abc95510",
+      "predicate": "hasMetric"
+    },
+    {
+      "id": "e:subProject:발대식->domain:performance:partOf",
+      "source": "subProject:발대식",
+      "target": "domain:performance",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:domain:performance->subProject:발대식:hasSubProject",
+      "source": "domain:performance",
+      "target": "subProject:발대식",
+      "predicate": "hasSubProject"
+    },
+    {
+      "id": "e:detail:발대식:프로그램진행->subProject:발대식:partOf",
+      "source": "detail:발대식:프로그램진행",
+      "target": "subProject:발대식",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:subProject:발대식->detail:발대식:프로그램진행:hasDetailCategory",
+      "source": "subProject:발대식",
+      "target": "detail:발대식:프로그램진행",
+      "predicate": "hasDetailCategory"
+    },
+    {
+      "id": "e:perf:275cf8f0-9214-4858-ad9f-24f6520a5306->domain:performance:partOf",
+      "source": "perf:275cf8f0-9214-4858-ad9f-24f6520a5306",
+      "target": "domain:performance",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:perf:275cf8f0-9214-4858-ad9f-24f6520a5306->subProject:발대식:partOf",
+      "source": "perf:275cf8f0-9214-4858-ad9f-24f6520a5306",
+      "target": "subProject:발대식",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:perf:275cf8f0-9214-4858-ad9f-24f6520a5306->month:5월:occursIn",
+      "source": "perf:275cf8f0-9214-4858-ad9f-24f6520a5306",
+      "target": "month:5월",
+      "predicate": "occursIn"
+    },
+    {
+      "id": "e:perf:275cf8f0-9214-4858-ad9f-24f6520a5306->metric:perf:275cf8f0-9214-4858-ad9f-24f6520a5306:hasMetric",
+      "source": "perf:275cf8f0-9214-4858-ad9f-24f6520a5306",
+      "target": "metric:perf:275cf8f0-9214-4858-ad9f-24f6520a5306",
+      "predicate": "hasMetric"
+    },
+    {
+      "id": "e:subProject:모금_활동->domain:performance:partOf",
+      "source": "subProject:모금_활동",
+      "target": "domain:performance",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:domain:performance->subProject:모금_활동:hasSubProject",
+      "source": "domain:performance",
+      "target": "subProject:모금_활동",
+      "predicate": "hasSubProject"
+    },
+    {
+      "id": "e:detail:모금_활동:프로그램진행->subProject:모금_활동:partOf",
+      "source": "detail:모금_활동:프로그램진행",
+      "target": "subProject:모금_활동",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:subProject:모금_활동->detail:모금_활동:프로그램진행:hasDetailCategory",
+      "source": "subProject:모금_활동",
+      "target": "detail:모금_활동:프로그램진행",
+      "predicate": "hasDetailCategory"
+    },
+    {
+      "id": "e:perf:bff8eb05-7acb-46e0-8cca-b8e9354cd33c->domain:performance:partOf",
+      "source": "perf:bff8eb05-7acb-46e0-8cca-b8e9354cd33c",
+      "target": "domain:performance",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:perf:bff8eb05-7acb-46e0-8cca-b8e9354cd33c->subProject:모금_활동:partOf",
+      "source": "perf:bff8eb05-7acb-46e0-8cca-b8e9354cd33c",
+      "target": "subProject:모금_활동",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:perf:bff8eb05-7acb-46e0-8cca-b8e9354cd33c->month:5월:occursIn",
+      "source": "perf:bff8eb05-7acb-46e0-8cca-b8e9354cd33c",
+      "target": "month:5월",
+      "predicate": "occursIn"
+    },
+    {
+      "id": "e:perf:bff8eb05-7acb-46e0-8cca-b8e9354cd33c->metric:perf:bff8eb05-7acb-46e0-8cca-b8e9354cd33c:hasMetric",
+      "source": "perf:bff8eb05-7acb-46e0-8cca-b8e9354cd33c",
+      "target": "metric:perf:bff8eb05-7acb-46e0-8cca-b8e9354cd33c",
+      "predicate": "hasMetric"
+    },
+    {
+      "id": "e:subProject:모금결과_안내->domain:performance:partOf",
+      "source": "subProject:모금결과_안내",
+      "target": "domain:performance",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:domain:performance->subProject:모금결과_안내:hasSubProject",
+      "source": "domain:performance",
+      "target": "subProject:모금결과_안내",
+      "predicate": "hasSubProject"
+    },
+    {
+      "id": "e:detail:모금결과_안내:홍보->subProject:모금결과_안내:partOf",
+      "source": "detail:모금결과_안내:홍보",
+      "target": "subProject:모금결과_안내",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:subProject:모금결과_안내->detail:모금결과_안내:홍보:hasDetailCategory",
+      "source": "subProject:모금결과_안내",
+      "target": "detail:모금결과_안내:홍보",
+      "predicate": "hasDetailCategory"
+    },
+    {
+      "id": "e:perf:303a346a-8943-43b2-b093-99d56182b726->domain:performance:partOf",
+      "source": "perf:303a346a-8943-43b2-b093-99d56182b726",
+      "target": "domain:performance",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:perf:303a346a-8943-43b2-b093-99d56182b726->subProject:모금결과_안내:partOf",
+      "source": "perf:303a346a-8943-43b2-b093-99d56182b726",
+      "target": "subProject:모금결과_안내",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:perf:303a346a-8943-43b2-b093-99d56182b726->month:5월:occursIn",
+      "source": "perf:303a346a-8943-43b2-b093-99d56182b726",
+      "target": "month:5월",
+      "predicate": "occursIn"
+    },
+    {
+      "id": "e:perf:303a346a-8943-43b2-b093-99d56182b726->metric:perf:303a346a-8943-43b2-b093-99d56182b726:hasMetric",
+      "source": "perf:303a346a-8943-43b2-b093-99d56182b726",
+      "target": "metric:perf:303a346a-8943-43b2-b093-99d56182b726",
+      "predicate": "hasMetric"
+    },
+    {
+      "id": "e:indicator:인원_현황->domain:dashboard:partOf",
+      "source": "indicator:인원_현황",
+      "target": "domain:dashboard",
+      "predicate": "partOf",
+      "label": "인원 현황"
+    },
+    {
+      "id": "e:indicator:활성_프로젝트->domain:dashboard:partOf",
+      "source": "indicator:활성_프로젝트",
+      "target": "domain:dashboard",
+      "predicate": "partOf",
+      "label": "활성 프로젝트"
+    },
+    {
+      "id": "e:indicator:서비스_이용자->domain:dashboard:partOf",
+      "source": "indicator:서비스_이용자",
+      "target": "domain:dashboard",
+      "predicate": "partOf",
+      "label": "서비스 이용자"
+    },
+    {
+      "id": "e:progress:인원_달성률->domain:dashboard:hasProgress",
+      "source": "progress:인원_달성률",
+      "target": "domain:dashboard",
+      "predicate": "hasProgress"
+    },
+    {
+      "id": "e:progress:횟수_달성률->domain:dashboard:hasProgress",
+      "source": "progress:횟수_달성률",
+      "target": "domain:dashboard",
+      "predicate": "hasProgress"
+    },
+    {
+      "id": "e:progress:예산_집행률->domain:dashboard:hasProgress",
+      "source": "progress:예산_집행률",
+      "target": "domain:dashboard",
+      "predicate": "hasProgress"
+    },
+    {
+      "id": "e:project:proj1->domain:kanban:partOf",
+      "source": "project:proj1",
+      "target": "domain:kanban",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:column:cat1->project:proj1:partOf",
+      "source": "column:cat1",
+      "target": "project:proj1",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:project:proj1->column:cat1:hasColumn",
+      "source": "project:proj1",
+      "target": "column:cat1",
+      "predicate": "hasColumn"
+    },
+    {
+      "id": "e:task:task1->column:cat1:inColumn",
+      "source": "task:task1",
+      "target": "column:cat1",
+      "predicate": "inColumn"
+    },
+    {
+      "id": "e:column:cat1->task:task1:hasTask",
+      "source": "column:cat1",
+      "target": "task:task1",
+      "predicate": "hasTask"
+    },
+    {
+      "id": "e:task:task1->project:proj1:belongsToProject",
+      "source": "task:task1",
+      "target": "project:proj1",
+      "predicate": "belongsToProject"
+    },
+    {
+      "id": "e:column:cat2->project:proj1:partOf",
+      "source": "column:cat2",
+      "target": "project:proj1",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:project:proj1->column:cat2:hasColumn",
+      "source": "project:proj1",
+      "target": "column:cat2",
+      "predicate": "hasColumn"
+    },
+    {
+      "id": "e:task:task2->column:cat2:inColumn",
+      "source": "task:task2",
+      "target": "column:cat2",
+      "predicate": "inColumn"
+    },
+    {
+      "id": "e:column:cat2->task:task2:hasTask",
+      "source": "column:cat2",
+      "target": "task:task2",
+      "predicate": "hasTask"
+    },
+    {
+      "id": "e:task:task2->project:proj1:belongsToProject",
+      "source": "task:task2",
+      "target": "project:proj1",
+      "predicate": "belongsToProject"
+    },
+    {
+      "id": "e:column:cat3->project:proj1:partOf",
+      "source": "column:cat3",
+      "target": "project:proj1",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:project:proj1->column:cat3:hasColumn",
+      "source": "project:proj1",
+      "target": "column:cat3",
+      "predicate": "hasColumn"
+    },
+    {
+      "id": "e:task:task3->column:cat3:inColumn",
+      "source": "task:task3",
+      "target": "column:cat3",
+      "predicate": "inColumn"
+    },
+    {
+      "id": "e:column:cat3->task:task3:hasTask",
+      "source": "column:cat3",
+      "target": "task:task3",
+      "predicate": "hasTask"
+    },
+    {
+      "id": "e:task:task3->project:proj1:belongsToProject",
+      "source": "task:task3",
+      "target": "project:proj1",
+      "predicate": "belongsToProject"
+    },
+    {
+      "id": "e:column:cat4->project:proj1:partOf",
+      "source": "column:cat4",
+      "target": "project:proj1",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:project:proj1->column:cat4:hasColumn",
+      "source": "project:proj1",
+      "target": "column:cat4",
+      "predicate": "hasColumn"
+    },
+    {
+      "id": "e:task:task4->column:cat4:inColumn",
+      "source": "task:task4",
+      "target": "column:cat4",
+      "predicate": "inColumn"
+    },
+    {
+      "id": "e:column:cat4->task:task4:hasTask",
+      "source": "column:cat4",
+      "target": "task:task4",
+      "predicate": "hasTask"
+    },
+    {
+      "id": "e:task:task4->project:proj1:belongsToProject",
+      "source": "task:task4",
+      "target": "project:proj1",
+      "predicate": "belongsToProject"
+    },
+    {
+      "id": "e:project:proj2->domain:kanban:partOf",
+      "source": "project:proj2",
+      "target": "domain:kanban",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:column:cat5->project:proj2:partOf",
+      "source": "column:cat5",
+      "target": "project:proj2",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:project:proj2->column:cat5:hasColumn",
+      "source": "project:proj2",
+      "target": "column:cat5",
+      "predicate": "hasColumn"
+    },
+    {
+      "id": "e:task:task5->column:cat5:inColumn",
+      "source": "task:task5",
+      "target": "column:cat5",
+      "predicate": "inColumn"
+    },
+    {
+      "id": "e:column:cat5->task:task5:hasTask",
+      "source": "column:cat5",
+      "target": "task:task5",
+      "predicate": "hasTask"
+    },
+    {
+      "id": "e:task:task5->project:proj2:belongsToProject",
+      "source": "task:task5",
+      "target": "project:proj2",
+      "predicate": "belongsToProject"
+    },
+    {
+      "id": "e:column:cat6->project:proj2:partOf",
+      "source": "column:cat6",
+      "target": "project:proj2",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:project:proj2->column:cat6:hasColumn",
+      "source": "project:proj2",
+      "target": "column:cat6",
+      "predicate": "hasColumn"
+    },
+    {
+      "id": "e:task:task6->column:cat6:inColumn",
+      "source": "task:task6",
+      "target": "column:cat6",
+      "predicate": "inColumn"
+    },
+    {
+      "id": "e:column:cat6->task:task6:hasTask",
+      "source": "column:cat6",
+      "target": "task:task6",
+      "predicate": "hasTask"
+    },
+    {
+      "id": "e:task:task6->project:proj2:belongsToProject",
+      "source": "task:task6",
+      "target": "project:proj2",
+      "predicate": "belongsToProject"
+    },
+    {
+      "id": "e:column:cat7->project:proj2:partOf",
+      "source": "column:cat7",
+      "target": "project:proj2",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:project:proj2->column:cat7:hasColumn",
+      "source": "project:proj2",
+      "target": "column:cat7",
+      "predicate": "hasColumn"
+    },
+    {
+      "id": "e:column:cat8->project:proj2:partOf",
+      "source": "column:cat8",
+      "target": "project:proj2",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:project:proj2->column:cat8:hasColumn",
+      "source": "project:proj2",
+      "target": "column:cat8",
+      "predicate": "hasColumn"
+    },
+    {
+      "id": "e:project:proj3->domain:kanban:partOf",
+      "source": "project:proj3",
+      "target": "domain:kanban",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:column:cat9->project:proj3:partOf",
+      "source": "column:cat9",
+      "target": "project:proj3",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:project:proj3->column:cat9:hasColumn",
+      "source": "project:proj3",
+      "target": "column:cat9",
+      "predicate": "hasColumn"
+    },
+    {
+      "id": "e:task:task7->column:cat9:inColumn",
+      "source": "task:task7",
+      "target": "column:cat9",
+      "predicate": "inColumn"
+    },
+    {
+      "id": "e:column:cat9->task:task7:hasTask",
+      "source": "column:cat9",
+      "target": "task:task7",
+      "predicate": "hasTask"
+    },
+    {
+      "id": "e:task:task7->project:proj3:belongsToProject",
+      "source": "task:task7",
+      "target": "project:proj3",
+      "predicate": "belongsToProject"
+    },
+    {
+      "id": "e:column:cat10->project:proj3:partOf",
+      "source": "column:cat10",
+      "target": "project:proj3",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:project:proj3->column:cat10:hasColumn",
+      "source": "project:proj3",
+      "target": "column:cat10",
+      "predicate": "hasColumn"
+    },
+    {
+      "id": "e:task:task8->column:cat10:inColumn",
+      "source": "task:task8",
+      "target": "column:cat10",
+      "predicate": "inColumn"
+    },
+    {
+      "id": "e:column:cat10->task:task8:hasTask",
+      "source": "column:cat10",
+      "target": "task:task8",
+      "predicate": "hasTask"
+    },
+    {
+      "id": "e:task:task8->project:proj3:belongsToProject",
+      "source": "task:task8",
+      "target": "project:proj3",
+      "predicate": "belongsToProject"
+    },
+    {
+      "id": "e:column:cat11->project:proj3:partOf",
+      "source": "column:cat11",
+      "target": "project:proj3",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:project:proj3->column:cat11:hasColumn",
+      "source": "project:proj3",
+      "target": "column:cat11",
+      "predicate": "hasColumn"
+    },
+    {
+      "id": "e:column:cat12->project:proj3:partOf",
+      "source": "column:cat12",
+      "target": "project:proj3",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:project:proj3->column:cat12:hasColumn",
+      "source": "project:proj3",
+      "target": "column:cat12",
+      "predicate": "hasColumn"
+    },
+    {
+      "id": "e:dept:management->domain:organization:partOf",
+      "source": "dept:management",
+      "target": "domain:organization",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:emp:emp-management-1->dept:management:memberOf",
+      "source": "emp:emp-management-1",
+      "target": "dept:management",
+      "predicate": "memberOf"
+    },
+    {
+      "id": "e:dept:management->emp:emp-management-1:relatedTo",
+      "source": "dept:management",
+      "target": "emp:emp-management-1",
+      "predicate": "relatedTo"
+    },
+    {
+      "id": "e:emp:emp-management-2->dept:management:memberOf",
+      "source": "emp:emp-management-2",
+      "target": "dept:management",
+      "predicate": "memberOf"
+    },
+    {
+      "id": "e:dept:management->emp:emp-management-2:relatedTo",
+      "source": "dept:management",
+      "target": "emp:emp-management-2",
+      "predicate": "relatedTo"
+    },
+    {
+      "id": "e:emp:emp-management-3->dept:management:memberOf",
+      "source": "emp:emp-management-3",
+      "target": "dept:management",
+      "predicate": "memberOf"
+    },
+    {
+      "id": "e:dept:management->emp:emp-management-3:relatedTo",
+      "source": "dept:management",
+      "target": "emp:emp-management-3",
+      "predicate": "relatedTo"
+    },
+    {
+      "id": "e:dept:support->domain:organization:partOf",
+      "source": "dept:support",
+      "target": "domain:organization",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:emp:emp-support-1->dept:support:memberOf",
+      "source": "emp:emp-support-1",
+      "target": "dept:support",
+      "predicate": "memberOf"
+    },
+    {
+      "id": "e:dept:support->emp:emp-support-1:relatedTo",
+      "source": "dept:support",
+      "target": "emp:emp-support-1",
+      "predicate": "relatedTo"
+    },
+    {
+      "id": "e:emp:emp-support-2->dept:support:memberOf",
+      "source": "emp:emp-support-2",
+      "target": "dept:support",
+      "predicate": "memberOf"
+    },
+    {
+      "id": "e:dept:support->emp:emp-support-2:relatedTo",
+      "source": "dept:support",
+      "target": "emp:emp-support-2",
+      "predicate": "relatedTo"
+    },
+    {
+      "id": "e:emp:emp-support-3->dept:support:memberOf",
+      "source": "emp:emp-support-3",
+      "target": "dept:support",
+      "predicate": "memberOf"
+    },
+    {
+      "id": "e:dept:support->emp:emp-support-3:relatedTo",
+      "source": "dept:support",
+      "target": "emp:emp-support-3",
+      "predicate": "relatedTo"
+    },
+    {
+      "id": "e:emp:emp-support-4->dept:support:memberOf",
+      "source": "emp:emp-support-4",
+      "target": "dept:support",
+      "predicate": "memberOf"
+    },
+    {
+      "id": "e:dept:support->emp:emp-support-4:relatedTo",
+      "source": "dept:support",
+      "target": "emp:emp-support-4",
+      "predicate": "relatedTo"
+    },
+    {
+      "id": "e:emp:emp-support-5->dept:support:memberOf",
+      "source": "emp:emp-support-5",
+      "target": "dept:support",
+      "predicate": "memberOf"
+    },
+    {
+      "id": "e:dept:support->emp:emp-support-5:relatedTo",
+      "source": "dept:support",
+      "target": "emp:emp-support-5",
+      "predicate": "relatedTo"
+    },
+    {
+      "id": "e:emp:emp-support-6->dept:support:memberOf",
+      "source": "emp:emp-support-6",
+      "target": "dept:support",
+      "predicate": "memberOf"
+    },
+    {
+      "id": "e:dept:support->emp:emp-support-6:relatedTo",
+      "source": "dept:support",
+      "target": "emp:emp-support-6",
+      "predicate": "relatedTo"
+    },
+    {
+      "id": "e:dept:welfare1->domain:organization:partOf",
+      "source": "dept:welfare1",
+      "target": "domain:organization",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:emp:emp-welfare1-1->dept:welfare1:memberOf",
+      "source": "emp:emp-welfare1-1",
+      "target": "dept:welfare1",
+      "predicate": "memberOf"
+    },
+    {
+      "id": "e:dept:welfare1->emp:emp-welfare1-1:relatedTo",
+      "source": "dept:welfare1",
+      "target": "emp:emp-welfare1-1",
+      "predicate": "relatedTo"
+    },
+    {
+      "id": "e:emp:emp-welfare1-2->dept:welfare1:memberOf",
+      "source": "emp:emp-welfare1-2",
+      "target": "dept:welfare1",
+      "predicate": "memberOf"
+    },
+    {
+      "id": "e:dept:welfare1->emp:emp-welfare1-2:relatedTo",
+      "source": "dept:welfare1",
+      "target": "emp:emp-welfare1-2",
+      "predicate": "relatedTo"
+    },
+    {
+      "id": "e:emp:emp-welfare1-3->dept:welfare1:memberOf",
+      "source": "emp:emp-welfare1-3",
+      "target": "dept:welfare1",
+      "predicate": "memberOf"
+    },
+    {
+      "id": "e:dept:welfare1->emp:emp-welfare1-3:relatedTo",
+      "source": "dept:welfare1",
+      "target": "emp:emp-welfare1-3",
+      "predicate": "relatedTo"
+    },
+    {
+      "id": "e:emp:emp-welfare1-4->dept:welfare1:memberOf",
+      "source": "emp:emp-welfare1-4",
+      "target": "dept:welfare1",
+      "predicate": "memberOf"
+    },
+    {
+      "id": "e:dept:welfare1->emp:emp-welfare1-4:relatedTo",
+      "source": "dept:welfare1",
+      "target": "emp:emp-welfare1-4",
+      "predicate": "relatedTo"
+    },
+    {
+      "id": "e:emp:emp-welfare1-5->dept:welfare1:memberOf",
+      "source": "emp:emp-welfare1-5",
+      "target": "dept:welfare1",
+      "predicate": "memberOf"
+    },
+    {
+      "id": "e:dept:welfare1->emp:emp-welfare1-5:relatedTo",
+      "source": "dept:welfare1",
+      "target": "emp:emp-welfare1-5",
+      "predicate": "relatedTo"
+    },
+    {
+      "id": "e:dept:welfare2->domain:organization:partOf",
+      "source": "dept:welfare2",
+      "target": "domain:organization",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:emp:emp-welfare2-1->dept:welfare2:memberOf",
+      "source": "emp:emp-welfare2-1",
+      "target": "dept:welfare2",
+      "predicate": "memberOf"
+    },
+    {
+      "id": "e:dept:welfare2->emp:emp-welfare2-1:relatedTo",
+      "source": "dept:welfare2",
+      "target": "emp:emp-welfare2-1",
+      "predicate": "relatedTo"
+    },
+    {
+      "id": "e:emp:emp-welfare2-2->dept:welfare2:memberOf",
+      "source": "emp:emp-welfare2-2",
+      "target": "dept:welfare2",
+      "predicate": "memberOf"
+    },
+    {
+      "id": "e:dept:welfare2->emp:emp-welfare2-2:relatedTo",
+      "source": "dept:welfare2",
+      "target": "emp:emp-welfare2-2",
+      "predicate": "relatedTo"
+    },
+    {
+      "id": "e:emp:emp-welfare2-3->dept:welfare2:memberOf",
+      "source": "emp:emp-welfare2-3",
+      "target": "dept:welfare2",
+      "predicate": "memberOf"
+    },
+    {
+      "id": "e:dept:welfare2->emp:emp-welfare2-3:relatedTo",
+      "source": "dept:welfare2",
+      "target": "emp:emp-welfare2-3",
+      "predicate": "relatedTo"
+    },
+    {
+      "id": "e:emp:emp-welfare2-4->dept:welfare2:memberOf",
+      "source": "emp:emp-welfare2-4",
+      "target": "dept:welfare2",
+      "predicate": "memberOf"
+    },
+    {
+      "id": "e:dept:welfare2->emp:emp-welfare2-4:relatedTo",
+      "source": "dept:welfare2",
+      "target": "emp:emp-welfare2-4",
+      "predicate": "relatedTo"
+    },
+    {
+      "id": "e:emp:emp-welfare2-5->dept:welfare2:memberOf",
+      "source": "emp:emp-welfare2-5",
+      "target": "dept:welfare2",
+      "predicate": "memberOf"
+    },
+    {
+      "id": "e:dept:welfare2->emp:emp-welfare2-5:relatedTo",
+      "source": "dept:welfare2",
+      "target": "emp:emp-welfare2-5",
+      "predicate": "relatedTo"
+    },
+    {
+      "id": "e:emp:emp-welfare2-6->dept:welfare2:memberOf",
+      "source": "emp:emp-welfare2-6",
+      "target": "dept:welfare2",
+      "predicate": "memberOf"
+    },
+    {
+      "id": "e:dept:welfare2->emp:emp-welfare2-6:relatedTo",
+      "source": "dept:welfare2",
+      "target": "emp:emp-welfare2-6",
+      "predicate": "relatedTo"
+    },
+    {
+      "id": "e:dept:welfare3->domain:organization:partOf",
+      "source": "dept:welfare3",
+      "target": "domain:organization",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:emp:emp-welfare3-1->dept:welfare3:memberOf",
+      "source": "emp:emp-welfare3-1",
+      "target": "dept:welfare3",
+      "predicate": "memberOf"
+    },
+    {
+      "id": "e:dept:welfare3->emp:emp-welfare3-1:relatedTo",
+      "source": "dept:welfare3",
+      "target": "emp:emp-welfare3-1",
+      "predicate": "relatedTo"
+    },
+    {
+      "id": "e:emp:emp-welfare3-2->dept:welfare3:memberOf",
+      "source": "emp:emp-welfare3-2",
+      "target": "dept:welfare3",
+      "predicate": "memberOf"
+    },
+    {
+      "id": "e:dept:welfare3->emp:emp-welfare3-2:relatedTo",
+      "source": "dept:welfare3",
+      "target": "emp:emp-welfare3-2",
+      "predicate": "relatedTo"
+    },
+    {
+      "id": "e:emp:emp-welfare3-3->dept:welfare3:memberOf",
+      "source": "emp:emp-welfare3-3",
+      "target": "dept:welfare3",
+      "predicate": "memberOf"
+    },
+    {
+      "id": "e:dept:welfare3->emp:emp-welfare3-3:relatedTo",
+      "source": "dept:welfare3",
+      "target": "emp:emp-welfare3-3",
+      "predicate": "relatedTo"
+    },
+    {
+      "id": "e:emp:emp-welfare3-4->dept:welfare3:memberOf",
+      "source": "emp:emp-welfare3-4",
+      "target": "dept:welfare3",
+      "predicate": "memberOf"
+    },
+    {
+      "id": "e:dept:welfare3->emp:emp-welfare3-4:relatedTo",
+      "source": "dept:welfare3",
+      "target": "emp:emp-welfare3-4",
+      "predicate": "relatedTo"
+    },
+    {
+      "id": "e:emp:emp-welfare3-5->dept:welfare3:memberOf",
+      "source": "emp:emp-welfare3-5",
+      "target": "dept:welfare3",
+      "predicate": "memberOf"
+    },
+    {
+      "id": "e:dept:welfare3->emp:emp-welfare3-5:relatedTo",
+      "source": "dept:welfare3",
+      "target": "emp:emp-welfare3-5",
+      "predicate": "relatedTo"
+    },
+    {
+      "id": "e:emp:emp-welfare3-6->dept:welfare3:memberOf",
+      "source": "emp:emp-welfare3-6",
+      "target": "dept:welfare3",
+      "predicate": "memberOf"
+    },
+    {
+      "id": "e:dept:welfare3->emp:emp-welfare3-6:relatedTo",
+      "source": "dept:welfare3",
+      "target": "emp:emp-welfare3-6",
+      "predicate": "relatedTo"
+    },
+    {
+      "id": "e:emp:emp-welfare3-7->dept:welfare3:memberOf",
+      "source": "emp:emp-welfare3-7",
+      "target": "dept:welfare3",
+      "predicate": "memberOf"
+    },
+    {
+      "id": "e:dept:welfare3->emp:emp-welfare3-7:relatedTo",
+      "source": "dept:welfare3",
+      "target": "emp:emp-welfare3-7",
+      "predicate": "relatedTo"
+    },
+    {
+      "id": "e:emp:emp-welfare3-8->dept:welfare3:memberOf",
+      "source": "emp:emp-welfare3-8",
+      "target": "dept:welfare3",
+      "predicate": "memberOf"
+    },
+    {
+      "id": "e:dept:welfare3->emp:emp-welfare3-8:relatedTo",
+      "source": "dept:welfare3",
+      "target": "emp:emp-welfare3-8",
+      "predicate": "relatedTo"
+    },
+    {
+      "id": "e:dept:resource->domain:organization:partOf",
+      "source": "dept:resource",
+      "target": "domain:organization",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:emp:emp-resource-1->dept:resource:memberOf",
+      "source": "emp:emp-resource-1",
+      "target": "dept:resource",
+      "predicate": "memberOf"
+    },
+    {
+      "id": "e:dept:resource->emp:emp-resource-1:relatedTo",
+      "source": "dept:resource",
+      "target": "emp:emp-resource-1",
+      "predicate": "relatedTo"
+    },
+    {
+      "id": "e:emp:emp-resource-2->dept:resource:memberOf",
+      "source": "emp:emp-resource-2",
+      "target": "dept:resource",
+      "predicate": "memberOf"
+    },
+    {
+      "id": "e:dept:resource->emp:emp-resource-2:relatedTo",
+      "source": "dept:resource",
+      "target": "emp:emp-resource-2",
+      "predicate": "relatedTo"
+    },
+    {
+      "id": "e:ebook:1->domain:ebooks:partOf",
+      "source": "ebook:1",
+      "target": "domain:ebooks",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:survey:1->domain:survey:partOf",
+      "source": "survey:1",
+      "target": "domain:survey",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:survey:2->domain:survey:partOf",
+      "source": "survey:2",
+      "target": "domain:survey",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:survey:3->domain:survey:partOf",
+      "source": "survey:3",
+      "target": "domain:survey",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:survey:4->domain:survey:partOf",
+      "source": "survey:4",
+      "target": "domain:survey",
+      "predicate": "partOf"
+    },
+    {
+      "id": "e:survey:5->domain:survey:partOf",
+      "source": "survey:5",
+      "target": "domain:survey",
+      "predicate": "partOf"
+    }
+  ],
+  "classHierarchy": {
+    "Platform": null,
+    "Domain": "Platform",
+    "SubProject": "Domain",
+    "DetailCategory": "SubProject",
+    "TimePeriod": null,
+    "PerformanceRecord": "Domain",
+    "MetricBundle": null,
+    "KanbanProject": "Domain",
+    "KanbanColumn": "KanbanProject",
+    "Task": "KanbanColumn",
+    "Department": "Domain",
+    "Employee": "Department",
+    "Ebook": "Domain",
+    "Survey": "Domain",
+    "DashboardIndicator": "Domain",
+    "ProgressIndicator": "Domain"
+  }
+}

@@ -30,6 +30,7 @@ import type {
 } from "@/services/kanban.version-history.types"
 import { VERSION_HISTORY_ACTION_LABELS } from "@/services/kanban.version-history.types"
 
+import { getCurrentYearString } from "@/lib/current-year"
 import { VersionHistoryItem } from "./version-history-item"
 
 const ACTION_FILTER_OPTIONS: Array<{
@@ -50,7 +51,7 @@ interface VersionHistorySheetProps {
 }
 
 export function VersionHistorySheet({
-  year = "2026",
+  year = getCurrentYearString(),
   isAdmin = true,
 }: VersionHistorySheetProps) {
   const { toast } = useToast()
@@ -122,6 +123,17 @@ export function VersionHistorySheet({
       toast({
         title: result.message,
       })
+
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent("kanban-version-restored", {
+            detail: {
+              year: result.year ?? year,
+              projectId: result.projectId,
+            },
+          }),
+        )
+      }
 
       await loadHistories()
     } catch (error) {

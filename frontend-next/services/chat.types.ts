@@ -56,6 +56,9 @@ export interface AssistantRagCitation {
   title: string
   snippet: string
   score?: number
+  taskId?: string
+  docKind?: "plan" | "evaluation" | "file"
+  href?: string
 }
 
 export interface AssistantQuestionResponse {

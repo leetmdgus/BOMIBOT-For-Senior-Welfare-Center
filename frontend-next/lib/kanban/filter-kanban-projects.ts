@@ -25,20 +25,19 @@ export function filterKanbanProjects(
   const results: KanbanProject[] = []
 
   for (const project of projects) {
-    if (matchesProjectName(project, query)) {
-      results.push(project)
-      continue
-    }
+    const nameMatched = matchesProjectName(project, query)
 
-    const categories = project.categories
+    const filteredCategories = project.categories
       .map((category) => ({
         ...category,
-        tasks: category.tasks.filter((task) => matchesTaskAssignee(task, query)),
+        tasks: category.tasks.filter(
+          (task) => nameMatched || matchesTaskAssignee(task, query),
+        ),
       }))
       .filter((category) => category.tasks.length > 0)
 
-    if (categories.length > 0) {
-      results.push({ ...project, categories })
+    if (filteredCategories.length > 0) {
+      results.push({ ...project, categories: filteredCategories })
     }
   }
 

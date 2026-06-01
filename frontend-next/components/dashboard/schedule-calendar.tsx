@@ -1,8 +1,25 @@
+"use client"
+
+import { useCallback, useEffect, useState } from "react"
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, RefreshCw } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import {
+  getGoogleCalendarViewUrl,
+  isGoogleCalendarApiAvailable,
+} from "@/lib/auth/google"
 import { cn } from "@/lib/utils"
+import {
+  fetchGoogleCalendarEvents,
+  getGoogleCalendarConnectUrl,
+  getGoogleCalendarStatus,
+} from "@/services/google-calendar.service"
+import {
+  getCalendarMonthMeta,
+  getCurrentMonthNumber,
+  getCurrentYearNumber,
+} from "@/lib/current-year"
 import { CalendarEvent, CalendarTab } from "@/services/dashboard.types"
 
 interface ScheduleCalendarProps {
@@ -12,9 +29,13 @@ interface ScheduleCalendarProps {
 }
 
 const days = ["일", "월", "화", "수", "목", "금", "토"]
-const calendarDays = Array.from({ length: 31 }, (_, i) => i + 1)
-const MAY_2026_LEADING_BLANKS = 5
-const TODAY_DAY = 24
+const VIEW_YEAR = getCurrentYearNumber()
+const VIEW_MONTH = getCurrentMonthNumber()
+const monthMeta = getCalendarMonthMeta(VIEW_YEAR, VIEW_MONTH)
+const calendarDays = Array.from(
+  { length: monthMeta.daysInMonth },
+  (_, index) => index + 1,
+)
 const MAX_VISIBLE_EVENTS = 2
 
 export function ScheduleCalendar({
@@ -22,10 +43,72 @@ export function ScheduleCalendar({
   onCalendarTabChange,
   events,
 }: ScheduleCalendarProps) {
+  const [googleConnected, setGoogleConnected] = useState(false)
+  const [googleEvents, setGoogleEvents] = useState<CalendarEvent[]>([])
+  const [isSyncing, setIsSyncing] = useState(false)
+  const [syncError, setSyncError] = useState<string | null>(null)
+
+  const loadGoogleStatus = useCallback(async () => {
+    if (!isGoogleCalendarApiAvailable()) return
+    try {
+      const status = await getGoogleCalendarStatus()
+      setGoogleConnected(status.connected)
+    } catch {
+      setGoogleConnected(false)
+    }
+  }, [])
+
+  const syncGoogleEvents = useCallback(async () => {
+    if (!isGoogleCalendarApiAvailable()) return
+    setIsSyncing(true)
+    setSyncError(null)
+    try {
+      const { events: fetched, connected } = await fetchGoogleCalendarEvents(
+        VIEW_YEAR,
+        VIEW_MONTH,
+      )
+      setGoogleConnected(connected)
+      setGoogleEvents(fetched)
+    } catch (error) {
+      setSyncError(
+        error instanceof Error ? error.message : "Google Calendar 동기화에 실패했습니다.",
+      )
+    } finally {
+      setIsSyncing(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    void loadGoogleStatus()
+  }, [loadGoogleStatus])
+
+  useEffect(() => {
+    if (googleConnected) {
+      void syncGoogleEvents()
+    }
+  }, [googleConnected, syncGoogleEvents])
+
+  async function handleGoogleConnect() {
+    if (!isGoogleCalendarApiAvailable()) {
+      setSyncError("FastAPI 모드(NEXT_PUBLIC_API_BASE_URL)에서만 Google 연동을 사용할 수 있습니다.")
+      return
+    }
+    try {
+      const url = await getGoogleCalendarConnectUrl()
+      window.location.href = url
+    } catch (error) {
+      setSyncError(
+        error instanceof Error ? error.message : "Google 연동 URL을 가져오지 못했습니다.",
+      )
+    }
+  }
+
+  const mergedEvents = [...events, ...googleEvents]
+
   const filteredEvents =
     calendarTab === "all"
-      ? events
-      : events.filter((event) => event.category === calendarTab)
+      ? mergedEvents
+      : mergedEvents.filter((event) => event.category === calendarTab)
 
   const eventsByDay = groupEventsByDay(filteredEvents)
 
@@ -36,11 +119,11 @@ export function ScheduleCalendar({
           <SectionTitle
             icon={CalendarIcon}
             title="복지관 일정"
-            description="INSTITUTION SCHEDULE · MAY 2026"
+            description={`INSTITUTION SCHEDULE · ${monthMeta.monthLabel} ${VIEW_YEAR}`}
           />
 
           <div className="flex flex-wrap items-center gap-2">
-            <CalendarLegend />
+            <CalendarLegend googleConnected={googleConnected} />
             <CalendarTabs
               calendarTab={calendarTab}
               onCalendarTabChange={onCalendarTabChange}
@@ -54,33 +137,62 @@ export function ScheduleCalendar({
               <ChevronLeft className="size-4" />
             </Button>
             <span className="min-w-[88px] text-center text-sm font-medium">
-              2026년 5월
+              {VIEW_YEAR}년 {VIEW_MONTH}월
             </span>
             <Button variant="ghost" size="icon" className="size-8" aria-label="다음 달">
               <ChevronRight className="size-4" />
             </Button>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs">
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              variant={googleConnected ? "default" : "outline"}
+              size="sm"
+              className="h-8 gap-1.5 text-xs"
+              onClick={googleConnected ? () => void syncGoogleEvents() : handleGoogleConnect}
+              disabled={isSyncing}
+            >
               <CalendarIcon className="size-3.5" />
-              Google 캘린더
+              {googleConnected ? "Google 연동됨" : "Google 캘린더 연동"}
             </Button>
-            <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs">
-              <RefreshCw className="size-3.5" />
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 gap-1.5 text-xs"
+              onClick={() => void syncGoogleEvents()}
+              disabled={!googleConnected || isSyncing}
+            >
+              <RefreshCw className={cn("size-3.5", isSyncing && "animate-spin")} />
               새로고침
             </Button>
           </div>
         </div>
 
-        <CalendarGrid eventsByDay={eventsByDay} />
+        {syncError && (
+          <p className="mb-3 rounded-md bg-destructive/10 px-3 py-2 text-xs text-destructive">
+            {syncError}
+          </p>
+        )}
+
+        <CalendarGrid
+          eventsByDay={eventsByDay}
+          leadingBlanks={monthMeta.leadingBlanks}
+          todayDay={monthMeta.todayDay}
+        />
 
         <div className="mt-4 flex justify-end">
           <Button
             variant="link"
             className="h-auto p-0 text-xs text-muted-foreground"
+            asChild
           >
-            Google 캘린더에서 전체 보기 →
+            <a
+              href={getGoogleCalendarViewUrl()}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Google 캘린더에서 전체 보기 →
+            </a>
           </Button>
         </div>
       </CardContent>
@@ -123,9 +235,9 @@ function SectionTitle({
   )
 }
 
-function CalendarLegend() {
+function CalendarLegend({ googleConnected }: { googleConnected: boolean }) {
   return (
-    <div className="flex items-center gap-3 text-xs text-muted-foreground">
+    <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
       <span className="flex items-center gap-1.5">
         <span className="size-2 rounded-full bg-rose-500" />
         복지관
@@ -134,6 +246,12 @@ function CalendarLegend() {
         <span className="size-2 rounded-full bg-emerald-500" />
         복지3팀
       </span>
+      {googleConnected && (
+        <span className="flex items-center gap-1.5">
+          <span className="size-2 rounded-full bg-sky-500" />
+          Google
+        </span>
+      )}
     </div>
   )
 }
@@ -174,8 +292,12 @@ function CalendarTabs({
 
 function CalendarGrid({
   eventsByDay,
+  leadingBlanks,
+  todayDay,
 }: {
   eventsByDay: Map<number, CalendarEvent[]>
+  leadingBlanks: number
+  todayDay: number
 }) {
   return (
     <div className="grid grid-cols-7 gap-px overflow-hidden rounded-lg border border-border bg-border">
@@ -183,13 +305,13 @@ function CalendarGrid({
         <CalendarWeekDay key={day} day={day} index={index} />
       ))}
 
-      {Array.from({ length: MAY_2026_LEADING_BLANKS }).map((_, index) => (
+      {Array.from({ length: leadingBlanks }).map((_, index) => (
         <div key={`empty-${index}`} className="bg-card p-2" />
       ))}
 
       {calendarDays.map((day) => {
         const dayEvents = eventsByDay.get(day) ?? []
-        const dayOfWeek = (day + 4) % 7
+        const dayOfWeek = new Date(VIEW_YEAR, VIEW_MONTH - 1, day).getDay()
 
         return (
           <CalendarDay
@@ -197,7 +319,7 @@ function CalendarGrid({
             day={day}
             dayOfWeek={dayOfWeek}
             events={dayEvents}
-            isToday={day === TODAY_DAY}
+            isToday={todayDay > 0 && day === todayDay}
           />
         )
       })}
@@ -264,6 +386,7 @@ function CalendarDay({
               "truncate rounded px-1.5 py-0.5 text-[10px] leading-tight text-white",
               event.color,
             )}
+            title={event.source === "google" ? `Google: ${event.title}` : event.title}
           >
             {event.title}
           </div>

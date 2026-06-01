@@ -1,6 +1,7 @@
 "use client"
 
 import { Fragment, useEffect, useState } from "react"
+import { Loader2 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { getBusinessPlanReport } from "@/services/kanban.documents.service"
@@ -11,19 +12,59 @@ import { useDocuments } from "./documents-provider"
 export function BusinessPlanContent() {
   const { year } = useDocuments()
   const [report, setReport] = useState<BusinessPlanReport | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [loadError, setLoadError] = useState<string | null>(null)
 
   useEffect(() => {
-    getBusinessPlanReport()
-      .then(setReport)
+    let cancelled = false
+    setIsLoading(true)
+    setLoadError(null)
+
+    getBusinessPlanReport({ year })
+      .then((data) => {
+        if (!cancelled) setReport(data)
+      })
       .catch((error) => {
         console.error("사업계획서 데이터 로드 실패:", error)
+        if (!cancelled) {
+          setReport(null)
+          setLoadError("사업계획서 데이터를 불러오지 못했습니다.")
+        }
       })
-  }, [])
+      .finally(() => {
+        if (!cancelled) setIsLoading(false)
+      })
 
-  if (!report) {
+    return () => {
+      cancelled = true
+    }
+  }, [year])
+
+  if (isLoading) {
     return (
-      <div className="rounded-lg border border-slate-300 bg-white p-12 text-center text-muted-foreground">
-        사업계획서를 불러오는 중입니다.
+      <div className="flex flex-col items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white py-24 text-muted-foreground">
+        <Loader2 className="size-8 animate-spin" />
+        <p className="text-sm">사업계획서 데이터를 불러오는 중입니다.</p>
+      </div>
+    )
+  }
+
+  if (loadError) {
+    return (
+      <div className="rounded-lg border border-slate-300 bg-white p-12 text-center text-sm text-muted-foreground">
+        {loadError}
+      </div>
+    )
+  }
+
+  if (!report || report.projects.length === 0) {
+    return (
+      <div className="rounded-lg border border-slate-300 bg-white p-12 text-center">
+        <p className="text-sm text-muted-foreground">
+          선택한 연도에 표시할 사업계획 데이터가 없습니다. 칸반 업무의
+          계획/실적 입력관리에서 연간 계획을 입력해 주세요.
+        </p>
+        <p className="mt-2 text-xs text-muted-foreground">{year}년 통합 사업계획서</p>
       </div>
     )
   }

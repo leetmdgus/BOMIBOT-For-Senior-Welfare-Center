@@ -36,6 +36,8 @@ export interface PerformanceRow {
   fundingSources?: PerformanceFundingSource[]
   planFunding?: PerformanceFundingEntry[]
   actualFunding?: PerformanceFundingEntry[]
+  /** 업무(칸반 카드) 단위 저장 시 연결 ID */
+  taskId?: string
 }
 
 /** 사업계획·사업실적·사업결과 탭 집계 행 */

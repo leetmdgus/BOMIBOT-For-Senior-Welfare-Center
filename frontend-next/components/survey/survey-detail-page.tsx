@@ -31,8 +31,12 @@ export function SurveyDetailPage({ id }: { id: string }) {
   const [isSaving, setIsSaving] = useState(false)
   const [lastSavedAt, setLastSavedAt] = useState<string | null>(null)
 
-  const taskId = detail?.taskId ?? id
-  const listHref = `/kanban/task/${taskId}/survey`
+  const linkedTaskId = searchParams.get("taskId") ?? undefined
+
+  const kanbanTaskId = linkedTaskId ?? detail?.taskId
+  const listHref = kanbanTaskId
+    ? `/kanban/task/${kanbanTaskId}/survey`
+    : "/kanban"
 
   useEffect(() => {
     const view = searchParams.get("view")
@@ -51,7 +55,7 @@ export function SurveyDetailPage({ id }: { id: string }) {
       setIsLoading(true)
 
       try {
-        const data = await getSurveyDetail(id)
+        const data = await getSurveyDetail(id, { taskId: linkedTaskId })
         if (!cancelled) setDetail(data)
       } catch (error) {
         console.error("설문 로드 실패:", error)
@@ -65,7 +69,7 @@ export function SurveyDetailPage({ id }: { id: string }) {
     return () => {
       cancelled = true
     }
-  }, [id])
+  }, [id, linkedTaskId])
 
   const handleViewChange = useCallback(
     (mode: ViewMode) => {
@@ -80,11 +84,24 @@ export function SurveyDetailPage({ id }: { id: string }) {
   const handleSaved = (nextDetail: SurveyDetail) => {
     setDetail(nextDetail)
     setLastSavedAt(new Date().toLocaleTimeString("ko-KR"))
+
+    if (id === "new" && nextDetail.id && nextDetail.id !== "new") {
+      const params = new URLSearchParams(searchParams.toString())
+      if (linkedTaskId ?? nextDetail.taskId) {
+        params.set("taskId", linkedTaskId ?? nextDetail.taskId ?? "")
+      }
+      if (viewMode === "edit") {
+        params.set("view", "edit")
+      }
+      router.replace(`/survey/${nextDetail.id}?${params.toString()}`)
+    }
   }
 
+  const surveyIdForLinks = detail?.id && detail.id !== "new" ? detail.id : id
+
   const respondUrl =
-    typeof window !== "undefined"
-      ? `${window.location.origin}/survey/${id}/respond`
+    typeof window !== "undefined" && surveyIdForLinks !== "new"
+      ? `${window.location.origin}/survey/${surveyIdForLinks}/respond`
       : ""
 
   const handleCopyRespondLink = async () => {
@@ -134,7 +151,7 @@ export function SurveyDetailPage({ id }: { id: string }) {
 
       <main ref={setScrollRoot} className="flex-1 overflow-auto">
         <SurveyBreadcrumb />
-        <SurveyTabNavigation id={taskId} />
+        <SurveyTabNavigation id={kanbanTaskId ?? id} />
 
         <div className="bg-muted/30 p-6 print:bg-white print:p-0">
           <SurveyToolbar
@@ -171,6 +188,7 @@ export function SurveyDetailPage({ id }: { id: string }) {
                 <SurveyEditor
                   ref={editorRef}
                   id={id}
+                  taskId={linkedTaskId ?? detail.taskId}
                   initialDetail={detail}
                   scrollRoot={scrollRoot}
                   onSaved={handleSaved}

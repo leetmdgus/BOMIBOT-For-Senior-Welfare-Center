@@ -1,38 +1,86 @@
+import { useEffect, useState } from "react"
 import {
   Briefcase,
   Calendar,
   Clock,
   FileText,
   Mail,
+  Pencil,
   Phone,
 } from "lucide-react"
 
+import { useAuth } from "@/components/auth/auth-provider"
 import { EmployeeAvatar } from "@/components/organization/employee-avatar"
+import { OrganizationEmployeeEditDialog } from "@/components/organization/organization-employee-edit-dialog"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { canEditEmployee } from "@/lib/organization-permissions"
 import { cn } from "@/lib/utils"
 
 import {
   DetailTabType,
   Employee,
+  OrganizationContext,
 } from "@/services/organization.types"
 
 interface EmployeeDetailPanelProps {
   employee: Employee | null
   detailTab: DetailTabType
+  organizationContext: OrganizationContext | null
+  autoOpenEdit?: boolean
+  onAutoOpenEditHandled?: () => void
   onDetailTabChange: (tab: DetailTabType) => void
+  onEmployeeUpdated: (employee: Employee) => void
 }
 
 export function EmployeeDetailPanel({
   employee,
   detailTab,
+  organizationContext,
+  autoOpenEdit = false,
+  onAutoOpenEditHandled,
   onDetailTabChange,
+  onEmployeeUpdated,
 }: EmployeeDetailPanelProps) {
+  const [editOpen, setEditOpen] = useState(false)
+  const canEdit =
+    employee &&
+    organizationContext &&
+    canEditEmployee(organizationContext, employee)
+
+  useEffect(() => {
+    if (!autoOpenEdit || !canEdit) return
+    setEditOpen(true)
+    onAutoOpenEditHandled?.()
+  }, [autoOpenEdit, canEdit, onAutoOpenEditHandled])
+
   return (
     <div className="rounded-xl border border-border bg-card p-6">
-      <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold">
-        <FileText className="size-5" />
-        직원정보
-      </h2>
+      <div className="mb-4 flex items-center justify-between gap-2">
+        <h2 className="flex items-center gap-2 text-lg font-semibold">
+          <FileText className="size-5" />
+          직원정보
+        </h2>
+        {canEdit && organizationContext && employee && (
+          <>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setEditOpen(true)}
+            >
+              <Pencil className="mr-1 size-3.5" />
+              수정
+            </Button>
+            <OrganizationEmployeeEditDialog
+              employee={employee}
+              context={organizationContext}
+              open={editOpen}
+              onOpenChange={setEditOpen}
+              onSaved={onEmployeeUpdated}
+            />
+          </>
+        )}
+      </div>
 
       {employee ? (
         <>
@@ -58,6 +106,9 @@ export function EmployeeDetailPanel({
 }
 
 function EmployeeProfileHeader({ employee }: { employee: Employee }) {
+  const { session } = useAuth()
+  const orgName = session?.orgName ?? "복지관"
+
   return (
     <div className="mb-6 flex items-start gap-4">
       <EmployeeAvatar
@@ -78,6 +129,9 @@ function EmployeeProfileHeader({ employee }: { employee: Employee }) {
               Admin
             </Badge>
           )}
+          {employee.isTeamLeader && (
+            <Badge variant="secondary">팀장</Badge>
+          )}
         </div>
 
         <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
@@ -88,7 +142,7 @@ function EmployeeProfileHeader({ employee }: { employee: Employee }) {
 
           <span className="flex items-center gap-1">
             <span className="size-1.5 rounded-full bg-muted-foreground" />
-            춘천북부노인복지관
+            {orgName}
           </span>
         </div>
       </div>

@@ -1,12 +1,14 @@
 {
-  "name": "bomibot-frontend-workspace",
+  "name": "bomibot",
   "private": true,
-  "description": "Run scripts from frontend-next only. Do not add Vite here.",
+  "description": "BOMIBOT monorepo — frontend-next (Vercel) + backend (FastAPI)",
   "scripts": {
-    "dev": "npm run dev --prefix frontend-next",
-    "dev:turbo": "npm run dev:turbo --prefix frontend-next",
-    "build": "npm run build --prefix frontend-next",
-    "start": "npm run start --prefix frontend-next",
-    "lint": "npm run lint --prefix frontend-next"
+    "dev": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/dev.ps1",
+    "dev:front": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/dev.ps1 -Frontend",
+    "verify": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify-stack.ps1",
+    "predeploy": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/pre-deploy.ps1",
+    "smoke": "powershell -NoProfile -ExecutionPolicy Bypass -File backend/scripts/smoke-test.ps1",
+    "smoke:prod": "powershell -NoProfile -ExecutionPolicy Bypass -File backend/scripts/smoke-test.ps1 -BaseUrl https://api-workspace.bomi.ai.kr",
+    "migrate": "powershell -NoProfile -ExecutionPolicy Bypass -File backend/scripts/migrate.ps1 -Docker"
   }
 }

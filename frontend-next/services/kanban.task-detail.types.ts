@@ -16,10 +16,21 @@ export interface Survey {
   endDate: string
 }
 
+export type TaskReferenceDocumentSource =
+  | "builtin"
+  | "file-manager"
+  | "saved-plan"
+
 export interface EvaluationFile {
   id: string
   name: string
   type: string
+  /** builtin: 기본틀·저장된 계획서 / file-manager: 파일관리 업로드 */
+  source?: TaskReferenceDocumentSource
+  mimeType?: string
+  fileType?: string
+  hasContent?: boolean
+  contentMissing?: boolean
 }
 
 export interface EvaluationDetailRow {
@@ -27,7 +38,16 @@ export interface EvaluationDetailRow {
   content: string
 }
 
-export type EvaluationSectionType = "heading" | "body" | "table"
+export type EvaluationSectionType = "heading" | "body" | "table" | "file"
+
+export type DocumentMediaKind = "image" | "pdf" | "video"
+
+export interface DocumentMediaAttachment {
+  fileId: string
+  name: string
+  mimeType?: string
+  mediaKind: DocumentMediaKind
+}
 
 export interface EvaluationSection {
   id: string
@@ -58,6 +78,8 @@ export interface BusinessEvaluationData {
   isCompleted: boolean
   detailRows: EvaluationDetailRow[]
   sections: EvaluationSection[]
+  /** 저장 시 템플릿 치환으로 생성된 HWPX (파일관리) */
+  hwpxFileId?: string
 }
 
 export interface SaveBusinessEvaluationPayload {
@@ -133,6 +155,8 @@ export interface BusinessPlanDocument {
   formData: BusinessPlanFormData
   sections: BusinessPlanSection[]
   isCompleted?: boolean
+  /** 저장 시 템플릿 치환으로 생성된 HWPX (파일관리) */
+  hwpxFileId?: string
 }
 
 export interface SaveBusinessPlanPayload {

@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, type ReactNode } from "react"
+import { useCallback, useEffect, type Dispatch, type ReactNode, type SetStateAction } from "react"
 import { format, parseISO } from "date-fns"
 import { ko } from "date-fns/locale"
 import { CalendarIcon } from "lucide-react"
@@ -82,7 +82,7 @@ type BusinessEvaluationSummaryFormProps = {
   canEdit: boolean
   datePickerOpen: boolean
   onDatePickerOpenChange: (open: boolean) => void
-  onEvaluationChange: (next: BusinessEvaluationData) => void
+  onEvaluationChange: Dispatch<SetStateAction<BusinessEvaluationData>>
   /** 사업계획서 사업명 — 프로그램명 비어 있을 때 제목에 사용 */
   businessName?: string
 }
@@ -106,7 +106,7 @@ export function BusinessEvaluationSummaryForm({
     : undefined
 
   const update = (patch: Partial<BusinessEvaluationData>) => {
-    onEvaluationChange({ ...evaluation, ...patch })
+    onEvaluationChange((prev) => ({ ...prev, ...patch }))
   }
 
   const supervisionReadOnly = canEdit

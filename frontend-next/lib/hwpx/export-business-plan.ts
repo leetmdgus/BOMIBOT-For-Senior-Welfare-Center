@@ -1,3 +1,5 @@
+import { shouldUseMockApi } from "@/lib/api-service-mode"
+import { documentSectionsForHwpxExport, mergeFlushedDocumentSections } from "@/lib/hwpx/document-sections-for-export"
 import { hwpxSectionsFromDocumentSections } from "@/lib/hwpx/export-sections"
 import {
   downloadHwpxDocument,
@@ -11,10 +13,18 @@ import {
   lineSlotDisplayValue,
   parseLineSlots,
 } from "@/lib/line-slot-utils"
+import { buildHwpxDownloadFilename } from "@/lib/hwpx/hwpx-filename"
+import { downloadBusinessPlanHwpx as downloadFromApi } from "@/services/kanban.task-detail.service"
 import type {
   BusinessPlanFormData,
   BusinessPlanSection,
 } from "@/services/kanban.task-detail.types"
+
+function documentSectionsForHwpx(
+  sections: BusinessPlanSection[],
+): BusinessPlanSection[] {
+  return documentSectionsForHwpxExport(sections) as BusinessPlanSection[]
+}
 
 export function buildBusinessPlanHwpx(
   formData: BusinessPlanFormData,
@@ -49,7 +59,10 @@ export function buildBusinessPlanHwpx(
         },
       ],
     },
-    ...hwpxSectionsFromDocumentSections(sections, { formData }),
+    ...hwpxSectionsFromDocumentSections(
+      documentSectionsForHwpx(sections),
+      { formData },
+    ),
   ]
 
   return {
@@ -59,10 +72,30 @@ export function buildBusinessPlanHwpx(
 }
 
 export async function downloadBusinessPlanHwpx(
+  taskId: string,
   formData: BusinessPlanFormData,
   sections: BusinessPlanSection[],
 ): Promise<void> {
-  const doc = buildBusinessPlanHwpx(formData, sections)
-  const baseName = formData.projectName || "사업계획서"
-  await downloadHwpxDocument(baseName, doc)
+  const exportSections = documentSectionsForHwpx(
+    mergeFlushedDocumentSections(sections),
+  )
+
+  if (!shouldUseMockApi() && downloadFromApi) {
+    await downloadFromApi(taskId, {
+      formData,
+      sections: exportSections,
+    })
+    return
+  }
+
+  const doc = buildBusinessPlanHwpx(formData, exportSections)
+  const filename = buildHwpxDownloadFilename(
+    formData.projectName,
+    "plan",
+    formData.period,
+  )
+  await downloadHwpxDocument(
+    filename.replace(/\.hwpx$/i, ""),
+    doc,
+  )
 }

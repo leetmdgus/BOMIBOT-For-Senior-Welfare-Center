@@ -9,55 +9,51 @@ components / app
        ↓
 *.service.ts          ← NEXT_PUBLIC_USE_MOCK_API 분기
    ↓            ↓
-*.mock.service   *.api.service  → fetch("/api/...")
+*.mock.service   *.api.service  → lib/api-client.ts
    ↓                    ↓
-lib/mocks/*.ts    app/api/** → *.mock.service | *.server.service
+region-store      NEXT_PUBLIC_API_BASE_URL 설정 시
+(mocks)           https://api-workspace.bomi.ai.kr/api/v1/...
+                  미설정 시 /api/* → app/api/[[...path]] → FastAPI 프록시
 ```
 
 | 파일 접미사 | 용도 |
 |-------------|------|
 | `*.types.ts` | 요청/응답 TypeScript 타입 |
-| `*.mock.service.ts` | 브라우저·서버 목업 비즈니스 로직 |
-| `*.api.service.ts` | REST `fetch` 클라이언트 |
+| `*.mock.service.ts` | 브라우저 목업 (`loadRegionStore`) |
+| `*.api.service.ts` | REST `fetch` → FastAPI `/api/v1/*` |
 | `*.service.ts` | UI 공개 facade |
-| `*.server.service.ts` | **서버 전용** (Route Handler만 import) |
 
-## 도메인 목록
+## 환경
 
-| Facade | Mock | API | 비고 |
-|--------|------|-----|------|
-| `dashboard.service` | `dashboard.mock.service` | `dashboard.api.service` | |
-| `organization.service` | `organization.mock.service` | `organization.api.service` | |
-| `ebooks.service` | `ebooks.mock.service` | `ebooks.api.service` | |
-| `files.service` | `files.mock.service` | `files.api.service` | |
-| `kanban.board.service` | `kanban.board.mock.service` | `kanban.board.api.service` | |
-| `kanban.version-history.service` | `…mock…` | `…api…` | |
-| `kanban.task-detail.service` | `…mock…` | `…api…` | |
-| `kanban.performance.service` | `…mock…` | `…api…` | |
-| `kanban.documents.service` | `…mock…` | `…api…` | |
-| `survey.service` | `survey.mock.service` | `survey.api.service` | |
-| `chat.service` | `chat.mock.service` | `chat.api.service` | 어시스턴트·CS·온톨로지는 `/api/chat/*` 경유 |
-| `chat.server.service` | — | — | Route Handler 전용 |
-| `auth.service` | — | — | FastAPI 연동 예정 (스텁) |
+| 변수 | mock | FastAPI |
+|------|------|---------|
+| `NEXT_PUBLIC_USE_MOCK_API` | `true` | `false` |
+| `NEXT_PUBLIC_API_BASE_URL` | (비움) | `http://127.0.0.1:8020` 또는 프로덕션 URL |
 
-## 챗봇 예외
+## 도메인 (전부 FastAPI 연동됨)
 
-`NEXT_PUBLIC_USE_MOCK_API=true` 여도 다음은 **서버 API 필수** (LLM·SMTP·그래프 빌드):
+| Facade | Mock | API |
+|--------|------|-----|
+| `auth.service` | ✅ | ✅ |
+| `dashboard.service` | ✅ | ✅ |
+| `organization.service` | ✅ | ✅ |
+| `kanban.board.service` | ✅ | ✅ |
+| `kanban.task-detail.service` | ✅ | ✅ |
+| `kanban.performance.service` | ✅ | ✅ |
+| `kanban.documents.service` | ✅ | ✅ |
+| `kanban.version-history.service` | ✅ | ✅ |
+| `survey.service` | ✅ | ✅ |
+| `files.service` | ✅ | ✅ |
+| `ebooks.service` | ✅ | ✅ |
+| `chat.service` | ✅ (클라이언트 규칙 엔진) | ✅ (RAG + Gemini + 규칙 폴백) |
 
-- `POST /api/chat/assistant`
-- `POST /api/chat/cs-ticket`
-- `GET /api/chat/ontology`
-
-`getChatConfig()` 만 mock 모드에서 인메모리 설정을 반환합니다.
+`chat.server.service.ts`는 레거시 Route Handler용이며, FastAPI 직연동 시에는 `chat.api.service`를 사용합니다.
 
 ## 사용 예
 
 ```typescript
 import { getProjects } from "@/services/kanban.board.service"
-import { askAssistantQuestion, submitCsTicket, getOntologyGraph } from "@/services/chat.service"
-
-const graph = await getOntologyGraph("5월 실적")
-const answer = await askAssistantQuestion({ message: "5월 예산 합계는?" })
+import { askAssistantQuestion } from "@/services/chat.service"
 ```
 
-명세: [docs/API_SPEC.md](../docs/API_SPEC.md) · 리뷰: [docs/FRONTEND_REVIEW.md](../docs/FRONTEND_REVIEW.md)
+인증 헤더: `api-client`가 `Authorization: Bearer` + `X-Region-Id` 를 `getClientSession()`에서 자동 첨부합니다.

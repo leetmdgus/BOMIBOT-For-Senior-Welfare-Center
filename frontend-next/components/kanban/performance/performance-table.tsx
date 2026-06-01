@@ -23,8 +23,12 @@ import {
   Check,
   ChevronDown,
 } from "lucide-react"
+import { isFastApiMode } from "@/lib/api-client"
 import { cn } from "@/lib/utils"
-import { getPerformanceRows } from "@/services/kanban.performance.service"
+import {
+  getInputManagementRows,
+  saveInputManagementRows,
+} from "@/services/kanban.performance.service"
 import type { PerformanceRow as RowData } from "@/services/kanban.performance.types"
 
 type CellKey = keyof Omit<RowData, "id" | "selected">
@@ -66,16 +70,53 @@ function aggregateBySubProject(rows: RowData[]) {
   return Object.values(grouped)
 }
 
-export const PerformanceTable = memo(function PerformanceTable() {
+export const PerformanceTable = memo(function PerformanceTable({
+  taskId,
+}: {
+  taskId: string
+}) {
   const [rows, setRows] = useState<RowData[]>([])
+  const hasLoadedRef = useRef(false)
+  const taskIdRef = useRef(taskId)
 
   useEffect(() => {
-    getPerformanceRows()
-      .then((result) => setRows(result.data))
+    taskIdRef.current = taskId
+  }, [taskId])
+
+  useEffect(() => {
+    if (!taskId) return
+    hasLoadedRef.current = false
+    setRows([])
+
+    const loadFor = taskId
+    getInputManagementRows(loadFor)
+      .then((data) => {
+        if (taskIdRef.current !== loadFor) return
+        setRows(data)
+        hasLoadedRef.current = true
+      })
       .catch((error) => {
+        if (taskIdRef.current !== loadFor) return
         console.error("실적 데이터 로드 실패:", error)
       })
-  }, [])
+  }, [taskId])
+
+  useEffect(() => {
+    if (!isFastApiMode() || !hasLoadedRef.current || !taskId) return
+
+    const saveFor = taskId
+    const timer = window.setTimeout(() => {
+      if (taskIdRef.current !== saveFor) return
+      void saveInputManagementRows(
+        rows.map((row) => ({ ...row, selected: false })),
+        saveFor,
+      ).catch((error) => {
+        console.error("실적 데이터 저장 실패:", error)
+      })
+    }, 500)
+
+    return () => window.clearTimeout(timer)
+  }, [rows, taskId])
   const [selectedCell, setSelectedCell] = useState<{ rowId: string; column: CellKey } | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
   const [activeSubTab, setActiveSubTab] = useState<"입력관리" | "사업계획" | "사업실적" | "사업결과">("입력관리")

@@ -49,6 +49,7 @@ export type AssistantAnswerSource =
   | "organization"
   | "ebooks"
   | "survey"
+  | "documents"
   | "help"
 
 export type AssistantAnswer = {

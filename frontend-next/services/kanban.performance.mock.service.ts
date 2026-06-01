@@ -1,10 +1,11 @@
-import { subProjects } from "@/lib/mocks/kanban.board.mock"
 import { getMonthlyPlanMock } from "@/lib/mocks/kanban.monthly-plan.mock"
 import {
-  defaultDetailCategories,
-  inputManagementRows,
-  performanceSubProjectChips,
-} from "@/lib/mocks/kanban.performance-input.mock"
+  getMockInputRowsForTask,
+  saveMockInputRowsForTask,
+} from "@/lib/mocks/kanban.performance-by-task.mock"
+import { loadRegionStore } from "@/lib/auth/load-region-store"
+import { requireTaskId } from "@/lib/kanban/require-task-id"
+import type { RegionId } from "@/lib/auth/regions"
 import type {
   MonthlyPlanResponse,
   MonthlyPlanVersion,
@@ -14,8 +15,19 @@ import type {
 } from "./kanban.performance.types"
 
 function mapSubProjectToRow(
-  item: (typeof subProjects)[number],
-  index: number
+  item: {
+    id?: string
+    name: string
+    category: string
+    month: string
+    planPeople: number
+    planCount: number
+    planBudget: number
+    actualPeople: number
+    actualCount: number
+    projectId?: string
+  },
+  index: number,
 ): PerformanceRow {
   return {
     id: item.id ?? String(index + 1),
@@ -33,28 +45,60 @@ function mapSubProjectToRow(
   }
 }
 
-export async function getInputManagementRows(): Promise<PerformanceRow[]> {
-  return inputManagementRows
+export async function getInputManagementRows(
+  taskId: string,
+  regionId?: RegionId,
+): Promise<PerformanceRow[]> {
+  const tid = requireTaskId(taskId)
+  const store = await loadRegionStore({ regionId })
+  const legacy = store.performanceInput.inputManagementRows
+  return getMockInputRowsForTask(tid, legacy)
 }
 
-export async function getPerformanceInputMeta(): Promise<PerformanceInputMeta> {
+export async function getPerformanceInputMeta(
+  regionId?: RegionId,
+): Promise<PerformanceInputMeta> {
+  const store = await loadRegionStore({ regionId })
+
   return {
-    subProjectChips: structuredClone(performanceSubProjectChips),
-    detailCategories: [...defaultDetailCategories],
+    subProjectChips: structuredClone(
+      store.performanceInput.performanceSubProjectChips,
+    ),
+    detailCategories: [...store.performanceInput.defaultDetailCategories],
   }
 }
 
 export async function getMonthlyPlan(
-  version: MonthlyPlanVersion = "기본계획"
+  version: MonthlyPlanVersion = "기본계획",
+  _regionId?: RegionId,
 ): Promise<MonthlyPlanResponse> {
   return getMonthlyPlanMock(version)
 }
 
-export async function getPerformanceRows(params?: {
-  projectId?: string
-  month?: string
-}): Promise<PerformanceListResponse> {
-  let filtered = subProjects
+export async function saveInputManagementRows(
+  rows: PerformanceRow[],
+  taskId: string,
+): Promise<{ success: boolean; count: number }> {
+  saveMockInputRowsForTask(requireTaskId(taskId), rows)
+  return { success: true, count: rows.length }
+}
+
+export async function saveMonthlyPlan(
+  version: MonthlyPlanVersion = "기본계획",
+): Promise<MonthlyPlanResponse> {
+  return getMonthlyPlanMock(version)
+}
+
+export async function getPerformanceRows(
+  params?: {
+    projectId?: string
+    month?: string
+  },
+  regionId?: RegionId,
+): Promise<PerformanceListResponse> {
+  const store = await loadRegionStore({ regionId })
+
+  let filtered = store.kanban.subProjects
 
   if (params?.projectId) {
     filtered = filtered.filter((item) => item.projectId === params.projectId)

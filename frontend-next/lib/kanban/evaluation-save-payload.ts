@@ -23,7 +23,7 @@ export function toSaveBusinessEvaluationPayload(
     performanceIndicator: evaluation.performanceIndicator,
     evaluationTool: evaluation.evaluationTool,
     supervision: evaluation.supervision,
-    detailRows: evaluation.detailRows,
+    detailRows: [],
     sections: evaluation.sections,
     keyFactorAnalysis: evaluation.keyFactorAnalysis,
     goalAppropriacy: evaluation.goalAppropriacy,

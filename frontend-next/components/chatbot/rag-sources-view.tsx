@@ -1,5 +1,7 @@
 "use client"
 
+import Link from "next/link"
+
 import type { AssistantRagCitation } from "@/services/chat.types"
 import { cn } from "@/lib/utils"
 
@@ -11,6 +13,7 @@ const SOURCE_LABELS: Record<string, string> = {
   organization: "조직",
   ebooks: "전자책",
   survey: "설문",
+  documents: "사업문서",
   aggregate: "통합",
   help: "도움말",
 }
@@ -47,7 +50,14 @@ export function RagSourcesView({
           >
             <div className="flex flex-wrap items-center gap-1">
               <span className="font-medium text-slate-700">
-                {index + 1}. {item.title}
+                {index + 1}.{" "}
+                {item.href ? (
+                  <Link href={item.href} className="hover:underline">
+                    {item.title}
+                  </Link>
+                ) : (
+                  item.title
+                )}
               </span>
               <span className="rounded bg-slate-100 px-1 py-0.5 text-[9px] text-muted-foreground">
                 {SOURCE_LABELS[item.source] ?? item.source}

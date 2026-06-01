@@ -42,6 +42,9 @@
 
   .print-hide,
   [data-print-chrome],
+  [aria-label="첨부 자료"],
+  .document-media-sections,
+  .document-media-block,
   .document-format-toolbar-rail,
   .reference-plan-panel,
   .plan-floating-panel,
@@ -114,7 +117,7 @@
     padding: 0 !important;
   }
 
-  /* HWPX 양식 — A4 인쇄 가능 폭(여백 제외)에 맞춤 */
+  /* 편집 화면 양식 — A4 인쇄용(브라우저). 한글 .hwpx 파일 레이아웃과 동일하지 않음 */
   .print-area .hwpx-doc,
   .print-area .hwpx-doc-section-row {
     width: 100% !important;

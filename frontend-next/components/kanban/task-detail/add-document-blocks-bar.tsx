@@ -12,9 +12,11 @@ type AddDocumentBlocksBarProps = {
   sectionCount?: number
   bodyCount?: number
   className?: string
+  /** compact: 표 옆·상단에 붙는 작은 버튼 */
+  variant?: "default" | "compact"
 }
 
-/** 사업계획·평가 하단 — 대목차 / 본문 블록 추가 */
+/** 사업계획·평가 — 대목차 / 본문 블록 추가 */
 export function AddDocumentBlocksBar({
   onAddHeading,
   onAddBody,
@@ -22,8 +24,47 @@ export function AddDocumentBlocksBar({
   sectionCount = 0,
   bodyCount = 0,
   className,
+  variant = "default",
 }: AddDocumentBlocksBarProps) {
   if (readOnly) return null
+
+  if (variant === "compact") {
+    return (
+      <div
+        className={cn(
+          "print-hide inline-flex flex-wrap items-center gap-1",
+          className,
+        )}
+      >
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="h-6 gap-1 px-2 text-[11px] shadow-none"
+          onClick={onAddHeading}
+        >
+          <LayoutTemplate className="size-3 shrink-0" />
+          대목차
+        </Button>
+        <Button
+          type="button"
+          variant="secondary"
+          size="sm"
+          className="h-6 gap-1 px-2 text-[11px] shadow-none"
+          onClick={onAddBody}
+        >
+          <Type className="size-3 shrink-0" />
+          목차·본문
+        </Button>
+        {sectionCount > 0 ? (
+          <span className="text-[10px] text-muted-foreground">
+            {sectionCount}
+            {bodyCount > 0 ? `/${bodyCount}` : ""}
+          </span>
+        ) : null}
+      </div>
+    )
+  }
 
   return (
     <div
@@ -42,7 +83,7 @@ export function AddDocumentBlocksBar({
         </Button>
         <Button type="button" variant="secondary" size="sm" onClick={onAddBody}>
           <Type className="mr-2 size-4" />
-          본문 (고급 서식)
+          목차·본문 (고급 서식)
         </Button>
       </div>
       {sectionCount > 0 ? (

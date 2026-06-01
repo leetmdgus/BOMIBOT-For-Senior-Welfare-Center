@@ -1,0 +1,12 @@
+"""region_json_stores.domain — 지역별 JSON blob 구분자."""
+
+DOMAIN_EBOOKS = "ebooks"
+DOMAIN_FILES = "files"
+DOMAIN_SURVEY = "survey"
+DOMAIN_VERSION_HISTORY = "version_history"
+DOMAIN_PERFORMANCE = "performance"
+DOMAIN_TASK_DETAIL = "task_detail"
+DOMAIN_REPORTS = "reports"
+DOMAIN_CHAT = "chat"
+DOMAIN_ONTOLOGY = "ontology"
+DOMAIN_APPROVALS = "approvals"

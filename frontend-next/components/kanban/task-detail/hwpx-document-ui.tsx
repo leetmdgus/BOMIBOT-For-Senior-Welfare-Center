@@ -137,6 +137,8 @@ export function HwpxTextarea({
   rows = 2,
   className,
   onFocus,
+  sectionId,
+  sectionField = "title",
 }: {
   value: string
   onChange?: (value: string) => void
@@ -145,6 +147,8 @@ export function HwpxTextarea({
   rows?: number
   className?: string
   onFocus?: () => void
+  sectionId?: string | number
+  sectionField?: "title" | "content"
 }) {
   if (readOnly) {
     return (
@@ -162,6 +166,8 @@ export function HwpxTextarea({
       placeholder={placeholder}
       rows={rows}
       className={cn("hwpx-field-textarea", className)}
+      data-bp-section-id={sectionId != null ? String(sectionId) : undefined}
+      data-bp-section-field={sectionField}
     />
   )
 }

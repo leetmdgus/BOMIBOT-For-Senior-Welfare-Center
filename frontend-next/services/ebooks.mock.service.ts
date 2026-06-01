@@ -1,18 +1,20 @@
-import {
-  booksData,
-  categories,
-  categoryStyles,
-  suggestedQuestions,
-} from "@/lib/mocks/ebooks.mock"
+import { loadRegionStore } from "@/lib/auth/load-region-store"
+import type { RegionId } from "@/lib/auth/regions"
 import type { Book, Category, EbooksListResponse } from "./ebooks.types"
 
-export async function getEbooks(params?: {
-  category?: string
-  search?: string
-}): Promise<EbooksListResponse> {
+export async function getEbooks(
+  params?: {
+    category?: string
+    search?: string
+  },
+  regionId?: RegionId,
+): Promise<EbooksListResponse> {
+  const store = await loadRegionStore({ regionId })
+
+  const { booksData, categories, categoryStyles } = store.ebooks
   let filtered = booksData
 
-  if (params?.category && params.category !== "전체") {
+  if (params?.category && params.category !== "??") {
     filtered = filtered.filter((book) => book.category === params.category)
   }
 
@@ -21,7 +23,7 @@ export async function getEbooks(params?: {
     filtered = filtered.filter(
       (book) =>
         book.title.toLowerCase().includes(keyword) ||
-        book.team.toLowerCase().includes(keyword)
+        book.team.toLowerCase().includes(keyword),
     )
   }
 
@@ -33,14 +35,17 @@ export async function getEbooks(params?: {
   }
 }
 
-export async function getCategories(): Promise<Category[]> {
-  return categories
+export async function getCategories(regionId?: RegionId): Promise<Category[]> {
+  const store = await loadRegionStore({ regionId })
+  return store.ebooks.categories
 }
 
-export async function getCategoryStyles() {
-  return categoryStyles
+export async function getCategoryStyles(regionId?: RegionId) {
+  const store = await loadRegionStore({ regionId })
+  return store.ebooks.categoryStyles
 }
 
-export async function getSuggestedQuestions() {
-  return suggestedQuestions
+export async function getSuggestedQuestions(regionId?: RegionId) {
+  const store = await loadRegionStore({ regionId })
+  return store.ebooks.suggestedQuestions
 }

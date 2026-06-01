@@ -73,7 +73,16 @@ export const filesData: EvaluationFile[] = [
 
 export const viewTogetherFixedFiles: EvaluationFile[] = [
   { id: "fixed-template", name: "기본틀", type: "틀" },
-  { id: "fixed-plan", name: "사업계획서", type: "계획서" },
+  {
+    id: "fixed-plan-template",
+    name: "사회복지사업 단위사업계획서 (양식)",
+    type: "틀",
+  },
+  {
+    id: "fixed-plan",
+    name: "사회복지사업 단위사업계획서",
+    type: "계획서",
+  },
 ]
 
 export const businessEvaluationData: BusinessEvaluationData = {

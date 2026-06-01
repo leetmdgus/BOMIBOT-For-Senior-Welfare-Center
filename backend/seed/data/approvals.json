@@ -1,0 +1,24 @@
+{
+  "documents": [
+    {
+      "id": "appr-seed-001",
+      "title": "2026년 1분기 사업비 집행 결재",
+      "type": "예산",
+      "status": "approved",
+      "requester": "김관리",
+      "department": "총무팀",
+      "createdAt": "2026-01-15",
+      "updatedAt": "2026-01-20"
+    },
+    {
+      "id": "appr-seed-002",
+      "title": "신규 프로그램 운영 계획 승인",
+      "type": "사업",
+      "status": "pending",
+      "requester": "이복지",
+      "department": "사업팀",
+      "createdAt": "2026-02-01",
+      "updatedAt": "2026-02-01"
+    }
+  ]
+}

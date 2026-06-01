@@ -5,6 +5,8 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { ChevronRight } from "lucide-react"
 
+import { useAuth } from "@/components/auth/auth-provider"
+import { UserMenu } from "@/components/common/user-menu"
 import { VersionHistorySheet } from "@/components/kanban/version-history/version-history-sheet"
 
 type BreadcrumbItem = {
@@ -25,6 +27,8 @@ const pageLinks: PageLink[] = [
   { title: "문서자동화", path: "/automation" },
   { title: "파일들", path: "/files" },
   { title: "전자책자", path: "/ebooks" },
+  { title: "메뉴 관리", path: "/settings/menu" },
+  { title: "전자결재", path: "/approvals" },
 
   {
     title: "사업문서",
@@ -120,10 +124,10 @@ function getCurrentPage(pathname: string) {
   return pageLinks.find((page) => matchPath(pathname, page.path)) ?? pageLinks[0]
 }
 
-function getBreadcrumbs(currentPage: PageLink): BreadcrumbItem[] {
+function getBreadcrumbs(currentPage: PageLink, orgName: string): BreadcrumbItem[] {
   return [
     { title: "산하기관" },
-    { title: "춘천북부노인복지관" },
+    { title: orgName },
     ...(currentPage.breadcrumbs ?? [
       {
         title: currentPage.title,
@@ -137,11 +141,16 @@ interface HeaderProps {
   kanbanYear?: string
 }
 
-export function Header({ kanbanYear = "2026" }: HeaderProps) {
+export function Header({ kanbanYear }: HeaderProps) {
   const pathname = usePathname()
+  const { session } = useAuth()
+  const orgName = session?.orgName ?? "복지관"
 
   const currentPage = useMemo(() => getCurrentPage(pathname), [pathname])
-  const breadcrumbs = useMemo(() => getBreadcrumbs(currentPage), [currentPage])
+  const breadcrumbs = useMemo(
+    () => getBreadcrumbs(currentPage, orgName),
+    [currentPage, orgName],
+  )
 
   const isKanbanPage = pathname === "/kanban"
 
@@ -195,7 +204,10 @@ export function Header({ kanbanYear = "2026" }: HeaderProps) {
           </nav>
         </div>
         
-        {isKanbanPage ? <VersionHistorySheet year={kanbanYear} /> : null}
+        <div className="flex items-center gap-2">
+          {isKanbanPage ? <VersionHistorySheet year={kanbanYear} /> : null}
+          <UserMenu />
+        </div>
       </div>
     </header>
   )

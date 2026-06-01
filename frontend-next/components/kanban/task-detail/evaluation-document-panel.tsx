@@ -18,7 +18,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { getEvaluationDocumentPreviewHtml } from "@/lib/evaluation-document-preview"
 import { cn } from "@/lib/utils"
 import type {
   BusinessEvaluationData,
@@ -81,13 +80,6 @@ export function EvaluationDocumentPanel({
     (filePage - 1) * FILES_PER_PAGE,
     filePage * FILES_PER_PAGE,
   )
-
-  const selectedFile =
-    allFiles.find((f) => f.id === selectedFileId) ?? allFiles[0] ?? null
-
-  const previewHtml = selectedFile
-    ? getEvaluationDocumentPreviewHtml(selectedFile.id, evaluation)
-    : ""
 
   if (collapsed) {
     return (
@@ -189,25 +181,6 @@ export function EvaluationDocumentPanel({
           >
             <ChevronRight className="size-4" />
           </Button>
-        </div>
-
-        <div className="min-h-[280px] flex-1 overflow-y-auto p-3">
-          <div className="mb-2 flex items-center justify-between gap-2">
-            <p className="text-xs font-medium text-foreground">
-              {selectedFile?.name ?? "문서"}
-            </p>
-            <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
-              {selectedFile?.type}
-            </span>
-          </div>
-          <div
-            className="prose prose-sm max-w-none rounded-lg border border-gray-200 bg-white p-3"
-            dangerouslySetInnerHTML={{ __html: previewHtml }}
-          />
-          <p className="mt-3 text-[10px] leading-relaxed text-muted-foreground">
-            왼쪽 문서를 보면서 오른쪽 평가서를 작성하세요. 목록에서 다른
-            첨부 파일을 선택할 수 있습니다.
-          </p>
         </div>
       </div>
     </aside>

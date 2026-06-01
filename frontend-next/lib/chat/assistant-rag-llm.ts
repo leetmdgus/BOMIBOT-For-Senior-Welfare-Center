@@ -17,6 +17,7 @@ const VALID_SOURCES: AssistantAnswerSource[] = [
   "organization",
   "ebooks",
   "survey",
+  "documents",
   "help",
 ]
 

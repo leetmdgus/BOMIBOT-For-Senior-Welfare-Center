@@ -7,7 +7,7 @@ import { Loader2 } from "lucide-react"
 
 import { getSurveyDetail } from "@/services/survey.service"
 import type { SurveyDetail } from "@/services/survey.types"
-import { BRAND_LOGO_SRC } from "@/lib/constants/brand"
+import { BrandLogo } from "@/components/common/brand-logo"
 import { SurveyResponseForm } from "./survey-response-form"
 
 export function SurveyRespondPage({ id: idFromProps }: { id?: string }) {
@@ -54,13 +54,9 @@ export function SurveyRespondPage({ id: idFromProps }: { id?: string }) {
   return (
     <div className="min-h-screen bg-muted/30">
       <header className="border-b border-border bg-background">
-        <div className="mx-auto flex max-w-2xl items-center justify-between px-4 py-4 sm:px-6">
+        <div className="mx-auto flex max-w-2xl items-center justify-between px-4 py-5 sm:px-6">
           <Link href="/" className="inline-flex items-center">
-            <img
-              src={BRAND_LOGO_SRC}
-              alt="BOMI"
-              className="h-7 w-auto object-contain"
-            />
+            <BrandLogo size="lg" />
           </Link>
           <span className="text-xs text-muted-foreground">만족도 조사</span>
         </div>

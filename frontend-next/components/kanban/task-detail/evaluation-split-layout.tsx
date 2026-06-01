@@ -11,12 +11,20 @@ import { useStickySidePanel } from "@/components/kanban/task-detail/use-sticky-s
 const STORAGE_VISIBLE = "bomi-eval-plan-panel-visible-v2"
 
 type EvaluationSplitLayoutProps = {
-  /** 우측: 평가서 작성(수정) 영역 */
-  evaluation: ReactNode
-  /** 좌측: 참고 사업계획서 */
-  referencePlan: ReactNode
+  /** 우측: 작성(수정) 영역 */
+  editor: ReactNode
+  /** 좌측: 선택한 참고 문서 */
+  referencePanel: ReactNode
+  /** 상단 사업 문서 선택 UI */
+  documentSelector?: ReactNode
   className?: string
-  /** 참고 계획서 패널 기본 표시 */
+  /** 참고 패널 기본 표시 */
+  defaultShowReferencePanel?: boolean
+  /** @deprecated use editor */
+  evaluation?: ReactNode
+  /** @deprecated use referencePanel */
+  referencePlan?: ReactNode
+  /** @deprecated use defaultShowReferencePanel */
   defaultShowPlanPanel?: boolean
 }
 
@@ -31,12 +39,21 @@ function readStoredVisible(fallback: boolean): boolean {
  * 사업평가 함께보기 — 좌: 참고 계획서(고정·스크롤), 우: 평가서(수정)
  */
 export function EvaluationSplitLayout({
+  editor,
+  referencePanel,
+  documentSelector,
+  className,
+  defaultShowReferencePanel = true,
   evaluation,
   referencePlan,
-  className,
-  defaultShowPlanPanel = true,
+  defaultShowPlanPanel,
 }: EvaluationSplitLayoutProps) {
-  const [showPlanPanel, setShowPlanPanel] = useState(defaultShowPlanPanel)
+  const resolvedEditor = editor ?? evaluation
+  const resolvedReference = referencePanel ?? referencePlan
+  const resolvedDefaultShow =
+    defaultShowReferencePanel ?? defaultShowPlanPanel ?? true
+
+  const [showPlanPanel, setShowPlanPanel] = useState(resolvedDefaultShow)
   const [hydrated, setHydrated] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
 
@@ -52,9 +69,9 @@ export function EvaluationSplitLayout({
       }
 
   useEffect(() => {
-    setShowPlanPanel(readStoredVisible(defaultShowPlanPanel))
+    setShowPlanPanel(readStoredVisible(resolvedDefaultShow))
     setHydrated(true)
-  }, [defaultShowPlanPanel])
+  }, [resolvedDefaultShow])
 
   useEffect(() => {
     if (!hydrated) return
@@ -92,16 +109,20 @@ export function EvaluationSplitLayout({
           ) : (
             <PanelLeft className="mr-1.5 size-3.5" />
           )}
-          {showPlanPanel ? "참고 계획서 닫기" : "참고 계획서 보기"}
+          {showPlanPanel ? "참고 문서 닫기" : "참고 문서 보기"}
         </Button>
 
         {!showPlanPanel ? (
           <span className="text-[11px] text-muted-foreground">
-            참고 계획서를 켜면 왼쪽에 사업계획서를 고정해 두고 오른쪽에서 평가서를
-            작성할 수 있습니다.
+            참고 문서를 켜면 왼쪽에서 사업 문서를 보며 오른쪽에서 작성할 수
+            있습니다.
           </span>
         ) : null}
       </div>
+
+      {showPlanPanel && documentSelector ? (
+        <div className="print-hide">{documentSelector}</div>
+      ) : null}
 
       <div
         ref={containerRef}
@@ -126,7 +147,7 @@ export function EvaluationSplitLayout({
               )}
               style={referencePanelStyle}
             >
-              {referencePlan}
+              {resolvedReference}
             </div>
           </div>
         ) : null}
@@ -135,7 +156,7 @@ export function EvaluationSplitLayout({
           data-eval-main-column
           className={cn("min-w-0 w-full", showPlanPanel && "md:min-w-0")}
         >
-          {evaluation}
+          {resolvedEditor}
         </div>
       </div>
     </div>

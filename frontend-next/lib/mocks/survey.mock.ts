@@ -7,14 +7,21 @@ import type {
   SurveyStyle,
 } from "@/services/survey.types"
 
-export const defaultSurveyStyle: SurveyStyle = {
-  themeColor: DEFAULT_SURVEY_THEME,
-  coverTitle: "춘천북부노인복지관 프로그램 만족도 조사",
-  coverDescription:
-    "참여하신 프로그램에 대한 솔직한 의견을 남겨주세요. 응답 내용은 서비스 개선 목적으로만 활용됩니다.",
-  coverPeriodLabel: "2026.03.01 ~ 2026.03.31",
-  thankYouMessage: "설문에 참여해 주셔서 감사합니다.",
+export function buildDefaultSurveyStyle(
+  orgName = "춘천북부노인복지관",
+): SurveyStyle {
+  return {
+    themeColor: DEFAULT_SURVEY_THEME,
+    coverTitle: `${orgName} 프로그램 만족도 조사`,
+    coverDescription:
+      "참여하신 프로그램에 대한 솔직한 의견을 남겨주세요. 응답 내용은 서비스 개선 목적으로만 활용됩니다.",
+    coverPeriodLabel: "2026.03.01 ~ 2026.03.31",
+    thankYouMessage: "설문에 참여해 주셔서 감사합니다.",
+  }
 }
+
+/** 북부 기본값 — 레거시 정적 mock 호환 */
+export const defaultSurveyStyle = buildDefaultSurveyStyle()
 
 const defaultQuestions: SurveyQuestion[] = [
   {
@@ -416,11 +423,13 @@ export const surveyResultsMock: Record<string, SurveyResults> = {
   },
 }
 
-export function getDefaultSurveyTemplate(): SurveyDetail {
+export function getDefaultSurveyTemplate(orgName?: string): SurveyDetail {
+  const style = buildDefaultSurveyStyle(orgName)
   return buildDetail("new", {
     questions: defaultQuestions.map((question) => ({
       ...question,
       id: `${question.id}-${Date.now()}`,
     })),
+    style: { ...style },
   })
 }

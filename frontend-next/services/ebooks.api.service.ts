@@ -1,46 +1,69 @@
 import type { CategoryStyles, EbooksListResponse } from "./ebooks.types"
+import { apiClient, resolveApiPath } from "@/lib/api-client"
 
 export async function getEbooks(params?: {
   category?: string
   search?: string
 }): Promise<EbooksListResponse> {
   const searchParams = new URLSearchParams()
-
   if (params?.category) searchParams.set("category", params.category)
   if (params?.search) searchParams.set("search", params.search)
-
   const query = searchParams.toString()
-  const response = await fetch(`/api/ebooks${query ? `?${query}` : ""}`)
-
-  if (!response.ok) {
-    throw new Error(`API 요청 실패: ${response.status}`)
-  }
-
-  return response.json()
+  return apiClient.get<EbooksListResponse>(
+    resolveApiPath(
+      `/api/ebooks${query ? `?${query}` : ""}`,
+      `/api/v1/ebooks${query ? `?${query}` : ""}`,
+    ),
+  )
 }
 
 export async function getCategories() {
   const response = await getEbooks()
-
   return response.categories
 }
 
 export async function getCategoryStyles(): Promise<CategoryStyles> {
-  const response = await fetch("/api/ebooks/category-styles")
-
-  if (!response.ok) {
-    throw new Error(`API 요청 실패: ${response.status}`)
-  }
-
-  return response.json()
+  return apiClient.get<CategoryStyles>(
+    resolveApiPath(
+      "/api/ebooks/category-styles",
+      "/api/v1/ebooks/category-styles",
+    ),
+  )
 }
 
 export async function getSuggestedQuestions() {
-  const response = await fetch("/api/ebooks/suggested-questions")
+  return apiClient.get<unknown[]>(
+    resolveApiPath(
+      "/api/ebooks/suggested-questions",
+      "/api/v1/ebooks/suggested-questions",
+    ),
+  )
+}
 
-  if (!response.ok) {
-    throw new Error(`API 요청 실패: ${response.status}`)
-  }
+export async function createEbook(
+  body: Record<string, unknown>,
+): Promise<Record<string, unknown>> {
+  return apiClient.post<Record<string, unknown>>(
+    resolveApiPath("/api/ebooks", "/api/v1/ebooks"),
+    body,
+  )
+}
 
-  return response.json()
+export async function updateEbook(
+  id: string,
+  body: Record<string, unknown>,
+): Promise<Record<string, unknown>> {
+  return apiClient.patch<Record<string, unknown>>(
+    resolveApiPath(`/api/ebooks/${id}`, `/api/v1/ebooks/${id}`),
+    body,
+  )
+}
+
+export async function deleteEbook(id: string): Promise<{
+  success: boolean
+  deletedId: string
+}> {
+  return apiClient.delete(
+    resolveApiPath(`/api/ebooks/${id}`, `/api/v1/ebooks/${id}`),
+  )
 }

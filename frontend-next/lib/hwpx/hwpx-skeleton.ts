@@ -1,4 +1,15 @@
+import { escapeXml } from "@/lib/hwpx/hwpx-encoding"
+
 /** OWPML header / 패키지 골격 — 한글 2014+ 호환 최소 세트 */
+
+const HWPX_FONT_FACE = "맑은 고딕"
+
+function fontfaceBlock(lang: string): string {
+  const charset = lang === "LATIN" ? "LATIN" : "HANGUL"
+  return `<hh:fontface lang="${lang}" fontCnt="1">
+        <hh:font id="0" face="${HWPX_FONT_FACE}" charset="${charset}" type="TTF" isEmbedded="0"/>
+      </hh:fontface>`
+}
 
 export const HWPX_STYLE = {
   body: 0,
@@ -34,13 +45,14 @@ export function buildHeaderXml(documentTitle: string): string {
          version="1.5" secCnt="1">
   <hh:beginNum page="1" footnote="1" endnote="1" pic="1" tbl="1" equation="1"/>
   <hh:refList>
-    <hh:fontfaces itemCnt="2">
-      <hh:fontface lang="HANGUL" fontCnt="1">
-        <hh:font id="0" face="맑은 고딕" charset="HANGUL" type="TTF" isEmbedded="0"/>
-      </hh:fontface>
-      <hh:fontface lang="LATIN" fontCnt="1">
-        <hh:font id="0" face="맑은 고딕" charset="LATIN" type="TTF" isEmbedded="0"/>
-      </hh:fontface>
+    <hh:fontfaces itemCnt="7">
+      ${fontfaceBlock("HANGUL")}
+      ${fontfaceBlock("LATIN")}
+      ${fontfaceBlock("HANJA")}
+      ${fontfaceBlock("JAPANESE")}
+      ${fontfaceBlock("OTHER")}
+      ${fontfaceBlock("SYMBOL")}
+      ${fontfaceBlock("USER")}
     </hh:fontfaces>
     <hh:borderFills itemCnt="3">
       <hh:borderFill id="0" threeD="0" shadow="0" centerLine="NONE" breakCellSeparateLine="0">
@@ -248,11 +260,3 @@ export function buildSectionOpenParagraph(): string {
 </hp:p>`
 }
 
-function escapeXml(value: string): string {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&apos;")
-}

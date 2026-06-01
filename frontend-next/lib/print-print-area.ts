@@ -12,7 +12,7 @@ function buildIframePrintStyles(documentsLandscape: boolean): string {
     return `
   html, body { margin: 0; padding: 0; background: #fff !important; }
   body.is-printing, body.is-printing * { visibility: visible !important; }
-  .print-hide, [data-print-chrome] { display: none !important; }
+  .print-hide, [data-print-chrome], [aria-label="첨부 자료"], .document-media-sections, .document-media-block { display: none !important; }
   @media print {
     ${KANBAN_DOCUMENTS_PRINT_CSS}
     .print-area, .print-area .print-document-root {
@@ -27,7 +27,7 @@ function buildIframePrintStyles(documentsLandscape: boolean): string {
   return `
   html, body { margin: 0; padding: 0; background: #fff !important; }
   body.is-printing, body.is-printing * { visibility: visible !important; }
-  .print-hide, [data-print-chrome] { display: none !important; }
+  .print-hide, [data-print-chrome], [aria-label="첨부 자료"], .document-media-sections, .document-media-block { display: none !important; }
   @media print {
     @page { size: A4 portrait; margin: 0; }
     body.is-printing .print-area {

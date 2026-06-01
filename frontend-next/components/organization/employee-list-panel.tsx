@@ -4,17 +4,21 @@ import {
   ChevronDown,
   ChevronRight,
   Search,
+  UserPlus,
   Users,
 } from "lucide-react"
 
 import { EmployeeAvatar } from "@/components/organization/employee-avatar"
+import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { canCreateEmployee } from "@/lib/organization-permissions"
 
 import { cn } from "@/lib/utils"
 
 import {
   Department,
   Employee,
+  OrganizationContext,
 } from "@/services/organization.types"
 
 interface EmployeeListPanelProps {
@@ -23,9 +27,11 @@ interface EmployeeListPanelProps {
   selectedEmployee: Employee | null
   searchQuery: string
   groupByPosition?: boolean
+  organizationContext?: OrganizationContext | null
   onToggleGroup: (id: string) => void
   onSelectEmployee: (employee: Employee) => void
   onSearchChange: (value: string) => void
+  onAddEmployee?: () => void
 }
 
 export function EmployeeListPanel({
@@ -34,10 +40,16 @@ export function EmployeeListPanel({
   selectedEmployee,
   searchQuery,
   groupByPosition = false,
+  organizationContext = null,
   onToggleGroup,
   onSelectEmployee,
   onSearchChange,
+  onAddEmployee,
 }: EmployeeListPanelProps) {
+  const showAddButton =
+    Boolean(onAddEmployee) &&
+    canCreateEmployee(organizationContext?.permissions ?? null)
+
   return (
     <div className="rounded-xl border border-border bg-card p-6">
       <div className="mb-4 flex items-center justify-between">
@@ -45,6 +57,12 @@ export function EmployeeListPanel({
           <Users className="size-5" />
           직원 목록
         </h2>
+        {showAddButton && (
+          <Button size="sm" variant="outline" onClick={onAddEmployee}>
+            <UserPlus className="mr-1 size-4" />
+            직원 추가
+          </Button>
+        )}
       </div>
 
       <div className="relative mb-4">

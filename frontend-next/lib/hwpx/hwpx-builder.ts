@@ -1,6 +1,14 @@
 import JSZip from "jszip"
 
 import {
+  decodeHtmlEntities,
+  encodeHwpxUtf8,
+  escapeXml,
+  hpTextRun,
+  hpTextRuns,
+  sanitizeHwpxText,
+} from "@/lib/hwpx/hwpx-encoding"
+import {
   buildContainerXml,
   buildHeaderXml,
   buildManifestXml,
@@ -13,6 +21,12 @@ import {
   HWPX_PARA,
   HWPX_STYLE,
 } from "@/lib/hwpx/hwpx-skeleton"
+
+export {
+  decodeHtmlEntities,
+  escapeXml,
+  sanitizeHwpxText,
+} from "@/lib/hwpx/hwpx-encoding"
 
 export type HwpxParagraph = {
   text: string
@@ -61,25 +75,16 @@ function resetIds(): void {
   tblIdSeq = 1
 }
 
-/** XML·한글에서 깨지는 제어문자 제거 */
-export function sanitizeHwpxText(value: string): string {
-  return value
-    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, "")
-    .replace(/\uFFFE|\uFFFF/g, "")
-    .replace(/\r\n/g, "\n")
-    .replace(/\r/g, "\n")
-}
-
-export function escapeXml(value: string): string {
-  return sanitizeHwpxText(value)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&apos;")
-}
-
 const HWPX_LINE_AREA = 42520
+
+function addUtf8File(
+  zip: JSZip,
+  path: string,
+  content: string,
+  options?: JSZip.JSZipFileOptions,
+): void {
+  zip.file(path, encodeHwpxUtf8(content), { ...options, binary: true })
+}
 
 function linesegarrayXml(charHeight = 1000, vertpos = 0): string {
   const baseline = Math.floor(charHeight * 0.85)
@@ -91,15 +96,18 @@ export function stripHtml(html: string): string {
   if (typeof document !== "undefined") {
     const el = document.createElement("div")
     el.innerHTML = html
-    return (el.textContent ?? el.innerText ?? "").trim()
+    return sanitizeHwpxText((el.textContent ?? el.innerText ?? "").trim())
   }
-  return html
-    .replace(/<br\s*\/?>/gi, "\n")
-    .replace(/<\/p>/gi, "\n")
-    .replace(/<\/li>/gi, "\n")
-    .replace(/<[^>]+>/g, "")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim()
+  const decoded = decodeHtmlEntities(html)
+  return sanitizeHwpxText(
+    decoded
+      .replace(/<br\s*\/?>/gi, "\n")
+      .replace(/<\/p>/gi, "\n")
+      .replace(/<\/li>/gi, "\n")
+      .replace(/<[^>]+>/g, "")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim(),
+  )
 }
 
 function paragraphXml(
@@ -126,20 +134,7 @@ function paragraphXml(
         ? HWPX_CHAR.heading
         : HWPX_CHAR.body
 
-  const safe = sanitizeHwpxText(text)
-  const lines = safe.split("\n")
-  const runs =
-    lines.length === 0 || (lines.length === 1 && !lines[0])
-      ? `<hp:run charPrIDRef="${charId}"><hp:t> </hp:t></hp:run>`
-      : lines
-          .map((line, index) => {
-            const breakXml =
-              index < lines.length - 1
-                ? `<hp:run charPrIDRef="${charId}"><hp:lineBreak/></hp:run>`
-                : ""
-            return `<hp:run charPrIDRef="${charId}"><hp:t>${escapeXml(line || " ")}</hp:t></hp:run>${breakXml}`
-          })
-          .join("")
+  const runs = hpTextRuns(charId, text)
 
   const charHeight =
     variant === "title" ? 1800 : variant === "heading" ? 1200 : 1000
@@ -216,17 +211,7 @@ function tableXml(table: HwpxTable): string {
           const charId = cell.header ? HWPX_CHAR.label : HWPX_CHAR.body
           const paraId = cell.header ? HWPX_PARA.center : HWPX_PARA.body
           const styleId = cell.header ? HWPX_STYLE.label : HWPX_STYLE.body
-          const text = sanitizeHwpxText(cell.text) || " "
-          const lines = text.split("\n")
-          const runs = lines
-            .map((line, li) => {
-              const br =
-                li < lines.length - 1
-                  ? `<hp:run charPrIDRef="${charId}"><hp:lineBreak/></hp:run>`
-                  : ""
-              return `<hp:run charPrIDRef="${charId}"><hp:t>${escapeXml(line)}</hp:t></hp:run>${br}`
-            })
-            .join("")
+          const runs = hpTextRuns(charId, cell.text || " ")
 
           const cellCharHeight = cell.header ? 900 : 1000
           const cellPara = `<hp:p id="${nextParaId()}" paraPrIDRef="${paraId}" styleIDRef="${styleId}" pageBreak="0" columnBreak="0" merged="0">${runs}${linesegarrayXml(cellCharHeight)}</hp:p>`
@@ -338,16 +323,16 @@ export async function buildHwpxBlob(doc: HwpxDocument): Promise<Blob> {
   const zip = new JSZip()
   const title = doc.title || "문서"
 
-  zip.file("mimetype", "application/hwp+zip", { compression: "STORE" })
-  zip.file("META-INF/container.xml", buildContainerXml())
-  zip.file("META-INF/manifest.xml", buildManifestXml())
-  zip.file("version.xml", buildVersionXml())
-  zip.file("settings.xml", buildSettingsXml())
-  zip.file("Contents/content.hpf", buildContentHpf(title))
-  zip.file("Contents/header.xml", buildHeaderXml(title))
-  zip.file("Contents/section0.xml", buildSection0Xml(doc.sections))
-  zip.file("Meta/meta.xml", buildMetaXml(title))
-  zip.file("Preview/PrvText.txt", buildPreviewText(doc))
+  addUtf8File(zip, "mimetype", "application/hwp+zip", { compression: "STORE" })
+  addUtf8File(zip, "META-INF/container.xml", buildContainerXml())
+  addUtf8File(zip, "META-INF/manifest.xml", buildManifestXml())
+  addUtf8File(zip, "version.xml", buildVersionXml())
+  addUtf8File(zip, "settings.xml", buildSettingsXml())
+  addUtf8File(zip, "Contents/content.hpf", buildContentHpf(title))
+  addUtf8File(zip, "Contents/header.xml", buildHeaderXml(title))
+  addUtf8File(zip, "Contents/section0.xml", buildSection0Xml(doc.sections))
+  addUtf8File(zip, "Meta/meta.xml", buildMetaXml(title))
+  addUtf8File(zip, "Preview/PrvText.txt", `\uFEFF${buildPreviewText(doc)}`)
 
   return zip.generateAsync({
     type: "blob",
@@ -357,7 +342,9 @@ export async function buildHwpxBlob(doc: HwpxDocument): Promise<Blob> {
 }
 
 export function downloadHwpxFile(filename: string, blob: Blob): void {
-  const safeName = filename.replace(/[<>:"/\\|?*]/g, "_").replace(/\s+/g, "_")
+  const safeName = sanitizeHwpxText(filename)
+    .replace(/[<>:"/\\|?*]/g, "_")
+    .replace(/\s+/g, "_")
   const url = URL.createObjectURL(blob)
   const anchor = document.createElement("a")
   anchor.href = url

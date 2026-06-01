@@ -39,7 +39,7 @@ export function SelectionToolbar({
       <div className="flex items-center gap-2">
         <Button variant="outline" size="sm" className="gap-2" onClick={onExport}>
           <Download className="size-4" />
-          선택 항목 export
+          선택 항목 ZIP export
         </Button>
         <Button variant="outline" size="sm" className="gap-2" onClick={onCopy}>
           <Copy className="size-4" />

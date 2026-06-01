@@ -1,4 +1,5 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { resolveProfileImageSrc } from "@/lib/organization/profile-image-src"
 import { cn } from "@/lib/utils"
 import type { Employee } from "@/services/organization.types"
 
@@ -6,20 +7,13 @@ function getEmployeeSurname(name: string): string {
   return name.trim().slice(0, 1) || "?"
 }
 
-/** public/ 한글 파일명 등 경로 인코딩 */
-function toPublicAssetUrl(path: string): string {
-  if (!path.startsWith("/")) return path
-  return path
-    .split("/")
-    .map((segment, index) => (index === 0 ? segment : encodeURIComponent(segment)))
-    .join("/")
-}
-
 interface EmployeeAvatarProps {
   employee: Pick<Employee, "name" | "profileImage">
   className?: string
   fallbackClassName?: string
   variant?: "circle" | "square"
+  /** 업로드 직후 이미지 캐시 무효화 */
+  imageCacheKey?: string | number
 }
 
 export function EmployeeAvatar({
@@ -27,11 +21,14 @@ export function EmployeeAvatar({
   className,
   fallbackClassName,
   variant = "circle",
+  imageCacheKey,
 }: EmployeeAvatarProps) {
   const isSquare = variant === "square"
   const shapeClass = isSquare ? "rounded-xl" : "rounded-full"
   const profileSrc = employee.profileImage
-    ? toPublicAssetUrl(employee.profileImage)
+    ? resolveProfileImageSrc(employee.profileImage, {
+        cacheBust: imageCacheKey,
+      })
     : undefined
 
   return (

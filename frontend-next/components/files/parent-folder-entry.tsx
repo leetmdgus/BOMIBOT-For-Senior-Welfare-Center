@@ -43,6 +43,7 @@ export function ParentFolderRow({ onOpen }: ParentFolderEntryProps) {
       onClick={onOpen}
     >
       <td className="p-4"></td>
+      <td className="p-2"></td>
       <td className="p-4">
         <div className="flex items-center gap-3">
           <CornerUpLeft className="size-5 text-muted-foreground" />

@@ -80,6 +80,8 @@ export interface SaveSurveyPayload {
   questions: SurveyQuestion[]
   style?: Partial<SurveyStyle>
   settings?: Partial<SurveySettings>
+  /** 칸반 업무(카드) 연결 */
+  taskId?: string
 }
 
 export interface SaveSurveyResult {

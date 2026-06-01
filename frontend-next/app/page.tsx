@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation"
 
-export default function DocumentsPage() {
-  redirect("/dashboard")
+export default function HomePage() {
+  redirect("/login")
 }

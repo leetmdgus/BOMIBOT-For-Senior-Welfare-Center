@@ -1,7 +1,7 @@
 "use client"
 
 import Image from "next/image"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { ChevronDown, ChevronUp, Search, Trash2, X } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -20,11 +20,17 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { getCurrentYearString } from "@/lib/current-year"
 import { cn } from "@/lib/utils"
+import {
+  ensureAssigneesIncludeSelf,
+  loadAssignableStaff,
+  resolveCurrentUserStaff,
+} from "@/lib/kanban/assignable-staff"
+import { toast } from "@/hooks/use-toast"
 import {
   getProjectImageOptions,
   getProjects,
-  getStaffList,
 } from "@/services/kanban.board.service"
 import { KanbanProject, ProjectImageOption, Staff, Task } from "@/services/kanban.board.types"
 
@@ -89,7 +95,7 @@ export function TaskModal({
   defaultCategoryId,
   defaultProjectName,
   lockProjectSelect = false,
-  year = "2026",
+  year = getCurrentYearString(),
   onSubmit,
   onDelete,
 }: TaskModalProps) {
@@ -98,6 +104,7 @@ export function TaskModal({
   const [searchQuery, setSearchQuery] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [staffList, setStaffList] = useState<Staff[]>(staffListProp ?? [])
+  const [currentUserStaff, setCurrentUserStaff] = useState<Staff | null>(null)
   const [projectImages, setProjectImages] = useState<ProjectImageOption[]>(
     projectImagesProp ?? []
   )
@@ -125,7 +132,7 @@ export function TaskModal({
 
     const loadModalData = async () => {
       const [staff, images, projects] = await Promise.all([
-        staffListProp?.length ? Promise.resolve(staffListProp) : getStaffList(),
+        staffListProp?.length ? Promise.resolve(staffListProp) : loadAssignableStaff(),
         projectImagesProp?.length
           ? Promise.resolve(projectImagesProp)
           : getProjectImageOptions(),
@@ -134,7 +141,11 @@ export function TaskModal({
 
       if (cancelled) return
 
-      setStaffList(staff)
+      const resolvedStaff = staffListProp?.length ? staffListProp : staff
+      const resolvedSelf = await resolveCurrentUserStaff(resolvedStaff)
+
+      setStaffList(resolvedStaff)
+      setCurrentUserStaff(resolvedSelf)
       setProjectImages(images)
       if (!projectsProp?.length) setLoadedProjects(projects)
     }
@@ -162,34 +173,55 @@ export function TaskModal({
     [resolvedProjects]
   )
 
-  const resolveAssignees = (assigneeName?: string) => {
-    if (!assigneeName?.trim()) return []
+  const resolveAssignees = (assigneeName?: string, selfStaff?: Staff | null) => {
+    const self = selfStaff ?? currentUserStaff
+    if (!assigneeName?.trim()) {
+      return self ? [self] : []
+    }
 
-    const matched = staffList.find(
-      (staff) =>
-        assigneeName.includes(staff.name) || staff.name === assigneeName
+    const names = assigneeName
+      .split(/[,、]\s*/)
+      .map((part) => part.trim())
+      .filter(Boolean)
+
+    const matched = names
+      .map(
+        (name) => staffList.find((staff) => staff.name === name) ?? null,
+      )
+      .filter((item): item is Staff => item !== null)
+
+    const unique = matched.filter(
+      (staff, index, list) => list.findIndex((item) => item.id === staff.id) === index,
     )
 
-    return matched ? [matched] : []
+    return self ? ensureAssigneesIncludeSelf(unique, self) : unique
   }
 
+  const formInitKeyRef = useRef<string | null>(null)
+
   useEffect(() => {
-    if (!open) return
+    if (!open) {
+      formInitKeyRef.current = null
+      return
+    }
 
     const selectedProject = existingProjects.find(
-      (project) => project.id === defaultProjectId
+      (project) => project.id === defaultProjectId,
     )
+
+    const initKey = `${mode}:${task?.id ?? "new"}:${defaultProjectId ?? ""}:${defaultCategoryId ?? ""}`
+    if (formInitKeyRef.current === initKey) return
+    formInitKeyRef.current = initKey
 
     if (task && mode === "edit") {
       setFormData({
         projectId: defaultProjectId ?? selectedProject?.id ?? "",
         categoryId: defaultCategoryId ?? selectedProject?.categoryId ?? "",
-        projectName:
-          defaultProjectName ?? selectedProject?.name ?? "",
+        projectName: defaultProjectName ?? selectedProject?.name ?? "",
         projectImage: "",
         title: task.title,
         description: task.description ?? "",
-        assignees: resolveAssignees(task.assignee),
+        assignees: [],
       })
       return
     }
@@ -199,17 +231,41 @@ export function TaskModal({
       projectId: selectedProject?.id ?? "",
       categoryId: defaultCategoryId ?? selectedProject?.categoryId ?? "",
       projectName: selectedProject?.name ?? "",
+      assignees: [],
     })
   }, [
     open,
-    task,
+    task?.id,
     mode,
     defaultProjectId,
     defaultCategoryId,
     defaultProjectName,
     existingProjects,
-    staffList,
   ])
+
+  useEffect(() => {
+    if (!open || staffList.length === 0) return
+
+    const self = currentUserStaff
+
+    if (mode === "edit" && task) {
+      setFormData((prev) => {
+        if (prev.assignees.length > 0) return prev
+        return {
+          ...prev,
+          assignees: resolveAssignees(task.assignee, self),
+        }
+      })
+      return
+    }
+
+    if (mode === "create" && self) {
+      setFormData((prev) => {
+        if (prev.assignees.length > 0) return prev
+        return { ...prev, assignees: [self] }
+      })
+    }
+  }, [open, mode, task?.id, task?.assignee, staffList, currentUserStaff])
 
   const filteredStaff = staffList.filter((staff) => {
     const keyword = searchQuery.trim()
@@ -242,9 +298,35 @@ export function TaskModal({
     if (!isNewProjectForm && !formData.categoryId) return
     if (!isNewProjectForm && !formData.title.trim()) return
 
+    const self = currentUserStaff
+    if (!isNewProjectForm && self) {
+      const includesSelf = formData.assignees.some((item) => item.id === self.id)
+      if (!includesSelf) {
+        toast({
+          variant: "destructive",
+          title: "담당자 확인",
+          description: "본인은 반드시 담당자에 포함되어야 합니다.",
+        })
+        return
+      }
+    }
+
+    if (!isNewProjectForm && formData.assignees.length === 0) {
+      toast({
+        variant: "destructive",
+        title: "담당자 확인",
+        description: "조직도에 등록된 담당자를 한 명 이상 선택해 주세요.",
+      })
+      return
+    }
+
+    const payload: TaskFormData = self
+      ? { ...formData, assignees: ensureAssigneesIncludeSelf(formData.assignees, self) }
+      : formData
+
     try {
       setIsSubmitting(true)
-      await onSubmit?.(formData)
+      await onSubmit?.(payload)
       handleClose()
     } catch (error) {
       console.error("저장 실패:", error)
@@ -263,7 +345,12 @@ export function TaskModal({
     }
   }
 
+  const isRequiredSelf = (staffId: string) =>
+    Boolean(currentUserStaff && currentUserStaff.id === staffId)
+
   const toggleAssignee = (staff: Staff) => {
+    if (isRequiredSelf(staff.id)) return
+
     setFormData((prev) => {
       const isSelected = prev.assignees.some(
         (assignee) => assignee.id === staff.id
@@ -279,6 +366,8 @@ export function TaskModal({
   }
 
   const removeAssignee = (staffId: string) => {
+    if (isRequiredSelf(staffId)) return
+
     setFormData((prev) => ({
       ...prev,
       assignees: prev.assignees.filter((assignee) => assignee.id !== staffId),
@@ -482,7 +571,14 @@ export function TaskModal({
               onClick={() => setShowAssigneeList((prev) => !prev)}
               className="flex w-full items-center justify-between border-b border-border pb-2 text-lg font-semibold text-foreground disabled:cursor-not-allowed disabled:opacity-50"
             >
-              <span>담당자</span>
+              <span>
+                담당자
+                {currentUserStaff ? (
+                  <span className="ml-2 text-xs font-normal text-muted-foreground">
+                    (본인 필수)
+                  </span>
+                ) : null}
+              </span>
               {showAssigneeList ? (
                 <ChevronUp className="size-5" />
               ) : (
@@ -511,15 +607,19 @@ export function TaskModal({
                             {assignee.position}
                           </span>
 
-                          <button
-                            type="button"
-                            disabled={isSubmitting}
-                            onClick={() => removeAssignee(assignee.id)}
-                            className="ml-1 rounded-full text-muted-foreground hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
-                            aria-label="담당자 삭제"
-                          >
-                            <X className="size-3" />
-                          </button>
+                          {!isRequiredSelf(assignee.id) ? (
+                            <button
+                              type="button"
+                              disabled={isSubmitting}
+                              onClick={() => removeAssignee(assignee.id)}
+                              className="ml-1 rounded-full text-muted-foreground hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                              aria-label="담당자 삭제"
+                            >
+                              <X className="size-3" />
+                            </button>
+                          ) : (
+                            <span className="ml-1 text-xs text-primary">본인</span>
+                          )}
                         </div>
                       ))
                     )}
@@ -542,11 +642,17 @@ export function TaskModal({
                   </div>
 
                   <div className="max-h-[150px] overflow-y-auto p-2">
-                    {filteredStaff.length > 0 ? (
+                    {staffList.length === 0 ? (
+                      <p className="px-2 py-4 text-center text-sm text-muted-foreground">
+                        조직도에 등록된 직원이 없습니다. 조직 관리에서 직원을
+                        등록한 뒤 다시 시도해 주세요.
+                      </p>
+                    ) : filteredStaff.length > 0 ? (
                       filteredStaff.map((staff) => {
                         const isSelected = formData.assignees.some(
                           (assignee) => assignee.id === staff.id
                         )
+                        const isSelf = isRequiredSelf(staff.id)
 
                         return (
                           <button
@@ -556,7 +662,8 @@ export function TaskModal({
                             onClick={() => toggleAssignee(staff)}
                             className={cn(
                               "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50",
-                              isSelected && "bg-muted font-medium"
+                              isSelected && "bg-muted font-medium",
+                              isSelf && "cursor-default"
                             )}
                           >
                             <span
@@ -570,6 +677,11 @@ export function TaskModal({
 
                             <span>
                               {staff.team} {staff.name} {staff.position}
+                              {isSelf ? (
+                                <span className="ml-1 text-xs text-primary">
+                                  (본인)
+                                </span>
+                              ) : null}
                             </span>
                           </button>
                         )

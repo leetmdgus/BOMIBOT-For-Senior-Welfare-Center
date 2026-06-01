@@ -19,6 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { getCurrentYearString } from "@/lib/current-year"
 import { cn } from "@/lib/utils"
 
 const navItems = [
@@ -42,12 +43,13 @@ const navItems = [
 export function DocumentsNav() {
   const pathname = usePathname()
   const isBusinessPlan = pathname.includes("/business-plan")
+  const currentYear = getCurrentYearString()
 
   return (
     <>
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-lg font-semibold">
-          {isBusinessPlan ? "2026년 통합 사업계획서" : "사업문서"}
+          {isBusinessPlan ? `${currentYear}년 통합 사업계획서` : "사업문서"}
         </h2>
 
         <div className="flex items-center gap-2">

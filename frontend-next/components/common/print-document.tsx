@@ -1,11 +1,12 @@
 "use client"
 
-import { useEffect, type ReactNode } from "react"
+import { useEffect, useState, type ReactNode } from "react"
 import { format } from "date-fns"
 import { ko } from "date-fns/locale"
-import { Printer } from "lucide-react"
+import { Loader2, Printer } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { flushRichTextEditorsAndWait } from "@/lib/prepare-print-area-html"
 import { printPrintArea } from "@/lib/print-print-area"
 import { cn } from "@/lib/utils"
 
@@ -65,15 +66,37 @@ export function PrintDocumentHeader({
   )
 }
 
+/** 브라우저 A4 인쇄 (한글 .hwpx 다운로드와 별개) */
 export function PrintDocumentButton({
   className,
   label = "인쇄",
+  loadingLabel = "인쇄 준비 중…",
+  disabled = false,
 }: {
   className?: string
   label?: string
+  loadingLabel?: string
+  disabled?: boolean
 }) {
-  const handlePrint = () => {
-    printPrintArea()
+  const [loading, setLoading] = useState(false)
+
+  const handleClick = () => {
+    void (async () => {
+      setLoading(true)
+      try {
+        await flushRichTextEditorsAndWait()
+        printPrintArea()
+      } catch (error) {
+        console.error("인쇄 실패:", error)
+        alert(
+          error instanceof Error
+            ? `인쇄 준비에 실패했습니다.\n${error.message}`
+            : "인쇄 준비에 실패했습니다.",
+        )
+      } finally {
+        setLoading(false)
+      }
+    })()
   }
 
   return (
@@ -82,10 +105,15 @@ export function PrintDocumentButton({
       variant="outline"
       size="sm"
       className={cn("print-hide", className)}
-      onClick={handlePrint}
+      disabled={disabled || loading}
+      onClick={handleClick}
     >
-      <Printer className="mr-2 size-4" />
-      {label}
+      {loading ? (
+        <Loader2 className="mr-2 size-4 animate-spin" />
+      ) : (
+        <Printer className="mr-2 size-4" />
+      )}
+      {loading ? loadingLabel : label}
     </Button>
   )
 }

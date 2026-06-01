@@ -3,6 +3,7 @@
 | 문서 | 설명 |
 |------|------|
 | [API_SPEC.md](./API_SPEC.md) | REST API·타입·Service 매핑 (Next.js `/api/*` + 목업) |
+| [DATABASE_SCHEMA.md](./DATABASE_SCHEMA.md) | DB ERD·테이블 스키마 (PostgreSQL 권장) |
 | [FRONTEND_REVIEW.md](./FRONTEND_REVIEW.md) | FastAPI 연동 전 코드 리뷰·TODO |
 | [../lib/README.md](../lib/README.md) | `lib/` 디렉터리 (mocks·chat·온톨로지) |
 | [../services/README.md](../services/README.md) | `services/` facade 패턴·도메인 목록 |

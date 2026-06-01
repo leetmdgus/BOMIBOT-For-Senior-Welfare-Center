@@ -2,28 +2,14 @@
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import { YearFilterSelect } from "@/components/kanban/documents/year-filter-select"
 
 export function BusinessPlanFilters() {
   return (
     <div className="flex items-center gap-4">
       <div>
         <label className="mb-1 block text-xs text-muted-foreground">연도</label>
-        <Select defaultValue="2026">
-          <SelectTrigger className="w-28">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="2026">2026년</SelectItem>
-            <SelectItem value="2025">2025년</SelectItem>
-          </SelectContent>
-        </Select>
+        <YearFilterSelect />
       </div>
 
       <div className="flex-1">

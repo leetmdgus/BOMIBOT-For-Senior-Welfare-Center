@@ -22,7 +22,6 @@ import {
   ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
-  ContextMenuSeparator,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu"
 import {
@@ -32,6 +31,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
+import { formatTaskAssigneeSummary } from "@/lib/kanban/assignee-names"
 import { cn } from "@/lib/utils"
 import { TaskModal, type TaskFormData } from "./task-modal"
 
@@ -48,6 +48,7 @@ interface TaskCardProps {
   columnType?: ColumnType
   projectId?: string
   projectName?: string
+  projectTeam?: string
   categoryId?: string
   staffList?: Staff[]
   projectImages?: ProjectImageOption[]
@@ -88,6 +89,7 @@ export function TaskCard({
   columnType,
   projectId,
   projectName,
+  projectTeam,
   categoryId,
   staffList,
   projectImages,
@@ -284,29 +286,19 @@ export function TaskCard({
                 <span className="shrink-0 text-primary">✽</span>
 
                 <span className="truncate">
-                  복지 1팀 {task.assignee} 사회복지사
+                  {formatTaskAssigneeSummary(task.assignee, projectTeam)}
                 </span>
               </div>
             </ContextMenuTrigger>
 
-            <ContextMenuContent className="w-64">
-              <ContextMenuItem className="justify-center text-destructive">
-                담당자 삭제
-              </ContextMenuItem>
-
-              <ContextMenuSeparator />
-
-              <div className="px-2 py-1.5 text-xs text-muted-foreground">
-                담당자 변경
-              </div>
-
-              <ContextMenuSeparator />
-
-              <ContextMenuItem>복지팀 김연수 사회복지사</ContextMenuItem>
-
-              <ContextMenuItem>복지팀 김태민 사회복지사</ContextMenuItem>
-
-              <ContextMenuItem>복지팀 박수현 사회복지사</ContextMenuItem>
+            <ContextMenuContent className="w-56">
+              {onUpdateTask ? (
+                <ContextMenuItem
+                  onSelect={() => setIsEditModalOpen(true)}
+                >
+                  담당자·업무 수정
+                </ContextMenuItem>
+              ) : null}
             </ContextMenuContent>
           </ContextMenu>
         </div>

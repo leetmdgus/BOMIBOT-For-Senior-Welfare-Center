@@ -7,51 +7,75 @@ import type {
   SurveyListItem,
   SurveyResults,
 } from "./survey.types"
+import { apiClient, resolveApiPath } from "@/lib/api-client"
+import { invalidateApiGetCache } from "@/lib/api-get-cache"
 
-async function apiFetch<T>(url: string, options?: RequestInit): Promise<T> {
-  const response = await fetch(url, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...options?.headers,
-    },
-  })
+const surveysPath = (suffix = "") =>
+  resolveApiPath(`/api/surveys${suffix}`, `/api/v1/surveys${suffix}`)
 
-  if (!response.ok) {
-    throw new Error(`API 요청 실패: ${response.status}`)
-  }
-
-  return response.json()
+export async function getSurveyList(options?: {
+  taskId?: string
+  status?: string
+  search?: string
+}): Promise<SurveyListItem[]> {
+  const params = new URLSearchParams()
+  if (options?.taskId) params.set("taskId", options.taskId)
+  if (options?.status) params.set("status", options.status)
+  if (options?.search) params.set("search", options.search)
+  const query = params.toString()
+  return apiClient.get<SurveyListItem[]>(
+    surveysPath(query ? `?${query}` : ""),
+  )
 }
 
-export async function getSurveyList(): Promise<SurveyListItem[]> {
-  return apiFetch<SurveyListItem[]>("/api/surveys")
-}
-
-export async function getSurveyDetail(id: string): Promise<SurveyDetail> {
-  return apiFetch<SurveyDetail>(`/api/surveys/${id}`)
+export async function getSurveyDetail(
+  id: string,
+  options?: { taskId?: string },
+): Promise<SurveyDetail> {
+  const params = new URLSearchParams()
+  if (options?.taskId) params.set("taskId", options.taskId)
+  const query = params.toString()
+  return apiClient.get<SurveyDetail>(
+    surveysPath(`/${id}${query ? `?${query}` : ""}`),
+  )
 }
 
 export async function saveSurvey(
   id: string,
-  payload: SaveSurveyPayload
+  payload: SaveSurveyPayload,
 ): Promise<SaveSurveyResult> {
-  return apiFetch<SaveSurveyResult>(`/api/surveys/${id}`, {
-    method: "POST",
-    body: JSON.stringify(payload),
-  })
+  const params = new URLSearchParams()
+  if (payload.taskId) params.set("taskId", payload.taskId)
+  const query = params.toString()
+  const { taskId: _taskId, ...body } = payload
+  const result = await apiClient.post<SaveSurveyResult>(
+    surveysPath(`/${id}${query ? `?${query}` : ""}`),
+    body,
+  )
+  invalidateApiGetCache("surveys")
+  if (payload.taskId) {
+    invalidateApiGetCache(`taskId=${encodeURIComponent(payload.taskId)}`)
+  }
+  return result
 }
 
 export async function getSurveyResults(id: string): Promise<SurveyResults> {
-  return apiFetch<SurveyResults>(`/api/surveys/${id}/results`)
+  return apiClient.get<SurveyResults>(surveysPath(`/${id}/results`))
 }
 
 export async function submitSurveyResponse(
   id: string,
-  payload: SubmitSurveyResponsePayload
+  payload: SubmitSurveyResponsePayload,
 ): Promise<SubmitSurveyResponseResult> {
-  return apiFetch<SubmitSurveyResponseResult>(`/api/surveys/${id}/responses`, {
-    method: "POST",
-    body: JSON.stringify(payload),
-  })
+  return apiClient.post<SubmitSurveyResponseResult>(
+    surveysPath(`/${id}/responses`),
+    payload,
+  )
+}
+
+export async function deleteSurvey(id: string): Promise<{
+  success: boolean
+  deletedId: string
+}> {
+  return apiClient.delete(surveysPath(`/${id}`))
 }

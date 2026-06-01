@@ -14,17 +14,29 @@ export interface VersionHistoryChange {
   after?: string
 }
 
+export interface VersionHistoryMeta {
+  projectId?: string
+  taskId?: string
+  categoryId?: string
+  fromCategoryId?: string
+  toCategoryId?: string
+  year?: string
+  restoredFrom?: string
+}
+
 export interface VersionHistoryEntry {
   id: string
   user: string
   userTeam?: string
   target: string
   projectName?: string
+  year?: string
   actionType: VersionHistoryActionType
   action: string
   date: string
   canRestore: boolean
   changes: VersionHistoryChange[]
+  meta?: VersionHistoryMeta
 }
 
 export interface VersionHistoryQuery {
@@ -37,6 +49,9 @@ export interface RestoreVersionHistoryResult {
   success: boolean
   historyId: string
   message: string
+  projectId?: string
+  year?: string
+  refresh?: { year: string; projectId: string }
 }
 
 export const VERSION_HISTORY_ACTION_LABELS: Record<

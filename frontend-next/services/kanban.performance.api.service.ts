@@ -3,28 +3,71 @@ import type {
   MonthlyPlanVersion,
   PerformanceInputMeta,
   PerformanceListResponse,
+  PerformanceRow,
 } from "./kanban.performance.types"
+import { cachedApiGet, invalidateApiGetCache } from "@/lib/api-get-cache"
+import { apiClient, resolveApiPath } from "@/lib/api-client"
+import { requireTaskId } from "@/lib/kanban/require-task-id"
 
-export async function getInputManagementRows() {
-  const response = await fetch("/api/performance?scope=input-management")
+function invalidatePerformanceInputCache(taskId: string) {
+  invalidateApiGetCache(`performance:input:${requireTaskId(taskId)}`)
+}
 
-  if (!response.ok) {
-    throw new Error(`API 요청 실패: ${response.status}`)
-  }
+const perfPath = (suffix = "") =>
+  resolveApiPath(
+    `/api/performance${suffix}`,
+    `/api/v1/performance${suffix}`,
+  )
 
-  const result = await response.json()
-
+export async function getInputManagementRows(
+  taskId: string,
+): Promise<PerformanceRow[]> {
+  const tid = requireTaskId(taskId)
+  const query = new URLSearchParams({
+    scope: "input-management",
+    taskId: tid,
+  })
+  const path = `${perfPath()}?${query.toString()}`
+  const result = await cachedApiGet(
+    path,
+    () => apiClient.get<{ data: PerformanceRow[] }>(path),
+    {
+      key: `performance:input:${tid}`,
+      ttlMs: 30_000,
+    },
+  )
   return result.data
 }
 
+export async function saveInputManagementRows(
+  rows: PerformanceRow[],
+  taskId: string,
+): Promise<{ success: boolean; count: number }> {
+  const tid = requireTaskId(taskId)
+  const suffix = `/input-management?${new URLSearchParams({ taskId: tid }).toString()}`
+  const result = await apiClient.put<{ success: boolean; count: number }>(
+    perfPath(suffix),
+    { rows },
+  )
+  invalidatePerformanceInputCache(tid)
+  return result
+}
+
+const EMPTY_INPUT_META: PerformanceInputMeta = {
+  subProjectChips: [],
+  detailCategories: [],
+}
+
 export async function getPerformanceInputMeta(): Promise<PerformanceInputMeta> {
-  const response = await fetch("/api/performance?scope=input-meta")
-
-  if (!response.ok) {
-    throw new Error(`API 요청 실패: ${response.status}`)
+  const path = `${perfPath()}?scope=input-meta`
+  try {
+    return await cachedApiGet(path, () => apiClient.get<PerformanceInputMeta>(path), {
+      key: "performance:input-meta",
+      ttlMs: 120_000,
+    })
+  } catch {
+    return EMPTY_INPUT_META
   }
-
-  return response.json()
 }
 
 export async function getPerformanceRows(params?: {
@@ -32,30 +75,55 @@ export async function getPerformanceRows(params?: {
   month?: string
 }): Promise<PerformanceListResponse> {
   const searchParams = new URLSearchParams()
-
   if (params?.projectId) searchParams.set("projectId", params.projectId)
   if (params?.month) searchParams.set("month", params.month)
-
   const query = searchParams.toString()
-  const response = await fetch(`/api/performance${query ? `?${query}` : ""}`)
-
-  if (!response.ok) {
-    throw new Error(`API 요청 실패: ${response.status}`)
-  }
-
-  return response.json()
+  return apiClient.get<PerformanceListResponse>(
+    perfPath(query ? `?${query}` : ""),
+  )
 }
 
 export async function getMonthlyPlan(
-  version: MonthlyPlanVersion = "기본계획"
+  version: MonthlyPlanVersion = "기본계획",
 ): Promise<MonthlyPlanResponse> {
-  const response = await fetch(
-    `/api/performance/monthly-plan?version=${encodeURIComponent(version)}`
+  return apiClient.get<MonthlyPlanResponse>(
+    resolveApiPath(
+      `/api/performance/monthly-plan?version=${encodeURIComponent(version)}`,
+      `/api/v1/performance/monthly-plan?version=${encodeURIComponent(version)}`,
+    ),
   )
+}
 
-  if (!response.ok) {
-    throw new Error(`API 요청 실패: ${response.status}`)
-  }
+export async function saveMonthlyPlan(
+  version: MonthlyPlanVersion,
+  payload: MonthlyPlanResponse,
+): Promise<MonthlyPlanResponse> {
+  return apiClient.put<MonthlyPlanResponse>(
+    resolveApiPath(
+      `/api/performance/monthly-plan?version=${encodeURIComponent(version)}`,
+      `/api/v1/performance/monthly-plan?version=${encodeURIComponent(version)}`,
+    ),
+    payload,
+  )
+}
 
-  return response.json()
+export async function createPerformanceRecord(
+  body: Partial<PerformanceRow>,
+): Promise<PerformanceRow> {
+  return apiClient.post<PerformanceRow>(perfPath(), body)
+}
+
+export async function updatePerformanceRecord(
+  body: Partial<PerformanceRow> & { id: string },
+): Promise<PerformanceRow> {
+  return apiClient.put<PerformanceRow>(perfPath(), body)
+}
+
+export async function deletePerformanceRecord(id: string): Promise<{
+  success: boolean
+  deletedId: string
+}> {
+  return apiClient.delete<{ success: boolean; deletedId: string }>(
+    `${perfPath()}?id=${encodeURIComponent(id)}`,
+  )
 }

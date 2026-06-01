@@ -157,6 +157,8 @@ type BusinessPlanRichTextProps = {
   minHeight?: number
   className?: string
   onActivate?: () => void
+  /** HWPX export 시 DOM에서 본문 동기화 */
+  sectionId?: string | number
 }
 
 export function plainTextToHtml(text: string): string {
@@ -193,6 +195,7 @@ export const BusinessPlanRichText = forwardRef<
     minHeight = 140,
     className,
     onActivate,
+    sectionId,
   },
   ref,
 ) {
@@ -785,6 +788,8 @@ export const BusinessPlanRichText = forwardRef<
             onClick={() => onActivate?.()}
             className="bp-rich-editor formal-doc min-h-[12rem] w-full min-w-0 cursor-text px-3 py-3 text-[11px] leading-relaxed outline-none"
             style={{ minHeight }}
+            data-bp-section-id={sectionId != null ? String(sectionId) : undefined}
+            data-bp-section-field="content"
             data-placeholder="내용을 입력하세요. 표 셀은 더블클릭해 글을 쓰고, 툴바 「이미지」 또는 붙여넣기(Ctrl+V)로 그림을 넣을 수 있습니다."
           />
           <RichTextTableSelectionLayer

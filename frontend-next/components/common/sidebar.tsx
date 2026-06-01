@@ -1,42 +1,20 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { usePathname } from "next/navigation"
 import Link from "next/link"
-import {
-  LayoutDashboard,
-  Users,
-  Briefcase,
-  FileText,
-  FolderOpen,
-  FileSignature,
-  BookOpen,
-  Settings,
-  Search,
-  ChevronLeft,
-} from "lucide-react"
+import { ChevronLeft, LogOut, Search } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { BRAND_LOGO_SRC } from "@/lib/constants/brand"
-import { CURRENT_USER } from "@/lib/constants/current-user"
+import { BrandLogo } from "@/components/common/brand-logo"
+import { useAuth } from "@/components/auth/auth-provider"
 import { EmployeeAvatar } from "@/components/organization/employee-avatar"
 import { Input } from "@/components/ui/input"
-
-interface MenuItem {
-  icon: React.ElementType
-  label: string
-  href: string
-}
-
-const menuItems: MenuItem[] = [
-  { icon: LayoutDashboard, label: "대시보드", href: "/dashboard" },
-  { icon: Users, label: "조직현황", href: "/organization" },
-  { icon: Briefcase, label: "사업관리", href: "/kanban" },
-  { icon: FileText, label: "문서자동화", href: "/automation" },
-  { icon: FolderOpen, label: "파일들", href: "/files" },
-  { icon: BookOpen, label: "전자책자", href: "/ebooks" },
-  { icon: FileSignature, label: "전자결재", href: "#" },
-  { icon: Settings, label: "메뉴 관리", href: "#" },
-]
+import { Button } from "@/components/ui/button"
+import { APP_MENU_ITEMS, MENU_MANAGEMENT_HREF } from "@/lib/navigation/app-menu"
+import {
+  getHiddenMenuHrefs,
+  MENU_PREFERENCES_EVENT,
+} from "@/lib/navigation/menu-preferences"
 
 /** 사업계획서·사업평가 작성 화면 — 넓은 문서 영역을 위해 기본 접힘 */
 function shouldCollapseSidebarByDefault(pathname: string) {
@@ -48,13 +26,42 @@ function shouldCollapseSidebarByDefault(pathname: string) {
 
 export function Sidebar() {
   const pathname = usePathname()
+  const { session, logout } = useAuth()
   const [collapsed, setCollapsed] = useState(() =>
     shouldCollapseSidebarByDefault(pathname),
+  )
+  const [hiddenHrefs, setHiddenHrefs] = useState<string[]>([])
+
+  const profileUser = session
+    ? {
+        name: session.name,
+        role: session.role,
+        department: session.department,
+        profileImage: session.profileImage,
+      }
+    : null
+
+  const visibleMenuItems = useMemo(
+    () =>
+      APP_MENU_ITEMS.filter(
+        (item) =>
+          item.href === "#" ||
+          item.href === MENU_MANAGEMENT_HREF ||
+          !hiddenHrefs.includes(item.href),
+      ),
+    [hiddenHrefs],
   )
 
   useEffect(() => {
     setCollapsed(shouldCollapseSidebarByDefault(pathname))
   }, [pathname])
+
+  useEffect(() => {
+    setHiddenHrefs(getHiddenMenuHrefs())
+    const sync = () => setHiddenHrefs(getHiddenMenuHrefs())
+    window.addEventListener(MENU_PREFERENCES_EVENT, sync)
+    return () => window.removeEventListener(MENU_PREFERENCES_EVENT, sync)
+  }, [])
 
   return (
     <aside
@@ -68,23 +75,19 @@ export function Sidebar() {
     >
       <div
         className={cn(
-          "flex h-16 items-center border-b border-sidebar-border px-4",
-          collapsed ? "justify-center" : "justify-between",
+          "flex items-center border-b border-sidebar-border px-3",
+          collapsed ? "h-[4.5rem] justify-center" : "h-20 justify-between gap-2 px-4",
         )}
       >
         <Link
           href="/dashboard"
           className={cn(
             "flex min-w-0 items-center overflow-hidden",
-            collapsed ? "w-8 justify-center" : "flex-1",
+            collapsed ? "justify-center" : "flex-1",
           )}
           title="대시보드"
         >
-          <img
-            src={BRAND_LOGO_SRC}
-            alt="BOMI"
-            className="h-8 w-auto shrink-0 object-contain"
-          />
+          <BrandLogo size={collapsed ? "sm" : "md"} />
         </Link>
 
         <button
@@ -106,40 +109,53 @@ export function Sidebar() {
       </div>
 
       <div className={cn("border-b border-sidebar-border p-4", collapsed && "px-3")}>
-        <div
+        <Link
+          href={MENU_MANAGEMENT_HREF}
+          title="메뉴 관리"
           className={cn(
-            "overflow-hidden rounded-xl bg-gradient-to-br from-primary/20 to-primary/5",
+            "block overflow-hidden rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 transition-opacity hover:opacity-90",
             collapsed ? "p-2" : "p-4",
           )}
         >
           <div className={cn("flex items-center", collapsed ? "justify-center" : "gap-3")}>
-            <div className="relative shrink-0">
-              <EmployeeAvatar
-                employee={CURRENT_USER}
-                className={cn(
-                  "border-2 border-card",
-                  collapsed ? "size-10" : "size-12",
-                )}
-                fallbackClassName={collapsed ? "text-sm" : "text-base"}
-              />
-              <span className="absolute bottom-0 right-0 size-3 rounded-full border-2 border-card bg-success" />
-            </div>
+            {profileUser && (
+              <>
+                <div className="relative shrink-0">
+                  <EmployeeAvatar
+                    key={session?.profileImage ?? session?.id}
+                    employee={profileUser}
+                    className={cn(
+                      "border-2 border-card",
+                      collapsed ? "size-10" : "size-12",
+                    )}
+                    fallbackClassName={collapsed ? "text-sm" : "text-base"}
+                    imageCacheKey={session?.profileImage}
+                  />
+                  <span className="absolute bottom-0 right-0 size-3 rounded-full border-2 border-card bg-success" />
+                </div>
 
-            {!collapsed && (
-              <div className="min-w-0 flex-1">
-                <p className="truncate font-medium text-sidebar-foreground">
-                  {CURRENT_USER.name}{" "}
-                  <span className="font-normal text-muted-foreground">
-                    {CURRENT_USER.role}
-                  </span>
-                </p>
-                <p className="truncate text-xs text-muted-foreground">
-                  {CURRENT_USER.department}
-                </p>
-              </div>
+                {!collapsed && (
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-medium text-sidebar-foreground">
+                      {profileUser.name}{" "}
+                      <span className="font-normal text-muted-foreground">
+                        {profileUser.role}
+                      </span>
+                    </p>
+                    <p className="truncate text-xs text-muted-foreground">
+                      {profileUser.department}
+                    </p>
+                    {session?.regionLabel && (
+                      <p className="truncate text-[10px] text-primary">
+                        {session.orgName} · {session.regionLabel}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </>
             )}
           </div>
-        </div>
+        </Link>
       </div>
 
       {!collapsed && (
@@ -155,13 +171,33 @@ export function Sidebar() {
       )}
 
       <nav className={cn("flex-1 space-y-1 overflow-y-auto py-2", collapsed ? "px-3" : "px-3")}>
-        {menuItems.map((item) => {
+        {visibleMenuItems.map((item) => {
           const isActive =
-            pathname === item.href ||
-            pathname.startsWith(`${item.href}/`) ||
-            (item.href === "/automation" && pathname.startsWith("/survey"))
+            item.href !== "#" &&
+            (pathname === item.href ||
+              pathname.startsWith(`${item.href}/`) ||
+              (item.href === "/automation" && pathname.startsWith("/survey")) ||
+              (item.href === MENU_MANAGEMENT_HREF &&
+                pathname.startsWith("/settings")))
 
           const Icon = item.icon
+          const isDisabled = item.href === "#"
+
+          if (isDisabled) {
+            return (
+              <span
+                key={item.label}
+                title={collapsed ? item.label : "준비 중"}
+                className={cn(
+                  "flex min-w-0 cursor-not-allowed items-center rounded-lg text-sm text-muted-foreground/60",
+                  collapsed ? "h-11 justify-center px-0" : "gap-3 px-3 py-2.5",
+                )}
+              >
+                <Icon className="size-5 shrink-0" />
+                <span className={collapsed ? "sr-only" : "truncate"}>{item.label}</span>
+              </span>
+            )
+          }
 
           return (
             <Link
@@ -177,13 +213,23 @@ export function Sidebar() {
               )}
             >
               <Icon className="size-5 shrink-0" />
-              <span className={collapsed ? "sr-only" : "truncate"}>
-                {item.label}
-              </span>
+              <span className={collapsed ? "sr-only" : "truncate"}>{item.label}</span>
             </Link>
           )
         })}
       </nav>
+
+      <div className={cn("border-t border-sidebar-border p-3", collapsed && "px-2")}>
+        <Button
+          variant="ghost"
+          size={collapsed ? "icon" : "sm"}
+          className={cn("w-full text-muted-foreground", !collapsed && "justify-start gap-2")}
+          onClick={() => void logout()}
+        >
+          <LogOut className="size-4" />
+          {!collapsed && <span>로그아웃</span>}
+        </Button>
+      </div>
     </aside>
   )
 }

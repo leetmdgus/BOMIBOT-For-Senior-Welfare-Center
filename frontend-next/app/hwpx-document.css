@@ -45,6 +45,23 @@
   vertical-align: top;
 }
 
+/* 사업계획·사업평가 편집기 — 표 격자선 (Tailwind base와 충돌 방지) */
+.business-plan-editor .hwpx-doc__table th,
+.business-plan-editor .hwpx-doc__table td,
+.business-evaluation-editor .hwpx-doc__table th,
+.business-evaluation-editor .hwpx-doc__table td,
+.evaluation-summary-form .hwpx-doc__table th,
+.evaluation-summary-form .hwpx-doc__table td {
+  border: 1px solid #000 !important;
+}
+
+.business-plan-editor .hwpx-doc__value .bp-rich-editor table.bp-rt-table th,
+.business-plan-editor .hwpx-doc__value .bp-rich-editor table.bp-rt-table td,
+.business-evaluation-editor .hwpx-doc__value .bp-rich-editor table.bp-rt-table th,
+.business-evaluation-editor .hwpx-doc__value .bp-rich-editor table.bp-rt-table td {
+  border: 1px solid #000;
+}
+
 .hwpx-doc__label,
 .hwpx-doc__sublabel {
   width: 6.5rem;
@@ -218,10 +235,25 @@
   max-width: 100%;
 }
 
+.document-media-block img,
+.document-media-block video,
+.document-media-block iframe {
+  max-width: 100%;
+}
+
+.document-media-block video {
+  background: #000;
+}
+
 @media print {
   .hwpx-doc {
     max-width: none;
     box-shadow: none;
+  }
+
+  .document-media-block video,
+  .document-media-block iframe {
+    break-inside: avoid;
   }
 
   .hwpx-doc-section-row {
@@ -231,4 +263,44 @@
   .hwpx-doc-section-row__controls {
     display: none !important;
   }
+}
+
+/* HWPX AST ↔ TipTap 1:1 편집기 */
+.hwp-ast-tiptap-root .ProseMirror {
+  min-height: 6rem;
+  font-size: 11px;
+  line-height: 1.55;
+  outline: none;
+}
+
+.hwp-ast-tiptap-root .ProseMirror table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.hwp-ast-tiptap-root .ProseMirror th,
+.hwp-ast-tiptap-root .ProseMirror td {
+  border: 1px solid #000;
+  padding: 5px 8px;
+  vertical-align: top;
+}
+
+.hwp-ast-tiptap-root .ProseMirror th {
+  background: #ececec;
+  text-align: center;
+  font-weight: 600;
+}
+
+.hwp-ast-tiptap-root .hwp-text-run {
+  white-space: pre-wrap;
+  min-width: 0.25rem;
+}
+
+.hwp-ast-tiptap-root .ProseMirror[data-placeholder]:empty::before {
+  content: attr(data-placeholder);
+  color: #94a3b8;
+  pointer-events: none;
+  float: left;
+  height: 0;
 }

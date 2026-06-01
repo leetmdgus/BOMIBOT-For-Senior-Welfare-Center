@@ -58,18 +58,18 @@ function validateRequired(
     if (!question.required) continue
 
     if (!isAnswered(answers[question.id])) {
-      return `"${question.title || "? ??"}"?(?) ?? ?????.`
+      return `"${question.title || "질문"}"은(는) 필수 항목입니다.`
     }
 
     if (question.type === "matrix" && question.rows.length > 0) {
       const matrix = answers[question.id]
       if (matrix?.type !== "matrix") {
-        return `"${question.title}"? ?? ?? ??? ???.`
+        return `"${question.title}"의 모든 행에 응답해 주세요.`
       }
 
       const missingRow = question.rows.find((row) => !matrix.value[row]?.trim())
       if (missingRow) {
-        return `"${question.title}" ? "${missingRow}"? ??? ???.`
+        return `"${question.title}"의 "${missingRow}"에 응답해 주세요.`
       }
     }
   }
@@ -118,7 +118,7 @@ export function SurveyResponseForm({ detail }: SurveyResponseFormProps) {
     if (!detail.settings.allowDuplicate) {
       const storageKey = `survey-responded-${detail.id}`
       if (typeof window !== "undefined" && localStorage.getItem(storageKey)) {
-        setFormError("?? ???????. ?? ??? ???? ????.")
+        setFormError("이미 응답하셨습니다. 중복 응답은 허용되지 않습니다.")
         return
       }
     }
@@ -141,8 +141,8 @@ export function SurveyResponseForm({ detail }: SurveyResponseFormProps) {
       setSubmittedMessage(result.message)
       setIsSubmitted(true)
     } catch (error) {
-      console.error("?? ?? ??:", error)
-      setFormError("??? ??????. ?? ? ?? ??? ???.")
+      console.error("설문 제출 실패:", error)
+      setFormError("제출에 실패했습니다. 잠시 후 다시 시도해 주세요.")
     } finally {
       setIsSubmitting(false)
     }
@@ -152,14 +152,14 @@ export function SurveyResponseForm({ detail }: SurveyResponseFormProps) {
     return (
       <div className="mx-auto max-w-lg rounded-2xl border border-border bg-card p-10 text-center shadow-sm">
         <p className="text-lg font-semibold text-foreground">
-          ?? ??? ?? ?? ?????.
+          현재 이 설문은 응답을 받지 않습니다.
         </p>
         <p className="mt-2 text-sm text-muted-foreground">
           {detail.basicInfo.status === "closed"
-            ? "??? ???????."
+            ? "설문이 종료되었습니다."
             : detail.basicInfo.status === "draft"
-              ? "?? ???? ?? ?????."
-              : "?? ??? ???????."}
+              ? "아직 게시되지 않은 설문입니다."
+              : "응답 수집이 중지되었습니다."}
         </p>
       </div>
     )
@@ -170,7 +170,7 @@ export function SurveyResponseForm({ detail }: SurveyResponseFormProps) {
       <div className="mx-auto max-w-lg space-y-4 pb-12">
         <div className="rounded-2xl border border-primary/30 bg-primary/5 p-10 text-center shadow-sm">
           <CheckCircle2 className="mx-auto size-14 text-primary" />
-          <h2 className="mt-4 text-xl font-bold text-foreground">?? ??</h2>
+          <h2 className="mt-4 text-xl font-bold text-foreground">제출 완료</h2>
           <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
             {submittedMessage || detail.style.thankYouMessage}
           </p>
@@ -223,7 +223,7 @@ export function SurveyResponseForm({ detail }: SurveyResponseFormProps) {
       {detail.settings.showProgress ? (
         <div className="mb-6">
           <div className="mb-1 flex justify-between text-xs text-muted-foreground">
-            <span>?? ???</span>
+            <span>응답 진행률</span>
             <span>{progressPercent}%</span>
           </div>
           <div className="h-1.5 overflow-hidden rounded-full bg-muted">
@@ -268,10 +268,10 @@ export function SurveyResponseForm({ detail }: SurveyResponseFormProps) {
         {isSubmitting ? (
           <>
             <Loader2 className="mr-2 size-4 animate-spin" />
-            ?? ?...
+            제출 중...
           </>
         ) : (
-          "?? ??"
+          "제출하기"
         )}
       </Button>
     </form>
@@ -324,7 +324,7 @@ function ResponseQuestion({
         <Textarea
           value={answer?.type === "text" ? answer.value : ""}
           maxLength={2000}
-          placeholder="??? ??? ??? (?? 2000?)"
+          placeholder="답변을 입력해 주세요 (최대 2000자)"
           className="min-h-[120px] resize-none"
           onChange={(event) =>
             onChange({ type: "text", value: event.target.value })
@@ -382,7 +382,7 @@ function ScaleInput({
   return (
     <div className="overflow-x-auto rounded-xl border border-border bg-muted/20 p-4">
       <div className="flex min-w-[520px] items-center justify-between gap-2">
-        <span className="shrink-0 text-xs text-muted-foreground">?? ???</span>
+        <span className="shrink-0 text-xs text-muted-foreground">전혀 그렇지 않다</span>
         <div className="flex flex-1 flex-wrap items-center justify-center gap-1">
           {Array.from({ length: 10 }).map((_, scaleIndex) => {
             const score = scaleIndex + 1
@@ -412,7 +412,7 @@ function ScaleInput({
             )
           })}
         </div>
-        <span className="shrink-0 text-xs text-muted-foreground">?? ??</span>
+        <span className="shrink-0 text-xs text-muted-foreground">매우 그렇다</span>
       </div>
     </div>
   )
@@ -464,7 +464,7 @@ function ChoiceInput({
   return (
     <div className="space-y-2">
       {question.options.map((option, optionIndex) => {
-        const label = option || `??? ${optionIndex + 1}`
+        const label = option || `선택지 ${optionIndex + 1}`
 
         return (
           <label
@@ -513,10 +513,10 @@ function ChoiceInput({
             }
           }}
         />
-        <span className="shrink-0">??</span>
+        <span className="shrink-0">기타</span>
         <Input
           value={otherText}
-          placeholder="?? ??"
+          placeholder="직접 입력"
           className="h-8 flex-1 border-0 bg-transparent shadow-none focus-visible:ring-0"
           onChange={(event) => {
             const next = event.target.value

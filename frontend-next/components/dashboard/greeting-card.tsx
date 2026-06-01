@@ -1,29 +1,43 @@
 import { Card, CardContent } from "@/components/ui/card"
+import { useAuth } from "@/components/auth/auth-provider"
 import { EmployeeAvatar } from "@/components/organization/employee-avatar"
-import { CURRENT_USER } from "@/lib/constants/current-user"
 
 interface GreetingCardProps {
   currentTime: Date
 }
 
 export function GreetingCard({ currentTime }: GreetingCardProps) {
+  const { session } = useAuth()
+
+  if (!session) return null
+
+  const profileUser = {
+    name: session.name,
+    role: session.role,
+    department: session.department,
+    profileImage: session.profileImage,
+  }
+
   return (
     <Card className="mb-6 overflow-hidden">
       <CardContent className="flex items-center justify-between p-6">
         <div className="flex items-center gap-4">
           <EmployeeAvatar
-            employee={CURRENT_USER}
+            key={session.profileImage ?? session.id}
+            employee={profileUser}
             className="size-12"
             fallbackClassName="text-lg"
+            imageCacheKey={session.profileImage}
           />
 
           <div>
             <h3 className="text-xl font-semibold">
-              {CURRENT_USER.name} {CURRENT_USER.role}님 안녕하세요.
+              {session.name} {session.role}님 안녕하세요.
             </h3>
 
             <p className="text-muted-foreground">
-              오늘도 힘찬 하루 되세요! 기관 운영 현황을 요약해 드립니다.
+              {session.orgName} ({session.regionLabel}) 운영 현황을 요약해
+              드립니다.
             </p>
           </div>
         </div>
