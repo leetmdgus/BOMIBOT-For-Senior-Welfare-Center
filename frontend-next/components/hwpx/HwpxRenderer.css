@@ -1,0 +1,67 @@
+/* HwpxRenderer.css */
+
+.hwpx-root {
+  width: 100%;
+  background: #f3f3f3;
+  overflow: auto;
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+.hwpx-page {
+  width: 794px;
+  min-height: 1123px;
+  margin: 0 auto;
+  padding: 72px;
+  background: white;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
+  box-sizing: border-box;
+}
+
+.hwpx-paragraph {
+  margin: 0;
+  line-height: 1.6;
+}
+
+.hwpx-text-run {
+  display: inline;
+}
+
+.hwpx-table {
+  border-collapse: collapse;
+  table-layout: fixed;
+  margin: 8px 0;
+}
+
+.hwpx-table-cell {
+  border: 1px solid #222;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.hwpx-image {
+  display: inline-block;
+  object-fit: contain;
+}
+
+.hwpx-image-placeholder {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed #999;
+  background: #fafafa;
+  color: #666;
+  font-size: 12px;
+  box-sizing: border-box;
+}
+
+.hwpx-shape-placeholder {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed #666;
+  background: #f8f8f8;
+  color: #555;
+  font-size: 12px;
+  box-sizing: border-box;
+}

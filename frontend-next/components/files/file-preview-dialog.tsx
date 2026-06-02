@@ -16,6 +16,7 @@ import {
   getFilePreviewKind,
   type FilePreviewKind,
 } from "@/lib/files/open-file-item"
+import { isOfficePreviewableFile } from "@/lib/files/office-preview"
 import {
   loadOfficePreviewHtml,
   wrapOfficePreviewDocument,
@@ -167,6 +168,10 @@ export function FilePreviewDialog({
   }
 
   const canOpenNewTab = Boolean(preview.html || preview.blobUrl)
+  const canOpenInDesktopApp =
+    Boolean(item?.hasContent) &&
+    downloadFileToDisk != null &&
+    isOfficePreviewableFile(item?.name ?? "", item?.type, item?.mimeType)
 
   return (
     <Dialog open={Boolean(item)} onOpenChange={onOpenChange}>
@@ -197,7 +202,7 @@ export function FilePreviewDialog({
                   className="h-8"
                   onClick={() => void downloadFileToDisk(item.id, item.name)}
                 >
-                  다운로드
+                  {canOpenInDesktopApp ? "PC에서 열기" : "다운로드"}
                 </Button>
               ) : null}
             </div>
@@ -240,7 +245,7 @@ export function FilePreviewDialog({
               <p>
                 이 형식은 브라우저 미리보기를 지원하지 않습니다.
                 <br />
-                다운로드 후 한글·엑셀 등 프로그램에서 열어 주세요.
+                다운로드 후 PC 프로그램에서 열어 주세요.
               </p>
               {item && downloadFileToDisk && item.hasContent ? (
                 <Button

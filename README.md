@@ -6,7 +6,7 @@
 
 | 구분 | URL |
 |------|-----|
-| 프론트 (Vercel) | Vercel 프로젝트 Production 도메인 |
+| 프론트 (Vercel) | `https://workspace.bomi.ai.kr` |
 | API (FastAPI) | `https://api-workspace.bomi.ai.kr` |
 
 **로컬 시작:** [QUICKSTART.md](./QUICKSTART.md) · `npm run dev` (루트) · 환경 변수: [docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md)

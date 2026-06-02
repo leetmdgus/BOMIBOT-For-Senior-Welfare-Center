@@ -40,7 +40,7 @@ export function isOfficePreviewableFile(
       ? false
       : true
   }
-  if (fileType === "spreadsheet" && /\.(xlsx|xls|csv)$/i.test(lower)) {
+  if (fileType === "spreadsheet") {
     return true
   }
   if (fileType === "document" && /\.docx$/i.test(lower)) return true

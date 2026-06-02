@@ -1,6 +1,7 @@
 # Vercel 환경 변수 체크리스트
 
-프론트 Root Directory: **`frontend-next`**
+프론트 Root Directory: **`frontend-next`**  
+Production 도메인: **`https://workspace.bomi.ai.kr`** → API **`https://api-workspace.bomi.ai.kr`**
 
 ## Production (필수)
 

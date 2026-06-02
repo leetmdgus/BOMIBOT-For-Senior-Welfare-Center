@@ -1,0 +1,40 @@
+name: Frontend Build
+
+on:
+  push:
+    branches: [main, master, develop]
+    paths:
+      - "frontend-next/**"
+      - ".github/workflows/frontend-build.yml"
+  pull_request:
+    paths:
+      - "frontend-next/**"
+
+defaults:
+  run:
+    working-directory: frontend-next
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+          cache-dependency-path: frontend-next/pnpm-lock.yaml
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        env:
+          NEXT_PUBLIC_API_BASE_URL: http://127.0.0.1:8020
+          NEXT_PUBLIC_USE_MOCK_API: "false"
+        run: pnpm build

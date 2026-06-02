@@ -1,6 +1,6 @@
 # 배포 아키텍처
 
-> **프론트:** Vercel  
+> **프론트:** `https://workspace.bomi.ai.kr` (Vercel)  
 > **백엔드 API:** `https://api-workspace.bomi.ai.kr`  
 > **로컬 개발:** 프론트 `http://localhost:3000` · API `http://127.0.0.1:8020`
 

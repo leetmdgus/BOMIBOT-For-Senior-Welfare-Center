@@ -1,0 +1,70 @@
+name: API Smoke
+
+on:
+  push:
+    branches: [main, master, develop]
+    paths:
+      - "backend/**"
+      - "backend/seed/**"
+  pull_request:
+    paths:
+      - "backend/**"
+      - "backend/seed/**"
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create .env for compose
+        run: |
+          cp .env.docker.example .env
+          sed -i 's/^POSTGRES_PASSWORD=.*/POSTGRES_PASSWORD=ci-test-secret/' .env
+          sed -i 's/^SECRET_KEY=.*/SECRET_KEY=ci-test-secret-key/' .env
+
+      - name: Build and start API + Postgres
+        run: docker compose up -d --build --remove-orphans
+
+      - name: Wait for healthy API
+        run: |
+          for i in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:8020/health; then
+              exit 0
+            fi
+            sleep 3
+          done
+          docker compose logs api
+          exit 1
+
+      - name: Login smoke
+        run: |
+          curl -fsS -X POST http://127.0.0.1:8020/api/v1/auth/login \
+            -H "Content-Type: application/json" \
+            -d '{"email":"admin@north.bomi.local","password":"bomi-north-2026","regionId":"chuncheon-north"}' \
+            | tee /tmp/login.json
+          test -s /tmp/login.json
+
+      - name: Dashboard smoke
+        run: |
+          TOKEN=$(python3 -c "import json; print(json.load(open('/tmp/login.json'))['token'])")
+          curl -fsS http://127.0.0.1:8020/api/v1/dashboard \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "X-Region-Id: chuncheon-north"
+
+      - name: Chat assistant smoke
+        run: |
+          TOKEN=$(python3 -c "import json; print(json.load(open('/tmp/login.json'))['token'])")
+          curl -fsS -X POST http://127.0.0.1:8020/api/v1/chat/assistant \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "X-Region-Id: chuncheon-north" \
+            -H "Content-Type: application/json" \
+            -d '{"message":"dashboard summary"}'
+
+      - name: Shutdown
+        if: always()
+        run: docker compose down -v
