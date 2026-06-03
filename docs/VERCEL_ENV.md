@@ -1,11 +1,7 @@
 # Vercel 환경 변수 체크리스트
 
-<<<<<<< HEAD
-프론트 Root Directory: **`frontend-next`**
-=======
 프론트 Root Directory: **`frontend-next`**  
 Production 도메인: **`https://workspace.bomi.ai.kr`** → API **`https://api-workspace.bomi.ai.kr`**
->>>>>>> dev2
 
 ## Production (필수)
 
@@ -54,11 +50,7 @@ cp .env.docker.example .env   # SECRET_KEY, POSTGRES_PASSWORD, GEMINI 등
 ## 로컬 개발 (`frontend-next/.env.local`)
 
 ```env
-<<<<<<< HEAD
-NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8020
-=======
 NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:9001
->>>>>>> dev2
 NEXT_PUBLIC_USE_MOCK_API=false
 ```
 

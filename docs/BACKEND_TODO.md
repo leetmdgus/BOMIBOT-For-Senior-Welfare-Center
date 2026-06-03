@@ -3,11 +3,7 @@
 > **구조:** `backend/app` — DDD (domain → application → infrastructure → interfaces)  
 > **시드:** `python scripts/seed.py` (프론트 `lib/mocks/*` → `backend/seed/data/*.json`)  
 > **프로덕션 API:** `https://api-workspace.bomi.ai.kr` · **프론트:** Vercel  
-<<<<<<< HEAD
-> **로컬 API:** `http://127.0.0.1:8020/api/v1`  
-=======
 > **로컬 API:** `http://127.0.0.1:9001/api/v1`  
->>>>>>> dev2
 > **Docker:** `cd backend && docker compose up -d --build --remove-orphans`  
 > 배포 상세: [DEPLOYMENT.md](./DEPLOYMENT.md)
 
@@ -77,11 +73,7 @@
 | 모든 도메인 | [x] FastAPI `/api/v1/*` |
 | Mock 모드 | [x] `*.mock.service` (챗봇 클라이언트 규칙 엔진) |
 
-<<<<<<< HEAD
-`NEXT_PUBLIC_USE_MOCK_API=false` + `NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8020`
-=======
 `NEXT_PUBLIC_USE_MOCK_API=false` + `NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:9001`
->>>>>>> dev2
 
 ---
 
@@ -104,20 +96,12 @@
 ```bash
 cd backend
 docker compose up -d --build --remove-orphans
-<<<<<<< HEAD
-# http://127.0.0.1:8020/health
-=======
 # http://127.0.0.1:9001/health
->>>>>>> dev2
 ```
 
 프론트 `frontend-next/.env.local`:
 
 ```env
-<<<<<<< HEAD
-NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8020
-=======
 NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:9001
->>>>>>> dev2
 NEXT_PUBLIC_USE_MOCK_API=false
 ```

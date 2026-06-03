@@ -59,8 +59,6 @@ python scripts/list-routes.py
 | Reports | `/api/v1/reports` |
 | Chat | `/api/v1/chat/*` |
 
-<<<<<<< HEAD
-=======
 ## Automation (문서자동화)
 
 | Method | Path | 설명 |
@@ -72,6 +70,5 @@ python scripts/list-routes.py
 
 프론트: `https://workspace.bomi.ai.kr/automation` · multipart/form-data · `Authorization` + `X-Region-Id` 필요
 
->>>>>>> dev2
 프론트 `*.api.service.ts`는 `NEXT_PUBLIC_API_BASE_URL` 설정 시 위 경로로 **직접** 호출합니다.  
 레거시 `/api/*` 는 `app/api/[[...path]]` 가 동일하게 프록시합니다.
