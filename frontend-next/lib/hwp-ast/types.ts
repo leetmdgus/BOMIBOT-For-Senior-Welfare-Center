@@ -42,6 +42,8 @@ export type HwpTableCell = {
     backgroundColor?: string | null
     verticalAlign?: "top" | "middle" | "bottom"
     header?: boolean
+    /** 셀 대표 글자 크기 (px) — HWPX charPr 높이로 변환 */
+    fontSizePx?: number | null
   }
   content: HwpBlock[]
   hwp?: Record<string, unknown>

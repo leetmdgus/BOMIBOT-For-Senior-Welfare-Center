@@ -8,7 +8,10 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { resolveSurveyTheme } from "@/lib/survey-theme"
 import { cn } from "@/lib/utils"
-import { submitSurveyResponse } from "@/services/survey.service"
+import {
+  submitPublicSurveyResponse,
+  submitSurveyResponse,
+} from "@/services/survey.service"
 import type {
   SurveyAnswerValue,
   SurveyDetail,
@@ -19,8 +22,18 @@ type AnswersState = Record<string, SurveyAnswerValue>
 
 const OTHER_VALUE = "__other__"
 
+/**
+ * 척도형 문항의 최대 점수.
+ * 백엔드 집계(survey_results.py `_scale_score`: 1~5 유효)와 매트릭스 만족도(5점 척도:
+ * 매우불만족~매우만족)와 동일한 5점 척도를 사용한다. 값이 어긋나면 6점 이상 응답이
+ * "미응답"으로 집계되고 평균 만족도에서 제외된다.
+ */
+const SURVEY_SCALE_MAX = 5
+
 interface SurveyResponseFormProps {
   detail: SurveyDetail
+  /** 공개(QR) 응답 — 지역이 주어지면 인증 없이 공개 엔드포인트로 제출 */
+  regionId?: string | null
 }
 
 function isChoiceAnswered(answer: Extract<SurveyAnswerValue, { type: "choice" }>) {
@@ -77,7 +90,7 @@ function validateRequired(
   return null
 }
 
-export function SurveyResponseForm({ detail }: SurveyResponseFormProps) {
+export function SurveyResponseForm({ detail, regionId }: SurveyResponseFormProps) {
   const { themeColor, useBrandClasses } = resolveSurveyTheme(detail)
   const [answers, setAnswers] = useState<AnswersState>({})
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -127,12 +140,15 @@ export function SurveyResponseForm({ detail }: SurveyResponseFormProps) {
     setFormError(null)
 
     try {
-      const result = await submitSurveyResponse(detail.id, {
+      const payload = {
         answers: Object.entries(answers).map(([questionId, answer]) => ({
           questionId,
           answer,
         })),
-      })
+      }
+      const result = regionId
+        ? await submitPublicSurveyResponse(regionId, detail.id, payload)
+        : await submitSurveyResponse(detail.id, payload)
 
       if (!detail.settings.allowDuplicate && typeof window !== "undefined") {
         localStorage.setItem(`survey-responded-${detail.id}`, result.responseId)
@@ -381,10 +397,10 @@ function ScaleInput({
 }) {
   return (
     <div className="overflow-x-auto rounded-xl border border-border bg-muted/20 p-4">
-      <div className="flex min-w-[520px] items-center justify-between gap-2">
+      <div className="flex min-w-[320px] items-center justify-between gap-2">
         <span className="shrink-0 text-xs text-muted-foreground">전혀 그렇지 않다</span>
         <div className="flex flex-1 flex-wrap items-center justify-center gap-1">
-          {Array.from({ length: 10 }).map((_, scaleIndex) => {
+          {Array.from({ length: SURVEY_SCALE_MAX }).map((_, scaleIndex) => {
             const score = scaleIndex + 1
             const selected = value === score
 

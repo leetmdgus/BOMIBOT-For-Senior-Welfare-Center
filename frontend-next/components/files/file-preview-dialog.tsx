@@ -1,7 +1,9 @@
 "use client"
 
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react"
 import { ExternalLink, FileWarning, Loader2 } from "lucide-react"
+
+import { cn } from "@/lib/utils"
 
 import {
   Dialog,
@@ -26,6 +28,18 @@ import { downloadFileBlob, downloadFileToDisk } from "@/services/files.service"
 type FilePreviewDialogProps = {
   item: FileItem | null
   onOpenChange: (open: boolean) => void
+}
+
+/** A4 1장(210×297mm) 페이지 — 파일 미리보기를 실제 문서처럼 표시 */
+function A4Page({ children, className }: { children: ReactNode; className?: string }) {
+  return (
+    <div
+      className={cn("mx-auto bg-white shadow-md", className)}
+      style={{ width: "210mm", minHeight: "297mm" }}
+    >
+      {children}
+    </div>
+  )
 }
 
 type PreviewState = {
@@ -175,7 +189,7 @@ export function FilePreviewDialog({
 
   return (
     <Dialog open={Boolean(item)} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[90vh] max-w-4xl flex-col gap-0 p-0">
+      <DialogContent className="flex h-[95vh] max-h-[95vh] w-[96vw] max-w-400 sm:max-w-400 flex-col gap-0 p-0">
         <DialogHeader className="shrink-0 border-b px-4 py-3">
           <div className="flex items-center gap-2 pr-8">
             <DialogTitle className="truncate text-base">
@@ -200,7 +214,7 @@ export function FilePreviewDialog({
                   variant="outline"
                   size="sm"
                   className="h-8"
-                  onClick={() => void downloadFileToDisk(item.id, item.name)}
+                  onClick={() => void downloadFileToDisk?.(item.id, item.name)}
                 >
                   {canOpenInDesktopApp ? "PC에서 열기" : "다운로드"}
                 </Button>
@@ -209,7 +223,7 @@ export function FilePreviewDialog({
           </div>
         </DialogHeader>
 
-        <div className="min-h-[50vh] flex-1 overflow-auto bg-white p-4">
+        <div className="min-h-[50vh] flex-1 overflow-auto bg-neutral-200 p-4">
           {loading ? (
             <div className="flex h-full min-h-[40vh] items-center justify-center gap-2 text-sm text-muted-foreground">
               <Loader2 className="size-4 animate-spin" />
@@ -251,33 +265,41 @@ export function FilePreviewDialog({
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => void downloadFileToDisk(item.id, item.name)}
+                  onClick={() => void downloadFileToDisk?.(item.id, item.name)}
                 >
                   다운로드
                 </Button>
               ) : null}
             </div>
           ) : preview.html ? (
-            <OfficePreviewContent html={preview.html} className="max-h-[70vh]" />
+            <A4Page>
+              <OfficePreviewContent
+                html={preview.html}
+                className="overflow-visible! p-[18mm]"
+              />
+            </A4Page>
           ) : preview.blobUrl && previewKind === "image" ? (
-            <div className="flex min-h-[40vh] items-center justify-center">
+            <A4Page className="flex items-center justify-center p-[18mm]">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={preview.blobUrl}
                 alt={item?.name ?? "미리보기"}
-                className="max-h-[70vh] max-w-full object-contain"
+                className="max-h-full max-w-full object-contain"
               />
-            </div>
+            </A4Page>
           ) : preview.blobUrl && previewKind === "pdf" ? (
             <iframe
               title={item?.name ?? "PDF 미리보기"}
               src={preview.blobUrl}
-              className="h-[70vh] w-full rounded border"
+              className="mx-auto block rounded border shadow-md"
+              style={{ width: "210mm", height: "297mm" }}
             />
           ) : preview.text ? (
-            <pre className="max-h-[70vh] overflow-auto whitespace-pre-wrap break-words rounded border bg-muted/30 p-4 text-sm">
-              {preview.text}
-            </pre>
+            <A4Page className="p-[18mm]">
+              <pre className="whitespace-pre-wrap wrap-break-word text-sm leading-relaxed">
+                {preview.text}
+              </pre>
+            </A4Page>
           ) : null}
         </div>
       </DialogContent>

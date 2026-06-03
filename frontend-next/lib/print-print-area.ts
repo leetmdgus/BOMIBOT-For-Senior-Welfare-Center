@@ -29,9 +29,19 @@ function buildIframePrintStyles(documentsLandscape: boolean): string {
   body.is-printing, body.is-printing * { visibility: visible !important; }
   .print-hide, [data-print-chrome], [aria-label="첨부 자료"], .document-media-sections, .document-media-block { display: none !important; }
   @media print {
-    @page { size: A4 portrait; margin: 0; }
+    @page {
+      size: A4 portrait;
+      /* 위·아래 여백은 페이지마다 필수 적용 (longhand 로 명시 — 일부 브라우저의 shorthand 무시 회피).
+         좌·우는 .print-area 패딩에서 처리. 패딩은 첫 페이지 위·마지막 페이지 아래에만 적용되므로
+         페이지마다 보장되는 상하 여백은 반드시 @page margin 으로 줘야 함 */
+      margin-top: 17mm;
+      margin-bottom: 17mm;
+      margin-left: 0;
+      margin-right: 0;
+    }
     body.is-printing .print-area {
-      padding: 12mm 14mm !important;
+      /* 좌·우 여백만 — 위·아래는 @page margin이 페이지마다 적용 */
+      padding: 0 14mm !important;
       box-sizing: border-box;
     }
     .print-area, .print-area .hwpx-doc, .print-area .a4-document-viewport__page,

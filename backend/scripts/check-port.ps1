@@ -1,5 +1,5 @@
-# 8020 포트 점유 확인 — 로컬 uvicorn + Docker 동시 점유 시 exit 1
-param([int]$Port = 8020)
+# 9001 포트 점유 확인 — 로컬 uvicorn + Docker 동시 점유 시 exit 1
+param([int]$Port = 9001)
 
 $listeners = Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue
 if (-not $listeners) {

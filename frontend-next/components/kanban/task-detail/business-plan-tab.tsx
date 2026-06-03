@@ -68,7 +68,7 @@ const PLAN_AUTO_SAVE_MS = 700
 function planDocumentSnapshot(document: {
   formData: BusinessPlanFormData
   sections: BusinessPlanSection[]
-  isCompleted: boolean
+  isCompleted?: boolean
 }): string {
   return JSON.stringify({
     formData: document.formData,

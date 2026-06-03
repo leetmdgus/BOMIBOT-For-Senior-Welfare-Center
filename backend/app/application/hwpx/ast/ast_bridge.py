@@ -24,12 +24,15 @@ def ast_to_hwpx_table(table: dict[str, Any]) -> HwpxTable:
             style = cell.get("style") or {}
             col_span = int(cell.get("colSpan") or 1)
             row_span = int(cell.get("rowSpan") or 1)
+            font_size = style.get("fontSizePx")
             hwpx_row.append(
                 HwpxTableCell(
                     text=paragraph_text_from_blocks(cell.get("content") or []) or " ",
                     col_span=col_span if col_span > 1 else None,
                     row_span=row_span if row_span > 1 else None,
                     header=bool(style.get("header")),
+                    background_color=style.get("backgroundColor") or None,
+                    font_size_px=int(font_size) if font_size else None,
                 )
             )
         if hwpx_row:

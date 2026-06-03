@@ -6,9 +6,9 @@ import type {
 type ExportSection = BusinessPlanSection | EvaluationSection
 
 /** HWPX·인쇄 영역과 동일 — 추가 본문(대목차·목차·본문)만 */
-export function documentSectionsForHwpxExport(
-  sections: ExportSection[],
-): ExportSection[] {
+export function documentSectionsForHwpxExport<T extends ExportSection>(
+  sections: T[],
+): T[] {
   return sections.filter(
     (section) => section.type === "heading" || section.type === "body",
   )

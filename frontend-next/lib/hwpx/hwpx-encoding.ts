@@ -30,7 +30,7 @@ export function encodeHwpxUtf8(content: string): Uint8Array {
 }
 
 /** hp:t — 앞뒤 공백·탭은 xml:space="preserve" (한글 띄어쓰기 유지) */
-export function hpTextRun(charId: string, text: string): string {
+export function hpTextRun(charId: string | number, text: string): string {
   const normalized = sanitizeHwpxText(text)
   const payload = normalized.length > 0 ? normalized : " "
   const escaped = escapeXml(payload)
@@ -43,7 +43,7 @@ export function hpTextRun(charId: string, text: string): string {
 }
 
 /** 여러 줄 → hp:t + hp:lineBreak */
-export function hpTextRuns(charId: string, text: string): string {
+export function hpTextRuns(charId: string | number, text: string): string {
   const safe = sanitizeHwpxText(text)
   const lines = safe.split("\n")
 

@@ -1,7 +1,7 @@
 # 사업관리(칸반 업무) — 실적·사업계획서·사업평가 저장 구조
 
 **사업관리** 메뉴(`/kanban`) → 카드 클릭 → `/kanban/task/{taskId}/…` 화면의 데이터는 **이미 FastAPI 백엔드**에 연결되어 있습니다.  
-`NEXT_PUBLIC_USE_MOCK_API=false` 이고 API 서버(8020)가 떠 있어야 DB에 저장됩니다.
+`NEXT_PUBLIC_USE_MOCK_API=false` 이고 API 서버(9001)가 떠 있어야 DB에 저장됩니다.
 
 ## 한눈에 보기
 
@@ -99,13 +99,13 @@ cd backend && docker compose up -d --build api
 # 2) 프론트 .env.local
 # NEXT_PUBLIC_USE_MOCK_API=false
 # NEXT_PUBLIC_USE_API_PROXY=true
-# API_PROXY_URL=http://127.0.0.1:8020
+# API_PROXY_URL=http://127.0.0.1:9001
 
 # 3) 시드 (최초 1회)
 cd backend && py -3 scripts/seed.py --missing-json
 ```
 
-Swagger: http://127.0.0.1:8020/docs → `performance`, `kanban-task-detail` 태그.
+Swagger: http://127.0.0.1:9001/docs → `performance`, `kanban-task-detail` 태그.
 
 DB 직접 확인 (예: performance 도메인):
 

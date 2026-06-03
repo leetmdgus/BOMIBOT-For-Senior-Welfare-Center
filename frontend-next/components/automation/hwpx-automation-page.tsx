@@ -3,111 +3,129 @@
 import { useCallback, useMemo, useState } from "react"
 import {
   Download,
-  FileUp,
+  FolderUp,
   Loader2,
-  RefreshCw,
+  ScanSearch,
   Zap,
 } from "lucide-react"
 
 import { Sidebar } from "@/components/common/sidebar"
 import { Header } from "@/components/common/header"
-import { HwpxRenderer } from "@/components/hwpx/HwpxRenderer"
+import { DocumentPreviewPanel } from "@/components/automation/document-preview-panel"
+import { EvidenceDocumentTree } from "@/components/automation/evidence-document-tree"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
+import type { DocumentAnalysisResult } from "@/lib/automation/document-analysis-types"
 import {
-  applyTextFieldEdits,
-  collectEditableTextFields,
-  type EditableTextField,
-  type HwpxFrontendDocument,
-} from "@/lib/hwpx/frontend-render-types"
+  buildEvidenceTreeFromFiles,
+  countEvidenceTree,
+  type EvidenceTreeNode,
+} from "@/lib/automation/document-tree"
+import type { HwpxFrontendDocument } from "@/lib/hwpx/frontend-render-types"
+import { HwpxEditorPanel } from "@/components/automation/hwpx-editor-panel"
 import { cn } from "@/lib/utils"
 import {
+  analyzeEvidenceDocument,
   downloadHwpxDocument,
-  parseHwpxDocument,
 } from "@/services/automation.service"
 
 export function HwpxAutomationPage() {
-  const [sourceFile, setSourceFile] = useState<File | null>(null)
-  const [frontendJson, setFrontendJson] = useState<HwpxFrontendDocument | null>(
-    null,
-  )
-  const [documentTitle, setDocumentTitle] = useState("")
-  const [textFields, setTextFields] = useState<EditableTextField[]>([])
+  const [treeRoot, setTreeRoot] = useState<EvidenceTreeNode | null>(null)
+  const [selectedPath, setSelectedPath] = useState<string | null>(null)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [analysis, setAnalysis] = useState<DocumentAnalysisResult | null>(null)
+  const [editedDoc, setEditedDoc] = useState<HwpxFrontendDocument | null>(null)
   const [loading, setLoading] = useState(false)
+  const [batchProgress, setBatchProgress] = useState<string | null>(null)
   const [exporting, setExporting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [search, setSearch] = useState("")
 
-  const previewData = useMemo(() => {
-    if (!frontendJson) return null
-    return applyTextFieldEdits(frontendJson, textFields)
-  }, [frontendJson, textFields])
+  const treeStats = useMemo(
+    () => (treeRoot ? countEvidenceTree(treeRoot) : null),
+    [treeRoot],
+  )
 
-  const filteredFields = useMemo(() => {
-    const query = search.trim().toLowerCase()
-    if (!query) return textFields
-    return textFields.filter(
-      (field) =>
-        field.label.toLowerCase().includes(query) ||
-        field.value.toLowerCase().includes(query),
-    )
-  }, [search, textFields])
+  const previewData = editedDoc
 
-  const handleFileChange = useCallback(
-    async (event: React.ChangeEvent<HTMLInputElement>) => {
-      const file = event.target.files?.[0]
+  const analyzeFile = useCallback(async (node: EvidenceTreeNode) => {
+    if (node.type !== "file" || !node.file) return
+
+    setLoading(true)
+    setError(null)
+    setSelectedPath(node.path)
+    setSelectedFile(node.file)
+
+    try {
+      const result = await analyzeEvidenceDocument(node.file, node.path)
+      setAnalysis(result)
+      setEditedDoc(result.frontendJson ?? null)
+    } catch (err) {
+      setAnalysis(null)
+      setEditedDoc(null)
+      setError(err instanceof Error ? err.message : "문서 분석에 실패했습니다.")
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  const handleFolderUpload = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const fileList = event.target.files
       event.target.value = ""
-      if (!file) return
+      if (!fileList?.length) return
 
-      setLoading(true)
+      const files = Array.from(fileList)
+      const root = buildEvidenceTreeFromFiles(files)
+      setTreeRoot(root)
+      setSelectedPath(null)
+      setSelectedFile(null)
+      setAnalysis(null)
+      setEditedDoc(null)
       setError(null)
-
-      try {
-        const result = await parseHwpxDocument(file)
-        setSourceFile(file)
-        setFrontendJson(result.frontendJson)
-        setDocumentTitle(result.documentTitle)
-        setTextFields(collectEditableTextFields(result.frontendJson))
-      } catch (err) {
-        setSourceFile(null)
-        setFrontendJson(null)
-        setTextFields([])
-        setError(err instanceof Error ? err.message : "HWPX 파싱에 실패했습니다.")
-      } finally {
-        setLoading(false)
-      }
+      setBatchProgress(null)
     },
     [],
   )
 
-  const handleFieldChange = useCallback((id: string, value: string) => {
-    setTextFields((prev) =>
-      prev.map((field) => (field.id === id ? { ...field, value } : field)),
-    )
-  }, [])
+  const handleAnalyzeAll = useCallback(async () => {
+    if (!treeRoot) return
 
-  const handleResetFields = useCallback(() => {
-    if (!frontendJson) return
-    setTextFields(collectEditableTextFields(frontendJson))
-  }, [frontendJson])
+    const collectFiles = (node: EvidenceTreeNode): EvidenceTreeNode[] => {
+      if (node.type === "file" && node.file) return [node]
+      return (node.children ?? []).flatMap(collectFiles)
+    }
+
+    const files = collectFiles(treeRoot)
+    if (files.length === 0) return
+
+    setBatchProgress(`0 / ${files.length}`)
+    setError(null)
+
+    for (let index = 0; index < files.length; index += 1) {
+      const node = files[index]
+      setBatchProgress(`${index + 1} / ${files.length} · ${node.name}`)
+      await analyzeFile(node)
+    }
+
+    setBatchProgress(`완료 · ${files.length}개 문서 분석`)
+  }, [analyzeFile, treeRoot])
 
   const handleExport = useCallback(async () => {
-    if (!sourceFile || !previewData) return
+    if (!selectedFile || !previewData || analysis?.kind !== "hwpx") return
 
     setExporting(true)
     setError(null)
 
     try {
-      const downloadName = sourceFile.name.replace(/\.hwpx$/i, "_edited.hwpx")
-      await downloadHwpxDocument(sourceFile, previewData, downloadName)
+      const downloadName = selectedFile.name.replace(/\.hwpx$/i, "_edited.hwpx")
+      await downloadHwpxDocument(selectedFile, previewData, downloadName)
     } catch (err) {
-      setError(err instanceof Error ? err.message : "HWPX 내보내기에 실패했습니다.")
+      setError(err instanceof Error ? err.message : "HWPX보내기에 실패했습니다.")
     } finally {
       setExporting(false)
     }
-  }, [previewData, sourceFile])
+  }, [analysis?.kind, previewData, selectedFile])
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -124,64 +142,66 @@ export function HwpxAutomationPage() {
                 <span className="text-sm font-medium">문서자동화</span>
               </div>
               <h1 className="text-2xl font-bold text-foreground">
-                HWPX 문서 미리보기 · 편집 · 내보내기
+                증빙문서 폴더 업로드 · 트리 · 분석
               </h1>
               <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-                한글 HWPX 파일을 업로드하면 웹에서 양식을 확인하고 텍스트를
-                수정한 뒤, 다시 HWPX로 내려받을 수 있습니다.
+                증빙문서 폴더 전체를 올리면 트리 구조로 보여 주고, 파일을
+                선택해 HWPX·Office 문서를 분석합니다.
               </p>
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
               <Label
-                htmlFor="hwpx-upload"
+                htmlFor="evidence-folder-upload"
                 className={cn(
-                  "inline-flex cursor-pointer items-center gap-2 rounded-md border px-4 py-2 text-sm font-medium transition-colors",
-                  loading
-                    ? "pointer-events-none opacity-60"
-                    : "hover:bg-accent",
+                  "inline-flex cursor-pointer items-center gap-2 rounded-md border px-4 py-2 text-sm font-medium transition-colors hover:bg-accent",
                 )}
               >
-                {loading ? (
-                  <Loader2 className="size-4 animate-spin" />
-                ) : (
-                  <FileUp className="size-4" />
-                )}
-                HWPX 업로드
+                <FolderUp className="size-4" />
+                폴더 업로드
               </Label>
               <Input
-                id="hwpx-upload"
+                id="evidence-folder-upload"
                 type="file"
-                accept=".hwpx,application/hwp+zip"
                 className="hidden"
-                disabled={loading}
-                onChange={handleFileChange}
+                multiple
+                onChange={handleFolderUpload}
+                {...({ webkitdirectory: "" } as Record<string, string>)}
               />
 
               <Button
                 type="button"
                 variant="outline"
-                disabled={!frontendJson}
-                onClick={handleResetFields}
+                disabled={!treeRoot || loading}
+                onClick={() => void handleAnalyzeAll()}
               >
-                <RefreshCw className="size-4" />
-                편집 초기화
+                <ScanSearch className="size-4" />
+                전체 순차 분석
               </Button>
 
-              <Button
-                type="button"
-                disabled={!sourceFile || !previewData || exporting}
-                onClick={handleExport}
-              >
-                {exporting ? (
-                  <Loader2 className="size-4 animate-spin" />
-                ) : (
-                  <Download className="size-4" />
-                )}
-                HWPX 다운로드
-              </Button>
+              {analysis?.kind === "hwpx" ? (
+                <Button
+                  type="button"
+                  disabled={!selectedFile || !previewData || exporting}
+                  onClick={() => void handleExport()}
+                >
+                  {exporting ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    <Download className="size-4" />
+                  )}
+                  HWPX 다운로드
+                </Button>
+              ) : null}
             </div>
           </div>
+
+          {treeStats ? (
+            <p className="text-sm text-muted-foreground">
+              폴더 {treeStats.folders}개 · 문서 {treeStats.files}개
+              {batchProgress ? ` · ${batchProgress}` : null}
+            </p>
+          ) : null}
 
           {error ? (
             <div className="rounded-md border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
@@ -189,77 +209,83 @@ export function HwpxAutomationPage() {
             </div>
           ) : null}
 
-          <div className="grid min-h-0 flex-1 gap-4 lg:grid-cols-[360px_minmax(0,1fr)]">
+          <div className="grid min-h-0 flex-1 gap-4 lg:grid-cols-[280px_minmax(0,1fr)_320px]">
             <section className="flex min-h-0 flex-col overflow-hidden rounded-lg border bg-card">
               <div className="border-b px-4 py-3">
-                <h2 className="font-semibold">텍스트 편집</h2>
+                <h2 className="font-semibold">증빙문서 트리</h2>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  {sourceFile
-                    ? `${documentTitle || sourceFile.name} · ${textFields.length}개 필드`
-                    : "HWPX 파일을 업로드하면 편집 가능한 텍스트 목록이 표시됩니다."}
+                  폴더 구조 그대로 표시
                 </p>
-                {frontendJson ? (
-                  <Input
-                    value={search}
-                    onChange={(event) => setSearch(event.target.value)}
-                    placeholder="텍스트 검색…"
-                    className="mt-3"
-                  />
-                ) : null}
               </div>
-
-              <div className="min-h-0 flex-1 overflow-y-auto p-4">
-                {!frontendJson ? (
-                  <p className="py-8 text-center text-sm text-muted-foreground">
-                    아직 불러온 문서가 없습니다.
-                  </p>
-                ) : filteredFields.length === 0 ? (
-                  <p className="py-8 text-center text-sm text-muted-foreground">
-                    편집 가능한 텍스트가 없습니다.
-                  </p>
-                ) : (
-                  <div className="space-y-4">
-                    {filteredFields.map((field) => (
-                      <div key={field.id} className="space-y-2">
-                        <Label htmlFor={field.id} className="text-xs text-muted-foreground">
-                          {field.label}
-                        </Label>
-                        <Textarea
-                          id={field.id}
-                          value={field.value}
-                          rows={Math.min(6, Math.max(2, field.value.split("\n").length))}
-                          onChange={(event) =>
-                            handleFieldChange(field.id, event.target.value)
-                          }
-                        />
-                      </div>
-                    ))}
-                  </div>
-                )}
+              <div className="min-h-0 flex-1 overflow-y-auto">
+                <EvidenceDocumentTree
+                  root={treeRoot}
+                  selectedPath={selectedPath}
+                  onSelect={(node) => void analyzeFile(node)}
+                />
               </div>
             </section>
 
-            <section className="min-h-0 overflow-hidden rounded-lg border bg-card">
+            <section className="flex min-h-0 flex-col overflow-hidden rounded-lg border bg-card">
               <div className="border-b px-4 py-3">
-                <h2 className="font-semibold">문서 미리보기</h2>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  week09 HwpxRenderer 기반 A4 페이지 렌더링
+                <h2 className="font-semibold">미리보기</h2>
+                <p className="mt-1 truncate text-xs text-muted-foreground">
+                  {selectedPath ?? "파일을 선택하세요"}
                 </p>
               </div>
+              <div className="min-h-0 flex-1 overflow-auto">
+                <DocumentPreviewPanel
+                  analysis={analysis}
+                  hwpxPreview={previewData}
+                  loading={loading}
+                />
+              </div>
+            </section>
 
-              <div className="h-[calc(100vh-220px)] min-h-[480px] overflow-auto">
-                {loading ? (
-                  <div className="flex items-center justify-center gap-2 py-24 text-sm text-muted-foreground">
-                    <Loader2 className="size-5 animate-spin" />
-                    HWPX 문서를 분석하는 중…
-                  </div>
-                ) : previewData ? (
-                  <HwpxRenderer data={previewData} />
+            <section className="flex min-h-0 flex-col overflow-hidden rounded-lg border bg-card">
+              <div className="border-b px-4 py-3">
+                <h2 className="font-semibold">분석 결과</h2>
+                {analysis ? (
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {analysis.summary}
+                  </p>
                 ) : (
-                  <p className="py-24 text-center text-sm text-muted-foreground">
-                    업로드한 HWPX 문서가 여기에 표시됩니다.
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    선택한 문서의 요약·텍스트
                   </p>
                 )}
+              </div>
+
+              <div className="min-h-0 flex-1 overflow-y-auto p-4">
+                {!analysis && !loading ? (
+                  <p className="py-8 text-center text-sm text-muted-foreground">
+                    트리에서 문서를 클릭하면 분석합니다.
+                  </p>
+                ) : null}
+
+                {analysis?.plainText ? (
+                  <div className="mb-4 space-y-2">
+                    <Label className="text-xs text-muted-foreground">
+                      추출 텍스트
+                    </Label>
+                    <pre className="max-h-48 overflow-auto rounded-md border bg-muted/40 p-3 text-xs whitespace-pre-wrap">
+                      {analysis.plainText.slice(0, 4000)}
+                      {analysis.plainText.length > 4000 ? "\n…" : ""}
+                    </pre>
+                  </div>
+                ) : null}
+
+                {editedDoc ? (
+                  <HwpxEditorPanel doc={editedDoc} onChange={setEditedDoc} />
+                ) : analysis && analysis.kind === "hwpx" ? (
+                  <p className="text-sm text-muted-foreground">
+                    HWPX 구조를 불러오지 못했습니다.
+                  </p>
+                ) : analysis ? (
+                  <p className="text-sm text-muted-foreground">
+                    HWPX가 아닌 문서는 미리보기 탭에서 확인하세요.
+                  </p>
+                ) : null}
               </div>
             </section>
           </div>

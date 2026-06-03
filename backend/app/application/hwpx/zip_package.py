@@ -236,10 +236,14 @@ def pack_hwpx_zip_bytes(
     file_contents: dict[str, bytes],
     *,
     extra_files: dict[str, bytes] | None = None,
+    allow_template_paths: frozenset[str] | set[str] = frozenset(),
 ) -> bytes:
     """
     지정 ZIP 템플릿 바이트로 재패킹 — 변경 없는 항목은 원본 압축 바이트 그대로 복사.
     extra_files: 템플릿에 없던 BinData 등 신규 ZIP 항목.
+    allow_template_paths: 평소 보호되는 _TEMPLATE_ONLY_PATHS 중 이번에는 교체를 허용할 경로
+        (예: charPr/borderFill을 추가한 Contents/header.xml). 호출자가 cross-reference를
+        일관되게 유지한 경우에만 사용한다.
     """
     extra_files = extra_files or {}
     with zipfile.ZipFile(io.BytesIO(template), "r") as zin:
@@ -254,7 +258,8 @@ def pack_hwpx_zip_bytes(
 
     for info in infos:
         name = info.filename.replace("\\", "/")
-        replace = name in file_contents and name not in _TEMPLATE_ONLY_PATHS
+        protected = name in _TEMPLATE_ONLY_PATHS and name not in allow_template_paths
+        replace = name in file_contents and not protected
         if replace and file_contents[name] == original_payload.get(name):
             replace = False
 

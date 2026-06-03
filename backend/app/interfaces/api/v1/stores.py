@@ -24,6 +24,7 @@ from app.application.services.kanban_board_service import KanbanBoardService
 from app.application.services.region_store_service import RegionStoreService
 from app.domain.scoped_ids import strip_scope
 from app.interfaces.api.deps import (
+    REGION_IDS,
     get_kanban_access_context,
     get_kanban_service,
     get_region_store_service,
@@ -565,6 +566,59 @@ def survey_responses(
     region_id: str = Depends(require_region_id),
     service: RegionStoreService = Depends(get_region_store_service),
 ):
+    return service.submit_survey_response(region_id, survey_id, body)
+
+
+# ── 공개(QR) 설문 — 로그인·task_id 불필요. 지역은 경로로 받고, 게시·응답중인 설문만 노출 ──
+
+
+def _require_known_region(region_id: str) -> str:
+    if region_id not in REGION_IDS:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="알 수 없는 지역입니다.")
+    return region_id
+
+
+@router.get("/public/surveys/{region_id}")
+def public_survey_list(
+    region_id: str,
+    service: RegionStoreService = Depends(get_region_store_service),
+    status_filter: str | None = Query(default=None, alias="status"),
+    search: str | None = Query(default=None),
+):
+    """task_id 없이 지역 설문 목록(공개). 임시(초안)는 제외."""
+    _require_known_region(region_id)
+    items = service.list_surveys(region_id, status=status_filter, search=search)
+    return [item for item in items if item.get("status") != "임시"]
+
+
+@router.get("/public/surveys/{region_id}/{survey_id}")
+def public_survey_detail(
+    region_id: str,
+    survey_id: str,
+    service: RegionStoreService = Depends(get_region_store_service),
+):
+    """공개 응답용 설문 상세 — 게시(active)·응답 허용 상태만 노출(초안 보호)."""
+    _require_known_region(region_id)
+    detail = service.get_survey_detail(region_id, survey_id)
+    basic = detail.get("basicInfo") or {}
+    settings = detail.get("settings") or {}
+    if basic.get("status") != "active" or settings.get("acceptResponses") is False:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="현재 응답할 수 없는 설문입니다.",
+        )
+    return detail
+
+
+@router.post("/public/surveys/{region_id}/{survey_id}/responses")
+def public_survey_responses(
+    region_id: str,
+    survey_id: str,
+    body: dict,
+    service: RegionStoreService = Depends(get_region_store_service),
+):
+    """공개 응답 제출 — submit_survey_response가 응답 허용·active 여부를 재검증."""
+    _require_known_region(region_id)
     return service.submit_survey_response(region_id, survey_id, body)
 
 

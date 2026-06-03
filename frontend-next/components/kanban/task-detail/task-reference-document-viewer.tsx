@@ -274,9 +274,9 @@ export function TaskReferenceDocumentViewer({
           <div
             className="prose prose-sm max-w-none p-4 [&_img]:max-w-full [&_img]:h-auto"
             dangerouslySetInnerHTML={{
-              __html:
-                evaluation &&
-                getEvaluationDocumentPreviewHtml(selectedFile.id, evaluation),
+              __html: evaluation
+                ? getEvaluationDocumentPreviewHtml(selectedFile.id, evaluation) ?? ""
+                : "",
             }}
           />
         )}

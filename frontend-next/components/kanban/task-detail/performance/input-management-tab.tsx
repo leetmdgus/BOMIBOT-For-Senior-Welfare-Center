@@ -7,13 +7,16 @@ import {
   ArrowDown,
   ArrowUp,
   ArrowUpDown,
+  Check,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
   Circle,
   Copy,
   Download,
+  Eye,
   HelpCircle,
+  Layers,
   Plus,
   Trash2,
   Upload,
@@ -39,6 +42,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import {
@@ -55,6 +59,7 @@ import {
 } from "@/components/ui/tooltip"
 import { getPerformanceInputMeta } from "@/services/kanban.performance.service"
 import type { PerformanceSubProjectChip } from "@/services/kanban.performance.types"
+import { formatKstDateTime } from "@/lib/datetime-kst"
 
 import { usePerformance } from "./performance-provider"
 import { InputManagementExcelGrid } from "./input-management-excel-grid"
@@ -93,6 +98,9 @@ const NAS_SEARCH_FIELDS = [
 
 const DEFAULT_ROW_BATCH = 10
 
+/** 드롭다운에서 '활성(편집 중) 버전' 항목을 식별하는 sentinel id */
+const ACTIVE_VERSION_ID = "__active__"
+
 type SortDirection = "asc" | "desc" | null
 type SortColumn = "subProject" | "detailCategory" | "month"
 
@@ -121,9 +129,44 @@ export function InputManagementTab() {
     canUndoRows,
     canRedoRows,
     addSupplementaryBudget,
+    deleteActiveSupplement,
     planVersion,
+    snapshots,
+    viewingSnapshotId,
+    setViewingSnapshot,
     deleteSelectedRows,
   } = usePerformance()
+
+  const viewingSnapshot = useMemo(
+    () =>
+      viewingSnapshotId
+        ? snapshots.find((snapshot) => snapshot.id === viewingSnapshotId) ?? null
+        : null,
+    [viewingSnapshotId, snapshots],
+  )
+  const isViewingSnapshot = viewingSnapshot !== null
+  const sourceRows = isViewingSnapshot ? viewingSnapshot.rows : rows
+
+  const versionEntries = useMemo(
+    () => [
+      ...snapshots.map((snapshot) => ({
+        id: snapshot.id,
+        label: snapshot.label,
+        createdAt: snapshot.createdAt as string | null,
+        isActive: false,
+      })),
+      {
+        id: ACTIVE_VERSION_ID,
+        label: planVersion,
+        createdAt: null as string | null,
+        isActive: true,
+      },
+    ],
+    [snapshots, planVersion],
+  )
+  const currentVersionLabel = viewingSnapshot
+    ? viewingSnapshot.label
+    : planVersion
 
   const now = new Date()
   const [selectedYear, setSelectedYear] = useState(now.getFullYear())
@@ -191,11 +234,11 @@ export function InputManagementTab() {
   }, [rows, detailCategoryItems])
 
   const filteredRows = useMemo(() => {
-    if (viewAllMonths) return rows
+    if (viewAllMonths) return sourceRows
 
     const monthLabel = `${selectedMonth}월`
-    return rows.filter((row) => row.month === monthLabel)
-  }, [rows, viewAllMonths, selectedMonth])
+    return sourceRows.filter((row) => row.month === monthLabel)
+  }, [sourceRows, viewAllMonths, selectedMonth])
 
   const displayedRows = useMemo(() => {
     const next = [...filteredRows]
@@ -297,6 +340,8 @@ export function InputManagementTab() {
   }
 
   const addRows = (count = DEFAULT_ROW_BATCH) => {
+    if (isViewingSnapshot) return
+
     const monthLabel = viewAllMonths
       ? `${selectedMonth}월`
       : `${selectedMonth}월`
@@ -428,6 +473,8 @@ export function InputManagementTab() {
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
+      if (isViewingSnapshot) return
+
       if (!panelRef.current?.contains(document.activeElement)) {
         const active = document.activeElement
         if (
@@ -493,11 +540,16 @@ export function InputManagementTab() {
     deleteSelectedRows,
     pasteRowsBelowSelection,
     selectedDisplayedCount,
+    isViewingSnapshot,
+    canUndoRows,
+    canRedoRows,
+    undoRows,
+    redoRows,
   ])
 
   const exportExcel = () => {
     const sheet = XLSX.utils.json_to_sheet(
-      rows.map((row) => ({
+      sourceRows.map((row) => ({
         세부사업명: row.subProject,
         상세분류: row.detailCategory,
         월: row.month,
@@ -715,6 +767,7 @@ export function InputManagementTab() {
                   variant="outline"
                   size="sm"
                   className="gap-2"
+                  disabled={isViewingSnapshot}
                   onClick={(event) => event.stopPropagation()}
                 >
                   <Download className="size-4" />
@@ -742,6 +795,7 @@ export function InputManagementTab() {
             variant="outline"
             size="sm"
             className="gap-2"
+            disabled={isViewingSnapshot}
             onClick={() => fileRef.current?.click()}
           >
             <Upload className="size-4" />
@@ -839,16 +893,88 @@ export function InputManagementTab() {
               · 세세목은 「상세분류」 열 · Tab/Enter · Ctrl+C/V/Z/Y · 셀 모서리 채우기
             </span>
           </span>
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            className="gap-1"
-            onClick={addSupplementaryBudget}
-          >
-            <Plus className="size-3.5" />
-            추경 추가
-          </Button>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                type="button"
+                size="sm"
+                variant={isViewingSnapshot ? "default" : "outline"}
+                className="gap-1.5"
+                onClick={(event) => event.stopPropagation()}
+              >
+                <Layers className="size-3.5" />
+                버전: {currentVersionLabel}
+                {isViewingSnapshot ? (
+                  <span className="rounded bg-white/20 px-1 text-[10px]">
+                    읽기전용
+                  </span>
+                ) : null}
+                <ChevronDown className="size-3.5 opacity-60" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-72">
+              <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
+                추경 스냅샷 / 버전
+              </DropdownMenuLabel>
+              {versionEntries.map((entry) => {
+                const isSelected = entry.isActive
+                  ? !isViewingSnapshot
+                  : entry.id === viewingSnapshotId
+                return (
+                  <DropdownMenuItem
+                    key={entry.id}
+                    onClick={() =>
+                      setViewingSnapshot(entry.isActive ? null : entry.id)
+                    }
+                    className="flex items-start gap-2"
+                  >
+                    <span className="mt-0.5 w-4 shrink-0">
+                      {isSelected ? <Check className="size-4" /> : null}
+                    </span>
+                    <span className="flex flex-1 flex-col">
+                      <span className="flex items-center gap-1.5 font-medium">
+                        {entry.label}
+                        {entry.isActive ? (
+                          <span className="rounded bg-emerald-100 px-1 text-[10px] text-emerald-700">
+                            편집
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-0.5 rounded bg-slate-100 px-1 text-[10px] text-slate-500">
+                            <Eye className="size-3" /> 읽기전용
+                          </span>
+                        )}
+                      </span>
+                      {entry.createdAt ? (
+                        <span className="text-[11px] text-muted-foreground">
+                          {formatKstDateTime(entry.createdAt)} 동결
+                        </span>
+                      ) : null}
+                    </span>
+                  </DropdownMenuItem>
+                )
+              })}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                disabled={isViewingSnapshot}
+                onClick={addSupplementaryBudget}
+              >
+                <Plus className="size-4" />
+                추경 추가
+              </DropdownMenuItem>
+              {snapshots.length > 0 ? (
+                <DropdownMenuItem
+                  disabled={isViewingSnapshot}
+                  onClick={deleteActiveSupplement}
+                  className="text-destructive focus:text-destructive"
+                >
+                  <Trash2 className="size-4" />
+                  현재 추경 삭제 ({planVersion})
+                </DropdownMenuItem>
+              ) : null}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           <Tooltip>
             <TooltipTrigger asChild>
               <button type="button" className="text-muted-foreground">
@@ -856,6 +982,7 @@ export function InputManagementTab() {
               </button>
             </TooltipTrigger>
             <TooltipContent className="max-w-xs text-sm">
+              추경을 누르면 현재 데이터가 스냅샷으로 보관되고 새 버전에서 편집합니다.
               사업실적·사업결과에는 최신 추경이 적용됩니다.
             </TooltipContent>
           </Tooltip>
@@ -871,20 +998,21 @@ export function InputManagementTab() {
               type="button"
               size="sm"
               variant="ghost"
-              disabled={selectedDisplayedCount === 0}
+              disabled={isViewingSnapshot || selectedDisplayedCount === 0}
               className="gap-1"
               onClick={deleteSelectedRows}
             >
               <Trash2 className="size-3.5" />
               선택 삭제
             </Button>
-            
+
             <span className="hidden h-4 w-px bg-slate-300 sm:inline" />
             <Button
               type="button"
               size="sm"
               variant="outline"
               className="gap-1"
+              disabled={isViewingSnapshot}
               onClick={() => addRows(1)}
             >
               <Plus className="size-3.5" />
@@ -894,6 +1022,7 @@ export function InputManagementTab() {
               type="button"
               size="sm"
               className="gap-1"
+              disabled={isViewingSnapshot}
               onClick={() => addRows(DEFAULT_ROW_BATCH)}
             >
               <Plus className="size-3.5" />
@@ -901,6 +1030,24 @@ export function InputManagementTab() {
             </Button>
           </div>
         </div>
+
+        {viewingSnapshot ? (
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+            <span className="inline-flex items-center gap-1.5">
+              <Eye className="size-4" />
+              '{viewingSnapshot.label}' 스냅샷을 읽기전용으로 보는 중입니다. 편집하려면 편집 버전으로 돌아가세요.
+            </span>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="gap-1 border-amber-300 bg-white"
+              onClick={() => setViewingSnapshot(null)}
+            >
+              편집 버전으로 ({planVersion})
+            </Button>
+          </div>
+        ) : null}
 
         <div ref={tableScrollRef} className="overflow-x-auto">
         <DndContext
@@ -984,7 +1131,8 @@ export function InputManagementTab() {
             onOpenActualModal={openActualModal}
             onRowSelect={handleRowSelect}
             hasRowSelection={selectedDisplayedCount > 0}
-            enableRowReorder={!isRowOrderLocked}
+            readOnly={isViewingSnapshot}
+            enableRowReorder={!isRowOrderLocked && !isViewingSnapshot}
             subProjectSuggestions={subProjects.filter(
               (item) => item !== "선택",
             )}

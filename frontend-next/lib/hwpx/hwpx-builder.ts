@@ -9,6 +9,8 @@ import {
   sanitizeHwpxText,
 } from "@/lib/hwpx/hwpx-encoding"
 import {
+  buildCellBorderFillXml,
+  buildCharPrXml,
   buildContainerXml,
   buildHeaderXml,
   buildManifestXml,
@@ -40,6 +42,10 @@ export type HwpxTableCell = {
   rowSpan?: number
   /** 표 헤더(라벨) 셀 — 배경·굵게 */
   header?: boolean
+  /** 셀 배경색 (#RRGGBB) — 지정 시 전용 borderFill 생성 */
+  backgroundColor?: string
+  /** 셀 글자 크기 (px) — 지정 시 전용 charPr 생성 */
+  fontSizePx?: number
 }
 
 export type HwpxTable = {
@@ -70,9 +76,98 @@ function nextTblId(): string {
   return String(tblIdSeq++)
 }
 
+/** 동적 charPr(글자 크기)·borderFill(셀 배경색) 레지스트리 — 빌드 1회당 초기화 */
+type ResourceRegistry = {
+  charProps: Map<string, { id: number; xml: string }>
+  borderFills: Map<string, { id: number; xml: string }>
+  nextCharId: number
+  nextBorderId: number
+}
+
+let resources: ResourceRegistry = createResourceRegistry()
+
+function createResourceRegistry(): ResourceRegistry {
+  return {
+    charProps: new Map(),
+    borderFills: new Map(),
+    // 기본 charPr 0~3, borderFill 0~2 다음부터 할당
+    nextCharId: 4,
+    nextBorderId: 3,
+  }
+}
+
 function resetIds(): void {
   paraIdSeq = 1
   tblIdSeq = 1
+  resources = createResourceRegistry()
+}
+
+/** px 글자 크기 → HWPX charPr 높이(HWPUNIT, 1pt=100). 안전 범위로 clamp */
+function fontSizePxToHeight(px: number): number {
+  const pt = Math.round(px)
+  return Math.min(Math.max(pt * 100, 400), 5000)
+}
+
+function normalizeHexColor(color: string): string | null {
+  const value = color.trim()
+  if (!value || value.toLowerCase() === "transparent") return null
+  const hex = /^#([0-9a-fA-F]{6})$/.exec(value)
+  if (hex) return `#${hex[1].toUpperCase()}`
+  const short = /^#([0-9a-fA-F]{3})$/.exec(value)
+  if (short) {
+    const [r, g, b] = short[1].split("")
+    return `#${r}${r}${g}${g}${b}${b}`.toUpperCase()
+  }
+  const rgb = /^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/.exec(value)
+  if (rgb) {
+    const toHex = (n: string) => Number(n).toString(16).padStart(2, "0")
+    return `#${toHex(rgb[1])}${toHex(rgb[2])}${toHex(rgb[3])}`.toUpperCase()
+  }
+  return null
+}
+
+/** 셀의 charPrIDRef — 글자 크기 지정 시 전용 charPr 생성/재사용 */
+function resolveCellCharId(cell: HwpxTableCell): number {
+  const baseId = cell.header ? HWPX_CHAR.label : HWPX_CHAR.body
+  if (!cell.fontSizePx) return baseId
+
+  const height = fontSizePxToHeight(cell.fontSizePx)
+  const baseHeight = cell.header ? 900 : 1000
+  if (height === baseHeight) return baseId
+
+  const key = `${baseId}:${height}`
+  const existing = resources.charProps.get(key)
+  if (existing) return existing.id
+
+  const id = resources.nextCharId++
+  resources.charProps.set(key, {
+    id,
+    xml: buildCharPrXml(id, height, {
+      bold: cell.header,
+      textColor: cell.header ? "#1E293B" : "#111827",
+    }),
+  })
+  return id
+}
+
+/** 셀의 borderFillIDRef — 배경색 지정 시 전용 borderFill 생성/재사용 */
+function resolveCellBorderId(cell: HwpxTableCell): number {
+  const baseId = cell.header ? HWPX_BORDER.headerCell : HWPX_BORDER.table
+  if (!cell.backgroundColor) return baseId
+
+  const color = normalizeHexColor(cell.backgroundColor)
+  if (!color) return baseId
+
+  const key = color
+  const existing = resources.borderFills.get(key)
+  if (existing) return existing.id
+
+  const id = resources.nextBorderId++
+  resources.borderFills.set(key, {
+    id,
+    xml: buildCellBorderFillXml(id, color),
+  })
+  return id
 }
 
 const HWPX_LINE_AREA = 42520
@@ -205,15 +300,17 @@ function tableXml(table: HwpxTable): string {
           for (let c = colIndex; c < colIndex + colSpan; c++) {
             cellWidth += colWidths[c] ?? 0
           }
-          const borderId = cell.header
-            ? HWPX_BORDER.headerCell
-            : HWPX_BORDER.table
-          const charId = cell.header ? HWPX_CHAR.label : HWPX_CHAR.body
+          const borderId = resolveCellBorderId(cell)
+          const charId = resolveCellCharId(cell)
           const paraId = cell.header ? HWPX_PARA.center : HWPX_PARA.body
           const styleId = cell.header ? HWPX_STYLE.label : HWPX_STYLE.body
           const runs = hpTextRuns(charId, cell.text || " ")
 
-          const cellCharHeight = cell.header ? 900 : 1000
+          const cellCharHeight = cell.fontSizePx
+            ? fontSizePxToHeight(cell.fontSizePx)
+            : cell.header
+              ? 900
+              : 1000
           const cellPara = `<hp:p id="${nextParaId()}" paraPrIDRef="${paraId}" styleIDRef="${styleId}" pageBreak="0" columnBreak="0" merged="0">${runs}${linesegarrayXml(cellCharHeight)}</hp:p>`
 
           return `<hp:tc name="" header="${cell.header ? 1 : 0}" hasMargin="0" protect="0" editable="0" dirty="0" borderFillIDRef="${borderId}">
@@ -323,14 +420,22 @@ export async function buildHwpxBlob(doc: HwpxDocument): Promise<Blob> {
   const zip = new JSZip()
   const title = doc.title || "문서"
 
+  // section0을 먼저 만들어 동적 charPr/borderFill(셀색·글자크기)을 수집한 뒤
+  // header.xml에 해당 정의를 주입한다.
+  const section0Xml = buildSection0Xml(doc.sections)
+  const headerExtras = {
+    charProps: [...resources.charProps.values()].map((entry) => entry.xml),
+    borderFills: [...resources.borderFills.values()].map((entry) => entry.xml),
+  }
+
   addUtf8File(zip, "mimetype", "application/hwp+zip", { compression: "STORE" })
   addUtf8File(zip, "META-INF/container.xml", buildContainerXml())
   addUtf8File(zip, "META-INF/manifest.xml", buildManifestXml())
   addUtf8File(zip, "version.xml", buildVersionXml())
   addUtf8File(zip, "settings.xml", buildSettingsXml())
   addUtf8File(zip, "Contents/content.hpf", buildContentHpf(title))
-  addUtf8File(zip, "Contents/header.xml", buildHeaderXml(title))
-  addUtf8File(zip, "Contents/section0.xml", buildSection0Xml(doc.sections))
+  addUtf8File(zip, "Contents/header.xml", buildHeaderXml(title, headerExtras))
+  addUtf8File(zip, "Contents/section0.xml", section0Xml)
   addUtf8File(zip, "Meta/meta.xml", buildMetaXml(title))
   addUtf8File(zip, "Preview/PrvText.txt", `\uFEFF${buildPreviewText(doc)}`)
 

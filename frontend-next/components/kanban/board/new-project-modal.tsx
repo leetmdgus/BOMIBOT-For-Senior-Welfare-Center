@@ -103,7 +103,7 @@ export function NewProjectModal({
         console.error("신규 사업 모달 데이터 로드 실패:", error)
         if (!cancelled) {
           setOptionsLoadError(
-            "모달 데이터를 불러오지 못했습니다. API(8020) 실행 여부를 확인해 주세요.",
+            "모달 데이터를 불러오지 못했습니다. API(9001) 실행 여부를 확인해 주세요.",
           )
         }
       })

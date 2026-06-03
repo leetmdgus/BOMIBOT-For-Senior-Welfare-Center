@@ -84,7 +84,7 @@ export function BusinessEvaluationEditor({
       </section>
 
       <section aria-label="평가 본문" className="space-y-2">
-        <div className="flex items-center justify-between gap-2 border border-b-0 border-black bg-[#f5f5f5] px-3 py-2">
+        <div className="print-hide flex items-center justify-between gap-2 border border-b-0 border-black bg-[#f5f5f5] px-3 py-2">
           <h3 className="text-sm font-medium text-neutral-700">추가 본문</h3>
           {!effectiveReadOnly ? (
             <p className="text-[11px] text-muted-foreground">

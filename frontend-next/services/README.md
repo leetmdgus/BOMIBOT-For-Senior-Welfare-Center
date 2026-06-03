@@ -28,7 +28,7 @@ region-store      NEXT_PUBLIC_API_BASE_URL 설정 시
 | 변수 | mock | FastAPI |
 |------|------|---------|
 | `NEXT_PUBLIC_USE_MOCK_API` | `true` | `false` |
-| `NEXT_PUBLIC_API_BASE_URL` | (비움) | `http://127.0.0.1:8020` 또는 프로덕션 URL |
+| `NEXT_PUBLIC_API_BASE_URL` | (비움) | `http://127.0.0.1:9001` 또는 프로덕션 URL |
 
 ## 도메인 (전부 FastAPI 연동됨)
 

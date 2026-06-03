@@ -57,6 +57,7 @@ def pack_render_hwpx_bytes(
     }
     extra_files: dict[str, bytes] = {}
 
+    allow_paths: set[str] = set()
     if built.image_catalog.has_images:
         file_contents["Contents/header.xml"] = patch_header_bindata(
             header, built.image_catalog
@@ -65,5 +66,12 @@ def pack_render_hwpx_bytes(
             content_hpf, built.image_catalog
         )
         extra_files = built.image_catalog.bin_files()
+        # header.xml/content.hpf는 보호 경로 — 이미지 binData/manifest를 일관 갱신했으므로 교체 허용
+        allow_paths = {"Contents/header.xml", "Contents/content.hpf"}
 
-    return pack_hwpx_zip_bytes(template, file_contents, extra_files=extra_files)
+    return pack_hwpx_zip_bytes(
+        template,
+        file_contents,
+        extra_files=extra_files,
+        allow_template_paths=allow_paths,
+    )

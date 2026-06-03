@@ -13,6 +13,8 @@ export function astToHwpxTable(table: HwpTable): HwpxTable {
       colSpan: cell.colSpan > 1 ? cell.colSpan : undefined,
       rowSpan: cell.rowSpan > 1 ? cell.rowSpan : undefined,
       header: cell.style.header,
+      backgroundColor: cell.style.backgroundColor ?? undefined,
+      fontSizePx: cell.style.fontSizePx ?? undefined,
     })),
   )
 

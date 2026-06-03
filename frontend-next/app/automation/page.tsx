@@ -1,5 +1,5 @@
-import { HwpxAutomationPage } from "@/components/automation/hwpx-automation-page";
+import { AutomationComingSoonPage } from "@/components/automation/automation-coming-soon-page";
 
 export default function Page() {
-  return <HwpxAutomationPage />;
+  return <AutomationComingSoonPage />;
 }

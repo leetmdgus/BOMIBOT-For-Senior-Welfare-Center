@@ -24,7 +24,7 @@ docker compose up -d --build --remove-orphans
 .\scripts\smoke-test.ps1
 ```
 
-API: http://127.0.0.1:8020/docs
+API: http://127.0.0.1:9001/docs
 
 ## 2. 프론트
 
@@ -36,7 +36,7 @@ pnpm clean:next   # app/api → FastAPI 이전 후 stale 캐시 제거
 pnpm dev
 ```
 
-http://localhost:3000 — 로그인:
+http://localhost:9000 — 로그인:
 
 | 지역 | 이메일 | 비밀번호 |
 |------|--------|----------|
@@ -51,7 +51,7 @@ http://localhost:3000 — 로그인:
 
 ## 3. 주의
 
-- **8020 포트 하나만** — Docker API와 로컬 `uvicorn` 동시 실행 금지 (`.\scripts\dev.ps1`가 uvicorn 정리)
+- **9001 포트 하나만** — Docker API와 로컬 `uvicorn` 동시 실행 금지 (`.\scripts\dev.ps1`가 uvicorn 정리)
 - **`POSTGRES_PASSWORD` 변경** — `backend\scripts\reset-docker-stack.ps1`
 - mock만 쓰려면 `NEXT_PUBLIC_USE_MOCK_API=true` (API 불필요)
 

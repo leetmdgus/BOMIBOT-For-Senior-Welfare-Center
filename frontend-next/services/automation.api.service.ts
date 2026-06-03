@@ -4,7 +4,13 @@ import {
   resolveApiPath,
 } from "@/lib/api-client"
 import { triggerBlobDownload } from "@/lib/files/download-blob"
+import type { DocumentAnalysisResult } from "@/lib/automation/document-analysis-types"
 import type { HwpxFrontendDocument, HwpxParseResponse } from "@/lib/hwpx/frontend-render-types"
+
+const analyzePath = resolveApiPath(
+  "/api/automation/documents/analyze",
+  "/api/v1/automation/documents/analyze",
+)
 
 const parsePath = resolveApiPath(
   "/api/automation/hwpx/parse",
@@ -15,6 +21,17 @@ const exportPath = resolveApiPath(
   "/api/automation/hwpx/export",
   "/api/v1/automation/hwpx/export",
 )
+
+export async function analyzeEvidenceDocument(
+  file: File,
+  relativePath: string,
+): Promise<DocumentAnalysisResult> {
+  const formData = new FormData()
+  formData.append("file", file)
+  formData.append("relative_path", relativePath)
+
+  return apiUploadFormData<DocumentAnalysisResult>(analyzePath, formData)
+}
 
 export async function parseHwpxDocument(file: File): Promise<HwpxParseResponse> {
   const formData = new FormData()

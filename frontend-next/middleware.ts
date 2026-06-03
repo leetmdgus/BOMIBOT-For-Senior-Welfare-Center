@@ -29,6 +29,9 @@ function isPublicPath(pathname: string): boolean {
   if (PUBLIC_API_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`))) {
     return true
   }
+  // 공개 설문(QR) — 로그인 없이 목록·상세·응답 제출
+  if (pathname.startsWith("/api/public/")) return true
+  if (pathname === "/survey/list" || pathname.startsWith("/survey/list")) return true
   if (/^\/survey\/[^/]+\/respond/.test(pathname)) return true
   return false
 }

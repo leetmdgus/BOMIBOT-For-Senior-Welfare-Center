@@ -17,6 +17,7 @@ import {
 import type {
   PerformanceRow,
   PerformanceSummaryRow,
+  PlanSnapshot,
 } from "@/services/kanban.performance.types"
 
 import type {
@@ -50,6 +51,11 @@ export const months = [
   "11월",
   "12월",
 ]
+
+const createSnapshotId = () =>
+  typeof crypto !== "undefined" && crypto.randomUUID
+    ? crypto.randomUUID()
+    : `snapshot-${Date.now()}-${Math.random()}`
 
 function aggregateBySubProject(rows: RowData[]) {
   const grouped: Record<
@@ -134,7 +140,14 @@ const PerformanceContext = createContext<{
   planVersion: string
   setPlanVersion: React.Dispatch<React.SetStateAction<string>>
   supplementVersions: string[]
+  /** 동결된 이전 추경 버전 스택 (활성 버전 미포함) */
+  snapshots: PlanSnapshot[]
+  /** 읽기전용으로 보고 있는 스냅샷 id (활성 편집 중이면 null) */
+  viewingSnapshotId: string | null
+  setViewingSnapshot: (id: string | null) => void
   addSupplementaryBudget: () => void
+  /** 최신(활성) 추경 버전 삭제 → 직전 스냅샷 편집 복원 */
+  deleteActiveSupplement: () => void
   activeView: PerformanceView
   setActiveView: (view: PerformanceView) => void
   summaryMonth: SummaryMonthFilter
@@ -193,6 +206,10 @@ export function PerformanceProvider({
   const [supplementVersions, setSupplementVersions] = useState<string[]>([
     "기본계획",
   ])
+  const [snapshots, setSnapshots] = useState<PlanSnapshot[]>([])
+  const [viewingSnapshotId, setViewingSnapshotId] = useState<string | null>(
+    null,
+  )
 
   const applyRows = useCallback((next: RowData[]) => {
     rowsRef.current = next
@@ -277,6 +294,8 @@ export function PerformanceProvider({
     setActiveView("input")
     setPlanVersion("기본계획")
     setSupplementVersions(["기본계획"])
+    setSnapshots([])
+    setViewingSnapshotId(null)
     setSelectedCell(null)
     setSummaryMonth("전체")
     setSummaryFundingSource("all")
@@ -347,13 +366,52 @@ export function PerformanceProvider({
   const inputRefs = useRef<Map<string, HTMLInputElement>>(new Map())
 
   const addSupplementaryBudget = useCallback(() => {
-    if (!window.confirm("정말 추경하시겠습니까?")) return
+    if (
+      !window.confirm(
+        `정말 추경하시겠습니까?\n현재 '${planVersion}' 데이터가 스냅샷으로 보관되고, 새 추경 버전에서 편집합니다.`,
+      )
+    )
+      return
 
-    const nextLabel = `${supplementVersions.length}차추경` as const
+    const frozenRows = clonePerformanceRows(rowsRef.current).map((row) => ({
+      ...row,
+      selected: false,
+    }))
+    const snapshot: PlanSnapshot = {
+      id: createSnapshotId(),
+      label: planVersion,
+      rows: frozenRows,
+      createdAt: new Date().toISOString(),
+    }
+    const nextLabel = `${snapshots.length + 1}차추경`
 
+    setSnapshots((prev) => [...prev, snapshot])
     setSupplementVersions((prev) => [...prev, nextLabel])
     setPlanVersion(nextLabel)
-  }, [supplementVersions.length])
+    setViewingSnapshotId(null)
+  }, [planVersion, snapshots.length])
+
+  const deleteActiveSupplement = useCallback(() => {
+    if (snapshots.length === 0) return
+
+    const last = snapshots[snapshots.length - 1]
+    if (
+      !window.confirm(
+        `현재 '${planVersion}' 추경 버전을 삭제하고 '${last.label}'을(를) 다시 편집하시겠습니까?\n'${planVersion}'에서 입력한 내용은 사라집니다.`,
+      )
+    )
+      return
+
+    setSnapshots((prev) => prev.slice(0, -1))
+    setSupplementVersions((prev) => prev.slice(0, -1))
+    setPlanVersion(last.label)
+    setViewingSnapshotId(null)
+    setRowsWithoutHistory(clonePerformanceRows(last.rows))
+  }, [snapshots, planVersion, setRowsWithoutHistory])
+
+  const setViewingSnapshot = useCallback((id: string | null) => {
+    setViewingSnapshotId(id)
+  }, [])
 
   const aggregatedData = useMemo(() => aggregateBySubProject(rows), [rows])
 
@@ -517,7 +575,11 @@ export function PerformanceProvider({
         planVersion,
         setPlanVersion,
         supplementVersions,
+        snapshots,
+        viewingSnapshotId,
+        setViewingSnapshot,
         addSupplementaryBudget,
+        deleteActiveSupplement,
         activeView,
         setActiveView,
         summaryMonth,

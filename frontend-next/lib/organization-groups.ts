@@ -14,6 +14,36 @@ export const POSITION_CATALOG: readonly { id: string; name: string }[] = [
   { id: "position-job-specialist", name: "취업전문가" },
 ] as const
 
+/** POSITION_CATALOG 순서 기반 직책 위계 순위 (관장 → 부장 → 팀장 → 실무직 …) */
+const POSITION_RANK = new Map(
+  POSITION_CATALOG.map((position, index) => [position.name, index]),
+)
+
+/** 카탈로그에 없는 직책(예: 사원)은 가장 낮은 순위로 마지막에 배치 */
+function positionRank(position: string): number {
+  return POSITION_RANK.get(position.trim()) ?? POSITION_CATALOG.length
+}
+
+/**
+ * 직책 위계로 직원을 정렬한다. 부장이 위, 팀장이 그 다음, 사원(실무직)이 마지막.
+ * 같은 직책끼리는 기존 순서를 유지한다(안정 정렬).
+ */
+export function sortEmployeesByPositionRank(employees: Employee[]): Employee[] {
+  return [...employees].sort(
+    (a, b) => positionRank(a.position) - positionRank(b.position),
+  )
+}
+
+/** 각 부서의 직원 목록을 직책 위계 순서로 정렬한 부서 배열을 반환 */
+export function sortDepartmentsByPositionRank(
+  departments: Department[],
+): Department[] {
+  return departments.map((department) => ({
+    ...department,
+    employees: sortEmployeesByPositionRank(department.employees),
+  }))
+}
+
 export function getAllEmployeesFromDepartments(
   departments: Department[],
 ): Employee[] {

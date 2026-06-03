@@ -4,5 +4,6 @@ import * as mockService from "./automation.mock.service"
 
 const automationService = shouldUseMockApi() ? mockService : apiService
 
+export const analyzeEvidenceDocument = automationService.analyzeEvidenceDocument
 export const parseHwpxDocument = automationService.parseHwpxDocument
 export const downloadHwpxDocument = automationService.downloadHwpxDocument

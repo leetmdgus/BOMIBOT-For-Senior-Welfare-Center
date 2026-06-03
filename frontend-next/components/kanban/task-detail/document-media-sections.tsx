@@ -13,23 +13,23 @@ import type {
 
 type MediaSection = BusinessPlanSection | EvaluationSection
 
-type DocumentMediaSectionsProps = {
-  sections: MediaSection[]
+type DocumentMediaSectionsProps<T extends MediaSection> = {
+  sections: T[]
   readOnly?: boolean
   taskId?: string
-  onSectionsChange: (next: MediaSection[]) => void
+  onSectionsChange: (next: T[]) => void
   createSectionId: () => string | number
   className?: string
 }
 
-export function DocumentMediaSections({
+export function DocumentMediaSections<T extends MediaSection>({
   sections,
   readOnly,
   taskId,
   onSectionsChange,
   createSectionId,
   className,
-}: DocumentMediaSectionsProps) {
+}: DocumentMediaSectionsProps<T>) {
   const mediaSections = sections.filter((section) => section.type === "file")
 
   const addMediaSection = () => {
@@ -40,7 +40,7 @@ export function DocumentMediaSections({
         type: "file",
         title: "",
         content: "",
-      } as MediaSection,
+      } as unknown as T,
     ])
   }
 
@@ -52,7 +52,7 @@ export function DocumentMediaSections({
     if (index < 0) return
     onSectionsChange(
       sections.map((section, i) =>
-        i === index ? ({ ...section, ...patch } as MediaSection) : section,
+        i === index ? ({ ...section, ...patch } as T) : section,
       ),
     )
   }

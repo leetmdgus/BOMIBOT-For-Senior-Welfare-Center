@@ -28,7 +28,7 @@ export function rowsFromDocumentSections(
       rows.push({
         kind: "heading",
         label: "대목차",
-        headingSectionId: section.id,
+        headingSectionId: String(section.id),
         value: section.title?.trim() || "",
       })
       continue
@@ -40,13 +40,13 @@ export function rowsFromDocumentSections(
     rows.push({
       kind: "toc",
       label: "목차",
-      bodySectionId: section.id,
+      bodySectionId: String(section.id),
       value: section.title?.trim() || "",
     })
     rows.push({
       kind: "body",
       label: "본문",
-      bodySectionId: section.id,
+      bodySectionId: String(section.id),
       value: section.content ?? "",
       htmlValue: section.content ?? "",
     })
@@ -114,33 +114,33 @@ export function blockSectionIds(
   return ids
 }
 
-export function deleteBlockFromSections(
-  sections: DocumentSection[],
+export function deleteBlockFromSections<T extends DocumentSection>(
+  sections: T[],
   blockIndex: number,
-): DocumentSection[] {
+): T[] {
   const drop = new Set(blockSectionIds(sections, blockIndex))
-  return sections.filter((section) => !drop.has(section.id))
+  return sections.filter((section) => !drop.has(String(section.id)))
 }
 
-export function moveBlockInSections(
-  sections: DocumentSection[],
+export function moveBlockInSections<T extends DocumentSection>(
+  sections: T[],
   blockIndex: number,
   direction: "up" | "down",
-): DocumentSection[] {
+): T[] {
   const blocks = blocksFromDocumentSections(sections)
   const target = direction === "up" ? blockIndex - 1 : blockIndex + 1
   if (target < 0 || target >= blocks.length) return sections
   const swapped = [...blocks]
   ;[swapped[blockIndex], swapped[target]] = [swapped[target], swapped[blockIndex]]
 
-  const byId = new Map(sections.map((section) => [section.id, section]))
+  const byId = new Map(sections.map((section) => [String(section.id), section]))
   const used = new Set<string>()
-  const ordered: DocumentSection[] = []
+  const ordered: T[] = []
 
   for (const section of sections) {
     if (section.type === "file") {
       ordered.push(section)
-      used.add(section.id)
+      used.add(String(section.id))
     }
   }
 
@@ -156,7 +156,7 @@ export function moveBlockInSections(
   }
 
   for (const section of sections) {
-    if (!used.has(section.id)) ordered.push(section)
+    if (!used.has(String(section.id))) ordered.push(section)
   }
 
   return ordered
@@ -167,11 +167,11 @@ export function isDocumentSectionType(section: DocumentSection): boolean {
 }
 
 /** 표1 대목차·목차·본문만 바꿀 때 table/file 등 다른 섹션 순서를 유지 */
-export function mergeDocumentSectionsInOrder(
-  allSections: DocumentSection[],
-  nextDocSections: DocumentSection[],
-): DocumentSection[] {
-  const result: DocumentSection[] = []
+export function mergeDocumentSectionsInOrder<T extends DocumentSection>(
+  allSections: T[],
+  nextDocSections: T[],
+): T[] {
+  const result: T[] = []
   let docIdx = 0
 
   for (const section of allSections) {
@@ -199,15 +199,19 @@ export function findSectionIndex(
   return sections.findIndex((section) => String(section.id) === id)
 }
 
-export function deleteRowFromSections(
-  sections: DocumentSection[],
+export function deleteRowFromSections<T extends DocumentSection>(
+  sections: T[],
   row: DocumentSectionRow,
-): DocumentSection[] {
+): T[] {
   if (row.kind === "heading" && row.headingSectionId) {
-    return sections.filter((section) => section.id !== row.headingSectionId)
+    return sections.filter(
+      (section) => String(section.id) !== row.headingSectionId,
+    )
   }
   if (row.bodySectionId) {
-    return sections.filter((section) => section.id !== row.bodySectionId)
+    return sections.filter(
+      (section) => String(section.id) !== row.bodySectionId,
+    )
   }
   return sections
 }
@@ -227,11 +231,11 @@ export function rowGroupIndex(
   return group
 }
 
-export function moveRowGroupInSections(
-  sections: DocumentSection[],
+export function moveRowGroupInSections<T extends DocumentSection>(
+  sections: T[],
   rowIndex: number,
   direction: "up" | "down",
-): DocumentSection[] {
+): T[] {
   const rows = rowsFromDocumentSections(sections)
   const groupStarts: number[] = []
   for (let i = 0; i < rows.length; i += 1) {

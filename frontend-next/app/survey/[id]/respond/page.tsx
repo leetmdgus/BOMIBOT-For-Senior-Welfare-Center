@@ -1,3 +1,5 @@
+import { Suspense } from "react"
+
 import { SurveyRespondPage } from "@/components/survey/survey-respond-page"
 
 export default async function Page({
@@ -6,5 +8,9 @@ export default async function Page({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  return <SurveyRespondPage id={id} />
+  return (
+    <Suspense>
+      <SurveyRespondPage id={id} />
+    </Suspense>
+  )
 }

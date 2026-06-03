@@ -15,7 +15,7 @@ if (-not (Test-Path ".env")) {
 docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build --remove-orphans
 
 Start-Sleep -Seconds 10
-$port = if ($env:API_PORT) { $env:API_PORT } else { "8020" }
+$port = if ($env:API_PORT) { $env:API_PORT } else { "9001" }
 $base = "http://127.0.0.1:$port"
 
 try {

@@ -344,6 +344,7 @@ export const surveyResultsMock: Record<string, SurveyResults> = {
       totalTarget: 30,
       averageSatisfaction: 4.2,
       completionRate: 100,
+      positiveRate: 75,
     },
     questions: [
       {
@@ -353,6 +354,7 @@ export const surveyResultsMock: Record<string, SurveyResults> = {
         subtitle: "공간·프로그램 내용에 대한 평가",
         answeredCount: 4,
         skippedCount: 0,
+        average: 3.88,
         matrixChart: [
           {
             name: "상반기",
@@ -370,6 +372,22 @@ export const surveyResultsMock: Record<string, SurveyResults> = {
             만족: 2,
             매우만족: 1,
           },
+        ],
+      },
+      {
+        questionId: "q-scale-1",
+        type: "scale",
+        title: "2. 전반적인 만족도",
+        subtitle: "1점(매우 불만족) ~ 5점(매우 만족)",
+        answeredCount: 4,
+        skippedCount: 0,
+        average: 4.25,
+        scaleData: [
+          { score: 1, count: 0 },
+          { score: 2, count: 0 },
+          { score: 3, count: 1 },
+          { score: 4, count: 1 },
+          { score: 5, count: 2 },
         ],
       },
       {

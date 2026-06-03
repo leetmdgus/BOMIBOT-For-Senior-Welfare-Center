@@ -1,6 +1,6 @@
-# FastAPI 스모크 테스트 — http://127.0.0.1:8020
+# FastAPI 스모크 테스트 — http://127.0.0.1:9001
 param(
-  [string]$BaseUrl = "http://127.0.0.1:8020",
+  [string]$BaseUrl = "http://127.0.0.1:9001",
   [switch]$AllowUnreachable,
   [string]$Email = "admin@north.bomi.local",
   [string]$Password = "bomi-north-2026",
@@ -24,7 +24,7 @@ Write-Host "Smoke test: $BaseUrl`n"
 
 $uri = [uri]$BaseUrl
 if ($uri.Host -in @("127.0.0.1", "localhost")) {
-  $port = if ($uri.Port -gt 0) { $uri.Port } else { 8020 }
+  $port = if ($uri.Port -gt 0) { $uri.Port } else { 9001 }
   & "$PSScriptRoot\check-port.ps1" -Port $port 2>$null
   if ($LASTEXITCODE -ne 0) {
     Write-Host "Port conflict — fix before relying on smoke results.`n" -ForegroundColor Yellow

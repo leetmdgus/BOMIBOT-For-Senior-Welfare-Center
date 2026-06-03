@@ -27,15 +27,15 @@ const SECTION_COLGROUP = (
   </colgroup>
 )
 
-type DocumentSectionsTableProps = {
-  sections: DocumentSection[]
+type DocumentSectionsTableProps<T extends DocumentSection> = {
+  sections: T[]
   readOnly?: boolean
   onHeadingChange: (sectionId: string, title: string) => void
   onBodyChange: (
     sectionId: string,
     patch: { title?: string; content?: string },
   ) => void
-  onSectionsChange?: (next: DocumentSection[]) => void
+  onSectionsChange?: (next: T[]) => void
   onAddHeading?: () => void
   onAddBody?: () => void
   className?: string
@@ -53,7 +53,7 @@ function groupRowSpan(
 }
 
 /** sections 순서대로 대목차·목차·본문 행을 가변 렌더 (본문만 추가 시 목차+본문 2행) */
-export function DocumentSectionsTable({
+export function DocumentSectionsTable<T extends DocumentSection>({
   sections,
   readOnly,
   onHeadingChange,
@@ -62,7 +62,7 @@ export function DocumentSectionsTable({
   onAddHeading,
   onAddBody,
   className,
-}: DocumentSectionsTableProps) {
+}: DocumentSectionsTableProps<T>) {
   const rows = rowsFromDocumentSections(sections)
   const showAddBar =
     !readOnly && onAddHeading && onAddBody && onSectionsChange
@@ -109,7 +109,12 @@ export function DocumentSectionsTable({
   ) : null
 
   return (
-    <div className={cn("space-y-0 border-x border-black", className)}>
+    <div
+      className={cn(
+        "document-sections-table space-y-0 border-x border-black",
+        className,
+      )}
+    >
       {addBar}
 
       <HwpxTable className="table-fixed w-full border-t border-black">

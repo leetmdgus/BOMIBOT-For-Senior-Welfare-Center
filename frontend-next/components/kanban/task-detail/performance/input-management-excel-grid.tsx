@@ -9,6 +9,7 @@ import {
   type KeyboardEvent,
 } from "react"
 import type { PerformanceRow } from "@/services/kanban.performance.types"
+import { cn } from "@/lib/utils"
 
 import {
   INPUT_GRID_COLUMNS,
@@ -32,6 +33,8 @@ type InputManagementExcelGridProps = {
   onRowSelect: (rowId: string, shiftKey: boolean) => void
   hasRowSelection?: boolean
   enableRowReorder?: boolean
+  /** 읽기전용(스냅샷 보기) 모드 — 셀 편집·선택·붙여넣기 차단 */
+  readOnly?: boolean
   subProjectSuggestions?: string[]
   detailCategorySuggestions?: string[]
 }
@@ -43,6 +46,7 @@ export function InputManagementExcelGrid({
   onRowSelect,
   hasRowSelection = false,
   enableRowReorder = false,
+  readOnly = false,
   subProjectSuggestions = [],
   detailCategorySuggestions = [],
 }: InputManagementExcelGridProps) {
@@ -57,13 +61,14 @@ export function InputManagementExcelGrid({
 
   const updateCell = useCallback(
     (rowIndex: number, key: InputGridColumnKey, value: string | number) => {
+      if (readOnly) return
       onRowsChange(
         rows.map((row, index) =>
           index === rowIndex ? { ...row, [key]: value } : row
         )
       )
     },
-    [onRowsChange, rows]
+    [onRowsChange, rows, readOnly]
   )
 
   const commitSelection = useCallback((range: CellRange) => {
@@ -292,10 +297,10 @@ export function InputManagementExcelGrid({
   return (
     <tbody
       ref={tableRef}
-      tabIndex={0}
-      className="outline-none"
-      onPaste={handlePaste}
-      onKeyDown={handleKeyDown}
+      tabIndex={readOnly ? -1 : 0}
+      className={cn("outline-none", readOnly && "pointer-events-none select-none")}
+      onPaste={readOnly ? undefined : handlePaste}
+      onKeyDown={readOnly ? undefined : handleKeyDown}
     >
       {rows.map((row, rowIndex) => (
         <InputManagementGridRow
@@ -303,9 +308,10 @@ export function InputManagementExcelGrid({
           row={row}
           rowIndex={rowIndex}
           enableRowReorder={enableRowReorder}
-          highlightRange={highlightRange}
-          activeCell={activeCell}
-          fillHandlePosition={fillHandlePosition}
+          readOnly={readOnly}
+          highlightRange={readOnly ? null : highlightRange}
+          activeCell={readOnly ? null : activeCell}
+          fillHandlePosition={readOnly ? null : fillHandlePosition}
           onRowSelect={onRowSelect}
           onOpenActualModal={onOpenActualModal}
           onRowsChange={onRowsChange}

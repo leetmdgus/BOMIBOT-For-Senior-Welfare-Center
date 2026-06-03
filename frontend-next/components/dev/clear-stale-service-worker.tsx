@@ -5,7 +5,7 @@ import { useEffect } from "react"
 const SW_CLEARED_KEY = "bomi_sw_cleared_v1"
 
 /**
- * 예전 v0 PWA Workbox가 API fetch(127.0.0.1:8020 등)를 가로채는 경우 제거.
+ * 예전 v0 PWA Workbox가 API fetch(127.0.0.1:9001 등)를 가로채는 경우 제거.
  * React 19에서는 `<script>` / `next/script` 대신 마운트 시 실행합니다.
  */
 export function ClearStaleServiceWorker() {

@@ -163,12 +163,12 @@ export function BusinessPlanEvaluationWorkspace({
     hasInitializedSnapshotRef.current = true
   }, [evaluationData, taskId])
 
-  const buildEvaluationDownloadPayload = useCallback(() => {
+  const buildEvaluationDownloadPayload = useCallback((): BusinessEvaluationData => {
     const current = evaluationDataRef.current
-    return toSaveBusinessEvaluationPayload({
+    return {
       ...current,
       sections: mergeFlushedDocumentSections(current.sections ?? []),
-    })
+    }
   }, [])
 
   const downloadEvaluationHwpx = useCallback(async () => {

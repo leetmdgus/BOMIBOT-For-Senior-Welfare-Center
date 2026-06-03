@@ -49,14 +49,14 @@ docker compose up -d --build
 `5432 already allocated` 오류 시: 다른 Postgres가 5432를 쓰는 경우입니다. 기본 호스트 포트는 **5433**입니다.  
 이전 compose 잔여 컨테이너는 `--remove-orphans` 로 정리하세요.
 
-**8020 포트 충돌:** Docker API와 로컬 `uvicorn`을 동시에 8020에서 띄우지 마세요.  
+**9001 포트 충돌:** Docker API와 로컬 `uvicorn`을 동시에 9001에서 띄우지 마세요.  
 `scripts/smoke-test.ps1` 전에 하나만 실행 (`docker compose down` 또는 로컬 uvicorn 종료).
 
 | 항목 | 값 |
 |------|-----|
-| API | http://127.0.0.1:8020 |
-| Swagger | http://127.0.0.1:8020/docs |
-| Health | http://127.0.0.1:8020/health |
+| API | http://127.0.0.1:9001 |
+| Swagger | http://127.0.0.1:9001/docs |
+| Health | http://127.0.0.1:9001/health |
 | PostgreSQL (호스트) | `localhost:5433` (컨테이너 내부 5432, user/db: `bomibot`) |
 
 ```bash
@@ -79,7 +79,7 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
 docker compose exec api python scripts/seed.py   # 최초 1회
 ```
 
-Nginx가 컨테이너 `8020`으로 프록시하면 됩니다. DB 포트는 `docker-compose.prod.yml`에서 외부 노출하지 않습니다.
+Nginx가 컨테이너 `9001`으로 프록시하면 됩니다. DB 포트는 `docker-compose.prod.yml`에서 외부 노출하지 않습니다.
 
 ## 로컬 실행 (venv, SQLite)
 
@@ -95,23 +95,23 @@ copy .env.example .env
 pip install -r requirements.txt
 python scripts\seed.py
 set APP_ENV=development
-uvicorn app.main:app --reload --host 127.0.0.1 --port 8020
+uvicorn app.main:app --reload --host 127.0.0.1 --port 9001
 ```
 
 `APP_ENV=development` 이면 CORS에 **localhost:3000 / 127.0.0.1:3000** 이 자동 포함됩니다.  
-프론트 `NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8020` 과 함께 사용하세요.
+프론트 `NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:9001` 과 함께 사용하세요.
 
 ## 프로덕션 실행 (api-workspace.bomi.ai.kr)
 
 ```bash
 export APP_ENV=production
 # .env.production.example 참고
-uvicorn app.main:app --host 0.0.0.0 --port 8020 --proxy-headers --forwarded-allow-ips='*'
+uvicorn app.main:app --host 0.0.0.0 --port 9001 --proxy-headers --forwarded-allow-ips='*'
 ```
 
 Nginx 뒤에서는 `X-Forwarded-Proto` / `Host` 가 API 도메인으로 전달되어야 합니다.
 
-- Health: `GET http://127.0.0.1:8020/health`
+- Health: `GET http://127.0.0.1:9001/health`
 - API prefix: `/api/v1`
 
 ### Admin 계정 (시드)
@@ -171,13 +171,13 @@ py -3 -m alembic revision --autogenerate -m "describe change"
 | Chat | `GET /chat/config`, `POST /chat/assistant` (RAG+Gemini), `cs-ticket`, `GET /chat/ontology` |
 | Legacy tasks | `GET /tasks` |
 
-Swagger: http://127.0.0.1:8020/docs
+Swagger: http://127.0.0.1:9001/docs
 
 ## 프론트 연동
 
 | 환경 | `NEXT_PUBLIC_API_BASE_URL` |
 |------|------------------------------|
-| 로컬 | `http://127.0.0.1:8020` |
+| 로컬 | `http://127.0.0.1:9001` |
 | Vercel 프로덕션 | `https://api-workspace.bomi.ai.kr` |
 
 공통: `NEXT_PUBLIC_USE_MOCK_API=false`

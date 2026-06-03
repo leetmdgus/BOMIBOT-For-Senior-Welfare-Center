@@ -17,11 +17,17 @@
   margin: 8mm 10mm;
 }
 
-/* ── 인쇄: A4 세로 — @page margin 0 으로 브라우저 머리글/바닥글 영역 제거 ── */
+/* ── 인쇄: A4 세로 — 한글처럼 페이지마다 위·아래 여백(상하 15mm). 좌우는 .print-area 패딩(14mm)에서 처리.
+   (상하 margin>0이면 브라우저 인쇄창의 '머리글/바닥글' 옵션이 켜져 있을 때 URL·날짜가 보일 수 있음 — 끄고 인쇄) ── */
 @media print {
   @page {
     size: A4 portrait;
-    margin: 0;
+    /* 위·아래 여백은 페이지마다 적용 (longhand 로 명시 — 일부 브라우저의 shorthand 무시 회피).
+       좌·우는 .print-area 패딩(14mm)에서 처리 */
+    margin-top: 17mm;
+    margin-bottom: 17mm;
+    margin-left: 0;
+    margin-right: 0;
   }
 
   html,
@@ -77,7 +83,8 @@
     position: static !important;
     width: 100% !important;
     max-width: 100% !important;
-    padding: 12mm 14mm !important;
+    /* 좌우 여백만 — 위·아래는 @page margin이 페이지마다 적용 */
+    padding: 0 14mm !important;
     margin: 0 !important;
     background: #fff !important;
     box-shadow: none !important;
@@ -147,6 +154,18 @@
   .print-area td {
     word-wrap: break-word;
     overflow-wrap: anywhere;
+  }
+
+  /* 추가 본문(대목차·목차·본문) — 인쇄 시 「지우기」 컨트롤 열 제거 후 본문 폭 확장 */
+  .print-area .document-sections-table colgroup col:last-child {
+    width: 0 !important;
+  }
+
+  .print-area .document-sections-table td.print-hide {
+    display: none !important;
+    width: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
   }
 
   .print-area tr {

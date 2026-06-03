@@ -1,4 +1,10 @@
 /* HWPX 공문 양식 — A4 뷰포트 밖(본문 블록)에서도 동일하게 적용 */
+:root {
+  /* 한글(HWP) 양식에 가까운 본문 글꼴 — 미리보기 iframe·인쇄와 공유 */
+  --hwpx-doc-font: "Malgun Gothic", "맑은 고딕", "Apple SD Gothic Neo",
+    "Noto Sans KR", "Pretendard", system-ui, sans-serif;
+}
+
 .hwpx-doc {
   width: 100%;
   max-width: var(--hwpx-doc-max-width, 420mm);
@@ -6,8 +12,12 @@
   overflow: hidden;
   background: #fff;
   color: #111;
+  font-family: var(--hwpx-doc-font);
   font-size: 11px;
   line-height: 1.48;
+  /* 한글 줄바꿈 — 어절 단위로 끊고 음절 중간에서 쪼개지 않음 */
+  word-break: keep-all;
+  overflow-wrap: anywhere;
   box-shadow: 0 2px 12px rgb(0 0 0 / 0.08);
 }
 
@@ -43,6 +53,8 @@
   border: 1px solid #000;
   padding: 5px 8px;
   vertical-align: top;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
 }
 
 /* 사업계획·사업평가 편집기 — 표 격자선 (Tailwind base와 충돌 방지) */
@@ -101,6 +113,7 @@
   border-radius: 0.25rem;
   background: #fff;
   padding: 4px 8px;
+  font-family: inherit;
   font-size: inherit;
   line-height: 1.45;
 }
@@ -122,8 +135,11 @@
   min-width: 0;
   min-height: 12rem;
   padding: 8px 10px;
+  font-family: inherit;
   font-size: 11px;
   line-height: 1.55;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
 }
 
 .hwpx-doc__value .bp-rich-editor[contenteditable="true"] {

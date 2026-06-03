@@ -18,6 +18,10 @@ class HwpxTableCell:
     col_span: int | None = None
     row_span: int | None = None
     header: bool = False
+    # 셀 배경색 (#RRGGBB) — 지정 시 전용 borderFill 생성
+    background_color: str | None = None
+    # 셀 글자 크기 (px) — 지정 시 전용 charPr 생성
+    font_size_px: int | None = None
 
 
 @dataclass

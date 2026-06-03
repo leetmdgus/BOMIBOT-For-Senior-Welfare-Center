@@ -50,7 +50,7 @@ cp .env.docker.example .env   # SECRET_KEY, POSTGRES_PASSWORD, GEMINI 등
 ## 로컬 개발 (`frontend-next/.env.local`)
 
 ```env
-NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8020
+NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:9001
 NEXT_PUBLIC_USE_MOCK_API=false
 ```
 

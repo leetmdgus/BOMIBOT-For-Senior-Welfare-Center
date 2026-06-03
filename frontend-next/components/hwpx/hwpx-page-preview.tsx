@@ -42,7 +42,9 @@ export function HwpxPagePreview({
     doc.write(html)
     doc.close()
 
+    let cancelled = false
     const measure = () => {
+      if (cancelled) return
       const pageEl = doc.querySelector<HTMLElement>(".hwpx-page")
       const rootEl = doc.querySelector<HTMLElement>(".hwpx-page-root")
       if (!pageEl) return
@@ -66,6 +68,9 @@ export function HwpxPagePreview({
 
     measure()
     const timer = window.setTimeout(measure, 150)
+    // 웹폰트 로드 후 줄 수가 바뀌어 A4 페이지가 잘리는 것 방지
+    const lateTimer = window.setTimeout(measure, 500)
+    doc.fonts?.ready?.then(measure).catch(() => {})
 
     const observer =
       typeof ResizeObserver !== "undefined"
@@ -74,7 +79,9 @@ export function HwpxPagePreview({
     observer?.observe(container)
 
     return () => {
+      cancelled = true
       window.clearTimeout(timer)
+      window.clearTimeout(lateTimer)
       observer?.disconnect()
     }
   }, [html])

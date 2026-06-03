@@ -14,6 +14,36 @@ function cellText(el: Element): string {
   return sanitizeHwpxText((el.textContent ?? "").replace(/\s+/g, " ").trim() || " ")
 }
 
+function parseFontSizePx(raw: string | null | undefined): number | null {
+  if (!raw) return null
+  const m = /^([\d.]+)\s*px$/i.exec(raw.trim())
+  if (!m) return null
+  const px = Math.round(Number(m[1]))
+  return Number.isFinite(px) && px > 0 ? px : null
+}
+
+/** 셀의 대표 글자 크기(px) — 셀 자체 또는 첫 번째 명시 스팬 기준 */
+function cellFontSizePx(cellEl: HTMLTableCellElement): number | null {
+  const own =
+    parseFontSizePx(cellEl.getAttribute("data-bp-fz")) ??
+    parseFontSizePx(cellEl.style.fontSize)
+  if (own) return own
+
+  const marked = cellEl.querySelector<HTMLElement>("[data-bp-fz]")
+  if (marked) {
+    const fromAttr = parseFontSizePx(marked.getAttribute("data-bp-fz"))
+    if (fromAttr) return fromAttr
+  }
+
+  const styled = cellEl.querySelector<HTMLElement>('[style*="font-size"]')
+  if (styled) {
+    const fromStyle = parseFontSizePx(styled.style.fontSize)
+    if (fromStyle) return fromStyle
+  }
+
+  return null
+}
+
 function parseCssLength(raw: string | null | undefined): number | null {
   if (!raw) return null
   const px = raw.match(/^([\d.]+)px$/i)
@@ -68,6 +98,7 @@ function htmlCellToAst(cellEl: HTMLTableCellElement): HwpTableCell {
       backgroundColor: bg,
       verticalAlign: verticalAlign || "top",
       header: cellEl.tagName === "TH",
+      fontSizePx: cellFontSizePx(cellEl),
     },
     content: cellText(cellEl)
       ? [{ type: "paragraph", content: [{ type: "text", text: cellText(cellEl) }] }]

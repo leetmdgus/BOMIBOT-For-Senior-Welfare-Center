@@ -115,7 +115,7 @@ export function useCollaborationRoom(
         ) {
           loggedWsFailure.current = true
           console.warn(
-            "[collaboration] WebSocket 연결 실패 — NEXT_PUBLIC_COLLABORATION_ENABLED=true 및 API(8020) /api/v1/ws 를 확인하세요.",
+            "[collaboration] WebSocket 연결 실패 — NEXT_PUBLIC_COLLABORATION_ENABLED=true 및 API(9001) /api/v1/ws 를 확인하세요.",
           )
         }
         try {

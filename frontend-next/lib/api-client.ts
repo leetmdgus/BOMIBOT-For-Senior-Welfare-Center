@@ -22,7 +22,7 @@ const USE_API_PROXY =
 const USE_MOCK_API = process.env.NEXT_PUBLIC_USE_MOCK_API === "true"
 
 /** 로컬 FastAPI 직연동 URL — 브라우저에서 쓰면 CORS·Workbox ERR_FAILED */
-const LOCAL_API_PATTERN = /^https?:\/\/(localhost|127\.0\.0\.1):8020\/?$/i
+const LOCAL_API_PATTERN = /^https?:\/\/(localhost|127\.0\.0\.1):9001\/?$/i
 
 function isLocalApiBase(base: string): boolean {
   return LOCAL_API_PATTERN.test(base)
@@ -149,7 +149,7 @@ function formatApiErrorMessage(
         ? String((body as { target?: unknown }).target ?? "")
         : ""
     const hint =
-      "FastAPI(8020)가 실행 중인지 확인하세요: cd backend && docker compose up -d api"
+      "FastAPI(9001)가 실행 중인지 확인하세요: cd backend && docker compose up -d api"
     if (detail.includes("ECONNREFUSED") || detail.includes("fetch failed")) {
       return `API 서버에 연결할 수 없습니다. ${hint}${target ? ` (${target})` : ""}`
     }
@@ -221,7 +221,7 @@ export async function apiFetch<T>(
       error instanceof Error ? error.message : String(error)
     const proxyHint =
       typeof window !== "undefined" && useBrowserProxy()
-        ? " FastAPI(8020) 실행 여부와 frontend-next/.env.local 의 API_PROXY_URL을 확인하세요."
+        ? " FastAPI(9001) 실행 여부와 frontend-next/.env.local 의 API_PROXY_URL을 확인하세요."
         : " API 서버(URL) 연결을 확인하세요."
     throw new ApiError(
       message === "Failed to fetch"
@@ -407,7 +407,7 @@ export async function apiUploadFormData<T>(
       error instanceof Error ? error.message : String(error)
     throw new ApiError(
       message === "Failed to fetch"
-        ? "프로필 사진 업로드에 실패했습니다. API 서버(8020) 연결을 확인해 주세요."
+        ? "프로필 사진 업로드에 실패했습니다. API 서버(9001) 연결을 확인해 주세요."
         : `네트워크 오류: ${message}`,
       0,
     )

@@ -11,6 +11,7 @@ import {
   normalizeTaskId,
   resolveKanbanCardTitle,
 } from "@/lib/kanban/resolve-card-title"
+import type { KanbanProject } from "./kanban.board.types"
 import type {
   BusinessEvaluationData,
   BusinessEvaluationTemplate,
@@ -19,6 +20,7 @@ import type {
   SaveBusinessEvaluationPayload,
   SaveBusinessPlanPayload,
   Survey,
+  SurveyStatus,
 } from "./kanban.task-detail.types"
 
 type TaskDetailRuntime = {
@@ -31,7 +33,8 @@ const runtimeByRegion = new Map<RegionId, TaskDetailRuntime>()
 
 async function getTaskDetailRuntime(regionId?: RegionId) {
   const store = await loadRegionStore({ regionId })
-  let runtime = runtimeByRegion.get(store.regionId)
+  const storeRegionId = store.regionId as RegionId
+  let runtime = runtimeByRegion.get(storeRegionId)
 
   if (!runtime) {
     runtime = {
@@ -39,7 +42,7 @@ async function getTaskDetailRuntime(regionId?: RegionId) {
       businessPlanByTaskId: new Map(),
       surveysByTaskId: new Map(),
     }
-    runtimeByRegion.set(store.regionId, runtime)
+    runtimeByRegion.set(storeRegionId, runtime)
   }
 
   return { store, runtime }
@@ -63,7 +66,10 @@ async function resolveCardTitle(
   regionId?: RegionId,
 ): Promise<string | null> {
   const { store } = await getTaskDetailRuntime(regionId)
-  return resolveKanbanCardTitle(taskId, store.kanban.projectsMock)
+  return resolveKanbanCardTitle(
+    taskId,
+    store.kanban.projectsMock as KanbanProject[],
+  )
 }
 
 async function getOrCreateEvaluation(
@@ -77,7 +83,7 @@ async function getOrCreateEvaluation(
 
   const cardTitle = await resolveCardTitle(taskId, regionId)
   const created = bootstrapEvaluation(
-    store.taskDetail.businessEvaluationData,
+    store.taskDetail.businessEvaluationData as BusinessEvaluationData,
     key,
     cardTitle,
   )
@@ -85,13 +91,15 @@ async function getOrCreateEvaluation(
   return created
 }
 
-function surveyCatalogFromStore(store: Awaited<ReturnType<typeof loadRegionStore>>) {
+function surveyCatalogFromStore(
+  store: Awaited<ReturnType<typeof loadRegionStore>>,
+): Survey[] {
   return store.survey.surveyListItemsMock.map((item) => ({
     id: item.id,
     title: item.title,
     program: item.program,
     date: item.date,
-    status: item.status,
+    status: item.status as SurveyStatus,
     endDate: item.endDate,
   }))
 }
@@ -128,7 +136,15 @@ export async function getEvaluationFiles(
 ): Promise<EvaluationFile[]> {
   const { store } = await getTaskDetailRuntime(regionId)
   const key = tid(taskId)
-  const fromManager = (store.files?.files ?? [])
+  type ManagerFile = {
+    id: string | number
+    name: string
+    type: string
+    taskId?: string | number
+    mimeType?: string
+  }
+  const managerFiles = (store.files?.files ?? []) as ManagerFile[]
+  const fromManager = managerFiles
     .filter(
       (item) =>
         item.type !== "folder" &&
@@ -229,7 +245,7 @@ export async function completeBusinessEvaluation(
 ): Promise<BusinessEvaluationData> {
   const { store, runtime } = await getTaskDetailRuntime(regionId)
   const key = tid(taskId)
-  advanceTaskToNextProcess(taskId, store.kanban.projectsMock)
+  advanceTaskToNextProcess(taskId, store.kanban.projectsMock as KanbanProject[])
 
   const current = await getOrCreateEvaluation(taskId, regionId)
   const next: BusinessEvaluationData = {
@@ -264,7 +280,7 @@ async function getOrCreateBusinessPlan(
 
   const cardTitle = await resolveCardTitle(taskId, regionId)
   const created = bootstrapBusinessPlan(
-    store.businessPlan.defaultBusinessPlanDocument,
+    store.businessPlan.defaultBusinessPlanDocument as BusinessPlanDocument,
     key,
     cardTitle,
   )

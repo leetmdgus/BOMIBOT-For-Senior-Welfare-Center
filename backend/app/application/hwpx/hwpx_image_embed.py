@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 
 from lxml import etree
@@ -237,27 +238,45 @@ def inject_image_into_tc(tc: etree._Element, item_id: str, catalog: HwpxImageCat
         para.remove(lineseg)
 
 
+def _bin_data_entry(image: EmbeddedImage) -> str:
+    mime = image.ext.upper()
+    if mime == "JPG":
+        mime = "JPEG"
+    return f'<hh:binData id="{image.item_id}" type="{mime}" compress="false"/>'
+
+
 def patch_header_bindata(header_xml: bytes, catalog: HwpxImageCatalog) -> bytes:
+    """header.xml에 binData 항목 추가.
+
+    - binDataList는 hh:refList의 '첫' 자식이어야 한다(OWPML refList 순서: binDataList → fontfaces → …).
+    - 이미 binDataList가 있으면 그 안에 append하고 itemCnt를 갱신(기존 항목 보존).
+    """
     if not catalog.has_images:
         return header_xml
     text = header_xml.decode("utf-8")
-    if "<hh:binData" in text:
-        return header_xml
+    entries = "".join(_bin_data_entry(img) for img in catalog._images)
 
-    entries = []
-    for image in catalog._images:
-        mime = image.ext.upper()
-        if mime == "JPG":
-            mime = "JPEG"
-        entries.append(
-            f'<hh:binData id="{image.item_id}" type="{mime}" compress="false"/>'
-        )
-    block = f'<hh:binDataList itemCnt="{len(entries)}">{"".join(entries)}</hh:binDataList>'
-    marker = "</hh:refList>"
-    if marker not in text:
-        return header_xml
-    patched = text.replace(marker, block + marker, 1)
-    return patched.encode("utf-8")
+    existing = re.search(r"<hh:binDataList\b([^>]*)>", text)
+    if existing:
+        open_tag = existing.group(0)
+        cnt = re.search(r'itemCnt="(\d+)"', open_tag)
+        prev = int(cnt.group(1)) if cnt else 0
+        new_count = prev + len(catalog._images)
+        if cnt:
+            new_open = re.sub(r'itemCnt="\d+"', f'itemCnt="{new_count}"', open_tag, count=1)
+        else:
+            new_open = open_tag[:-1] + f' itemCnt="{new_count}">'
+        text = text.replace(open_tag, new_open, 1)
+        text = text.replace("</hh:binDataList>", entries + "</hh:binDataList>", 1)
+        return text.encode("utf-8")
+
+    block = f'<hh:binDataList itemCnt="{len(catalog._images)}">{entries}</hh:binDataList>'
+    if "<hh:fontfaces" in text:  # refList 첫 자식으로 (fontfaces 앞)
+        return text.replace("<hh:fontfaces", block + "<hh:fontfaces", 1).encode("utf-8")
+    open_ref = re.search(r"<hh:refList\b[^>]*>", text)
+    if open_ref:
+        return text.replace(open_ref.group(0), open_ref.group(0) + block, 1).encode("utf-8")
+    return header_xml
 
 
 def patch_content_hpf(hpf_xml: bytes, catalog: HwpxImageCatalog) -> bytes:
@@ -286,3 +305,8 @@ def patch_content_hpf(hpf_xml: bytes, catalog: HwpxImageCatalog) -> bytes:
 def reset_pic_ids() -> None:
     if hasattr(_next_pic_id, "_counter"):
         delattr(_next_pic_id, "_counter")
+
+
+def seed_pic_ids(base: int) -> None:
+    """업로드 문서의 기존 id/instid와 충돌하지 않도록 pic id 카운터 시작값을 지정."""
+    _next_pic_id._counter = max(int(base), 2_000_000_001)  # type: ignore[attr-defined]

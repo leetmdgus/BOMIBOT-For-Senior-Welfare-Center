@@ -4,6 +4,8 @@ import {
   useCallback,
   useEffect,
   useState,
+  type Dispatch,
+  type SetStateAction,
 } from "react"
 import { useParams } from "next/navigation"
 import { Loader2 } from "lucide-react"
@@ -15,7 +17,6 @@ import {
 import { BusinessPlanEvaluationWorkspace } from "@/components/kanban/task-detail/business-plan-evaluation-workspace"
 import { mergeFlushedDocumentSections } from "@/lib/hwpx/document-sections-for-export"
 import { downloadBusinessEvaluationHwpx } from "@/lib/hwpx/export-business-evaluation"
-import { toSaveBusinessEvaluationPayload } from "@/lib/kanban/evaluation-save-payload"
 import {
   completeBusinessEvaluation,
   getBusinessEvaluation,
@@ -34,6 +35,20 @@ export function BusinessEvaluationTab() {
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [isEditMode, setIsEditMode] = useState(false)
+
+  /** evaluationData가 로드된 뒤에만 갱신 — null 상태에서는 무시 */
+  const updateEvaluation = useCallback<
+    Dispatch<SetStateAction<BusinessEvaluationData>>
+  >((action) => {
+    setEvaluationData((prev) => {
+      if (prev === null) return prev
+      return typeof action === "function"
+        ? (action as (current: BusinessEvaluationData) => BusinessEvaluationData)(
+            prev,
+          )
+        : action
+    })
+  }, [])
 
   const load = useCallback(async () => {
     setIsLoading(true)
@@ -139,12 +154,12 @@ export function BusinessEvaluationTab() {
                 /* 계획서 없으면 평가서만 보냄 */
               }
               await downloadBusinessEvaluationHwpx(taskId, {
-                evaluation: toSaveBusinessEvaluationPayload({
+                evaluation: {
                   ...evaluationData,
                   sections: mergeFlushedDocumentSections(
                     evaluationData.sections ?? [],
                   ),
-                }),
+                },
                 planForm,
               })
             }}
@@ -167,8 +182,8 @@ export function BusinessEvaluationTab() {
         isSaving={isSaving}
         onSavingChange={setIsSaving}
         evaluationData={evaluationData}
-        onEvaluationChange={setEvaluationData}
-        onEvaluationSaved={setEvaluationData}
+        onEvaluationChange={updateEvaluation}
+        onEvaluationSaved={updateEvaluation}
         isCompleted={evaluationData.isCompleted}
         onCompleteOrEdit={() => void handleCompleteOrEdit()}
         hideTopActionChrome

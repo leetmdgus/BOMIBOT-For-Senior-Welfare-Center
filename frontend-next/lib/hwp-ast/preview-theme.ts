@@ -30,7 +30,7 @@ export const HWPX_PREVIEW_THEME_CSS = `
 
   color: #111;
 
-  font-family: "Malgun Gothic", "맑은 고딕", sans-serif;
+  font-family: "Malgun Gothic", "맑은 고딕", "Apple SD Gothic Neo", "Noto Sans KR", "Pretendard", system-ui, sans-serif;
 
   font-size: 10pt;
 
@@ -60,7 +60,7 @@ export const HWPX_PREVIEW_THEME_CSS = `
 
   color: #111;
 
-  font-family: "Malgun Gothic", "맑은 고딕", sans-serif;
+  font-family: "Malgun Gothic", "맑은 고딕", "Apple SD Gothic Neo", "Noto Sans KR", "Pretendard", system-ui, sans-serif;
 
   font-size: 10pt;
 
@@ -154,7 +154,9 @@ export const HWPX_PREVIEW_THEME_CSS = `
 
   vertical-align: top;
 
-  word-break: break-word;
+  word-break: keep-all;
+
+  overflow-wrap: anywhere;
 
 }
 
@@ -296,7 +298,7 @@ export const OFFICE_HWPX_PREVIEW_CSS = `
 
 .office-preview.hwpx-like {
 
-  font-family: "Malgun Gothic", "맑은 고딕", sans-serif;
+  font-family: "Malgun Gothic", "맑은 고딕", "Apple SD Gothic Neo", "Noto Sans KR", "Pretendard", system-ui, sans-serif;
 
   font-size: 10pt;
 

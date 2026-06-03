@@ -2,9 +2,7 @@ import path from "node:path"
 import { fileURLToPath } from "node:url"
 
 const configDir = path.dirname(fileURLToPath(import.meta.url))
-/** Next 앱 루트 (frontend-next) — turbopack/webpack 이 여기만 기준으로 동작 */
 const projectRoot = path.resolve(configDir)
-/** Git 저장소 루트 (Bomi-Slot 등 형제 폴더는 감시·추적 제외) */
 const workspaceRoot = path.resolve(configDir, "..")
 
 const watchIgnored = [
@@ -15,20 +13,31 @@ const watchIgnored = [
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  allowedDevOrigins: [
+    "http://10.50.209.5:9000",
+    "10.50.209.5:9000",
+    "http://localhost:9000",
+    "localhost:9000",
+  ],
+
   outputFileTracingRoot: workspaceRoot,
+
   experimental: {
-    // .hwp/.hwpx 업로드 — proxy 기본 10MB 초과 시 본문 잘림 → 프록시 502
     proxyClientMaxBodySize: "50mb",
   },
+
   turbopack: {
     root: projectRoot,
   },
+
   typescript: {
     ignoreBuildErrors: true,
   },
+
   images: {
     unoptimized: true,
   },
+
   webpack: (config, { dev }) => {
     if (dev) {
       config.watchOptions = {

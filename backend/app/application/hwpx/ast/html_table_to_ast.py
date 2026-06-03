@@ -50,6 +50,38 @@ def _extract_column_widths(table_el, col_count: int) -> list[int]:
     return [base] * (col_count - 1) + [total - base * (col_count - 1)]
 
 
+def _parse_font_size_px(raw: str | None) -> int | None:
+    if not raw:
+        return None
+    m = re.match(r"^([\d.]+)\s*px$", raw.strip(), re.I)
+    if not m:
+        return None
+    px = int(round(float(m.group(1))))
+    return px if px > 0 else None
+
+
+def _cell_font_size_px(cell_el) -> int | None:
+    """셀 대표 글자 크기(px) — 셀 자체 또는 첫 명시 스팬 기준."""
+    own = _parse_font_size_px(cell_el.get("data-bp-fz"))
+    if own:
+        return own
+    style = cell_el.get("style") or ""
+    m = re.search(r"font-size:\s*([^;]+)", style, re.I)
+    own = _parse_font_size_px(m.group(1).strip()) if m else None
+    if own:
+        return own
+    for marked in cell_el.xpath(".//*[@data-bp-fz]"):
+        fz = _parse_font_size_px(marked.get("data-bp-fz"))
+        if fz:
+            return fz
+    for styled in cell_el.xpath('.//*[contains(@style, "font-size")]'):
+        sm = re.search(r"font-size:\s*([^;]+)", styled.get("style") or "", re.I)
+        fz = _parse_font_size_px(sm.group(1).strip()) if sm else None
+        if fz:
+            return fz
+    return None
+
+
 def _html_cell_to_ast(cell_el) -> dict[str, Any]:
     tag = (cell_el.tag or "").lower()
     style = cell_el.get("style") or ""
@@ -74,6 +106,7 @@ def _html_cell_to_ast(cell_el) -> dict[str, Any]:
             "backgroundColor": bg,
             "verticalAlign": valign,
             "header": tag == "th",
+            "fontSizePx": _cell_font_size_px(cell_el),
         },
         "content": [
             {

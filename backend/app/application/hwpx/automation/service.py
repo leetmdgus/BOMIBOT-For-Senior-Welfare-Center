@@ -12,8 +12,6 @@ from app.application.hwpx.automation.pipeline import (
     hwpx_xml_to_json,
     make_render_json,
     normalize_render_json_for_frontend,
-    render_json_to_xml,
-    xml_to_hwpx,
 )
 
 
@@ -60,31 +58,16 @@ class HwpxAutomationService:
         *,
         download_filename: str = "result.hwpx",
     ) -> bytes:
-        """편집된 frontend JSON 텍스트를 원본 HWPX 템플릿에 반영."""
-        if not hwpx_bytes:
-            raise ValueError("원본 HWPX 파일이 필요합니다.")
-        if not frontend_json:
-            raise ValueError("frontendJson이 비어 있습니다.")
+        """편집된 frontend JSON을 원본 HWPX에 '절대 보존'으로 반영.
 
-        with tempfile.TemporaryDirectory() as tmp:
-            tmp_path = Path(tmp)
-            hwpx_path = tmp_path / "template.hwpx"
-            hwpx_path.write_bytes(hwpx_bytes)
+        Contents/section0.xml 만 교체하고 나머지 ZIP 항목은 원본 바이트를 그대로 보존한다
+        (mimetype·header.xml·settings.xml·BinData·Preview 등). 변경이 없으면 원본 그대로 반환.
+        """
+        from app.application.hwpx.automation.section0_writeback import (
+            export_hwpx_preserving,
+        )
 
-            xml_dir = tmp_path / "xml"
-            extract_hwpx(hwpx_path, xml_dir)
-
-            output_xml = tmp_path / "xml_edit"
-            render_json_to_xml(
-                frontend_json,
-                template_dir=xml_dir,
-                output_xml=output_xml,
-            )
-
-            output_hwpx = tmp_path / "result.hwpx"
-            xml_to_hwpx(output_xml, output_hwpx)
-
-            return output_hwpx.read_bytes()
+        return export_hwpx_preserving(hwpx_bytes, frontend_json)
 
     @staticmethod
     def parse_frontend_json_field(raw: str) -> dict[str, Any]:
@@ -97,3 +80,20 @@ class HwpxAutomationService:
             raise ValueError("frontendJson은 객체여야 합니다.")
 
         return data
+
+    def analyze_document_bytes(
+        self,
+        data: bytes,
+        *,
+        source_filename: str,
+        relative_path: str = "",
+    ) -> dict[str, Any]:
+        from app.application.hwpx.automation.evidence_analyzer import (
+            analyze_document_bytes,
+        )
+
+        return analyze_document_bytes(
+            data,
+            source_filename=source_filename,
+            relative_path=relative_path,
+        )

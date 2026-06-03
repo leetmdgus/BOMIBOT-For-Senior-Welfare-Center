@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import { useParams } from "next/navigation"
-import { Loader2 } from "lucide-react"
+import { useParams, useSearchParams } from "next/navigation"
+import { ArrowLeft, Loader2 } from "lucide-react"
 
-import { getSurveyDetail } from "@/services/survey.service"
+import { getPublicSurveyDetail, getSurveyDetail } from "@/services/survey.service"
 import type { SurveyDetail } from "@/services/survey.types"
+import { getClientSession } from "@/lib/auth/session"
 import { BrandLogo } from "@/components/common/brand-logo"
 import { SurveyResponseForm } from "./survey-response-form"
 
@@ -16,6 +17,10 @@ export function SurveyRespondPage({ id: idFromProps }: { id?: string }) {
   const id =
     idFromProps ??
     (typeof routeId === "string" ? routeId : Array.isArray(routeId) ? routeId[0] : "")
+  const searchParams = useSearchParams()
+  const region = searchParams.get("region") ?? undefined
+  // 목록 back 링크용 — URL에 region이 없으면 로그인 세션 지역으로 폴백
+  const listRegion = region ?? getClientSession()?.regionId ?? undefined
 
   const [detail, setDetail] = useState<SurveyDetail | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -29,7 +34,9 @@ export function SurveyRespondPage({ id: idFromProps }: { id?: string }) {
       setLoadError(null)
 
       try {
-        const data = await getSurveyDetail(id)
+        const data = region
+          ? await getPublicSurveyDetail(region, id)
+          : await getSurveyDetail(id)
         if (!cancelled) setDetail(data)
       } catch (error) {
         console.error("설문 로드 실패:", error)
@@ -49,7 +56,7 @@ export function SurveyRespondPage({ id: idFromProps }: { id?: string }) {
     return () => {
       cancelled = true
     }
-  }, [id])
+  }, [id, region])
 
   return (
     <div className="min-h-screen bg-muted/30">
@@ -73,7 +80,20 @@ export function SurveyRespondPage({ id: idFromProps }: { id?: string }) {
             {loadError}
           </p>
         ) : detail ? (
-          <SurveyResponseForm detail={detail} />
+          <div className="space-y-4">
+            <Link
+              href={
+                listRegion
+                  ? `/survey/list?region=${encodeURIComponent(listRegion)}`
+                  : "/survey/list"
+              }
+              className="inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
+            >
+              <ArrowLeft className="size-4" />
+              응답 가능한 설문 목록
+            </Link>
+            <SurveyResponseForm detail={detail} regionId={region} />
+          </div>
         ) : (
           <p className="py-24 text-center text-sm text-muted-foreground">
             설문을 찾을 수 없습니다.

@@ -52,7 +52,6 @@ export function bootstrapBusinessPlan(
     ...source,
     formData: {
       ...form,
-      goals: [...form.goals],
       subProjects: form.subProjects.map((item) => ({ ...item })),
       projectName: title,
       purpose:

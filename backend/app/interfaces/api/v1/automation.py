@@ -54,7 +54,8 @@ async def parse_hwpx_document(
 async def export_hwpx_document(
     region_id: str = Depends(require_region_id),
     file: UploadFile = File(...),
-    frontend_json: Annotated[str, Form()] = "",
+    # 프론트는 multipart 필드명을 camelCase(frontendJson)로 전송 — alias로 바인딩
+    frontend_json: Annotated[str, Form(alias="frontendJson")] = "",
     download_filename: Annotated[str | None, Form()] = None,
 ) -> Response:
     del region_id
@@ -92,3 +93,49 @@ async def export_hwpx_document(
             "Content-Disposition": attachment_content_disposition(out_name),
         },
     )
+
+
+@router.post("/documents/analyze")
+async def analyze_evidence_document(
+    region_id: str = Depends(require_region_id),
+    file: UploadFile = File(...),
+    relative_path: Annotated[str, Form()] = "",
+) -> dict[str, Any]:
+    del region_id
+
+    filename = file.filename or "document"
+    data = await file.read()
+    if not data:
+        raise HTTPException(status_code=400, detail="업로드된 파일이 비어 있습니다.")
+
+    path = (relative_path or filename).replace("\\", "/")
+
+    try:
+        return _service.analyze_document_bytes(
+            data,
+            source_filename=filename,
+            relative_path=path,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(
+            status_code=500,
+            detail=f"문서 분석 중 오류가 발생했습니다: {exc}",
+        ) from exc
+
+
+@router.get("/documents/supported-extensions")
+def list_supported_document_extensions(
+    region_id: str = Depends(require_region_id),
+) -> dict[str, Any]:
+    del region_id
+
+    from app.application.hwpx.automation.evidence_analyzer import _SUPPORTED
+
+    return {
+        "extensions": sorted(_SUPPORTED),
+        "hwpxOnly": [".hwpx"],
+        "office": [".docx", ".doc", ".xlsx", ".xls", ".csv"],
+        "image": [".png", ".jpg", ".jpeg", ".gif", ".webp"],
+    }

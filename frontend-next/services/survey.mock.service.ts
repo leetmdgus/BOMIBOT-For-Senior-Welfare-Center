@@ -251,6 +251,7 @@ export async function getSurveyResults(
             ((listItem.responseCount ?? 0) / listItem.totalTarget) * 100,
           )
         : 0,
+      positiveRate: 0,
     },
     questions: [],
   }

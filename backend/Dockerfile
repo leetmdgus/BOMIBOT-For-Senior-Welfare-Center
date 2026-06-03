@@ -35,10 +35,10 @@ RUN sed -i 's/\r$//' /app/scripts/*.sh \
     && sed -i '1s/^\xEF\xBB\xBF//' /app/scripts/*.sh \
     && chmod +x /app/scripts/docker-entrypoint.sh
 
-EXPOSE 8020
+EXPOSE 9001
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
-    CMD curl -fsS http://127.0.0.1:8020/health || exit 1
+    CMD curl -fsS http://127.0.0.1:9001/health || exit 1
 
 ENTRYPOINT ["/app/scripts/docker-entrypoint.sh"]
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8020", "--proxy-headers", "--forwarded-allow-ips", "*"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "9001", "--proxy-headers", "--forwarded-allow-ips", "*"]

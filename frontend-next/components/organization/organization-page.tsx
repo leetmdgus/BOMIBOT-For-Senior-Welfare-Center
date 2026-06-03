@@ -8,6 +8,8 @@ import { useAuth } from "@/components/auth/auth-provider"
 import { Sidebar } from "@/components/common/sidebar"
 import { Header } from "@/components/common/header"
 
+import { sortDepartmentsByPositionRank } from "@/lib/organization-groups"
+
 import { GroupPanel } from "./group-panel"
 import { EmployeeListPanel } from "./employee-list-panel"
 import { EmployeeDetailPanel } from "./employee-detail-panel"
@@ -171,12 +173,17 @@ export function OrganizationPage() {
     activeTab === "department" ? departments : positionGroups
 
   const listGroups = useMemo(() => {
-    const source = activeTab === "department" ? departments : positionGroups
+    const isDepartment = activeTab === "department"
+    // 부서별(조직도) 보기는 부장 → 팀장 → 사원(실무직) 위계 순으로 정렬한다.
+    // 직책별 보기는 이미 POSITION_CATALOG 순서로 그룹핑되어 있어 그대로 둔다.
+    const source = isDepartment
+      ? sortDepartmentsByPositionRank(departments)
+      : positionGroups
     const canAdd = organizationContext?.permissions.canCreateEmployee
     return source.filter(
       (group) =>
         group.id !== "all" &&
-        (group.employees.length > 0 || (canAdd && activeTab === "department")),
+        (group.employees.length > 0 || (canAdd && isDepartment)),
     )
   }, [activeTab, departments, positionGroups, organizationContext])
 

@@ -6,6 +6,12 @@ from collections import Counter, defaultdict
 from typing import Any
 
 MATRIX_BUCKETS = ("매우불만족", "불만족", "보통", "만족", "매우만족")
+# 만족도 척도 최대 점수 — 프론트 SURVEY_SCALE_MAX, `_scale_score`(1~5)와 동일.
+SCALE_MAX = 5
+# 5점 척도 만족도 가중치 (매트릭스 버킷 → 점수)
+BUCKET_WEIGHT = {"매우불만족": 1, "불만족": 2, "보통": 3, "만족": 4, "매우만족": 5}
+# 4점(만족) 이상을 긍정 응답(top-box)으로 집계
+POSITIVE_THRESHOLD = 4
 PIE_COLORS = (
     "#3b82f6",
     "#22c55e",
@@ -79,6 +85,7 @@ def build_survey_results(
         total_target = max(total_responses, 30)
 
     scale_scores: list[float] = []
+    matrix_scores: list[float] = []
     question_results: list[dict] = []
 
     for question in questions:
@@ -140,6 +147,7 @@ def build_survey_results(
             rows = question.get("rows") or []
             columns = question.get("columns") or list(MATRIX_BUCKETS)
             chart_rows: list[dict] = []
+            question_weights: list[float] = []
             for row_name in rows:
                 counts = {bucket: 0 for bucket in MATRIX_BUCKETS}
                 for response in responses:
@@ -151,10 +159,16 @@ def build_survey_results(
                     bucket = _matrix_bucket(str(cell or ""))
                     if bucket:
                         counts[bucket] += 1
+                        question_weights.append(float(BUCKET_WEIGHT[bucket]))
                     elif str(cell or "").strip() in columns:
                         counts[str(cell).strip()] = counts.get(str(cell).strip(), 0) + 1
                 chart_rows.append({"name": row_name, **counts})
             result["matrixChart"] = chart_rows
+            if question_weights:
+                result["average"] = round(
+                    sum(question_weights) / len(question_weights), 2
+                )
+            matrix_scores.extend(question_weights)
 
         elif qtype == "choice":
             option_counts: Counter[str] = Counter()
@@ -218,6 +232,7 @@ def build_survey_results(
             result["textResponses"] = texts
 
         elif qtype == "scale":
+            question_scores: list[float] = []
             for response in responses:
                 answers = _answer_map(response)
                 answer = answers.get(qid)
@@ -226,30 +241,37 @@ def build_survey_results(
                 score = _scale_score(answer.get("value"))
                 if score is not None:
                     scale_scores.append(score)
+                    question_scores.append(score)
+            counts = {score: 0 for score in range(1, SCALE_MAX + 1)}
+            for score in question_scores:
+                bucket = int(round(score))
+                if bucket in counts:
+                    counts[bucket] += 1
+            result["scaleData"] = [
+                {"score": score, "count": counts[score]}
+                for score in range(1, SCALE_MAX + 1)
+            ]
+            if question_scores:
+                result["average"] = round(
+                    sum(question_scores) / len(question_scores), 2
+                )
 
         question_results.append(result)
 
+    # 척도형 응답이 있으면 척도 평균, 없으면 매트릭스 가중 평균을 만족도로 사용
+    satisfaction_points = scale_scores or matrix_scores
     average = (
-        round(sum(scale_scores) / len(scale_scores), 2) if scale_scores else 0.0
+        round(sum(satisfaction_points) / len(satisfaction_points), 2)
+        if satisfaction_points
+        else 0.0
     )
-    if not scale_scores:
-        matrix_scores: list[float] = []
-        for question in questions:
-            if question.get("type") != "matrix":
-                continue
-            qid = str(question.get("id") or "")
-            weight = {"매우불만족": 1, "불만족": 2, "보통": 3, "만족": 4, "매우만족": 5}
-            for response in responses:
-                answers = _answer_map(response)
-                answer = answers.get(qid)
-                if not answer or answer.get("type") != "matrix":
-                    continue
-                for cell in (answer.get("value") or {}).values():
-                    bucket = _matrix_bucket(str(cell or ""))
-                    if bucket:
-                        matrix_scores.append(float(weight[bucket]))
-        if matrix_scores:
-            average = round(sum(matrix_scores) / len(matrix_scores), 2)
+
+    # 긍정 응답률(top-box): 척도+매트릭스 만족도 점수 중 4점 이상 비율
+    all_points = scale_scores + matrix_scores
+    positive_count = sum(1 for point in all_points if point >= POSITIVE_THRESHOLD)
+    positive_rate = (
+        round(positive_count / len(all_points) * 100) if all_points else 0
+    )
 
     completion = (
         round((total_responses / total_target) * 100) if total_target else 0
@@ -262,6 +284,7 @@ def build_survey_results(
             "totalTarget": total_target,
             "averageSatisfaction": average,
             "completionRate": min(completion, 100),
+            "positiveRate": min(positive_rate, 100),
         },
         "questions": question_results,
     }

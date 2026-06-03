@@ -14,18 +14,25 @@ import {
   XAxis,
   YAxis,
 } from "recharts"
-import { Loader2 } from "lucide-react"
+import { Download, Loader2, Printer } from "lucide-react"
 
+import { Button } from "@/components/ui/button"
 import { getSurveyResults } from "@/services/survey.service"
 import type {
   SurveyQuestionResult,
   SurveyQuestionType,
   SurveyResults,
 } from "@/services/survey.types"
+import {
+  buildSurveyResultsCsv,
+  downloadCsv,
+} from "@/lib/survey-results-export"
+import { cn } from "@/lib/utils"
 
 import { SURVEY_MATRIX_CHART_COLORS } from "@/lib/constants/brand"
 
 const MATRIX_COLORS = SURVEY_MATRIX_CHART_COLORS
+const SCALE_BAR_COLOR = "#3b82f6"
 
 const TYPE_LABEL: Record<SurveyQuestionType, string> = {
   matrix: "표형",
@@ -34,7 +41,13 @@ const TYPE_LABEL: Record<SurveyQuestionType, string> = {
   scale: "척도",
 }
 
-export function SurveyResults({ surveyId }: { surveyId: string }) {
+export function SurveyResults({
+  surveyId,
+  surveyTitle,
+}: {
+  surveyId: string
+  surveyTitle?: string
+}) {
   const [results, setResults] = useState<SurveyResults | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
@@ -46,6 +59,16 @@ export function SurveyResults({ surveyId }: { surveyId: string }) {
       })
       .finally(() => setIsLoading(false))
   }, [surveyId])
+
+  const handleExportCsv = () => {
+    if (!results) return
+    const csv = buildSurveyResultsCsv(results, surveyTitle)
+    const base = (surveyTitle || `survey-${surveyId}`).replace(
+      /[\\/:*?"<>|]/g,
+      "_",
+    )
+    downloadCsv(`${base}_결과`, csv)
+  }
 
   if (isLoading) {
     return (
@@ -66,8 +89,75 @@ export function SurveyResults({ surveyId }: { surveyId: string }) {
 
   return (
     <div className="mx-auto max-w-3xl space-y-6 pb-12">
+      <div className="print-hide flex items-center justify-end gap-2">
+        <Button variant="outline" size="sm" onClick={handleExportCsv}>
+          <Download className="mr-2 size-4" />
+          CSV 내보내기
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => window.print()}
+        >
+          <Printer className="mr-2 size-4" />
+          인쇄
+        </Button>
+      </div>
+
+      <ResultsSummaryCard summary={results.summary} />
       {results.questions.map((question) => (
         <QuestionResultCard key={question.questionId} question={question} />
+      ))}
+    </div>
+  )
+}
+
+function ResultsSummaryCard({
+  summary,
+}: {
+  summary: SurveyResults["summary"]
+}) {
+  const items: Array<{ label: string; value: string; hint?: string }> = [
+    {
+      label: "평균 만족도",
+      value: `${summary.averageSatisfaction.toFixed(2)}점`,
+      hint: "5점 만점",
+    },
+    {
+      label: "총 응답",
+      value: `${summary.totalResponses}명`,
+      hint: summary.totalTarget > 0 ? `목표 ${summary.totalTarget}명` : undefined,
+    },
+    {
+      label: "응답률",
+      value: `${summary.completionRate}%`,
+      hint: undefined,
+    },
+  ]
+
+  if (summary.positiveRate !== undefined) {
+    items.push({
+      label: "긍정 응답률",
+      value: `${summary.positiveRate}%`,
+      hint: "만족·매우만족",
+    })
+  }
+
+  return (
+    <div
+      className={cn(
+        "grid gap-4 rounded-2xl border border-border bg-card p-6 shadow-sm",
+        items.length === 4 ? "grid-cols-2 sm:grid-cols-4" : "grid-cols-3",
+      )}
+    >
+      {items.map((item) => (
+        <div key={item.label} className="text-center">
+          <p className="text-xs text-muted-foreground">{item.label}</p>
+          <p className="mt-1 text-2xl font-bold text-foreground">{item.value}</p>
+          {item.hint ? (
+            <p className="mt-0.5 text-[11px] text-muted-foreground">{item.hint}</p>
+          ) : null}
+        </div>
       ))}
     </div>
   )
@@ -99,7 +189,36 @@ function QuestionResultCard({ question }: { question: SurveyQuestionResult }) {
         {total > 0
           ? ` · 응답률 ${Math.round((question.answeredCount / total) * 100)}%`
           : ""}
+        {question.average !== undefined
+          ? ` · 평균 ${question.average.toFixed(2)}점`
+          : ""}
       </p>
+
+      {question.scaleData && question.scaleData.length > 0 ? (
+        <div className="h-64 w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={question.scaleData}
+              margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" vertical={false} />
+              <XAxis
+                dataKey="score"
+                tick={{ fontSize: 12 }}
+                tickFormatter={(value) => `${value}점`}
+              />
+              <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
+              <Tooltip formatter={(value) => [`${value}명`, "응답 수"]} />
+              <Bar
+                dataKey="count"
+                name="응답 수"
+                fill={SCALE_BAR_COLOR}
+                radius={[4, 4, 0, 0]}
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      ) : null}
 
       {question.matrixChart && question.matrixChart.length > 0 ? (
         <div className="h-72 w-full">

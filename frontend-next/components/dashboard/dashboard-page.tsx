@@ -94,7 +94,7 @@ export function DashboardPage({
               <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-6 text-center text-sm">
                 <p className="text-destructive">{loadError}</p>
                 <p className="mt-2 text-muted-foreground">
-                  FastAPI(8020) 실행 여부와 로그인 상태를 확인한 뒤 다시 시도해
+                  FastAPI(9001) 실행 여부와 로그인 상태를 확인한 뒤 다시 시도해
                   주세요.
                 </p>
                 {session?.token ? (

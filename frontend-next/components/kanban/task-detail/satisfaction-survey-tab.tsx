@@ -1,16 +1,21 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { useParams, usePathname } from "next/navigation"
+import QRCode from "react-qr-code"
 import {
   Calendar,
   ChevronDown,
+  Copy,
+  Download,
+  ExternalLink,
   Eye,
   FileText,
   Filter,
   MoreHorizontal,
   Plus,
+  QrCode,
   Search,
   Star,
   TrendingUp,
@@ -20,12 +25,19 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
+import { getClientSession } from "@/lib/auth/session"
 import { cn } from "@/lib/utils"
 import { statusStyles } from "./data"
 import { getSurveyList } from "@/services/survey.service"
@@ -121,6 +133,54 @@ export function SatisfactionSurveyTab() {
     const qs = params.toString()
     return qs ? `${base}?${qs}` : base
   }
+
+  // 공개(QR) 응답 URL — 비로그인 응답이 가능하도록 지역을 포함
+  const regionId = getClientSession()?.regionId ?? undefined
+  const [qrSurvey, setQrSurvey] = useState<Survey | null>(null)
+  const qrRef = useRef<HTMLDivElement>(null)
+
+  const respondUrlFor = (surveyId: string) => {
+    if (typeof window === "undefined") return ""
+    const suffix = regionId ? `?region=${encodeURIComponent(regionId)}` : ""
+    return `${window.location.origin}/survey/${surveyId}/respond${suffix}`
+  }
+
+  const handleCopyRespondLink = async (surveyId: string) => {
+    const url = respondUrlFor(surveyId)
+    if (!url) return
+    try {
+      await navigator.clipboard.writeText(url)
+      alert("응답 링크가 복사되었습니다.")
+    } catch {
+      alert("복사에 실패했습니다.")
+    }
+  }
+
+  const handleDownloadQrPng = () => {
+    const svg = qrRef.current?.querySelector("svg")
+    if (!svg || !qrSurvey) return
+    const xml = new XMLSerializer().serializeToString(svg)
+    const svg64 = `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(xml)))}`
+    const img = new Image()
+    img.onload = () => {
+      const size = 1024
+      const canvas = document.createElement("canvas")
+      canvas.width = size
+      canvas.height = size
+      const ctx = canvas.getContext("2d")
+      if (!ctx) return
+      ctx.fillStyle = "#ffffff"
+      ctx.fillRect(0, 0, size, size)
+      ctx.drawImage(img, 0, 0, size, size)
+      const link = document.createElement("a")
+      link.href = canvas.toDataURL("image/png")
+      link.download = `survey-${qrSurvey.id}-qr.png`
+      link.click()
+    }
+    img.src = svg64
+  }
+
+  const qrUrl = qrSurvey ? respondUrlFor(qrSurvey.id) : ""
 
   return (
     <div>
@@ -250,6 +310,16 @@ export function SatisfactionSurveyTab() {
                         편집
                       </Link>
                     </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => void handleCopyRespondLink(survey.id)}
+                    >
+                      <Copy className="mr-2 size-4" />
+                      응답 링크 복사
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setQrSurvey(survey)}>
+                      <QrCode className="mr-2 size-4" />
+                      QR 코드
+                    </DropdownMenuItem>
                     <DropdownMenuItem>설문 중지</DropdownMenuItem>
                     <DropdownMenuItem>설문 복사</DropdownMenuItem>
                     <DropdownMenuItem className="text-destructive">
@@ -262,6 +332,52 @@ export function SatisfactionSurveyTab() {
           ))
         )}
       </div>
+
+      <Dialog open={qrSurvey !== null} onOpenChange={(open) => !open && setQrSurvey(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="truncate">
+              {qrSurvey?.title ?? "설문"} · 응답 QR
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col items-center gap-4 py-1">
+            <div ref={qrRef} className="rounded-lg bg-white p-4 shadow-sm">
+              {qrUrl ? <QRCode value={qrUrl} size={232} /> : null}
+            </div>
+            <p className="w-full break-all text-center text-xs text-muted-foreground">
+              {qrUrl}
+            </p>
+            <div className="flex w-full gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                className="flex-1"
+                onClick={handleDownloadQrPng}
+                disabled={!qrUrl}
+              >
+                <Download className="mr-2 size-4" />
+                PNG 저장
+              </Button>
+              <Button
+                type="button"
+                className="flex-1"
+                disabled={!qrUrl}
+                onClick={() =>
+                  qrUrl && window.open(qrUrl, "_blank", "noopener,noreferrer")
+                }
+              >
+                <ExternalLink className="mr-2 size-4" />
+                응답 화면 열기
+              </Button>
+            </div>
+            {!regionId ? (
+              <p className="text-center text-[11px] text-amber-600">
+                지역 정보가 없어 QR에 지역이 포함되지 않았습니다. 로그인 후 다시 시도하세요.
+              </p>
+            ) : null}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

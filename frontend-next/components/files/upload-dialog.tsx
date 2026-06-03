@@ -25,6 +25,8 @@ interface UploadDialogProps {
   open: boolean
   taskOptions: TaskOption[]
   defaultTaskId?: string | null
+  /** OS에서 끌어다 놓아 미리 채워진 파일들 */
+  initialFiles?: File[]
   onOpenChange: (open: boolean) => void
   onUpload: (files: File[], taskId: string) => void | Promise<void>
 }
@@ -47,6 +49,7 @@ export function UploadDialog({
   open,
   taskOptions,
   defaultTaskId,
+  initialFiles,
   onOpenChange,
   onUpload,
 }: UploadDialogProps) {
@@ -61,9 +64,9 @@ export function UploadDialog({
     if (open) {
       setTaskId(resolveDefaultTaskId(taskOptions, defaultTaskId))
       setError(null)
-      setFiles([])
+      setFiles(initialFiles ?? [])
     }
-  }, [open, defaultTaskId, taskOptions])
+  }, [open, defaultTaskId, taskOptions, initialFiles])
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -101,6 +104,22 @@ export function UploadDialog({
             className="w-full rounded-md border p-2 text-sm"
             onChange={(event) => setFiles(Array.from(event.target.files ?? []))}
           />
+
+          {files.length > 0 && (
+            <ul className="max-h-40 space-y-1 overflow-auto rounded-md border bg-muted/30 p-2">
+              {files.map((file, index) => (
+                <li
+                  key={`${file.name}-${index}`}
+                  className="flex items-center justify-between gap-2 text-sm"
+                >
+                  <span className="truncate">{file.name}</span>
+                  <span className="shrink-0 text-xs text-muted-foreground">
+                    {(file.size / 1024 / 1024).toFixed(2)} MB
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
 
         {error && <p className="text-sm text-destructive">{error}</p>}

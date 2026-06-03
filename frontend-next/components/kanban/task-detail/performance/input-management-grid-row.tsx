@@ -28,6 +28,7 @@ export type InputManagementGridRowProps = {
   row: PerformanceRow
   rowIndex: number
   enableRowReorder: boolean
+  readOnly?: boolean
   highlightRange: CellRange | null
   activeCell: CellPosition | null
   fillHandlePosition: CellPosition | null
@@ -53,6 +54,7 @@ export function InputManagementGridRow({
   row,
   rowIndex,
   enableRowReorder,
+  readOnly = false,
   highlightRange,
   activeCell,
   fillHandlePosition,
@@ -164,6 +166,7 @@ export function InputManagementGridRow({
               <FundingBudgetCell
                 variant={column.key === "planBudget" ? "plan" : "actual"}
                 isActive={isActive}
+                readOnly={readOnly}
                 entries={
                   column.key === "planBudget"
                     ? getPlanFundingEntries(row)
@@ -188,6 +191,7 @@ export function InputManagementGridRow({
                 columnKey={column.key}
                 type={column.type}
                 isActive={isActive}
+                readOnly={readOnly}
                 suggestions={
                   column.key === "subProject"
                     ? subProjectSuggestions

@@ -675,7 +675,7 @@ export const BusinessPlanRichText = forwardRef<
     const el = editorDom
     if (!el || readOnly || sourceMode) return
 
-    const onTabKeyDown = (e: KeyboardEvent) => {
+    const onTabKeyDown = (e: globalThis.KeyboardEvent) => {
       if (e.key !== "Tab" || e.defaultPrevented) return
 
       const backward = e.shiftKey

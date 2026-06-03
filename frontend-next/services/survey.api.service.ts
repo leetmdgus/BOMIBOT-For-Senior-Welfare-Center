@@ -79,3 +79,42 @@ export async function deleteSurvey(id: string): Promise<{
 }> {
   return apiClient.delete(surveysPath(`/${id}`))
 }
+
+// ── 공개(QR) 설문 — 로그인·task_id 불필요. 지역은 경로로 전달 ──
+
+const publicSurveysPath = (regionId: string, suffix = "") =>
+  resolveApiPath(
+    `/api/public/surveys/${encodeURIComponent(regionId)}${suffix}`,
+    `/api/v1/public/surveys/${encodeURIComponent(regionId)}${suffix}`,
+  )
+
+export async function getPublicSurveyList(
+  regionId: string,
+  options?: { status?: string; search?: string },
+): Promise<SurveyListItem[]> {
+  const params = new URLSearchParams()
+  if (options?.status) params.set("status", options.status)
+  if (options?.search) params.set("search", options.search)
+  const query = params.toString()
+  return apiClient.get<SurveyListItem[]>(
+    publicSurveysPath(regionId, query ? `?${query}` : ""),
+  )
+}
+
+export async function getPublicSurveyDetail(
+  regionId: string,
+  id: string,
+): Promise<SurveyDetail> {
+  return apiClient.get<SurveyDetail>(publicSurveysPath(regionId, `/${id}`))
+}
+
+export async function submitPublicSurveyResponse(
+  regionId: string,
+  id: string,
+  payload: SubmitSurveyResponsePayload,
+): Promise<SubmitSurveyResponseResult> {
+  return apiClient.post<SubmitSurveyResponseResult>(
+    publicSurveysPath(regionId, `/${id}/responses`),
+    payload,
+  )
+}

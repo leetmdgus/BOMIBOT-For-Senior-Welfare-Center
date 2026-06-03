@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react"
-import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import {
   closestCenter,
@@ -17,6 +16,7 @@ import {
 } from "@dnd-kit/core"
 import { SortableContext, arrayMove, rectSortingStrategy, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import {
+  FolderOpen,
   FolderPlus,
   Grid3X3,
   HardDrive,
@@ -30,8 +30,8 @@ import { Input } from "@/components/ui/input"
 
 import { FileCard } from "./file-card"
 import { FileList } from "./file-list"
+import { FilesBreadcrumb } from "./files-breadcrumb"
 import { RecentFiles } from "./recent-files"
-import { ParentFolderCard, ParentFolderRow } from "./parent-folder-entry"
 import { RenameDialog } from "./rename-dialog"
 import { ShareDialog } from "./share-dialog"
 import { SortControl } from "./sort-control"
@@ -41,6 +41,7 @@ import { UploadDialog } from "./upload-dialog"
 import { NewFolderDialog } from "./new-folder-dialog"
 import { FilePreviewDialog } from "./file-preview-dialog"
 import { useFileManager } from "./use-file-manager"
+import type { FileItem } from "./file-types"
 import {
   canMoveItem,
   FILE_DRAG_MOVE_THRESHOLD_PX,
@@ -62,6 +63,41 @@ function CurrentFolderDropArea({ children }: { children: ReactNode }) {
   )
 }
 
+function EmptyState({
+  searching,
+  onUpload,
+}: {
+  searching: boolean
+  onUpload: () => void
+}) {
+  return (
+    <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed bg-card/40 py-20 text-center">
+      <div className="flex size-16 items-center justify-center rounded-full bg-muted">
+        <FolderOpen className="size-8 text-muted-foreground" />
+      </div>
+      {searching ? (
+        <>
+          <p className="text-sm font-medium">검색 결과가 없습니다</p>
+          <p className="text-sm text-muted-foreground">
+            다른 검색어나 필터로 다시 시도해 보세요.
+          </p>
+        </>
+      ) : (
+        <>
+          <p className="text-sm font-medium">이 폴더가 비어 있어요</p>
+          <p className="text-sm text-muted-foreground">
+            파일을 끌어다 놓거나 업로드 버튼을 눌러 추가하세요.
+          </p>
+          <Button className="mt-2 gap-2" onClick={onUpload}>
+            <Upload className="size-4" />
+            파일 업로드
+          </Button>
+        </>
+      )}
+    </div>
+  )
+}
+
 export function FilesPageContent() {
   const { session } = useAuth()
   const searchParams = useSearchParams()
@@ -69,11 +105,55 @@ export function FilesPageContent() {
   const shareLinkHandledRef = useRef<string | null>(null)
   const [activeDragId, setActiveDragId] = useState<string | null>(null)
   const [dragOrderIds, setDragOrderIds] = useState<string[] | null>(null)
+  const [isOsDragging, setIsOsDragging] = useState(false)
+  const [pendingUploadFiles, setPendingUploadFiles] = useState<File[]>([])
+  const osDragDepthRef = useRef(0)
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 12 },
     }),
   )
+
+  // OS(바탕화면 등)에서 끌어온 파일 드래그인지 판별
+  const isOsFileDrag = (event: React.DragEvent) =>
+    Array.from(event.dataTransfer.types).includes("Files")
+
+  const handleOsDragEnter = (event: React.DragEvent) => {
+    if (!isOsFileDrag(event)) return
+    event.preventDefault()
+    osDragDepthRef.current += 1
+    setIsOsDragging(true)
+  }
+
+  const handleOsDragOver = (event: React.DragEvent) => {
+    if (!isOsFileDrag(event)) return
+    event.preventDefault()
+    event.dataTransfer.dropEffect = "copy"
+  }
+
+  const handleOsDragLeave = (event: React.DragEvent) => {
+    if (!isOsFileDrag(event)) return
+    osDragDepthRef.current = Math.max(0, osDragDepthRef.current - 1)
+    if (osDragDepthRef.current === 0) setIsOsDragging(false)
+  }
+
+  const handleOsDrop = (event: React.DragEvent) => {
+    if (!isOsFileDrag(event)) return
+    event.preventDefault()
+    osDragDepthRef.current = 0
+    setIsOsDragging(false)
+    const dropped = Array.from(event.dataTransfer.files)
+    if (dropped.length === 0) return
+    setPendingUploadFiles(dropped)
+    manager.setUploadOpen(true)
+  }
+
+  const navigateToFolder = (folderId: string | null) => {
+    manager.setCurrentFolderId(folderId)
+    manager.setSelectedIds([])
+  }
+
+  const atRoot = !manager.currentFolderId && !manager.useFlatView
 
   const breadcrumbs = getBreadcrumbs(manager.files, manager.currentFolderId)
   const visibleIds = useMemo(
@@ -217,10 +297,10 @@ export function FilesPageContent() {
     onShare: manager.setShareTarget,
     onToggleStar: manager.toggleStar,
     onDelete: manager.deleteItem,
-    onExport: (item) => {
+    onExport: (item: FileItem) => {
       void manager.exportItem(item)
     },
-    onDownload: (item) => {
+    onDownload: (item: FileItem) => {
       void manager.downloadItem(item)
     },
   }
@@ -229,33 +309,57 @@ export function FilesPageContent() {
     <div className="flex flex-1 flex-col overflow-hidden">
       <Header />
       <div className="border-b border-border bg-white px-6 py-4">
-        <div className="flex items-center justify-end gap-3">
-          <Button className="gap-2" onClick={() => manager.setUploadOpen(true)}>
-            <Upload className="size-4" />
-            파일 업로드
-          </Button>
+        <div className="flex items-center justify-between gap-3">
+          <FilesBreadcrumb trail={breadcrumbs} onNavigate={navigateToFolder} />
 
-          <Button
-            variant="outline"
-            className="gap-2"
-            onClick={() => manager.setNewFolderOpen(true)}
-          >
-            <FolderPlus className="size-4" />
-            새 폴더
-          </Button>
+          <div className="flex shrink-0 items-center gap-3">
+            <Button className="gap-2" onClick={() => manager.setUploadOpen(true)}>
+              <Upload className="size-4" />
+              파일 업로드
+            </Button>
+
+            <Button
+              variant="outline"
+              className="gap-2"
+              onClick={() => manager.setNewFolderOpen(true)}
+            >
+              <FolderPlus className="size-4" />
+              새 폴더
+            </Button>
+          </div>
         </div>
       </div>
 
-      <main className="flex-1 overflow-auto">
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragStart={handleDragStart}
-          onDragOver={handleDragOver}
-          onDragCancel={handleDragCancel}
-          onDragEnd={handleDragEnd}
-        >
-          <CurrentFolderDropArea>
+      <main
+        className="relative flex-1 overflow-hidden"
+        onDragEnter={handleOsDragEnter}
+        onDragOver={handleOsDragOver}
+        onDragLeave={handleOsDragLeave}
+        onDrop={handleOsDrop}
+      >
+        {isOsDragging && (
+          <div className="pointer-events-none absolute inset-0 z-20 m-4 flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-primary bg-primary/5 backdrop-blur-[2px]">
+            <Upload className="size-10 text-primary" />
+            <p className="text-base font-medium text-primary">
+              여기에 파일을 놓아 업로드
+            </p>
+            <p className="text-sm text-muted-foreground">
+              {breadcrumbs.length > 0
+                ? `「${breadcrumbs[breadcrumbs.length - 1].name}」 폴더에 업로드됩니다`
+                : "현재 폴더에 업로드됩니다"}
+            </p>
+          </div>
+        )}
+        <div className="h-full overflow-auto">
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragStart={handleDragStart}
+            onDragOver={handleDragOver}
+            onDragCancel={handleDragCancel}
+            onDragEnd={handleDragEnd}
+          >
+            <CurrentFolderDropArea>
             <div className="mb-6 flex items-center justify-between rounded-lg border bg-card p-4">
               <div className="flex items-center gap-3">
                 <div className="relative">
@@ -313,31 +417,37 @@ export function FilesPageContent() {
               onUpdatePermissions={manager.updateSelectedPermissions}
             />
 
-            <RecentFiles items={manager.recentFiles} onOpen={manager.openItem} />
+            {atRoot && (
+              <>
+                <RecentFiles items={manager.recentFiles} onOpen={manager.openItem} />
 
-            <div className="mb-6 rounded-lg border bg-card p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <HardDrive className="size-5 text-primary" />
-                  <div>
-                    <p className="text-sm font-medium">저장 공간</p>
-                    <p className="text-xs text-muted-foreground">12.4 GB / 50 GB 사용 중</p>
+                <div className="mb-6 rounded-lg border bg-card p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <HardDrive className="size-5 text-primary" />
+                      <div>
+                        <p className="text-sm font-medium">저장 공간</p>
+                        <p className="text-xs text-muted-foreground">12.4 GB / 50 GB 사용 중</p>
+                      </div>
+                    </div>
+                    <div className="w-48">
+                      <div className="h-2 rounded-full bg-muted">
+                        <div className="h-2 w-1/4 rounded-full bg-primary" />
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <div className="w-48">
-                  <div className="h-2 rounded-full bg-muted">
-                    <div className="h-2 w-1/4 rounded-full bg-primary" />
-                  </div>
-                </div>
-              </div>
-            </div>
+              </>
+            )}
 
-            {manager.viewMode === "grid" ? (
+            {orderedVisibleFiles.length === 0 ? (
+              <EmptyState
+                searching={manager.useFlatView}
+                onUpload={() => manager.setUploadOpen(true)}
+              />
+            ) : manager.viewMode === "grid" ? (
               <SortableContext items={orderedIds} strategy={rectSortingStrategy}>
                 <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-                  {manager.currentFolderId && !manager.useFlatView && (
-                    <ParentFolderCard onOpen={manager.goToParentFolder} />
-                  )}
                   {orderedVisibleFiles.map((item) => (
                     <FileCard
                       key={item.id}
@@ -353,11 +463,6 @@ export function FilesPageContent() {
                 <FileList
                   items={orderedVisibleFiles}
                   selectedIds={manager.selectedIds}
-                  parentRow={
-                    manager.currentFolderId && !manager.useFlatView ? (
-                      <ParentFolderRow onOpen={manager.goToParentFolder} />
-                    ) : null
-                  }
                   {...commonActions}
                 />
               </SortableContext>
@@ -371,7 +476,8 @@ export function FilesPageContent() {
               </div>
             ) : null}
           </DragOverlay>
-        </DndContext>
+          </DndContext>
+        </div>
       </main>
 
       <ShareDialog
@@ -389,7 +495,11 @@ export function FilesPageContent() {
         open={manager.uploadOpen}
         taskOptions={manager.taskOptions}
         defaultTaskId={manager.taskFilterId}
-        onOpenChange={manager.setUploadOpen}
+        initialFiles={pendingUploadFiles}
+        onOpenChange={(open) => {
+          manager.setUploadOpen(open)
+          if (!open) setPendingUploadFiles([])
+        }}
         onUpload={manager.uploadFiles}
       />
       <NewFolderDialog

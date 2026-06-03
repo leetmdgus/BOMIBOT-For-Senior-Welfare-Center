@@ -28,7 +28,7 @@ Write-Host "seed: $($seedArgs -join ' ') ..."
 Invoke-ApiExec $seedArgs
 
 if ($Smoke) {
-  $port = if ($env:API_PORT) { $env:API_PORT } else { "8020" }
+  $port = if ($env:API_PORT) { $env:API_PORT } else { "9001" }
   & "$PSScriptRoot\smoke-test.ps1" -BaseUrl "http://127.0.0.1:$port"
 }
 

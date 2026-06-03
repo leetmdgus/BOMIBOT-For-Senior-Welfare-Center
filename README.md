@@ -27,7 +27,7 @@ UI (Next.js)
 
 | 환경 | API Base URL | 비고 |
 |------|----------------|------|
-| 로컬 | `http://127.0.0.1:8020` | `backend/scripts/run-dev.ps1` 또는 Docker |
+| 로컬 | `http://127.0.0.1:9001` | `backend/scripts/run-dev.ps1` 또는 Docker |
 | 프로덕션 | `https://api-workspace.bomi.ai.kr` | Vercel env에 동일 값 설정 |
 
 ### 도메인별 연동 현황
@@ -45,7 +45,7 @@ UI (Next.js)
 `frontend-next/.env.local`:
 
 ```env
-NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8020
+NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:9001
 NEXT_PUBLIC_USE_MOCK_API=false
 ```
 
@@ -66,7 +66,7 @@ NEXT_PUBLIC_USE_MOCK_API=false
 cd backend
 cp .env.docker.example .env
 docker compose up -d --build --remove-orphans
-# API http://127.0.0.1:8020/health
+# API http://127.0.0.1:9001/health
 ```
 
 **venv (SQLite):**
@@ -106,7 +106,7 @@ npm run dev
 - 기본 `dev`는 **Webpack** 모드 + Node 힙 **8GB** (`--max-old-space-size=8192`)  
 - Turbopack이 OOM 나면 Webpack을 쓰세요. Turbopack이 필요하면: `npm run dev:turbo`
 
-브라우저: **http://localhost:3000** (Next 기본 포트)
+브라우저: **http://localhost:9000**
 
 메모리 부족이 계속되면:
 

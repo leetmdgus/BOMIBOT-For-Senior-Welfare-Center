@@ -30,7 +30,7 @@ else
 fi
 
 if [ -n "$SMOKE" ]; then
-  curl -fsS "http://127.0.0.1:${API_PORT:-8020}/health"
+  curl -fsS "http://127.0.0.1:${API_PORT:-9001}/health"
 fi
 
 echo "Bootstrap done."
