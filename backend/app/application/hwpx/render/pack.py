@@ -74,7 +74,7 @@ def json_to_hwpx_path(
         }
         for key, path in targets.items():
             path.parent.mkdir(parents=True, exist_ok=True)
-            part = json_data[key]
+            part = file_json[key]
             path.write_bytes(
                 json_part_to_bytes(part["data"], nsmap=part.get("nsmap"))
             )

@@ -4,11 +4,18 @@ from fastapi.responses import Response
 from app.application.http.content_disposition import attachment_content_disposition
 from app.application.hwpx.export_service import HwpxExportService
 from app.application.hwpx.document_sections import hwpx_export_document_sections
+from app.application.kanban_access import KanbanAccessContext
 from app.application.kanban_task_options import resolve_kanban_card_title
 from app.application.services.collaboration_broadcast import broadcast_document_saved
 from app.application.services.kanban_board_service import KanbanBoardService
 from app.application.services.region_store_service import RegionStoreService
-from app.interfaces.api.deps import get_kanban_service, require_region_id
+from app.interfaces.api.deps import (
+    get_kanban_access_context,
+    get_kanban_service,
+    get_region_store_service,
+    optional_user_display_name,
+    require_region_id,
+)
 
 
 router = APIRouter(prefix="/kanban/task-detail", tags=["kanban-task-detail"])
