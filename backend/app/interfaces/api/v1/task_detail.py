@@ -8,13 +8,8 @@ from app.application.kanban_task_options import resolve_kanban_card_title
 from app.application.services.collaboration_broadcast import broadcast_document_saved
 from app.application.services.kanban_board_service import KanbanBoardService
 from app.application.services.region_store_service import RegionStoreService
+from app.interfaces.api.deps import get_kanban_service, require_region_id
 
-from app.interfaces.api.depsget_region_store_service import require_region_id
-from app.application.kanban_access import KanbanAccessContext
-    get_kanban_service,
-    get_region_store_service,
-    optional_user_display_name,
-)
 
 router = APIRouter(prefix="/kanban/task-detail", tags=["kanban-task-detail"])
 _hwpx_export = HwpxExportService()
