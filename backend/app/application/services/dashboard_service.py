@@ -1,55 +1,9 @@
-from app.domain.repositories.dashboard_repository import DashboardRepository
+"""하위 호환 — `DashboardService` 는 `app.application.dashboard.service` 로 이동.
 
+기존 import 경로(`app.application.services.dashboard_service`)를 유지하면서
+실제 구현은 라이브 지표(조직·칸반·실적)를 반영하는 dashboard 패키지를 사용한다.
+"""
 
-class DashboardService:
-    def __init__(self, dashboard_repo: DashboardRepository) -> None:
-        self._dashboard_repo = dashboard_repo
+from app.application.dashboard.service import DashboardService
 
-    def get_overview(self, region_id: str) -> dict:
-        overview = self._dashboard_repo.get_overview(region_id)
-        return {
-            "stats": [
-                {
-                    "label": s.label,
-                    "labelEn": s.label_en,
-                    "value": s.value,
-                    "unit": s.unit,
-                    "description": s.description,
-                    "iconName": s.icon_name,
-                    "color": s.color,
-                    "link": s.link,
-                    "showChart": s.show_chart,
-                    "goto": s.goto,
-                }
-                for s in overview.stats
-            ],
-            "progress": [
-                {
-                    "label": p.label,
-                    "value": p.value,
-                    "iconName": p.icon_name,
-                    "color": p.color,
-                    "textColor": p.text_color,
-                }
-                for p in overview.progress
-            ],
-            "calendarEvents": [
-                {
-                    "day": c.day,
-                    "title": c.title,
-                    "color": c.color,
-                    "category": c.category,
-                }
-                for c in overview.calendar_events
-            ],
-            "volunteerEvents": [
-                {
-                    "id": v.id.split(":", 1)[-1] if ":" in v.id else v.id,
-                    "name": v.name,
-                    "program": v.program,
-                    "day": v.day,
-                    "status": v.status,
-                }
-                for v in overview.volunteer_events
-            ],
-        }
+__all__ = ["DashboardService"]
