@@ -10,8 +10,6 @@ from typing import Any
 
 from fastapi import HTTPException, status
 
-<<<<<<< HEAD
-=======
 from app.core.datetime_kst import format_kst_datetime, kst_year, now_kst
 
 from app.application.kanban_access import (
@@ -19,17 +17,13 @@ from app.application.kanban_access import (
     file_entry_allowed,
     filter_file_tree,
 )
->>>>>>> dev2
 from app.application.documents_reports import (
     build_budget_report_rows,
     build_business_plan_report,
     build_performance_report_rows,
 )
 from app.application.services.file_storage_service import FileStorageService
-<<<<<<< HEAD
-=======
 from app.application.services.survey_service import SurveyService
->>>>>>> dev2
 from app.application.task_detail_bootstrap import (
     bootstrap_business_plan,
     bootstrap_evaluation,
@@ -39,33 +33,6 @@ from app.application.task_detail_bootstrap import (
     business_name_for_task,
     normalize_task_id,
 )
-<<<<<<< HEAD
-from app.domain.scoped_ids import strip_scope
-from app.infrastructure.persistence.repositories.sqlalchemy_json_store_repository import (
-    SqlAlchemyJsonStoreRepository,
-)
-
-DOMAIN_EBOOKS = "ebooks"
-DOMAIN_FILES = "files"
-DOMAIN_SURVEY = "survey"
-DOMAIN_VERSION_HISTORY = "version_history"
-DOMAIN_PERFORMANCE = "performance"
-DOMAIN_TASK_DETAIL = "task_detail"
-DOMAIN_REPORTS = "reports"
-DOMAIN_CHAT = "chat"
-DOMAIN_ONTOLOGY = "ontology"
-DOMAIN_APPROVALS = "approvals"
-
-
-class RegionStoreService:
-    def __init__(
-        self,
-        repo: SqlAlchemyJsonStoreRepository,
-        file_storage: FileStorageService | None = None,
-    ) -> None:
-        self._repo = repo
-        self._file_storage = file_storage or FileStorageService()
-=======
 from app.application.region_store.approvals import ApprovalApplicationService
 from app.application.region_store.chat_config import ChatConfigApplicationService
 from app.application.region_store.gateway import RegionStoreGateway
@@ -123,29 +90,15 @@ class RegionStoreService:
         self._surveys = survey_service
         self._approvals = ApprovalApplicationService(self._gateway)
         self._chat_config = ChatConfigApplicationService(self._gateway)
->>>>>>> dev2
 
     def get_domain_payload(self, region_id: str, domain: str) -> dict:
         return self._load(region_id, domain)
 
     def _load(self, region_id: str, domain: str) -> dict:
-<<<<<<< HEAD
-        payload = self._repo.get_payload(region_id, domain)
-        if payload is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Region data not found: {domain}",
-            )
-        return payload
-
-    def _save(self, region_id: str, domain: str, payload: dict) -> dict:
-        return self._repo.save_payload(region_id, domain, payload)
-=======
         return self._gateway.load(region_id, domain)
 
     def _save(self, region_id: str, domain: str, payload: dict) -> dict:
         return self._gateway.save(region_id, domain, payload)
->>>>>>> dev2
 
     # --- ebooks ---
 
@@ -347,12 +300,6 @@ class RegionStoreService:
             parent_id = parent.get("parentId")
         return " / ".join(parts) if parts else "루트"
 
-<<<<<<< HEAD
-    def get_file_manager_state(self, region_id: str) -> dict:
-        data = self._load(region_id, DOMAIN_FILES)
-        manager = self._files_manager(data)
-        files = deepcopy(self._get_tree_files(data))
-=======
     def _annotate_content_availability(
         self,
         region_id: str,
@@ -386,19 +333,12 @@ class RegionStoreService:
         self._annotate_content_availability(region_id, files)
         if allowed_task_ids is not None:
             files = filter_file_tree(files, allowed_task_ids)
->>>>>>> dev2
         known_ids = {str(f["id"]) for f in files}
         recent_ids = [
             rid
             for rid in manager.get("defaultRecentIds", [])
             if str(rid) in known_ids
         ]
-<<<<<<< HEAD
-        return {
-            "files": files,
-            "taskOptions": deepcopy(manager.get("taskOptions", [])),
-            "recentIds": recent_ids,
-=======
         task_options = deepcopy(manager.get("taskOptions", []))
         if allowed_task_ids is not None:
             task_options = [
@@ -414,7 +354,6 @@ class RegionStoreService:
             "taskOptions": task_options,
             "recentIds": recent_ids,
             "folderOrderByParentId": folder_order,
->>>>>>> dev2
         }
 
     def list_files(
@@ -424,10 +363,7 @@ class RegionStoreService:
         folder: str | None = None,
         file_type: str | None = None,
         search: str | None = None,
-<<<<<<< HEAD
-=======
         allowed_task_ids: set[str] | None = None,
->>>>>>> dev2
     ) -> dict:
         data = self._load(region_id, DOMAIN_FILES)
         tree = self._get_tree_files(data)
@@ -439,11 +375,8 @@ class RegionStoreService:
             for item in tree:
                 if item.get("type") == "folder":
                     continue
-<<<<<<< HEAD
-=======
                 if not file_entry_allowed(item, allowed_task_ids):
                     continue
->>>>>>> dev2
                 entries.append(
                     {
                         "id": item["id"],
@@ -452,22 +385,6 @@ class RegionStoreService:
                         "size": item.get("size", "0 MB"),
                         "modifiedAt": item.get("modifiedAt", ""),
                         "folder": self._folder_label(tree, item),
-<<<<<<< HEAD
-                    }
-                )
-        else:
-            entries = [
-                {
-                    "id": f.get("id"),
-                    "name": f.get("name"),
-                    "type": f.get("type"),
-                    "size": f.get("size", "0 MB"),
-                    "modifiedAt": f.get("modifiedAt", ""),
-                    "folder": f.get("folder", "루트"),
-                }
-                for f in legacy_flat
-            ]
-=======
                         "taskId": item.get("taskId"),
                     }
                 )
@@ -487,7 +404,6 @@ class RegionStoreService:
                         "taskId": f.get("taskId"),
                     }
                 )
->>>>>>> dev2
 
         filtered = entries
         if folder and folder not in self._FILTER_ALL_LABELS:
@@ -616,8 +532,6 @@ class RegionStoreService:
         self._save(region_id, DOMAIN_FILES, data)
         return created_items
 
-<<<<<<< HEAD
-=======
     def upsert_task_hwpx_file(
         self,
         region_id: str,
@@ -676,7 +590,6 @@ class RegionStoreService:
             )
         return created[0]
 
->>>>>>> dev2
     def copy_file_item(self, region_id: str, file_id: str, body: dict) -> dict:
         data = self._load(region_id, DOMAIN_FILES)
         files = self._get_tree_files(data)
@@ -851,11 +764,8 @@ class RegionStoreService:
         self,
         region_id: str,
         root_ids: list[str],
-<<<<<<< HEAD
-=======
         *,
         allowed_task_ids: set[str] | None = None,
->>>>>>> dev2
     ) -> tuple[bytes, str]:
         import io
         import json
@@ -863,27 +773,20 @@ class RegionStoreService:
 
         data = self._load(region_id, DOMAIN_FILES)
         files = self._get_tree_files(data)
-<<<<<<< HEAD
-=======
         if allowed_task_ids is not None:
             for root_id in root_ids:
                 assert_file_tree_access(files, str(root_id), allowed_task_ids)
             files = filter_file_tree(files, allowed_task_ids)
->>>>>>> dev2
         export_root_ids = {str(rid) for rid in root_ids}
         entries, archive_label = self._collect_export_entries(files, root_ids)
 
         buffer = io.BytesIO()
-<<<<<<< HEAD
-        with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as archive:
-=======
         with zipfile.ZipFile(
             buffer,
             "w",
             zipfile.ZIP_DEFLATED,
             metadata_encoding="utf-8",
         ) as archive:
->>>>>>> dev2
             manifest = {
                 "exportedAt": datetime.now(UTC).isoformat(),
                 "rootIds": list(root_ids),
@@ -912,11 +815,6 @@ class RegionStoreService:
                     continue
 
                 storage_key = item.get("storageKey")
-<<<<<<< HEAD
-                if storage_key:
-                    path = self._file_storage.resolve_path(region_id, str(storage_key))
-                    archive.write(path, arcname=arc_path)
-=======
                 if storage_key and self._file_storage.exists(region_id, str(storage_key)):
                     path = self._file_storage.resolve_path(region_id, str(storage_key))
                     archive.write(path, arcname=arc_path)
@@ -930,7 +828,6 @@ class RegionStoreService:
                             f"storageKey: {storage_key}\n"
                         ).encode("utf-8"),
                     )
->>>>>>> dev2
                 else:
                     archive.writestr(
                         f"{arc_path}.readme.txt",
@@ -946,13 +843,6 @@ class RegionStoreService:
             safe_name = safe_name.replace(char, "_")
         return buffer.getvalue(), f"{safe_name}.zip"
 
-<<<<<<< HEAD
-    def get_download_file(self, region_id: str, file_id: str) -> tuple[Path, str, str]:
-        data = self._load(region_id, DOMAIN_FILES)
-        files = self._get_tree_files(data)
-        target = next((f for f in files if f.get("id") == file_id), None)
-        if not target or target.get("type") == "folder":
-=======
     def assert_file_access(
         self,
         region_id: str,
@@ -975,7 +865,6 @@ class RegionStoreService:
         files = self._get_tree_files(data)
         target = assert_file_tree_access(files, file_id, allowed_task_ids)
         if target.get("type") == "folder":
->>>>>>> dev2
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
         storage_key = target.get("storageKey")
         if not storage_key:
@@ -1035,8 +924,6 @@ class RegionStoreService:
                 str(rid) for rid in body["recentIds"] if str(rid) in known_ids
             ][:20]
 
-<<<<<<< HEAD
-=======
         if "folderOrderByParentId" in body and isinstance(body["folderOrderByParentId"], dict):
             # 폴더별 정렬은 UI 힌트이므로 값 검증은 최소화
             next_order: dict[str, list[str]] = {}
@@ -1046,7 +933,6 @@ class RegionStoreService:
                 next_order[str(key)] = [str(x) for x in value if str(x)]
             manager["folderOrderByParentId"] = next_order
 
->>>>>>> dev2
         self._save(region_id, DOMAIN_FILES, data)
         return self.get_file_manager_state(region_id)
 
@@ -1615,28 +1501,17 @@ class RegionStoreService:
         except HTTPException:
             return None
         entries = data.setdefault("entries", [])
-<<<<<<< HEAD
-        entry_id = f"vh-{int(datetime.now(UTC).timestamp() * 1000)}"
-        entry: dict[str, Any] = {
-            "id": entry_id,
-            "date": datetime.now(UTC).strftime("%Y-%m-%d %H:%M"),
-=======
         kst_now = now_kst()
         entry_id = f"vh-{int(kst_now.timestamp() * 1000)}"
         entry: dict[str, Any] = {
             "id": entry_id,
             "date": format_kst_datetime(kst_now),
->>>>>>> dev2
             "user": user,
             "action": action,
             "target": target,
             "actionType": action_type,
             "projectName": project_name,
-<<<<<<< HEAD
-            "year": year or str(datetime.now(UTC).year),
-=======
             "year": year or kst_year(kst_now),
->>>>>>> dev2
             "canRestore": can_restore,
             "changes": deepcopy(changes) if changes else [],
         }
@@ -1776,15 +1651,9 @@ class RegionStoreService:
         *,
         card_title: str | None = None,
     ) -> list:
-<<<<<<< HEAD
-        data = self._load(region_id, DOMAIN_TASK_DETAIL)
-        items = self._get_or_create_task_surveys(data, task_id, card_title=card_title)
-        self._save(region_id, DOMAIN_TASK_DETAIL, data)
-=======
         items = self._surveys.list_for_task(
             region_id, task_id, card_title=card_title
         )
->>>>>>> dev2
         return [
             {
                 "id": item["id"],
@@ -1797,11 +1666,6 @@ class RegionStoreService:
             for item in items
         ]
 
-<<<<<<< HEAD
-    def get_evaluation_files(self, region_id: str, _task_id: str | None = None) -> list:
-        data = self._load(region_id, DOMAIN_TASK_DETAIL)
-        return deepcopy(data.get("filesData", []))
-=======
     @staticmethod
     def _reference_file_type_label(item: dict) -> str:
         name = str(item.get("name") or "")
@@ -1901,7 +1765,6 @@ class RegionStoreService:
             task_file_ids.add(fid)
 
         return self._merge_reference_file_lists(legacy, task_files)
->>>>>>> dev2
 
     def get_view_together_files(self, region_id: str) -> list:
         data = self._load(region_id, DOMAIN_TASK_DETAIL)
@@ -1915,17 +1778,12 @@ class RegionStoreService:
         card_title: str | None = None,
     ) -> dict:
         data = self._load(region_id, DOMAIN_TASK_DETAIL)
-<<<<<<< HEAD
-        source = self._get_or_create_evaluation(data, task_id, card_title=card_title)
-        self._save(region_id, DOMAIN_TASK_DETAIL, data)
-=======
         tid = self._normalize_task_id(task_id)
         runtime = self._task_runtime(data)
         source = runtime["evaluationByTaskId"].get(tid)
         if not source:
             source = self._get_or_create_evaluation(data, task_id, card_title=card_title)
             self._save(region_id, DOMAIN_TASK_DETAIL, data)
->>>>>>> dev2
         return {
             "performanceIndicator": source.get("performanceIndicator", ""),
             "evaluationTool": source.get("evaluationTool", ""),
@@ -1944,11 +1802,6 @@ class RegionStoreService:
         card_title: str | None = None,
     ) -> dict:
         data = self._load(region_id, DOMAIN_TASK_DETAIL)
-<<<<<<< HEAD
-        doc = self._get_or_create_evaluation(data, task_id, card_title=card_title)
-        self._save(region_id, DOMAIN_TASK_DETAIL, data)
-        return self._clone_evaluation(doc)
-=======
         tid = self._normalize_task_id(task_id)
         runtime = self._task_runtime(data)
         stored = runtime["evaluationByTaskId"].get(tid)
@@ -1965,7 +1818,6 @@ class RegionStoreService:
             task_id,
             self._clone_evaluation(doc),
         )
->>>>>>> dev2
 
     def save_business_evaluation(
         self,
@@ -1976,32 +1828,6 @@ class RegionStoreService:
         user: str = "시스템",
         card_title: str | None = None,
     ) -> dict:
-<<<<<<< HEAD
-        data = self._load(region_id, DOMAIN_TASK_DETAIL)
-        tid = self._normalize_task_id(task_id)
-        current = self._get_or_create_evaluation(data, tid, card_title=card_title)
-        next_eval = {**current, **payload}
-        if "goals" in payload:
-            next_eval["goals"] = list(payload["goals"])
-        if "detailRows" in payload:
-            next_eval["detailRows"] = [deepcopy(r) for r in payload["detailRows"]]
-        if "sections" in payload:
-            next_eval["sections"] = [deepcopy(s) for s in payload["sections"]]
-        self._task_runtime(data)["evaluationByTaskId"][tid] = next_eval
-        self._save(region_id, DOMAIN_TASK_DETAIL, data)
-        program_name = next_eval.get("programName") or business_name_for_task(
-            tid, card_title=card_title
-        )
-        self.append_version_entry(
-            region_id,
-            action="사업평가를 저장했습니다.",
-            target=program_name,
-            action_type="update_description",
-            project_name=program_name,
-            user=user,
-        )
-        return self._clone_evaluation(next_eval)
-=======
         saved = self.save_task_documents(
             region_id,
             task_id,
@@ -2010,7 +1836,6 @@ class RegionStoreService:
             card_title=card_title,
         )
         return saved["evaluation"]
->>>>>>> dev2
 
     def complete_business_evaluation(
         self,
@@ -2024,8 +1849,6 @@ class RegionStoreService:
         tid = self._normalize_task_id(task_id)
         current = self._get_or_create_evaluation(data, tid, card_title=card_title)
         next_eval = {**current, "isCompleted": True}
-<<<<<<< HEAD
-=======
         plan_form = None
         plan_stored = self._task_runtime(data)["businessPlanByTaskId"].get(tid)
         if isinstance(plan_stored, dict):
@@ -2040,7 +1863,6 @@ class RegionStoreService:
             plan_form=plan_form if isinstance(plan_form, dict) else None,
             card_title=card_title,
         )
->>>>>>> dev2
         self._task_runtime(data)["evaluationByTaskId"][tid] = next_eval
         self._save(region_id, DOMAIN_TASK_DETAIL, data)
         program_name = next_eval.get("programName") or business_name_for_task(
@@ -2056,11 +1878,6 @@ class RegionStoreService:
         )
         return self._clone_evaluation(next_eval)
 
-<<<<<<< HEAD
-    def _clone_business_plan(self, source: dict) -> dict:
-        result = deepcopy(source)
-        form = result.get("formData", {})
-=======
     def _collect_performance_sub_project_names(
         self,
         region_id: str,
@@ -2109,7 +1926,6 @@ class RegionStoreService:
 
         result = deepcopy(source)
         form = merge_plan_form_with_template_defaults(result.get("formData", {}))
->>>>>>> dev2
         form["goals"] = list(form.get("goals", []))
         form["subProjects"] = [deepcopy(s) for s in form.get("subProjects", [])]
         result["formData"] = form
@@ -2124,11 +1940,6 @@ class RegionStoreService:
         card_title: str | None = None,
     ) -> dict:
         data = self._load(region_id, DOMAIN_TASK_DETAIL)
-<<<<<<< HEAD
-        doc = self._get_or_create_business_plan_doc(data, task_id, card_title=card_title)
-        self._save(region_id, DOMAIN_TASK_DETAIL, data)
-        return self._clone_business_plan(doc)
-=======
         tid = self._normalize_task_id(task_id)
         runtime = self._task_runtime(data)
         stored = runtime["businessPlanByTaskId"].get(tid)
@@ -2263,7 +2074,6 @@ class RegionStoreService:
             )
 
         return result
->>>>>>> dev2
 
     def save_business_plan(
         self,
@@ -2274,171 +2084,6 @@ class RegionStoreService:
         user: str = "시스템",
         card_title: str | None = None,
     ) -> dict:
-<<<<<<< HEAD
-        data = self._load(region_id, DOMAIN_TASK_DETAIL)
-        tid = self._normalize_task_id(task_id)
-        current = self._get_or_create_business_plan_doc(data, tid, card_title=card_title)
-        next_doc: dict[str, Any] = deepcopy(current)
-        if "isCompleted" in payload:
-            next_doc["isCompleted"] = payload["isCompleted"]
-        if payload.get("formData"):
-            form = payload["formData"]
-            next_doc["formData"] = {
-                **form,
-                "goals": list(form.get("goals", [])),
-                "subProjects": [deepcopy(s) for s in form.get("subProjects", [])],
-            }
-        if payload.get("sections"):
-            next_doc["sections"] = [deepcopy(s) for s in payload["sections"]]
-        self._task_runtime(data)["businessPlanByTaskId"][tid] = next_doc
-        self._save(region_id, DOMAIN_TASK_DETAIL, data)
-        project_name = next_doc.get("formData", {}).get("projectName") or business_name_for_task(
-            tid, card_title=card_title
-        )
-        self.append_version_entry(
-            region_id,
-            action="사업계획서를 저장했습니다.",
-            target=project_name,
-            action_type="update_description",
-            project_name=project_name,
-            user=user,
-        )
-        return self._clone_business_plan(next_doc)
-
-    # --- survey ---
-
-    def _survey_runtime(self, data: dict) -> dict:
-        runtime = data.setdefault("runtime", {"details": {}, "responses": {}})
-        runtime.setdefault("details", {})
-        runtime.setdefault("responses", {})
-        return runtime
-
-    def list_surveys(self, region_id: str) -> list:
-        data = self._load(region_id, DOMAIN_SURVEY)
-        return deepcopy(data.get("surveyListItemsMock", []))
-
-    def get_survey_detail(self, region_id: str, survey_id: str) -> dict:
-        data = self._load(region_id, DOMAIN_SURVEY)
-        if survey_id == "new":
-            template = data.get("defaultSurveyTemplate")
-            if template:
-                return deepcopy(template)
-            raise HTTPException(status_code=404, detail="Survey template missing")
-
-        runtime = self._survey_runtime(data)
-        if survey_id in runtime["details"]:
-            return deepcopy(runtime["details"][survey_id])
-
-        details_mock = data.get("surveyDetailsMock", {})
-        if survey_id in details_mock:
-            detail = deepcopy(details_mock[survey_id])
-            runtime["details"][survey_id] = detail
-            self._save(region_id, DOMAIN_SURVEY, data)
-            return deepcopy(detail)
-
-        list_item = next(
-            (i for i in data.get("surveyListItemsMock", []) if i.get("id") == survey_id),
-            None,
-        )
-        if list_item:
-            detail = self._build_survey_detail_from_list_item(list_item)
-            runtime["details"][survey_id] = detail
-            self._save(region_id, DOMAIN_SURVEY, data)
-            return deepcopy(detail)
-
-        template = deepcopy(data.get("defaultSurveyTemplate", {}))
-        template["id"] = survey_id
-        template.setdefault("settings", {})["acceptResponses"] = True
-        template.setdefault("basicInfo", {})["status"] = "active"
-        return template
-
-    def _build_survey_detail_from_list_item(self, item: dict) -> dict:
-        status_map = {"진행중": "active", "완료": "closed", "예정": "draft", "임시": "draft"}
-        return {
-            "id": item.get("id"),
-            "overview": {"purpose": [], "target": "", "period": ""},
-            "basicInfo": {
-                "title": item.get("title", ""),
-                "program": item.get("program", ""),
-                "status": status_map.get(item.get("status", ""), "draft"),
-            },
-            "questions": [],
-            "style": {"thankYouMessage": "응답해 주셔서 감사합니다."},
-            "settings": {"acceptResponses": item.get("status") == "진행중"},
-        }
-
-    def save_survey(self, region_id: str, survey_id: str, payload: dict) -> dict:
-        data = self._load(region_id, DOMAIN_SURVEY)
-        existing = self.get_survey_detail(region_id, survey_id)
-        next_id = f"survey-{int(datetime.now(UTC).timestamp() * 1000)}" if survey_id == "new" else survey_id
-
-        basic_info = {**existing.get("basicInfo", {}), **payload.get("basicInfo", {})}
-        if payload.get("saveType") == "publish":
-            basic_info["status"] = "active"
-
-        next_detail = {
-            **existing,
-            "id": next_id,
-            "overview": payload.get("overview", existing.get("overview")),
-            "basicInfo": basic_info,
-            "questions": payload.get("questions", existing.get("questions", [])),
-            "style": {**existing.get("style", {}), **payload.get("style", {})}
-            if payload.get("style")
-            else existing.get("style"),
-            "settings": {**existing.get("settings", {}), **payload.get("settings", {})}
-            if payload.get("settings")
-            else existing.get("settings"),
-        }
-
-        runtime = self._survey_runtime(data)
-        runtime["details"][next_id] = next_detail
-
-        if survey_id == "new":
-            items = data.setdefault("surveyListItemsMock", [])
-            items.append(
-                {
-                    "id": next_id,
-                    "title": basic_info.get("title", "새 설문"),
-                    "program": basic_info.get("program", ""),
-                    "status": "임시",
-                    "endDate": "",
-                    "responseCount": 0,
-                    "totalTarget": 0,
-                    "satisfaction": 0,
-                }
-            )
-
-        self._save(region_id, DOMAIN_SURVEY, data)
-        return {
-            "id": next_id,
-            "savedAt": datetime.now(UTC).isoformat(),
-            "status": next_detail.get("basicInfo", {}).get("status"),
-        }
-
-    def get_survey_results(self, region_id: str, survey_id: str) -> dict:
-        data = self._load(region_id, DOMAIN_SURVEY)
-        results_mock = data.get("surveyResultsMock", {})
-        if survey_id in results_mock:
-            return deepcopy(results_mock[survey_id])
-
-        list_item = next(
-            (i for i in data.get("surveyListItemsMock", []) if i.get("id") == survey_id),
-            None,
-        )
-        total_target = (list_item or {}).get("totalTarget", 0)
-        response_count = (list_item or {}).get("responseCount", 0)
-        completion = round((response_count / total_target) * 100) if total_target else 0
-        return {
-            "surveyId": survey_id,
-            "summary": {
-                "totalResponses": response_count,
-                "totalTarget": total_target,
-                "averageSatisfaction": (list_item or {}).get("satisfaction", 0),
-                "completionRate": completion,
-            },
-            "questions": [],
-        }
-=======
         saved = self.save_task_documents(
             region_id,
             task_id,
@@ -2487,56 +2132,10 @@ class RegionStoreService:
 
     def get_survey_results(self, region_id: str, survey_id: str) -> dict:
         return self._surveys.get_survey_results(region_id, survey_id)
->>>>>>> dev2
 
     def submit_survey_response(
         self, region_id: str, survey_id: str, payload: dict
     ) -> dict:
-<<<<<<< HEAD
-        if survey_id == "new":
-            raise HTTPException(status_code=400, detail="저장된 설문이 아닙니다.")
-
-        data = self._load(region_id, DOMAIN_SURVEY)
-        detail = self.get_survey_detail(region_id, survey_id)
-        settings = detail.get("settings", {})
-        basic = detail.get("basicInfo", {})
-        if not settings.get("acceptResponses") or basic.get("status") != "active":
-            raise HTTPException(status_code=400, detail="응답을 받을 수 없는 설문입니다.")
-
-        runtime = self._survey_runtime(data)
-        responses = runtime["responses"].setdefault(survey_id, [])
-        responses.append(deepcopy(payload))
-
-        list_item = next(
-            (i for i in data.get("surveyListItemsMock", []) if i.get("id") == survey_id),
-            None,
-        )
-        if list_item:
-            list_item["responseCount"] = (list_item.get("responseCount") or 0) + 1
-
-        self._save(region_id, DOMAIN_SURVEY, data)
-        thank_you = detail.get("style", {}).get("thankYouMessage", "감사합니다.")
-        return {
-            "responseId": f"resp-{uuid.uuid4().hex[:8]}",
-            "submittedAt": datetime.now(UTC).isoformat(),
-            "message": thank_you,
-        }
-
-    def delete_survey(self, region_id: str, survey_id: str) -> dict:
-        if survey_id == "new":
-            raise HTTPException(status_code=400, detail="Cannot delete unsaved survey")
-        data = self._load(region_id, DOMAIN_SURVEY)
-        items = data.get("surveyListItemsMock", [])
-        next_items = [i for i in items if i.get("id") != survey_id]
-        if len(next_items) == len(items):
-            raise HTTPException(status_code=404, detail="Survey not found")
-        data["surveyListItemsMock"] = next_items
-        runtime = self._survey_runtime(data)
-        runtime["details"].pop(survey_id, None)
-        runtime["responses"].pop(survey_id, None)
-        self._save(region_id, DOMAIN_SURVEY, data)
-        return {"success": True, "deletedId": survey_id}
-=======
         return self._surveys.submit_survey_response(region_id, survey_id, payload)
 
     def delete_survey(self, region_id: str, survey_id: str) -> dict:
@@ -2547,66 +2146,10 @@ class RegionStoreService:
 
     def duplicate_survey(self, region_id: str, survey_id: str) -> dict:
         return self._surveys.duplicate_survey(region_id, survey_id)
->>>>>>> dev2
 
     # --- approvals (전자결재) ---
 
     def list_approvals(self, region_id: str, *, status: str | None = None) -> list:
-<<<<<<< HEAD
-        data = self._load_or_empty(region_id, DOMAIN_APPROVALS)
-        docs = list(data.get("documents", []))
-        if status and status != "all":
-            docs = [d for d in docs if d.get("status") == status]
-        return deepcopy(docs)
-
-    def _load_or_empty(self, region_id: str, domain: str) -> dict:
-        payload = self._repo.get_payload(region_id, domain)
-        if payload is None:
-            return {"documents": []}
-        return payload
-
-    def create_approval(self, region_id: str, body: dict) -> dict:
-        data = self._load_or_empty(region_id, DOMAIN_APPROVALS)
-        created = {
-            "id": f"appr-{uuid.uuid4().hex[:8]}",
-            "title": body.get("title", "제목 없음"),
-            "type": body.get("type", "일반"),
-            "status": body.get("status", "draft"),
-            "requester": body.get("requester", ""),
-            "department": body.get("department", ""),
-            "createdAt": datetime.now(UTC).date().isoformat(),
-            "updatedAt": datetime.now(UTC).isoformat(),
-            **{k: v for k, v in body.items() if k not in ("id",)},
-        }
-        data.setdefault("documents", []).insert(0, created)
-        self._save(region_id, DOMAIN_APPROVALS, data)
-        return deepcopy(created)
-
-    def update_approval(self, region_id: str, approval_id: str, body: dict) -> dict:
-        data = self._load_or_empty(region_id, DOMAIN_APPROVALS)
-        docs = data.setdefault("documents", [])
-        for index, doc in enumerate(docs):
-            if doc.get("id") == approval_id:
-                docs[index] = {
-                    **doc,
-                    **body,
-                    "id": approval_id,
-                    "updatedAt": datetime.now(UTC).date().isoformat(),
-                }
-                self._save(region_id, DOMAIN_APPROVALS, data)
-                return deepcopy(docs[index])
-        raise HTTPException(status_code=404, detail="Approval not found")
-
-    def delete_approval(self, region_id: str, approval_id: str) -> dict:
-        data = self._load_or_empty(region_id, DOMAIN_APPROVALS)
-        docs = data.get("documents", [])
-        next_docs = [d for d in docs if d.get("id") != approval_id]
-        if len(next_docs) == len(docs):
-            raise HTTPException(status_code=404, detail="Approval not found")
-        data["documents"] = next_docs
-        self._save(region_id, DOMAIN_APPROVALS, data)
-        return {"success": True, "deletedId": approval_id}
-=======
         return self._approvals.list(region_id, status=status)
 
     def create_approval(self, region_id: str, body: dict) -> dict:
@@ -2617,28 +2160,11 @@ class RegionStoreService:
 
     def delete_approval(self, region_id: str, approval_id: str) -> dict:
         return self._approvals.delete(region_id, approval_id)
->>>>>>> dev2
 
     # --- chat ---
 
     def get_chat_config(self, region_id: str) -> dict:
-<<<<<<< HEAD
-        return deepcopy(self._load(region_id, DOMAIN_CHAT))
-
-    def save_chat_config(self, region_id: str, body: dict) -> dict:
-        current = self._load(region_id, DOMAIN_CHAT)
-        if "cs" in body:
-            current["cs"] = {**current.get("cs", {}), **body["cs"]}
-        if "assistant" in body:
-            current["assistant"] = {**current.get("assistant", {}), **body["assistant"]}
-        for key, value in body.items():
-            if key not in ("cs", "assistant"):
-                current[key] = value
-        self._save(region_id, DOMAIN_CHAT, current)
-        return deepcopy(current)
-=======
         return self._chat_config.get(region_id)
 
     def save_chat_config(self, region_id: str, body: dict) -> dict:
         return self._chat_config.save(region_id, body)
->>>>>>> dev2

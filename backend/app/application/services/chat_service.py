@@ -9,10 +9,7 @@ from app.application.chat.assistant_llm import answer_with_rag_llm, is_assistant
 from app.application.chat.assistant_snapshot import build_assistant_snapshot
 from app.application.chat.cs_ticket import process_cs_ticket
 from app.application.chat.ontology_query import query_knowledge_graph
-<<<<<<< HEAD
-=======
 from app.application.chat.rag.business_documents import build_business_documents_corpus
->>>>>>> dev2
 from app.application.chat.rag.resolve import resolve_rag_for_question
 from app.application.services.dashboard_service import DashboardService
 from app.application.services.kanban_board_service import KanbanBoardService
@@ -31,18 +28,6 @@ logger = logging.getLogger(__name__)
 
 
 def _to_citations(rag: dict) -> list[dict]:
-<<<<<<< HEAD
-    return [
-        {
-            "id": chunk.get("id", ""),
-            "source": chunk.get("source", "rag"),
-            "title": chunk.get("title", ""),
-            "snippet": (chunk.get("text") or "")[:220],
-            "score": chunk.get("score"),
-        }
-        for chunk in rag.get("chunks", [])
-    ]
-=======
     citations: list[dict] = []
     for chunk in rag.get("chunks", []):
         meta = chunk.get("meta") if isinstance(chunk.get("meta"), dict) else {}
@@ -59,7 +44,6 @@ def _to_citations(rag: dict) -> list[dict]:
             }
         )
     return citations
->>>>>>> dev2
 
 
 class ChatService:
@@ -98,14 +82,11 @@ class ChatService:
         ebooks = self._region_store.get_domain_payload(region_id, DOMAIN_EBOOKS)
         books = ebooks.get("booksData", [])
         projects = self._kanban_service.list_projects(region_id, "2026")
-<<<<<<< HEAD
-=======
         business_docs = build_business_documents_corpus(
             region_id,
             region_store=self._region_store,
             kanban=self._kanban_service,
         )
->>>>>>> dev2
 
         rag = await resolve_rag_for_question(
             self._settings,
@@ -114,10 +95,7 @@ class ChatService:
             input_rows=input_rows,
             books=books,
             kanban_projects=projects,
-<<<<<<< HEAD
-=======
             business_documents=business_docs,
->>>>>>> dev2
         )
         citations = _to_citations(rag)
 

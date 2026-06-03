@@ -128,8 +128,6 @@ class AuthService:
         if not user:
             return None
         return self._build_session(user)
-<<<<<<< HEAD
-=======
 
     def get_user_by_id(self, user_id: str) -> UserRecord | None:
         return self._auth_repo.get_user_by_id(user_id)
@@ -152,4 +150,3 @@ class AuthService:
         if verify_password(normalized, user.password_hash):
             raise ValueError("새 비밀번호는 현재 비밀번호와 달라야 합니다.")
         self._auth_repo.update_password_hash(user_id, hash_password(normalized))
->>>>>>> dev2

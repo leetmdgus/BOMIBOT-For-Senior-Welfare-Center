@@ -16,10 +16,7 @@ from app.application.organization_permissions import (
     is_self_target,
 )
 from app.application.services.file_storage_service import FileStorageService
-<<<<<<< HEAD
-=======
 from app.core.security import hash_password
->>>>>>> dev2
 from app.domain.repositories.auth_repository import AuthRepository, UserRecord
 from app.domain.repositories.organization_repository import (
     DepartmentRecord,
@@ -105,11 +102,8 @@ class OrganizationService:
 
         if self._organization_repo.get_employee_by_email(region_id, email):
             raise ValueError("이미 사용 중인 이메일입니다.")
-<<<<<<< HEAD
-=======
         if self._auth_repo and self._auth_repo.find_user_by_email(email, region_id):
             raise ValueError("이미 사용 중인 로그인 이메일입니다.")
->>>>>>> dev2
 
         if not can_create_employee_in_department(actor, department_id):
             raise PermissionError("이 부서에 직원을 추가할 권한이 없습니다.")
@@ -145,9 +139,6 @@ class OrganizationService:
         except ValueError as exc:
             raise ValueError(str(exc)) from exc
 
-<<<<<<< HEAD
-        return self._employee_payload(created)
-=======
         scoped_employee_id = f"{region_id}:{employee_id}"
         if self._auth_repo:
             role_display = (created.role or created.position or "직원").strip()
@@ -169,7 +160,6 @@ class OrganizationService:
         result = self._employee_payload(created)
         result["initialPassword"] = email
         return result
->>>>>>> dev2
 
     def update_employee(
         self,
@@ -192,8 +182,6 @@ class OrganizationService:
         elif not can_full_hr_edit(actor, target):
             raise PermissionError("수정 권한이 없습니다.")
 
-<<<<<<< HEAD
-=======
         new_email_raw = body.get("email")
         if new_email_raw is not None:
             new_email = str(new_email_raw).strip().lower()
@@ -211,7 +199,6 @@ class OrganizationService:
                         raise ValueError("이미 사용 중인 로그인 이메일입니다.")
             body = {**body, "email": new_email}
 
->>>>>>> dev2
         patch = EmployeeUpdate(
             name=body.get("name"),
             role=body.get("role"),
@@ -244,10 +231,7 @@ class OrganizationService:
                 department=updated.department,
                 role_display=updated.role,
                 profile_image_url=updated.profile_image,
-<<<<<<< HEAD
-=======
                 email=updated.email,
->>>>>>> dev2
             )
 
         return self._employee_payload(updated)
@@ -282,11 +266,7 @@ class OrganizationService:
         storage_key, _ = self._file_storage.write(
             region_id, storage_id, filename, data
         )
-<<<<<<< HEAD
-        profile_url = f"/api/v1/employees/profile-content/{storage_key}"
-=======
         profile_url = f"/api/employees/profile-content/{storage_key}"
->>>>>>> dev2
 
         updated = self._organization_repo.update_employee(
             region_id,
@@ -346,12 +326,9 @@ class OrganizationService:
             for dept in departments
         ]
 
-<<<<<<< HEAD
-=======
     def resolve_actor(self, region_id: str, user: UserRecord) -> OrgActor:
         return self._resolve_actor(region_id, user)
 
->>>>>>> dev2
     def _resolve_actor(self, region_id: str, user: UserRecord) -> OrgActor:
         employee: EmployeeRecord | None = None
         if user.employee_id:

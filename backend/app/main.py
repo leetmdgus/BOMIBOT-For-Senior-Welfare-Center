@@ -23,7 +23,7 @@ settings = get_settings()
 async def lifespan(_app: FastAPI):
     cors_origins = resolve_cors_origins(settings)
 
-=======    cors_regex = resolve_cors_origin_regex(settings)
+    cors_regex = resolve_cors_origin_regex(settings)
     logger.info(
         "Starting %s [%s] cors_origins=%s cors_regex=%s",
         settings.app_name,

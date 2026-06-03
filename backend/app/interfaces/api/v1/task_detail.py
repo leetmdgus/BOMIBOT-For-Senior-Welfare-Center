@@ -1,37 +1,24 @@
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
-<<<<<<< HEAD
-
-=======
 from fastapi.responses import Response
 
 from app.application.http.content_disposition import attachment_content_disposition
 from app.application.hwpx.export_service import HwpxExportService
 from app.application.hwpx.document_sections import hwpx_export_document_sections
->>>>>>> dev2
 from app.application.kanban_task_options import resolve_kanban_card_title
 from app.application.services.collaboration_broadcast import broadcast_document_saved
 from app.application.services.kanban_board_service import KanbanBoardService
 from app.application.services.region_store_service import RegionStoreService
-<<<<<<< HEAD
-from app.interfaces.api.deps import (
-=======
+
+from app.interfaces.api.depsget_region_store_service import require_region_id
 from app.application.kanban_access import KanbanAccessContext
-from app.interfaces.api.deps import (
-    get_kanban_access_context,
->>>>>>> dev2
     get_kanban_service,
     get_region_store_service,
     optional_user_display_name,
-    require_region_id,
 )
 
 router = APIRouter(prefix="/kanban/task-detail", tags=["kanban-task-detail"])
-
-<<<<<<< HEAD
-=======
 _hwpx_export = HwpxExportService()
 
->>>>>>> dev2
 
 def _require_task_id(task_id: str | None) -> str:
     if not task_id or not str(task_id).strip():
@@ -52,17 +39,11 @@ def task_detail_surveys(
     region_id: str = Depends(require_region_id),
     service: RegionStoreService = Depends(get_region_store_service),
     kanban: KanbanBoardService = Depends(get_kanban_service),
-<<<<<<< HEAD
-    task_id: str = Query(..., alias="taskId"),
-):
-    tid = _require_task_id(task_id)
-=======
     access: KanbanAccessContext = Depends(get_kanban_access_context),
     task_id: str = Query(..., alias="taskId"),
 ):
     tid = _require_task_id(task_id)
     kanban.assert_task_access(region_id, tid, access)
->>>>>>> dev2
     return service.list_task_surveys(
         region_id, tid, card_title=_card_title(kanban, region_id, tid)
     )
@@ -72,11 +53,6 @@ def task_detail_surveys(
 def task_detail_files(
     region_id: str = Depends(require_region_id),
     service: RegionStoreService = Depends(get_region_store_service),
-<<<<<<< HEAD
-    task_id: str = Query(..., alias="taskId"),
-):
-    return service.get_evaluation_files(region_id, _require_task_id(task_id))
-=======
     kanban: KanbanBoardService = Depends(get_kanban_service),
     access: KanbanAccessContext = Depends(get_kanban_access_context),
     task_id: str = Query(..., alias="taskId"),
@@ -84,7 +60,6 @@ def task_detail_files(
     tid = _require_task_id(task_id)
     kanban.assert_task_access(region_id, tid, access)
     return service.get_evaluation_files(region_id, tid)
->>>>>>> dev2
 
 
 @router.get("/view-together-files")
@@ -100,17 +75,11 @@ def evaluation_template(
     region_id: str = Depends(require_region_id),
     service: RegionStoreService = Depends(get_region_store_service),
     kanban: KanbanBoardService = Depends(get_kanban_service),
-<<<<<<< HEAD
-    task_id: str = Query(..., alias="taskId"),
-):
-    tid = _require_task_id(task_id)
-=======
     access: KanbanAccessContext = Depends(get_kanban_access_context),
     task_id: str = Query(..., alias="taskId"),
 ):
     tid = _require_task_id(task_id)
     kanban.assert_task_access(region_id, tid, access)
->>>>>>> dev2
     return service.get_evaluation_template(
         region_id, tid, card_title=_card_title(kanban, region_id, tid)
     )
@@ -121,17 +90,11 @@ def get_evaluation(
     region_id: str = Depends(require_region_id),
     service: RegionStoreService = Depends(get_region_store_service),
     kanban: KanbanBoardService = Depends(get_kanban_service),
-<<<<<<< HEAD
-    task_id: str = Query(..., alias="taskId"),
-):
-    tid = _require_task_id(task_id)
-=======
     access: KanbanAccessContext = Depends(get_kanban_access_context),
     task_id: str = Query(..., alias="taskId"),
 ):
     tid = _require_task_id(task_id)
     kanban.assert_task_access(region_id, tid, access)
->>>>>>> dev2
     return service.get_business_evaluation(
         region_id, tid, card_title=_card_title(kanban, region_id, tid)
     )
@@ -144,17 +107,11 @@ def patch_evaluation(
     region_id: str = Depends(require_region_id),
     service: RegionStoreService = Depends(get_region_store_service),
     kanban: KanbanBoardService = Depends(get_kanban_service),
-<<<<<<< HEAD
-    user: str = Depends(optional_user_display_name),
-):
-    task_id = _require_task_id(body.get("taskId"))
-=======
     access: KanbanAccessContext = Depends(get_kanban_access_context),
     user: str = Depends(optional_user_display_name),
 ):
     task_id = _require_task_id(body.get("taskId"))
     kanban.assert_task_access(region_id, task_id, access)
->>>>>>> dev2
     saved = service.save_business_evaluation(
         region_id,
         task_id,
@@ -180,17 +137,11 @@ def complete_evaluation(
     region_id: str = Depends(require_region_id),
     service: RegionStoreService = Depends(get_region_store_service),
     kanban: KanbanBoardService = Depends(get_kanban_service),
-<<<<<<< HEAD
-    user: str = Depends(optional_user_display_name),
-):
-    task_id = _require_task_id(body.get("taskId"))
-=======
     access: KanbanAccessContext = Depends(get_kanban_access_context),
     user: str = Depends(optional_user_display_name),
 ):
     task_id = _require_task_id(body.get("taskId"))
     kanban.assert_task_access(region_id, task_id, access)
->>>>>>> dev2
     saved = service.complete_business_evaluation(
         region_id,
         task_id,
@@ -213,24 +164,16 @@ def get_business_plan(
     region_id: str = Depends(require_region_id),
     service: RegionStoreService = Depends(get_region_store_service),
     kanban: KanbanBoardService = Depends(get_kanban_service),
-<<<<<<< HEAD
-    task_id: str = Query(..., alias="taskId"),
-):
-    tid = _require_task_id(task_id)
-=======
     access: KanbanAccessContext = Depends(get_kanban_access_context),
     task_id: str = Query(..., alias="taskId"),
 ):
     tid = _require_task_id(task_id)
     kanban.assert_task_access(region_id, tid, access)
->>>>>>> dev2
     return service.get_business_plan(
         region_id, tid, card_title=_card_title(kanban, region_id, tid)
     )
 
 
-<<<<<<< HEAD
-=======
 @router.post("/business-plan/hwpx")
 def export_business_plan_hwpx(
     body: dict,
@@ -442,7 +385,6 @@ def patch_task_documents(
     return saved
 
 
->>>>>>> dev2
 @router.patch("/business-plan")
 def patch_business_plan(
     body: dict,
@@ -450,17 +392,11 @@ def patch_business_plan(
     region_id: str = Depends(require_region_id),
     service: RegionStoreService = Depends(get_region_store_service),
     kanban: KanbanBoardService = Depends(get_kanban_service),
-<<<<<<< HEAD
-    user: str = Depends(optional_user_display_name),
-):
-    task_id = _require_task_id(body.get("taskId"))
-=======
     access: KanbanAccessContext = Depends(get_kanban_access_context),
     user: str = Depends(optional_user_display_name),
 ):
     task_id = _require_task_id(body.get("taskId"))
     kanban.assert_task_access(region_id, task_id, access)
->>>>>>> dev2
     saved = service.save_business_plan(
         region_id,
         task_id,

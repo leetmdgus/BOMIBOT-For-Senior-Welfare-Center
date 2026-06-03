@@ -15,11 +15,8 @@ class SignupRequest(BaseModel):
     name: str = Field(min_length=1)
     department: str = Field(min_length=1)
     regionId: Literal["chuncheon-north", "chuncheon-east"]
-<<<<<<< HEAD
-=======
 
 
 class ChangePasswordRequest(BaseModel):
     currentPassword: str = Field(min_length=1)
     newPassword: str = Field(min_length=6)
->>>>>>> dev2

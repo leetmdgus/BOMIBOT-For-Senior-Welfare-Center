@@ -19,10 +19,7 @@ VALID_SOURCES = {
     "organization",
     "ebooks",
     "survey",
-<<<<<<< HEAD
-=======
     "documents",
->>>>>>> dev2
     "help",
 }
 

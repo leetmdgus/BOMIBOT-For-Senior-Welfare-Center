@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 from app.domain.repositories.dashboard_repository import DashboardRepository
 
 
@@ -54,10 +53,3 @@ class DashboardService:
                 for v in overview.volunteer_events
             ],
         }
-=======
-"""하위 호환 — `app.application.dashboard.service.DashboardService` 사용 권장."""
-
-from app.application.dashboard.service import DashboardService
-
-__all__ = ["DashboardService"]
->>>>>>> dev2
