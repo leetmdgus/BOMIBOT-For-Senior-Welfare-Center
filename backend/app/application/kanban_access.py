@@ -148,6 +148,8 @@ def _filter_categories_payload(
     if has_full_project_access_payload(project, ctx):
         return list(project.get("categories") or [])
 
+    # 컬럼(카테고리) 자체는 항상 노출 — 접근 권한은 카드(태스크)에만 적용.
+    # 빈 컬럼을 드롭하면 사업 추가 시 초기 태스크가 있는 컬럼만 보이는 문제가 생긴다.
     filtered: list[dict[str, Any]] = []
     for category in project.get("categories") or []:
         tasks = [
@@ -155,8 +157,6 @@ def _filter_categories_payload(
             for task in category.get("tasks") or []
             if can_access_task_payload(project, task, ctx)
         ]
-        if not tasks:
-            continue
         filtered.append({**category, "tasks": tasks})
     return filtered
 
