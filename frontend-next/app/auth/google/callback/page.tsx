@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { Suspense, useEffect, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 
 import { useAuth } from "@/components/auth/auth-provider"
@@ -9,7 +9,15 @@ import { apiFetch } from "@/lib/api-client"
 import type { AuthSession } from "@/services/auth.types"
 import type { RegionId } from "@/lib/auth/regions"
 
-export default function GoogleCallbackPage() {
+function GoogleCallbackFallback() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-background p-6">
+      <p className="text-sm text-muted-foreground">Google 캘린더 연동 처리 중...</p>
+    </div>
+  )
+}
+
+function GoogleCallbackContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { refresh } = useAuth()
@@ -34,16 +42,19 @@ export default function GoogleCallbackPage() {
       return
     }
 
+    const sessionToken = token
+    const sessionRegionId = regionId
+
     async function completeLogin() {
       try {
         const headers = new Headers({
-          Authorization: `Bearer ${token}`,
-          "X-Region-Id": regionId!,
+          Authorization: `Bearer ${sessionToken}`,
+          "X-Region-Id": sessionRegionId,
         })
         const session = await apiFetch<AuthSession>("/api/v1/auth/session", {
           headers,
         })
-        setClientSession({ ...session, token })
+        setClientSession({ ...session, token: sessionToken })
         await refresh()
         router.replace("/dashboard?googleCalendar=connected")
       } catch {
@@ -58,5 +69,13 @@ export default function GoogleCallbackPage() {
     <div className="flex min-h-screen items-center justify-center bg-background p-6">
       <p className="text-sm text-muted-foreground">{message}</p>
     </div>
+  )
+}
+
+export default function GoogleCallbackPage() {
+  return (
+    <Suspense fallback={<GoogleCallbackFallback />}>
+      <GoogleCallbackContent />
+    </Suspense>
   )
 }

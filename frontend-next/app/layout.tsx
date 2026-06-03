@@ -4,7 +4,6 @@ import { Analytics } from '@vercel/analytics/next'
 import { AuthProvider } from '@/components/auth/auth-provider'
 import { ChatbotClientLoader } from '@/components/chatbot-client-loader'
 import { ClearStaleServiceWorker } from '@/components/dev/clear-stale-service-worker'
-import { UnregisterStaleSwScript } from '@/components/dev/unregister-stale-sw-script'
 import { Toaster } from '@/components/ui/toaster'
 import './globals.css'
 import './hwpx-document.css'
@@ -33,7 +32,7 @@ export const metadata: Metadata = {
         media: '(prefers-color-scheme: dark)',
       },
       {
-        url: '/icon.svg',
+        url: '/icon.png',
         type: 'image/svg+xml',
       },
     ],
@@ -48,9 +47,6 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko" className="bg-background">
-      <head>
-        <UnregisterStaleSwScript />
-      </head>
       <body className="font-sans antialiased">
         <ClearStaleServiceWorker />
         <AuthProvider>

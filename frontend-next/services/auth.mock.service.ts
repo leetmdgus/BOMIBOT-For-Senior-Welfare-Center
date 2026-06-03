@@ -8,9 +8,11 @@ import {
   findUserByCredentials,
   registerUser,
   toAuthUser,
+  updateMockUserPassword,
 } from "@/lib/mocks/auth-users.mock"
 import type {
   AuthSession,
+  ChangePasswordRequest,
   LoginRequest,
   SignupRequest,
 } from "./auth.types"
@@ -57,6 +59,25 @@ export async function signup(request: SignupRequest): Promise<AuthSession> {
 
 export async function getSession(): Promise<AuthSession | null> {
   return getClientSession()
+}
+
+export async function refreshSession(): Promise<AuthSession | null> {
+  return getClientSession()
+}
+
+export async function changePassword(
+  request: ChangePasswordRequest,
+): Promise<void> {
+  const session = getClientSession()
+  if (!session?.token) {
+    throw new Error("로그인이 필요합니다.")
+  }
+  updateMockUserPassword(
+    session.id,
+    session.regionId,
+    request.currentPassword,
+    request.newPassword,
+  )
 }
 
 export async function logout(): Promise<void> {

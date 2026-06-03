@@ -9,6 +9,7 @@ import {
   Phone,
 } from "lucide-react"
 
+import { useAuth } from "@/components/auth/auth-provider"
 import { EmployeeAvatar } from "@/components/organization/employee-avatar"
 import { OrganizationEmployeeEditDialog } from "@/components/organization/organization-employee-edit-dialog"
 import { Badge } from "@/components/ui/badge"
@@ -93,7 +94,7 @@ export function EmployeeDetailPanel({
 
           {detailTab === "contact" && <ContactInfo employee={employee} />}
           {detailTab === "work" && <WorkInfo employee={employee} />}
-          {detailTab === "hr" && <HrInfo />}
+          {detailTab === "hr" && <HrInfo employee={employee} />}
         </>
       ) : (
         <div className="flex h-64 items-center justify-center text-muted-foreground">
@@ -105,6 +106,9 @@ export function EmployeeDetailPanel({
 }
 
 function EmployeeProfileHeader({ employee }: { employee: Employee }) {
+  const { session } = useAuth()
+  const orgName = session?.orgName ?? "복지관"
+
   return (
     <div className="mb-6 flex items-start gap-4">
       <EmployeeAvatar
@@ -138,7 +142,7 @@ function EmployeeProfileHeader({ employee }: { employee: Employee }) {
 
           <span className="flex items-center gap-1">
             <span className="size-1.5 rounded-full bg-muted-foreground" />
-            춘천북부노인복지관
+            {orgName}
           </span>
         </div>
       </div>
@@ -269,23 +273,63 @@ function WorkInfo({ employee }: { employee: Employee }) {
   )
 }
 
-function HrInfo() {
+/** 법인명 — 백엔드에 별도 필드가 생기기 전까지 사용하는 기본값 */
+const LEGAL_ENTITY_NAME = "사단법인 사랑나눔"
+
+function HrInfo({ employee }: { employee: Employee }) {
+  const { session } = useAuth()
+  const orgName = session?.orgName ?? "노인복지관"
+
+  const events: {
+    date: string
+    title: string
+    rows: { label: string; value: string }[]
+  }[] = [
+    {
+      date: employee.joinDate || "-",
+      title: "입사",
+      rows: [
+        { label: "부서", value: employee.department || "-" },
+        { label: "직책", value: employee.position || "-" },
+        { label: "법인", value: LEGAL_ENTITY_NAME },
+        { label: "소속", value: orgName },
+        { label: "담당업무", value: employee.role || "-" },
+      ],
+    },
+  ]
+
   return (
-    <div className="space-y-4">
-      <div>
-        <p className="text-xs text-muted-foreground">고용 형태</p>
-        <p className="mt-1 font-medium">정규직</p>
-      </div>
+    <ol className="relative space-y-6">
+      {events.map((event, index) => (
+        <li key={`${event.date}-${index}`} className="relative pl-6">
+          {/* 타임라인 세로선 (마지막 항목 제외) */}
+          {index < events.length - 1 && (
+            <span
+              aria-hidden
+              className="absolute left-1.25 top-2.5 h-full w-px bg-border"
+            />
+          )}
+          {/* 타임라인 점 */}
+          <span
+            aria-hidden
+            className="absolute left-0 top-1 size-2.5 rounded-full border-2 border-primary bg-background"
+          />
 
-      <div>
-        <p className="text-xs text-muted-foreground">연차 현황</p>
-        <p className="mt-1 font-medium">15일 중 5일 사용</p>
-      </div>
+          <p className="text-xs font-medium text-primary">{event.date}</p>
+          <p className="mt-0.5 text-sm font-semibold">{event.title}</p>
 
-      <div>
-        <p className="text-xs text-muted-foreground">최근 인사 발령</p>
-        <p className="mt-1 text-muted-foreground">-</p>
-      </div>
-    </div>
+          <dl className="mt-2 space-y-1.5">
+            {event.rows.map((row) => (
+              <div key={row.label} className="flex gap-3 text-sm">
+                <dt className="w-16 shrink-0 text-xs leading-5 text-muted-foreground">
+                  {row.label}
+                </dt>
+                <dd className="font-medium">{row.value}</dd>
+              </div>
+            ))}
+          </dl>
+        </li>
+      ))}
+    </ol>
   )
 }

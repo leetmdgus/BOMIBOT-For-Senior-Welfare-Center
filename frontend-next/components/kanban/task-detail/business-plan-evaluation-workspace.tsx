@@ -1,20 +1,37 @@
 "use client"
 
-import { useCallback, useEffect, useRef, useState } from "react"
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type Dispatch,
+  type SetStateAction,
+} from "react"
 import { useRouter } from "next/navigation"
-import { FileStack } from "lucide-react"
+import { Loader2 } from "lucide-react"
 
 import { useAuth } from "@/components/auth/auth-provider"
 import { CollaborationLiveNotice } from "@/components/collaboration/collaboration-live-notice"
 import { CollaborationPresenceBar } from "@/components/collaboration/collaboration-presence-bar"
+import {
+  PrintDocumentButton,
+  PrintDocumentShell,
+} from "@/components/common/print-document"
 import { HwpxDownloadButton } from "@/components/common/hwpx-download-button"
 import { BusinessEvaluationEditor } from "@/components/kanban/task-detail/business-evaluation-editor"
-import { BusinessPlanFloatingPanel } from "@/components/kanban/task-detail/business-plan-floating-panel"
 import { EvaluationFormActionBar } from "@/components/kanban/task-detail/evaluation-form-action-bar"
 import { EvaluationSplitLayout } from "@/components/kanban/task-detail/evaluation-split-layout"
-import { EvaluationDocumentPanel } from "@/components/kanban/task-detail/evaluation-document-panel"
+import { TaskReferenceDocumentSelector } from "@/components/kanban/task-detail/task-reference-document-selector"
+import { TaskReferenceDocumentViewer } from "@/components/kanban/task-detail/task-reference-document-viewer"
+import {
+  defaultSelectedDocumentId,
+  EVALUATION_LIVE_REFERENCE_FILE,
+  mergeTaskReferenceDocuments,
+} from "@/lib/kanban/task-reference-documents"
 import { Button } from "@/components/ui/button"
 import { downloadBusinessEvaluationHwpx } from "@/lib/hwpx/export-business-evaluation"
+import { mergeFlushedDocumentSections } from "@/lib/hwpx/document-sections-for-export"
 import { toSaveBusinessEvaluationPayload } from "@/lib/kanban/evaluation-save-payload"
 import {
   getBusinessEvaluationTemplate,
@@ -22,7 +39,7 @@ import {
   getEvaluationFiles,
   getViewTogetherFixedFiles,
   saveBusinessEvaluation,
-  saveBusinessPlan,
+  saveTaskDocuments,
 } from "@/services/kanban.task-detail.service"
 import type { CollaborationMessage } from "@/lib/collaboration/types"
 import { taskBusinessPlanRoom, taskEvaluationRoom } from "@/lib/collaboration/rooms"
@@ -41,14 +58,24 @@ import type {
 
 const createId = () => crypto.randomUUID()
 
+const EVAL_AUTO_SAVE_MS = 700
+
+function evaluationSnapshot(evaluation: BusinessEvaluationData): string {
+  return JSON.stringify(toSaveBusinessEvaluationPayload(evaluation))
+}
+
 type BusinessPlanEvaluationWorkspaceProps = {
   taskId: string
   canEditEvaluation: boolean
   isSaving: boolean
   onSavingChange: (saving: boolean) => void
   evaluationData: BusinessEvaluationData
-  onEvaluationChange: (next: BusinessEvaluationData) => void
-  onEvaluationSaved: (saved: BusinessEvaluationData) => void
+  onEvaluationChange: Dispatch<SetStateAction<BusinessEvaluationData>>
+  onEvaluationSaved: Dispatch<SetStateAction<BusinessEvaluationData>>
+  isCompleted: boolean
+  onCompleteOrEdit: () => void
+  /** 사업평가 탭 상단에 인쇄·한글·완료가 있으면 중복 숨김 */
+  hideTopActionChrome?: boolean
 }
 
 export function BusinessPlanEvaluationWorkspace({
@@ -59,11 +86,17 @@ export function BusinessPlanEvaluationWorkspace({
   evaluationData,
   onEvaluationChange,
   onEvaluationSaved,
+  isCompleted,
+  onCompleteOrEdit,
+  hideTopActionChrome = false,
 }: BusinessPlanEvaluationWorkspaceProps) {
   const router = useRouter()
   const { session } = useAuth()
   const lastLocalEditRef = useRef(0)
   const collaborationClientIdRef = useRef<string | null>(null)
+  const lastSavedSnapshotRef = useRef("")
+  const hasInitializedSnapshotRef = useRef(false)
+  const sectionsStructureRef = useRef<string | null>(null)
   const [liveNotice, setLiveNotice] = useState<string | null>(null)
 
   const [planDocument, setPlanDocument] = useState<BusinessPlanDocument | null>(
@@ -72,12 +105,27 @@ export function BusinessPlanEvaluationWorkspace({
   const [documentFiles, setDocumentFiles] = useState<EvaluationFile[]>([])
   const [fixedFiles, setFixedFiles] = useState<EvaluationFile[]>([])
   const [planLoading, setPlanLoading] = useState(true)
-  const [showDocPanel, setShowDocPanel] = useState(false)
+  const [selectedFileId, setSelectedFileId] = useState("")
   const [datePickerOpen, setDatePickerOpen] = useState(false)
   const [scrollToSectionId, setScrollToSectionId] = useState<string | null>(
     null,
   )
   const sectionRefs = useRef<Map<string, HTMLDivElement>>(new Map())
+  const evaluationDataRef = useRef(evaluationData)
+  evaluationDataRef.current = evaluationData
+
+  function mergeEvaluationSaveResult(
+    prev: BusinessEvaluationData,
+    saved: BusinessEvaluationData,
+    sentSnapshot: string,
+  ): BusinessEvaluationData {
+    const prevMatchesSent = evaluationSnapshot(prev) === sentSnapshot
+    const savedMatchesSent = evaluationSnapshot(saved) === sentSnapshot
+    if (prevMatchesSent && savedMatchesSent) {
+      return saved
+    }
+    return { ...prev, hwpxFileId: saved.hwpxFileId }
+  }
 
   const setSectionRef = useCallback(
     (sectionId: string) => (element: HTMLDivElement | null) => {
@@ -100,6 +148,110 @@ export function BusinessPlanEvaluationWorkspace({
     return () => window.clearTimeout(timer)
   }, [scrollToSectionId, evaluationData.sections])
 
+  useEffect(() => {
+    lastSavedSnapshotRef.current = ""
+    hasInitializedSnapshotRef.current = false
+    sectionsStructureRef.current = null
+  }, [taskId])
+
+  useEffect(() => {
+    if (hasInitializedSnapshotRef.current) return
+    lastSavedSnapshotRef.current = evaluationSnapshot(evaluationData)
+    sectionsStructureRef.current = evaluationData.sections
+      .map((section) => `${section.id}:${section.type}`)
+      .join("\u0000")
+    hasInitializedSnapshotRef.current = true
+  }, [evaluationData, taskId])
+
+  const buildEvaluationDownloadPayload = useCallback((): BusinessEvaluationData => {
+    const current = evaluationDataRef.current
+    return {
+      ...current,
+      sections: mergeFlushedDocumentSections(current.sections ?? []),
+    }
+  }, [])
+
+  const downloadEvaluationHwpx = useCallback(async () => {
+    await downloadBusinessEvaluationHwpx(taskId, {
+      evaluation: buildEvaluationDownloadPayload(),
+      planForm: planDocument?.formData ?? null,
+    })
+  }, [buildEvaluationDownloadPayload, planDocument?.formData, taskId])
+
+  const persistEvaluation = useCallback(async () => {
+    const current = evaluationDataRef.current
+    const flushedSections = mergeFlushedDocumentSections(current.sections ?? [])
+    const payload = toSaveBusinessEvaluationPayload({
+      ...current,
+      sections: flushedSections,
+    })
+    const sentSnapshot = evaluationSnapshot({ ...current, sections: flushedSections })
+    onSavingChange(true)
+    try {
+      const saved = await saveBusinessEvaluation(taskId, payload)
+      onEvaluationSaved((prev) => {
+        const merged = mergeEvaluationSaveResult(prev, saved, sentSnapshot)
+        lastSavedSnapshotRef.current = evaluationSnapshot(merged)
+        return merged
+      })
+      try {
+        const files = await getEvaluationFiles(taskId)
+        setDocumentFiles(files)
+      } catch {
+        /* 목록 갱신 실패는 저장과 무관 */
+      }
+      return saved
+    } catch (error) {
+      console.error("사업평가 저장 실패:", error)
+      alert("저장에 실패했습니다.")
+      return null
+    } finally {
+      onSavingChange(false)
+    }
+  }, [taskId, onEvaluationSaved, onSavingChange])
+
+  useEffect(() => {
+    if (!hasInitializedSnapshotRef.current) return
+
+    const mayAutoSave = canEditEvaluation || evaluationData.isCompleted
+    if (!mayAutoSave) return
+
+    const snapshot = evaluationSnapshot(evaluationData)
+    if (snapshot === lastSavedSnapshotRef.current) return
+
+    if (Date.now() - lastLocalEditRef.current > 1600) {
+      lastSavedSnapshotRef.current = snapshot
+      return
+    }
+
+    const timer = window.setTimeout(() => {
+      void persistEvaluation()
+    }, EVAL_AUTO_SAVE_MS)
+
+    return () => window.clearTimeout(timer)
+  }, [canEditEvaluation, evaluationData, persistEvaluation])
+
+  const sectionsStructureSignature = evaluationData.sections
+    .map((section) => `${section.id}:${section.type}`)
+    .join("\u0000")
+
+  useEffect(() => {
+    if (!hasInitializedSnapshotRef.current) return
+    if (!canEditEvaluation) return
+    if (sectionsStructureRef.current === sectionsStructureSignature) return
+
+    const hadBaseline = sectionsStructureRef.current !== null
+    sectionsStructureRef.current = sectionsStructureSignature
+    if (hadBaseline) {
+      lastLocalEditRef.current = Date.now()
+      void persistEvaluation()
+    }
+  }, [
+    sectionsStructureSignature,
+    canEditEvaluation,
+    persistEvaluation,
+  ])
+
   const loadPlan = useCallback(async () => {
     setPlanLoading(true)
     try {
@@ -110,7 +262,14 @@ export function BusinessPlanEvaluationWorkspace({
       ])
       setPlanDocument(plan)
       setDocumentFiles(files)
-      setFixedFiles(togetherFiles)
+      const evalFixedFiles = [EVALUATION_LIVE_REFERENCE_FILE, ...togetherFiles]
+      setFixedFiles(evalFixedFiles)
+      const merged = mergeTaskReferenceDocuments(evalFixedFiles, files)
+      setSelectedFileId((prev) =>
+        merged.some((file) => file.id === prev)
+          ? prev
+          : defaultSelectedDocumentId(merged, { preferEvaluationLive: true }),
+      )
     } catch (error) {
       console.error("사업계획서 로드 실패:", error)
     } finally {
@@ -128,42 +287,45 @@ export function BusinessPlanEvaluationWorkspace({
     void loadPlan()
   }, [loadPlan])
 
-  const persistPlan = async () => {
-    if (!planDocument) return
-    onSavingChange(true)
-    try {
-      const saved = await saveBusinessPlan(taskId, {
-        formData: planDocument.formData,
-        sections: planDocument.sections,
-      })
-      setPlanDocument(saved)
-    } catch (error) {
-      console.error("사업계획서 저장 실패:", error)
-      alert("사업계획서 저장에 실패했습니다.")
-    } finally {
-      onSavingChange(false)
-    }
-  }
-
-  const persistEvaluation = async () => {
-    onSavingChange(true)
-    try {
-      const saved = await saveBusinessEvaluation(
-        taskId,
-        toSaveBusinessEvaluationPayload(evaluationData),
-      )
-      onEvaluationSaved(saved)
-    } catch (error) {
-      console.error("사업평가 저장 실패:", error)
-      alert("사업평가 저장에 실패했습니다.")
-    } finally {
-      onSavingChange(false)
-    }
-  }
-
   const handleSaveAll = async () => {
-    await persistPlan()
-    await persistEvaluation()
+    if (!planDocument) {
+      await persistEvaluation()
+      return
+    }
+    onSavingChange(true)
+    const sentSnapshot = evaluationSnapshot(evaluationDataRef.current)
+    try {
+      const saved = await saveTaskDocuments(taskId, {
+        plan: {
+          formData: planDocument.formData,
+          sections: planDocument.sections,
+        },
+        evaluation: toSaveBusinessEvaluationPayload(evaluationDataRef.current),
+      })
+      if (saved.plan) setPlanDocument(saved.plan)
+      if (saved.evaluation) {
+        onEvaluationSaved((prev) => {
+          const merged = mergeEvaluationSaveResult(
+            prev,
+            saved.evaluation!,
+            sentSnapshot,
+          )
+          lastSavedSnapshotRef.current = evaluationSnapshot(merged)
+          return merged
+        })
+      }
+      try {
+        const files = await getEvaluationFiles(taskId)
+        setDocumentFiles(files)
+      } catch {
+        /* 목록 갱신 실패는 저장과 무관 */
+      }
+    } catch (error) {
+      console.error("문서 저장 실패:", error)
+      alert("저장에 실패했습니다.")
+    } finally {
+      onSavingChange(false)
+    }
   }
 
   const handleLoadPreviousEvaluation = async () => {
@@ -177,19 +339,19 @@ export function BusinessPlanEvaluationWorkspace({
 
     try {
       const template = await getBusinessEvaluationTemplate(taskId)
-      handleEvaluationChange({
-        ...evaluationData,
+      handleEvaluationChange((prev) => ({
+        ...prev,
         performanceIndicator: template.performanceIndicator,
         evaluationTool: template.evaluationTool,
         keyFactorAnalysis: template.keyFactorAnalysis,
         goalAppropriacy: template.goalAppropriacy,
         suggestion: template.suggestion,
-        detailRows: template.detailRows.map((row) => ({ ...row })),
+        detailRows: [],
         sections: template.sections.map((s) => ({
           ...s,
           id: createId(),
         })),
-      })
+      }))
     } catch (error) {
       console.error("이전 양식 불러오기 실패:", error)
       alert("이전 양식을 불러오지 못했습니다.")
@@ -198,8 +360,8 @@ export function BusinessPlanEvaluationWorkspace({
 
   const handleImportFromPlan = () => {
     if (!planDocument) return
-    handleEvaluationChange({
-      ...evaluationData,
+    handleEvaluationChange((prev) => ({
+      ...prev,
       programName: planDocument.formData.projectName,
       purpose: planDocument.formData.purpose,
       goals: [...planDocument.formData.goals],
@@ -207,7 +369,7 @@ export function BusinessPlanEvaluationWorkspace({
       target: planDocument.formData.target,
       planCount: planDocument.formData.totalCount,
       planBudget: planDocument.formData.budget,
-    })
+    }))
   }
 
   const addSection = (type: "heading" | "body") => {
@@ -217,10 +379,10 @@ export function BusinessPlanEvaluationWorkspace({
       title: type === "heading" ? "제목을 입력하세요" : "",
       content: type === "body" ? "" : "",
     }
-    handleEvaluationChange({
-      ...evaluationData,
-      sections: [...evaluationData.sections, section],
-    })
+    handleEvaluationChange((prev) => ({
+      ...prev,
+      sections: [...prev.sections, section],
+    }))
     setScrollToSectionId(section.id)
   }
 
@@ -303,10 +465,13 @@ export function BusinessPlanEvaluationWorkspace({
     { enabled: canEditEvaluation, isConnected },
   )
 
-  const handleEvaluationChange = (next: BusinessEvaluationData) => {
-    lastLocalEditRef.current = Date.now()
-    onEvaluationChange(next)
-  }
+  const handleEvaluationChange = useCallback(
+    (next: SetStateAction<BusinessEvaluationData>) => {
+      lastLocalEditRef.current = Date.now()
+      onEvaluationChange(next)
+    },
+    [onEvaluationChange],
+  )
 
   return (
     <div className="space-y-4">
@@ -315,22 +480,27 @@ export function BusinessPlanEvaluationWorkspace({
         isConnected={isConnected}
       />
       <CollaborationLiveNotice message={liveNotice} />
+      {!hideTopActionChrome ? (
       <div className="evaluation-workspace-chrome print-hide flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border/50 bg-card px-4 py-3">
         <p className="text-sm text-muted-foreground">
-          {canEditEvaluation
-            ? "왼쪽 참고 계획서를 보며 오른쪽에서 평가서를 작성합니다. 「계획서 → 평가 반영」으로 내용을 가져올 수 있습니다."
-            : "보기 모드 · 슈퍼비전만 수정할 수 있습니다."}
+          {canEditEvaluation ? (
+            <>
+              {isSaving ? (
+                <span className="inline-flex items-center gap-1.5">
+                  <Loader2 className="size-3.5 animate-spin" />
+                  저장 중… (한글 양식 파일 동기화)
+                </span>
+              ) : (
+                "요약 표·추가 본문은 수정 즉시 자동 저장되며, 한글(.hwpx) 파일이 함께 갱신됩니다."
+              )}
+            </>
+          ) : (
+            "보기 모드 · 슈퍼비전만 수정할 수 있습니다."
+          )}
         </p>
         <div className="flex flex-wrap gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => setShowDocPanel((v) => !v)}
-          >
-            <FileStack className="mr-2 size-4" />
-            {showDocPanel ? "참고 문서 닫기" : "참고 문서"}
-          </Button>
+          <PrintDocumentButton />
+          <HwpxDownloadButton onDownload={downloadEvaluationHwpx} />
           <Button
             type="button"
             variant="outline"
@@ -340,53 +510,84 @@ export function BusinessPlanEvaluationWorkspace({
           >
             계획서 → 평가 반영
           </Button>
-          <HwpxDownloadButton
-            onDownload={async () => {
-              await downloadBusinessEvaluationHwpx(
-                evaluationData,
-                planDocument?.formData ?? null,
-              )
-            }}
-          />
+          <Button
+            type="button"
+            size="sm"
+            className="min-w-[88px] bg-foreground text-background hover:bg-foreground/90"
+            disabled={isSaving}
+            onClick={onCompleteOrEdit}
+          >
+            {isCompleted ? "수정" : "완료"}
+          </Button>
         </div>
       </div>
-
-      {showDocPanel ? (
-        <EvaluationDocumentPanel
-          evaluation={evaluationData}
-          fixedFiles={fixedFiles}
-          documentFiles={documentFiles}
-        />
-      ) : null}
+      ) : (
+        <div className="evaluation-workspace-chrome print-hide flex flex-wrap items-center justify-end gap-2 rounded-lg border border-border/50 bg-card px-4 py-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={!canEditEvaluation || isSaving || planLoading}
+            onClick={handleImportFromPlan}
+          >
+            계획서 → 평가 반영
+          </Button>
+        </div>
+      )}
 
       <EvaluationSplitLayout
-        defaultShowPlanPanel
-        referencePlan={
-          <BusinessPlanFloatingPanel
+        defaultShowReferencePanel
+        documentSelector={
+          <div className="space-y-3">
+            <TaskReferenceDocumentSelector
+              fixedFiles={fixedFiles}
+              taskFiles={documentFiles}
+              selectedFileId={selectedFileId}
+              onSelectFileId={setSelectedFileId}
+            />
+          </div>
+        }
+        referencePanel={
+          <TaskReferenceDocumentViewer
             taskId={taskId}
+            selectedFileId={selectedFileId}
+            fixedFiles={fixedFiles}
+            taskFiles={documentFiles}
             planDocument={planDocument}
-            isLoading={planLoading}
+            planLoading={planLoading}
+            evaluation={evaluationData}
           />
         }
-        evaluation={
+        editor={
           <div className="flex w-full min-w-0 flex-col space-y-4 pb-6">
-            <BusinessEvaluationEditor
-              evaluation={evaluationData}
-              canEdit={canEditEvaluation}
-              datePickerOpen={datePickerOpen}
-              onDatePickerOpenChange={setDatePickerOpen}
-              onEvaluationChange={handleEvaluationChange}
-              setSectionRef={setSectionRef}
-              onAddHeading={() => addSection("heading")}
-              onAddBody={() => addSection("body")}
-              planProjectName={planDocument?.formData.projectName}
-            />
+            <PrintDocumentShell className="mx-auto w-full max-w-none">
+              <BusinessEvaluationEditor
+                evaluation={evaluationData}
+                canEdit={canEditEvaluation}
+                taskId={taskId}
+                datePickerOpen={datePickerOpen}
+                onDatePickerOpenChange={setDatePickerOpen}
+                onEvaluationChange={handleEvaluationChange}
+                setSectionRef={setSectionRef}
+                onAddHeading={() => addSection("heading")}
+                onAddBody={() => addSection("body")}
+                planProjectName={planDocument?.formData.projectName}
+              />
+            </PrintDocumentShell>
 
             <EvaluationFormActionBar
               canEdit={canEditEvaluation}
               isSaving={isSaving}
               onLoadPrevious={() => void handleLoadPreviousEvaluation()}
               onSave={() => void handleSaveAll()}
+              onHwpxDownload={downloadEvaluationHwpx}
+              hint={
+                canEditEvaluation
+                  ? isSaving
+                    ? "자동 저장 중…"
+                    : "요약 표·추가 본문은 수정 즉시 반영됩니다. 왼쪽 「작성 중인 사업평가서」에서 실시간으로 확인할 수 있습니다."
+                  : "보기 모드 · 「수정」을 누르면 편집할 수 있습니다."
+              }
               onClose={() => {
                 router.push(`/kanban/task/${taskId}/performance`)
               }}

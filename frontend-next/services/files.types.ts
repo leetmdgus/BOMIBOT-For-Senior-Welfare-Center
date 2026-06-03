@@ -4,6 +4,8 @@ export interface FileManagerState {
   files: FileItem[]
   taskOptions: TaskOption[]
   recentIds: string[]
+  /** 폴더별 수동 정렬(Drag reorder) */
+  folderOrderByParentId?: Record<string, string[]>
 }
 
 export interface FileListItem {

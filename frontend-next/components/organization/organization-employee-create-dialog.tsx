@@ -28,8 +28,8 @@ import {
 } from "@/services/organization.service"
 import type {
   CreateEmployeeInput,
+  CreateEmployeeResult,
   DepartmentOption,
-  Employee,
   OrganizationContext,
 } from "@/services/organization.types"
 
@@ -37,7 +37,7 @@ interface OrganizationEmployeeCreateDialogProps {
   context: OrganizationContext
   open: boolean
   onOpenChange: (open: boolean) => void
-  onCreated: (employee: Employee) => void
+  onCreated: (employee: CreateEmployeeResult) => void
 }
 
 const EMPTY_FORM: CreateEmployeeInput = {
@@ -177,12 +177,15 @@ export function OrganizationEmployeeCreateDialog({
             </Select>
           </Field>
 
-          <Field label="이메일 *">
+          <Field label="이메일 * (로그인 ID)">
             <Input
               type="email"
               value={form.email}
               onChange={(e) => setForm((prev) => ({ ...prev, email: e.target.value }))}
             />
+            <p className="text-xs text-muted-foreground">
+              초기 비밀번호는 이메일과 동일합니다.
+            </p>
           </Field>
 
           <Field label="휴대전화">

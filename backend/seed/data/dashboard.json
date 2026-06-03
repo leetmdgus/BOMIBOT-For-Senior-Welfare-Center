@@ -6,10 +6,17 @@
       "value": "45",
       "unit": "명",
       "description": "전년 대비 2명 증가 (신규 채용 포함)",
+<<<<<<< HEAD
       "color": "bg-primary/10 text-primary",
       "link": "전체 직원 현황 보기",
       "goto": "/organization",
       "iconName": "Users"
+=======
+      "iconName": "Users",
+      "color": "bg-primary/10 text-primary",
+      "link": "전체 직원 현황 보기",
+      "goto": "/organization"
+>>>>>>> dev2
     },
     {
       "label": "활성 프로젝트",
@@ -17,10 +24,17 @@
       "value": "12",
       "unit": "개",
       "description": "2026년도 사업계획 승인 완료 기준",
+<<<<<<< HEAD
       "color": "bg-primary/10 text-primary",
       "link": "사업계획 및 실적 관리",
       "goto": "/kanban",
       "iconName": "Users"
+=======
+      "iconName": "Layers",
+      "color": "bg-primary/10 text-primary",
+      "link": "사업계획 및 실적 관리",
+      "goto": "/kanban"
+>>>>>>> dev2
     },
     {
       "label": "서비스 이용자",
@@ -28,32 +42,56 @@
       "value": "8,420",
       "unit": "명",
       "description": "최근 3개월 누적 이용자 추이",
+<<<<<<< HEAD
       "color": "bg-primary/10 text-primary",
       "showChart": true,
       "iconName": "Users"
+=======
+      "iconName": "TrendingUp",
+      "color": "bg-primary/10 text-primary",
+      "showChart": true
+>>>>>>> dev2
     }
   ],
   "progress": [
     {
       "label": "인원 달성률",
       "value": 85,
+<<<<<<< HEAD
       "color": "bg-primary",
       "textColor": "text-primary",
       "iconName": "Users"
+=======
+      "iconName": "Users",
+      "color": "bg-primary",
+      "textColor": "text-primary"
+>>>>>>> dev2
     },
     {
       "label": "횟수 달성률",
       "value": 92,
+<<<<<<< HEAD
       "color": "bg-success",
       "textColor": "text-success",
       "iconName": "Users"
+=======
+      "iconName": "Calendar",
+      "color": "bg-success",
+      "textColor": "text-success"
+>>>>>>> dev2
     },
     {
       "label": "예산 집행률",
       "value": 74,
+<<<<<<< HEAD
       "color": "bg-[hsl(280,60%,50%)]",
       "textColor": "text-[hsl(280,60%,50%)]",
       "iconName": "Users"
+=======
+      "iconName": "DollarSign",
+      "color": "bg-[hsl(280,60%,50%)]",
+      "textColor": "text-[hsl(280,60%,50%)]"
+>>>>>>> dev2
     }
   ],
   "calendarEvents": [

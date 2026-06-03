@@ -25,6 +25,7 @@ interface KanbanColumnProps {
   columnType?: ColumnType
   projectId?: string
   projectName?: string
+  projectTeam?: string
   staffList?: Staff[]
   projectImages?: ProjectImageOption[]
   year?: string
@@ -61,6 +62,7 @@ export function KanbanColumn({
   columnType,
   projectId,
   projectName,
+  projectTeam,
   staffList,
   projectImages,
   year,
@@ -106,6 +108,7 @@ export function KanbanColumn({
             columnType={resolvedColumnType}
             projectId={projectId}
             projectName={projectName}
+            projectTeam={projectTeam}
             categoryId={id}
             staffList={staffList}
             projectImages={projectImages}

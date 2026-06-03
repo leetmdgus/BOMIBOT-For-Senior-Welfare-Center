@@ -1,5 +1,7 @@
 import { cachedApiGet, invalidateApiGetCache } from "@/lib/api-get-cache"
 import { apiClient, resolveApiPath } from "@/lib/api-client"
+import { filterProjectsByAssignee } from "@/lib/kanban/project-access"
+import { normalizeTaskId } from "@/lib/kanban/resolve-card-title"
 import {
   DEFAULT_KANBAN_STAFF,
   DEFAULT_PROJECT_IMAGE_OPTIONS,
@@ -20,11 +22,18 @@ function kanbanPath(nextSuffix: string): string {
   return resolveApiPath(`/api/kanban${nextSuffix}`, `/api/v1/kanban${nextSuffix}`)
 }
 
+function scopedKanbanId(id: string): string {
+  return normalizeTaskId(id)
+}
+
 export async function getProjects(year: string): Promise<KanbanProject[]> {
   const path = `${kanbanPath("/boards")}?year=${encodeURIComponent(year)}`
-  return cachedApiGet(path, () => apiClient.get<KanbanProject[]>(path), {
-    key: `kanban:boards:${year}`,
-  })
+  const projects = await cachedApiGet(
+    path,
+    () => apiClient.get<KanbanProject[]>(path),
+    { key: `kanban:boards:${year}` },
+  )
+  return filterProjectsByAssignee(projects)
 }
 
 export async function getStaffList(): Promise<Staff[]> {
@@ -106,11 +115,18 @@ export async function updateTask(
   taskId: string,
   updatedTask: Partial<Task>,
 ): Promise<Task | null> {
+  const pid = scopedKanbanId(projectId)
+  const cid = scopedKanbanId(categoryId)
+  const tid = scopedKanbanId(taskId)
   const result = await apiClient.patch<Task>(
-    kanbanPath(
-      `/boards/${projectId}/categories/${categoryId}/tasks/${taskId}/details`,
-    ),
-    updatedTask,
+    kanbanPath(`/boards/${pid}/categories/${cid}/tasks/${tid}/details`),
+    {
+      title: updatedTask.title,
+      description: updatedTask.description,
+      assignee: updatedTask.assignee,
+      completedCount: updatedTask.completedCount,
+      totalCount: updatedTask.totalCount,
+    },
   )
   invalidateApiGetCache("kanban")
   return result
@@ -122,7 +138,9 @@ export async function deleteTask(
   taskId: string,
 ): Promise<boolean> {
   await apiClient.delete(
-    kanbanPath(`/boards/${projectId}/categories/${categoryId}/tasks/${taskId}`),
+    kanbanPath(
+      `/boards/${scopedKanbanId(projectId)}/categories/${scopedKanbanId(categoryId)}/tasks/${scopedKanbanId(taskId)}`,
+    ),
   )
   invalidateApiGetCache("kanban")
   return true
@@ -140,8 +158,15 @@ export async function moveTask(
   payload: MoveTaskRequest,
 ): Promise<Task | null> {
   const result = await apiClient.post<Task>(
-    kanbanPath(`/boards/${projectId}/tasks/move`),
-    payload,
+    kanbanPath(`/boards/${scopedKanbanId(projectId)}/tasks/move`),
+    {
+      taskId: scopedKanbanId(payload.taskId),
+      fromCategoryId: scopedKanbanId(payload.fromCategoryId),
+      toCategoryId: scopedKanbanId(payload.toCategoryId),
+      overTaskId: payload.overTaskId
+        ? scopedKanbanId(payload.overTaskId)
+        : undefined,
+    },
   )
   invalidateApiGetCache("kanban")
   return result

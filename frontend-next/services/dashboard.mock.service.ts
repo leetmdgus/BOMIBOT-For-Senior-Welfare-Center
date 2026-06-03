@@ -5,6 +5,7 @@ import type { DashboardOverview } from "./dashboard.types"
 import { hydrateDashboardOverview } from "./dashboard.utils"
 
 export async function getDashboardOverview(
+  _year?: string,
   regionId?: RegionId,
 ): Promise<DashboardOverview> {
   const store = await loadRegionStore({ regionId })

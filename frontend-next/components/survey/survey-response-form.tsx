@@ -8,7 +8,10 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { resolveSurveyTheme } from "@/lib/survey-theme"
 import { cn } from "@/lib/utils"
-import { submitSurveyResponse } from "@/services/survey.service"
+import {
+  submitPublicSurveyResponse,
+  submitSurveyResponse,
+} from "@/services/survey.service"
 import type {
   SurveyAnswerValue,
   SurveyDetail,
@@ -19,8 +22,18 @@ type AnswersState = Record<string, SurveyAnswerValue>
 
 const OTHER_VALUE = "__other__"
 
+/**
+ * 척도형 문항의 최대 점수.
+ * 백엔드 집계(survey_results.py `_scale_score`: 1~5 유효)와 매트릭스 만족도(5점 척도:
+ * 매우불만족~매우만족)와 동일한 5점 척도를 사용한다. 값이 어긋나면 6점 이상 응답이
+ * "미응답"으로 집계되고 평균 만족도에서 제외된다.
+ */
+const SURVEY_SCALE_MAX = 5
+
 interface SurveyResponseFormProps {
   detail: SurveyDetail
+  /** 공개(QR) 응답 — 지역이 주어지면 인증 없이 공개 엔드포인트로 제출 */
+  regionId?: string | null
 }
 
 function isChoiceAnswered(answer: Extract<SurveyAnswerValue, { type: "choice" }>) {
@@ -58,18 +71,18 @@ function validateRequired(
     if (!question.required) continue
 
     if (!isAnswered(answers[question.id])) {
-      return `"${question.title || "? ??"}"?(?) ?? ?????.`
+      return `"${question.title || "질문"}"은(는) 필수 항목입니다.`
     }
 
     if (question.type === "matrix" && question.rows.length > 0) {
       const matrix = answers[question.id]
       if (matrix?.type !== "matrix") {
-        return `"${question.title}"? ?? ?? ??? ???.`
+        return `"${question.title}"의 모든 행에 응답해 주세요.`
       }
 
       const missingRow = question.rows.find((row) => !matrix.value[row]?.trim())
       if (missingRow) {
-        return `"${question.title}" ? "${missingRow}"? ??? ???.`
+        return `"${question.title}"의 "${missingRow}"에 응답해 주세요.`
       }
     }
   }
@@ -77,7 +90,7 @@ function validateRequired(
   return null
 }
 
-export function SurveyResponseForm({ detail }: SurveyResponseFormProps) {
+export function SurveyResponseForm({ detail, regionId }: SurveyResponseFormProps) {
   const { themeColor, useBrandClasses } = resolveSurveyTheme(detail)
   const [answers, setAnswers] = useState<AnswersState>({})
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -118,7 +131,7 @@ export function SurveyResponseForm({ detail }: SurveyResponseFormProps) {
     if (!detail.settings.allowDuplicate) {
       const storageKey = `survey-responded-${detail.id}`
       if (typeof window !== "undefined" && localStorage.getItem(storageKey)) {
-        setFormError("?? ???????. ?? ??? ???? ????.")
+        setFormError("이미 응답하셨습니다. 중복 응답은 허용되지 않습니다.")
         return
       }
     }
@@ -127,12 +140,15 @@ export function SurveyResponseForm({ detail }: SurveyResponseFormProps) {
     setFormError(null)
 
     try {
-      const result = await submitSurveyResponse(detail.id, {
+      const payload = {
         answers: Object.entries(answers).map(([questionId, answer]) => ({
           questionId,
           answer,
         })),
-      })
+      }
+      const result = regionId
+        ? await submitPublicSurveyResponse(regionId, detail.id, payload)
+        : await submitSurveyResponse(detail.id, payload)
 
       if (!detail.settings.allowDuplicate && typeof window !== "undefined") {
         localStorage.setItem(`survey-responded-${detail.id}`, result.responseId)
@@ -141,8 +157,8 @@ export function SurveyResponseForm({ detail }: SurveyResponseFormProps) {
       setSubmittedMessage(result.message)
       setIsSubmitted(true)
     } catch (error) {
-      console.error("?? ?? ??:", error)
-      setFormError("??? ??????. ?? ? ?? ??? ???.")
+      console.error("설문 제출 실패:", error)
+      setFormError("제출에 실패했습니다. 잠시 후 다시 시도해 주세요.")
     } finally {
       setIsSubmitting(false)
     }
@@ -152,14 +168,14 @@ export function SurveyResponseForm({ detail }: SurveyResponseFormProps) {
     return (
       <div className="mx-auto max-w-lg rounded-2xl border border-border bg-card p-10 text-center shadow-sm">
         <p className="text-lg font-semibold text-foreground">
-          ?? ??? ?? ?? ?????.
+          현재 이 설문은 응답을 받지 않습니다.
         </p>
         <p className="mt-2 text-sm text-muted-foreground">
           {detail.basicInfo.status === "closed"
-            ? "??? ???????."
+            ? "설문이 종료되었습니다."
             : detail.basicInfo.status === "draft"
-              ? "?? ???? ?? ?????."
-              : "?? ??? ???????."}
+              ? "아직 게시되지 않은 설문입니다."
+              : "응답 수집이 중지되었습니다."}
         </p>
       </div>
     )
@@ -170,7 +186,7 @@ export function SurveyResponseForm({ detail }: SurveyResponseFormProps) {
       <div className="mx-auto max-w-lg space-y-4 pb-12">
         <div className="rounded-2xl border border-primary/30 bg-primary/5 p-10 text-center shadow-sm">
           <CheckCircle2 className="mx-auto size-14 text-primary" />
-          <h2 className="mt-4 text-xl font-bold text-foreground">?? ??</h2>
+          <h2 className="mt-4 text-xl font-bold text-foreground">제출 완료</h2>
           <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
             {submittedMessage || detail.style.thankYouMessage}
           </p>
@@ -223,7 +239,7 @@ export function SurveyResponseForm({ detail }: SurveyResponseFormProps) {
       {detail.settings.showProgress ? (
         <div className="mb-6">
           <div className="mb-1 flex justify-between text-xs text-muted-foreground">
-            <span>?? ???</span>
+            <span>응답 진행률</span>
             <span>{progressPercent}%</span>
           </div>
           <div className="h-1.5 overflow-hidden rounded-full bg-muted">
@@ -268,10 +284,10 @@ export function SurveyResponseForm({ detail }: SurveyResponseFormProps) {
         {isSubmitting ? (
           <>
             <Loader2 className="mr-2 size-4 animate-spin" />
-            ?? ?...
+            제출 중...
           </>
         ) : (
-          "?? ??"
+          "제출하기"
         )}
       </Button>
     </form>
@@ -324,7 +340,7 @@ function ResponseQuestion({
         <Textarea
           value={answer?.type === "text" ? answer.value : ""}
           maxLength={2000}
-          placeholder="??? ??? ??? (?? 2000?)"
+          placeholder="답변을 입력해 주세요 (최대 2000자)"
           className="min-h-[120px] resize-none"
           onChange={(event) =>
             onChange({ type: "text", value: event.target.value })
@@ -381,10 +397,10 @@ function ScaleInput({
 }) {
   return (
     <div className="overflow-x-auto rounded-xl border border-border bg-muted/20 p-4">
-      <div className="flex min-w-[520px] items-center justify-between gap-2">
-        <span className="shrink-0 text-xs text-muted-foreground">?? ???</span>
+      <div className="flex min-w-[320px] items-center justify-between gap-2">
+        <span className="shrink-0 text-xs text-muted-foreground">전혀 그렇지 않다</span>
         <div className="flex flex-1 flex-wrap items-center justify-center gap-1">
-          {Array.from({ length: 10 }).map((_, scaleIndex) => {
+          {Array.from({ length: SURVEY_SCALE_MAX }).map((_, scaleIndex) => {
             const score = scaleIndex + 1
             const selected = value === score
 
@@ -412,7 +428,7 @@ function ScaleInput({
             )
           })}
         </div>
-        <span className="shrink-0 text-xs text-muted-foreground">?? ??</span>
+        <span className="shrink-0 text-xs text-muted-foreground">매우 그렇다</span>
       </div>
     </div>
   )
@@ -464,7 +480,7 @@ function ChoiceInput({
   return (
     <div className="space-y-2">
       {question.options.map((option, optionIndex) => {
-        const label = option || `??? ${optionIndex + 1}`
+        const label = option || `선택지 ${optionIndex + 1}`
 
         return (
           <label
@@ -513,10 +529,10 @@ function ChoiceInput({
             }
           }}
         />
-        <span className="shrink-0">??</span>
+        <span className="shrink-0">기타</span>
         <Input
           value={otherText}
-          placeholder="?? ??"
+          placeholder="직접 입력"
           className="h-8 flex-1 border-0 bg-transparent shadow-none focus-visible:ring-0"
           onChange={(event) => {
             const next = event.target.value

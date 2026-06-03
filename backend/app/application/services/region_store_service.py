@@ -10,12 +10,26 @@ from typing import Any
 
 from fastapi import HTTPException, status
 
+<<<<<<< HEAD
+=======
+from app.core.datetime_kst import format_kst_datetime, kst_year, now_kst
+
+from app.application.kanban_access import (
+    assert_file_tree_access,
+    file_entry_allowed,
+    filter_file_tree,
+)
+>>>>>>> dev2
 from app.application.documents_reports import (
     build_budget_report_rows,
     build_business_plan_report,
     build_performance_report_rows,
 )
 from app.application.services.file_storage_service import FileStorageService
+<<<<<<< HEAD
+=======
+from app.application.services.survey_service import SurveyService
+>>>>>>> dev2
 from app.application.task_detail_bootstrap import (
     bootstrap_business_plan,
     bootstrap_evaluation,
@@ -25,6 +39,7 @@ from app.application.task_detail_bootstrap import (
     business_name_for_task,
     normalize_task_id,
 )
+<<<<<<< HEAD
 from app.domain.scoped_ids import strip_scope
 from app.infrastructure.persistence.repositories.sqlalchemy_json_store_repository import (
     SqlAlchemyJsonStoreRepository,
@@ -50,11 +65,71 @@ class RegionStoreService:
     ) -> None:
         self._repo = repo
         self._file_storage = file_storage or FileStorageService()
+=======
+from app.application.region_store.approvals import ApprovalApplicationService
+from app.application.region_store.chat_config import ChatConfigApplicationService
+from app.application.region_store.gateway import RegionStoreGateway
+from app.domain.region_store.constants import (
+    DOMAIN_EBOOKS,
+    DOMAIN_FILES,
+    DOMAIN_ONTOLOGY,
+    DOMAIN_PERFORMANCE,
+    DOMAIN_REPORTS,
+    DOMAIN_SURVEY,
+    DOMAIN_TASK_DETAIL,
+    DOMAIN_VERSION_HISTORY,
+)
+from app.domain.region_store.repository import RegionJsonStoreRepository
+from app.domain.shared.scoped_ids import strip_scope
+
+from app.domain.region_store.constants import (  # noqa: E402 — re-export
+    DOMAIN_APPROVALS,
+    DOMAIN_CHAT,
+)
+
+# 하위 호환 — 기존 `from region_store_service import DOMAIN_*` 유지
+__all__ = [
+    "DOMAIN_APPROVALS",
+    "DOMAIN_CHAT",
+    "DOMAIN_EBOOKS",
+    "DOMAIN_FILES",
+    "DOMAIN_ONTOLOGY",
+    "DOMAIN_PERFORMANCE",
+    "DOMAIN_REPORTS",
+    "DOMAIN_SURVEY",
+    "DOMAIN_TASK_DETAIL",
+    "DOMAIN_VERSION_HISTORY",
+    "RegionStoreService",
+]
+
+
+class RegionStoreService:
+    """JSON region store (TaskDetailRepository·PerformanceRepository 계약 충족)."""
+
+    def __init__(
+        self,
+        repo: RegionJsonStoreRepository,
+        file_storage: FileStorageService | None = None,
+        *,
+        survey_service: SurveyService | None = None,
+    ) -> None:
+        self._gateway = RegionStoreGateway(repo)
+        self._repo = repo
+        self._file_storage = file_storage or FileStorageService()
+        if survey_service is None:
+            raise ValueError(
+                "survey_service is required — wire via infrastructure.di.container"
+            )
+        self._surveys = survey_service
+        self._approvals = ApprovalApplicationService(self._gateway)
+        self._chat_config = ChatConfigApplicationService(self._gateway)
+>>>>>>> dev2
 
     def get_domain_payload(self, region_id: str, domain: str) -> dict:
         return self._load(region_id, domain)
 
     def _load(self, region_id: str, domain: str) -> dict:
+<<<<<<< HEAD
         payload = self._repo.get_payload(region_id, domain)
         if payload is None:
             raise HTTPException(
@@ -65,6 +140,12 @@ class RegionStoreService:
 
     def _save(self, region_id: str, domain: str, payload: dict) -> dict:
         return self._repo.save_payload(region_id, domain, payload)
+=======
+        return self._gateway.load(region_id, domain)
+
+    def _save(self, region_id: str, domain: str, payload: dict) -> dict:
+        return self._gateway.save(region_id, domain, payload)
+>>>>>>> dev2
 
     # --- ebooks ---
 
@@ -266,20 +347,74 @@ class RegionStoreService:
             parent_id = parent.get("parentId")
         return " / ".join(parts) if parts else "루트"
 
+<<<<<<< HEAD
     def get_file_manager_state(self, region_id: str) -> dict:
         data = self._load(region_id, DOMAIN_FILES)
         manager = self._files_manager(data)
         files = deepcopy(self._get_tree_files(data))
+=======
+    def _annotate_content_availability(
+        self,
+        region_id: str,
+        files: list[dict],
+    ) -> None:
+        """storageKey는 있으나 디스크 본문이 없는 항목(컨테이너 재빌드 등) 표시."""
+        for item in files:
+            if item.get("type") == "folder":
+                continue
+            storage_key = item.get("storageKey")
+            if not storage_key:
+                item.pop("hasContent", None)
+                item.pop("contentMissing", None)
+                continue
+            if self._file_storage.exists(region_id, str(storage_key)):
+                item["hasContent"] = True
+                item.pop("contentMissing", None)
+            else:
+                item["hasContent"] = False
+                item["contentMissing"] = True
+
+    def get_file_manager_state(
+        self,
+        region_id: str,
+        *,
+        allowed_task_ids: set[str] | None = None,
+    ) -> dict:
+        data = self._load(region_id, DOMAIN_FILES)
+        manager = self._files_manager(data)
+        files = deepcopy(self._get_tree_files(data))
+        self._annotate_content_availability(region_id, files)
+        if allowed_task_ids is not None:
+            files = filter_file_tree(files, allowed_task_ids)
+>>>>>>> dev2
         known_ids = {str(f["id"]) for f in files}
         recent_ids = [
             rid
             for rid in manager.get("defaultRecentIds", [])
             if str(rid) in known_ids
         ]
+<<<<<<< HEAD
         return {
             "files": files,
             "taskOptions": deepcopy(manager.get("taskOptions", [])),
             "recentIds": recent_ids,
+=======
+        task_options = deepcopy(manager.get("taskOptions", []))
+        if allowed_task_ids is not None:
+            task_options = [
+                opt
+                for opt in task_options
+                if strip_scope(str(opt.get("id") or "")) in allowed_task_ids
+            ]
+        folder_order = manager.get("folderOrderByParentId", {})
+        if not isinstance(folder_order, dict):
+            folder_order = {}
+        return {
+            "files": files,
+            "taskOptions": task_options,
+            "recentIds": recent_ids,
+            "folderOrderByParentId": folder_order,
+>>>>>>> dev2
         }
 
     def list_files(
@@ -289,6 +424,10 @@ class RegionStoreService:
         folder: str | None = None,
         file_type: str | None = None,
         search: str | None = None,
+<<<<<<< HEAD
+=======
+        allowed_task_ids: set[str] | None = None,
+>>>>>>> dev2
     ) -> dict:
         data = self._load(region_id, DOMAIN_FILES)
         tree = self._get_tree_files(data)
@@ -300,6 +439,11 @@ class RegionStoreService:
             for item in tree:
                 if item.get("type") == "folder":
                     continue
+<<<<<<< HEAD
+=======
+                if not file_entry_allowed(item, allowed_task_ids):
+                    continue
+>>>>>>> dev2
                 entries.append(
                     {
                         "id": item["id"],
@@ -308,6 +452,7 @@ class RegionStoreService:
                         "size": item.get("size", "0 MB"),
                         "modifiedAt": item.get("modifiedAt", ""),
                         "folder": self._folder_label(tree, item),
+<<<<<<< HEAD
                     }
                 )
         else:
@@ -322,6 +467,27 @@ class RegionStoreService:
                 }
                 for f in legacy_flat
             ]
+=======
+                        "taskId": item.get("taskId"),
+                    }
+                )
+        else:
+            entries = []
+            for f in legacy_flat:
+                if not file_entry_allowed(f, allowed_task_ids):
+                    continue
+                entries.append(
+                    {
+                        "id": f.get("id"),
+                        "name": f.get("name"),
+                        "type": f.get("type"),
+                        "size": f.get("size", "0 MB"),
+                        "modifiedAt": f.get("modifiedAt", ""),
+                        "folder": f.get("folder", "루트"),
+                        "taskId": f.get("taskId"),
+                    }
+                )
+>>>>>>> dev2
 
         filtered = entries
         if folder and folder not in self._FILTER_ALL_LABELS:
@@ -450,6 +616,67 @@ class RegionStoreService:
         self._save(region_id, DOMAIN_FILES, data)
         return created_items
 
+<<<<<<< HEAD
+=======
+    def upsert_task_hwpx_file(
+        self,
+        region_id: str,
+        *,
+        task_id: str,
+        file_id: str | None,
+        filename: str,
+        content: bytes,
+        content_type: str = "application/hwp+zip",
+        task_name: str | None = None,
+    ) -> dict:
+        """업무별 HWPX — 기존 file_id가 있으면 내용만 갱신, 없으면 새로 업로드."""
+        data = self._load(region_id, DOMAIN_FILES)
+        files = self._get_tree_files(data)
+        now = datetime.now(UTC).isoformat()
+
+        if file_id:
+            item = next((f for f in files if f.get("id") == file_id), None)
+            if item is not None:
+                storage_key, mime_type = self._file_storage.write(
+                    region_id,
+                    str(file_id),
+                    filename,
+                    content,
+                )
+                item = {
+                    **item,
+                    "name": filename,
+                    "storageKey": storage_key,
+                    "mimeType": content_type or mime_type,
+                    "size": FileStorageService.format_size(len(content)),
+                    "modifiedAt": now,
+                    "hasContent": True,
+                    "taskId": task_id,
+                }
+                if task_name:
+                    item["taskName"] = task_name
+                normalized = self._normalize_file_item(item)
+                files = [
+                    normalized if f.get("id") == file_id else f for f in files
+                ]
+                self._sync_tree_files(data, files)
+                self._save(region_id, DOMAIN_FILES, data)
+                return deepcopy(normalized)
+
+        created = self.upload_binary_files(
+            region_id,
+            [(filename, content, content_type)],
+            task_id=task_id,
+            task_name=task_name,
+        )
+        if not created:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="HWPX file upload failed",
+            )
+        return created[0]
+
+>>>>>>> dev2
     def copy_file_item(self, region_id: str, file_id: str, body: dict) -> dict:
         data = self._load(region_id, DOMAIN_FILES)
         files = self._get_tree_files(data)
@@ -624,6 +851,11 @@ class RegionStoreService:
         self,
         region_id: str,
         root_ids: list[str],
+<<<<<<< HEAD
+=======
+        *,
+        allowed_task_ids: set[str] | None = None,
+>>>>>>> dev2
     ) -> tuple[bytes, str]:
         import io
         import json
@@ -631,11 +863,27 @@ class RegionStoreService:
 
         data = self._load(region_id, DOMAIN_FILES)
         files = self._get_tree_files(data)
+<<<<<<< HEAD
+=======
+        if allowed_task_ids is not None:
+            for root_id in root_ids:
+                assert_file_tree_access(files, str(root_id), allowed_task_ids)
+            files = filter_file_tree(files, allowed_task_ids)
+>>>>>>> dev2
         export_root_ids = {str(rid) for rid in root_ids}
         entries, archive_label = self._collect_export_entries(files, root_ids)
 
         buffer = io.BytesIO()
+<<<<<<< HEAD
         with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as archive:
+=======
+        with zipfile.ZipFile(
+            buffer,
+            "w",
+            zipfile.ZIP_DEFLATED,
+            metadata_encoding="utf-8",
+        ) as archive:
+>>>>>>> dev2
             manifest = {
                 "exportedAt": datetime.now(UTC).isoformat(),
                 "rootIds": list(root_ids),
@@ -664,9 +912,25 @@ class RegionStoreService:
                     continue
 
                 storage_key = item.get("storageKey")
+<<<<<<< HEAD
                 if storage_key:
                     path = self._file_storage.resolve_path(region_id, str(storage_key))
                     archive.write(path, arcname=arc_path)
+=======
+                if storage_key and self._file_storage.exists(region_id, str(storage_key)):
+                    path = self._file_storage.resolve_path(region_id, str(storage_key))
+                    archive.write(path, arcname=arc_path)
+                elif storage_key:
+                    archive.writestr(
+                        f"{arc_path}.readme.txt",
+                        (
+                            "서버 저장소에서 파일 본문을 찾을 수 없습니다. "
+                            "다시 업로드해 주세요.\n"
+                            f"name: {item.get('name')}\n"
+                            f"storageKey: {storage_key}\n"
+                        ).encode("utf-8"),
+                    )
+>>>>>>> dev2
                 else:
                     archive.writestr(
                         f"{arc_path}.readme.txt",
@@ -682,11 +946,36 @@ class RegionStoreService:
             safe_name = safe_name.replace(char, "_")
         return buffer.getvalue(), f"{safe_name}.zip"
 
+<<<<<<< HEAD
     def get_download_file(self, region_id: str, file_id: str) -> tuple[Path, str, str]:
         data = self._load(region_id, DOMAIN_FILES)
         files = self._get_tree_files(data)
         target = next((f for f in files if f.get("id") == file_id), None)
         if not target or target.get("type") == "folder":
+=======
+    def assert_file_access(
+        self,
+        region_id: str,
+        file_id: str,
+        *,
+        allowed_task_ids: set[str] | None = None,
+    ) -> dict:
+        data = self._load(region_id, DOMAIN_FILES)
+        files = self._get_tree_files(data)
+        return assert_file_tree_access(files, file_id, allowed_task_ids)
+
+    def get_download_file(
+        self,
+        region_id: str,
+        file_id: str,
+        *,
+        allowed_task_ids: set[str] | None = None,
+    ) -> tuple[Path, str, str]:
+        data = self._load(region_id, DOMAIN_FILES)
+        files = self._get_tree_files(data)
+        target = assert_file_tree_access(files, file_id, allowed_task_ids)
+        if target.get("type") == "folder":
+>>>>>>> dev2
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
         storage_key = target.get("storageKey")
         if not storage_key:
@@ -746,6 +1035,18 @@ class RegionStoreService:
                 str(rid) for rid in body["recentIds"] if str(rid) in known_ids
             ][:20]
 
+<<<<<<< HEAD
+=======
+        if "folderOrderByParentId" in body and isinstance(body["folderOrderByParentId"], dict):
+            # 폴더별 정렬은 UI 힌트이므로 값 검증은 최소화
+            next_order: dict[str, list[str]] = {}
+            for key, value in body["folderOrderByParentId"].items():
+                if not isinstance(value, list):
+                    continue
+                next_order[str(key)] = [str(x) for x in value if str(x)]
+            manager["folderOrderByParentId"] = next_order
+
+>>>>>>> dev2
         self._save(region_id, DOMAIN_FILES, data)
         return self.get_file_manager_state(region_id)
 
@@ -1314,16 +1615,28 @@ class RegionStoreService:
         except HTTPException:
             return None
         entries = data.setdefault("entries", [])
+<<<<<<< HEAD
         entry_id = f"vh-{int(datetime.now(UTC).timestamp() * 1000)}"
         entry: dict[str, Any] = {
             "id": entry_id,
             "date": datetime.now(UTC).strftime("%Y-%m-%d %H:%M"),
+=======
+        kst_now = now_kst()
+        entry_id = f"vh-{int(kst_now.timestamp() * 1000)}"
+        entry: dict[str, Any] = {
+            "id": entry_id,
+            "date": format_kst_datetime(kst_now),
+>>>>>>> dev2
             "user": user,
             "action": action,
             "target": target,
             "actionType": action_type,
             "projectName": project_name,
+<<<<<<< HEAD
             "year": year or str(datetime.now(UTC).year),
+=======
+            "year": year or kst_year(kst_now),
+>>>>>>> dev2
             "canRestore": can_restore,
             "changes": deepcopy(changes) if changes else [],
         }
@@ -1463,9 +1776,15 @@ class RegionStoreService:
         *,
         card_title: str | None = None,
     ) -> list:
+<<<<<<< HEAD
         data = self._load(region_id, DOMAIN_TASK_DETAIL)
         items = self._get_or_create_task_surveys(data, task_id, card_title=card_title)
         self._save(region_id, DOMAIN_TASK_DETAIL, data)
+=======
+        items = self._surveys.list_for_task(
+            region_id, task_id, card_title=card_title
+        )
+>>>>>>> dev2
         return [
             {
                 "id": item["id"],
@@ -1478,9 +1797,111 @@ class RegionStoreService:
             for item in items
         ]
 
+<<<<<<< HEAD
     def get_evaluation_files(self, region_id: str, _task_id: str | None = None) -> list:
         data = self._load(region_id, DOMAIN_TASK_DETAIL)
         return deepcopy(data.get("filesData", []))
+=======
+    @staticmethod
+    def _reference_file_type_label(item: dict) -> str:
+        name = str(item.get("name") or "")
+        mime = str(item.get("mimeType") or "").lower()
+        if name.lower().endswith(".hwpx") or "hwp" in mime:
+            return "한글"
+        file_type = str(item.get("type") or "document")
+        labels = {
+            "image": "이미지",
+            "pdf": "PDF",
+            "document": "문서",
+            "spreadsheet": "스프레드시트",
+            "video": "동영상",
+            "archive": "압축",
+            "etc": "기타",
+        }
+        return labels.get(file_type, "첨부")
+
+    @staticmethod
+    def _merge_reference_file_lists(*groups: list[dict]) -> list[dict]:
+        """참고 문서 목록 — id 기준 중복 제거, 앞쪽 그룹 우선."""
+        seen: set[str] = set()
+        merged: list[dict] = []
+        for group in groups:
+            for item in group:
+                fid = str(item.get("id") or "")
+                if not fid or fid in seen:
+                    continue
+                seen.add(fid)
+                merged.append(item)
+        return merged
+
+    def _file_manager_reference_entry(self, region_id: str, item: dict) -> dict:
+        entry: dict = {
+            "id": str(item.get("id")),
+            "name": str(item.get("name") or "파일"),
+            "type": self._reference_file_type_label(item),
+            "source": "file-manager",
+            "mimeType": item.get("mimeType"),
+            "fileType": item.get("type"),
+        }
+        storage_key = item.get("storageKey")
+        if not storage_key:
+            return entry
+        if self._file_storage.exists(region_id, str(storage_key)):
+            entry["hasContent"] = True
+        else:
+            entry["hasContent"] = False
+            entry["contentMissing"] = True
+        return entry
+
+    def get_evaluation_files(self, region_id: str, task_id: str | None = None) -> list:
+        """업무(taskId) 관련 문서 — 시드 참고 문서 + 파일관리 첨부 + 저장 HWPX."""
+        data = self._load(region_id, DOMAIN_TASK_DETAIL)
+        legacy = deepcopy(data.get("filesData", []))
+
+        if not task_id or not str(task_id).strip():
+            return legacy
+
+        tid = self._normalize_task_id(str(task_id))
+        files_store = self._load(region_id, DOMAIN_FILES)
+        tree_files = self._get_tree_files(files_store)
+        by_id = {
+            str(item.get("id")): item
+            for item in tree_files
+            if item.get("type") != "folder" and item.get("id")
+        }
+
+        task_files: list[dict] = []
+        for item in tree_files:
+            if item.get("type") == "folder":
+                continue
+            raw_tid = item.get("taskId")
+            if not raw_tid:
+                continue
+            if self._normalize_task_id(str(raw_tid)) != tid:
+                continue
+            task_files.append(self._file_manager_reference_entry(region_id, item))
+
+        runtime = self._task_runtime(data)
+        linked_hwpx_ids: list[str] = []
+        plan = runtime.get("businessPlanByTaskId", {}).get(tid)
+        if isinstance(plan, dict) and plan.get("hwpxFileId"):
+            linked_hwpx_ids.append(str(plan["hwpxFileId"]))
+        evaluation = runtime.get("evaluationByTaskId", {}).get(tid)
+        if isinstance(evaluation, dict) and evaluation.get("hwpxFileId"):
+            linked_hwpx_ids.append(str(evaluation["hwpxFileId"]))
+
+        task_file_ids = {str(f.get("id")) for f in task_files}
+        for fid in linked_hwpx_ids:
+            if fid in task_file_ids:
+                continue
+            item = by_id.get(fid)
+            if item is None:
+                continue
+            task_files.append(self._file_manager_reference_entry(region_id, item))
+            task_file_ids.add(fid)
+
+        return self._merge_reference_file_lists(legacy, task_files)
+>>>>>>> dev2
 
     def get_view_together_files(self, region_id: str) -> list:
         data = self._load(region_id, DOMAIN_TASK_DETAIL)
@@ -1494,8 +1915,17 @@ class RegionStoreService:
         card_title: str | None = None,
     ) -> dict:
         data = self._load(region_id, DOMAIN_TASK_DETAIL)
+<<<<<<< HEAD
         source = self._get_or_create_evaluation(data, task_id, card_title=card_title)
         self._save(region_id, DOMAIN_TASK_DETAIL, data)
+=======
+        tid = self._normalize_task_id(task_id)
+        runtime = self._task_runtime(data)
+        source = runtime["evaluationByTaskId"].get(tid)
+        if not source:
+            source = self._get_or_create_evaluation(data, task_id, card_title=card_title)
+            self._save(region_id, DOMAIN_TASK_DETAIL, data)
+>>>>>>> dev2
         return {
             "performanceIndicator": source.get("performanceIndicator", ""),
             "evaluationTool": source.get("evaluationTool", ""),
@@ -1514,9 +1944,28 @@ class RegionStoreService:
         card_title: str | None = None,
     ) -> dict:
         data = self._load(region_id, DOMAIN_TASK_DETAIL)
+<<<<<<< HEAD
         doc = self._get_or_create_evaluation(data, task_id, card_title=card_title)
         self._save(region_id, DOMAIN_TASK_DETAIL, data)
         return self._clone_evaluation(doc)
+=======
+        tid = self._normalize_task_id(task_id)
+        runtime = self._task_runtime(data)
+        stored = runtime["evaluationByTaskId"].get(tid)
+        if stored:
+            return self._sync_evaluation_detail_rows_from_performance(
+                region_id,
+                task_id,
+                self._clone_evaluation(stored),
+            )
+        doc = self._get_or_create_evaluation(data, task_id, card_title=card_title)
+        self._save(region_id, DOMAIN_TASK_DETAIL, data)
+        return self._sync_evaluation_detail_rows_from_performance(
+            region_id,
+            task_id,
+            self._clone_evaluation(doc),
+        )
+>>>>>>> dev2
 
     def save_business_evaluation(
         self,
@@ -1527,6 +1976,7 @@ class RegionStoreService:
         user: str = "시스템",
         card_title: str | None = None,
     ) -> dict:
+<<<<<<< HEAD
         data = self._load(region_id, DOMAIN_TASK_DETAIL)
         tid = self._normalize_task_id(task_id)
         current = self._get_or_create_evaluation(data, tid, card_title=card_title)
@@ -1551,6 +2001,16 @@ class RegionStoreService:
             user=user,
         )
         return self._clone_evaluation(next_eval)
+=======
+        saved = self.save_task_documents(
+            region_id,
+            task_id,
+            evaluation=payload,
+            user=user,
+            card_title=card_title,
+        )
+        return saved["evaluation"]
+>>>>>>> dev2
 
     def complete_business_evaluation(
         self,
@@ -1564,6 +2024,23 @@ class RegionStoreService:
         tid = self._normalize_task_id(task_id)
         current = self._get_or_create_evaluation(data, tid, card_title=card_title)
         next_eval = {**current, "isCompleted": True}
+<<<<<<< HEAD
+=======
+        plan_form = None
+        plan_stored = self._task_runtime(data)["businessPlanByTaskId"].get(tid)
+        if isinstance(plan_stored, dict):
+            plan_form = plan_stored.get("formData")
+        from app.application.hwpx.task_hwpx_sync import try_sync_evaluation_hwpx
+
+        try_sync_evaluation_hwpx(
+            self,
+            region_id,
+            task_id,
+            next_eval,
+            plan_form=plan_form if isinstance(plan_form, dict) else None,
+            card_title=card_title,
+        )
+>>>>>>> dev2
         self._task_runtime(data)["evaluationByTaskId"][tid] = next_eval
         self._save(region_id, DOMAIN_TASK_DETAIL, data)
         program_name = next_eval.get("programName") or business_name_for_task(
@@ -1579,9 +2056,60 @@ class RegionStoreService:
         )
         return self._clone_evaluation(next_eval)
 
+<<<<<<< HEAD
     def _clone_business_plan(self, source: dict) -> dict:
         result = deepcopy(source)
         form = result.get("formData", {})
+=======
+    def _collect_performance_sub_project_names(
+        self,
+        region_id: str,
+        task_id: str,
+    ) -> list[str]:
+        from app.application.plan_sub_projects import collect_performance_sub_project_names
+
+        data = self._load(region_id, DOMAIN_PERFORMANCE)
+        self._migrate_legacy_performance_to_buckets(data)
+        tid = self._normalize_task_id(task_id)
+        rows = self._performance_runtime(data)["inputManagementByTaskId"].get(tid) or []
+        chips = data.get("performanceSubProjectChips") or []
+        return collect_performance_sub_project_names(chips=chips, input_rows=rows)
+
+    def _sync_plan_sub_projects_from_performance(
+        self,
+        region_id: str,
+        task_id: str,
+        doc: dict,
+    ) -> dict:
+        from app.application.plan_sub_projects import merge_plan_sub_projects
+
+        names = self._collect_performance_sub_project_names(region_id, task_id)
+        if not names:
+            return doc
+        form = doc.setdefault("formData", {})
+        form["subProjects"] = merge_plan_sub_projects(
+            form.get("subProjects") or [],
+            names,
+        )
+        return doc
+
+    def _sync_evaluation_detail_rows_from_performance(
+        self,
+        region_id: str,
+        task_id: str,
+        evaluation: dict,
+    ) -> dict:
+        evaluation["detailRows"] = []
+        return evaluation
+
+    def _clone_business_plan(self, source: dict) -> dict:
+        from app.application.hwpx.render.template_defaults import (
+            merge_plan_form_with_template_defaults,
+        )
+
+        result = deepcopy(source)
+        form = merge_plan_form_with_template_defaults(result.get("formData", {}))
+>>>>>>> dev2
         form["goals"] = list(form.get("goals", []))
         form["subProjects"] = [deepcopy(s) for s in form.get("subProjects", [])]
         result["formData"] = form
@@ -1596,9 +2124,146 @@ class RegionStoreService:
         card_title: str | None = None,
     ) -> dict:
         data = self._load(region_id, DOMAIN_TASK_DETAIL)
+<<<<<<< HEAD
         doc = self._get_or_create_business_plan_doc(data, task_id, card_title=card_title)
         self._save(region_id, DOMAIN_TASK_DETAIL, data)
         return self._clone_business_plan(doc)
+=======
+        tid = self._normalize_task_id(task_id)
+        runtime = self._task_runtime(data)
+        stored = runtime["businessPlanByTaskId"].get(tid)
+        if stored:
+            return self._sync_plan_sub_projects_from_performance(
+                region_id,
+                task_id,
+                self._clone_business_plan(stored),
+            )
+        doc = self._get_or_create_business_plan_doc(data, task_id, card_title=card_title)
+        self._save(region_id, DOMAIN_TASK_DETAIL, data)
+        return self._sync_plan_sub_projects_from_performance(
+            region_id,
+            task_id,
+            self._clone_business_plan(doc),
+        )
+
+    def _merge_business_plan(self, current: dict, payload: dict) -> dict:
+        next_doc: dict[str, Any] = {**current}
+        if "isCompleted" in payload:
+            next_doc["isCompleted"] = payload["isCompleted"]
+        if payload.get("formData"):
+            form = payload["formData"]
+            next_doc["formData"] = {
+                **form,
+                "goals": list(form.get("goals", [])),
+                "subProjects": [deepcopy(s) for s in form.get("subProjects", [])],
+            }
+        if "sections" in payload:
+            next_doc["sections"] = [deepcopy(s) for s in payload["sections"]]
+        return next_doc
+
+    def _merge_business_evaluation(self, current: dict, payload: dict) -> dict:
+        next_eval = {**current, **payload}
+        if "goals" in payload:
+            next_eval["goals"] = list(payload["goals"])
+        if "detailRows" in payload:
+            next_eval["detailRows"] = [deepcopy(r) for r in payload["detailRows"]]
+        if "sections" in payload:
+            next_eval["sections"] = [deepcopy(s) for s in payload["sections"]]
+        return next_eval
+
+    def save_task_documents(
+        self,
+        region_id: str,
+        task_id: str,
+        *,
+        plan: dict | None = None,
+        evaluation: dict | None = None,
+        user: str = "시스템",
+        card_title: str | None = None,
+    ) -> dict[str, Any]:
+        """사업계획서·사업평가를 한 번의 JSON 로드/저장으로 처리."""
+        if plan is None and evaluation is None:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="plan or evaluation payload is required",
+            )
+
+        data = self._load(region_id, DOMAIN_TASK_DETAIL)
+        tid = self._normalize_task_id(task_id)
+        runtime = self._task_runtime(data)
+        result: dict[str, Any] = {}
+
+        if plan is not None:
+            current = self._get_or_create_business_plan_doc(data, tid, card_title=card_title)
+            next_doc = self._merge_business_plan(current, plan)
+            next_doc = self._sync_plan_sub_projects_from_performance(
+                region_id, tid, next_doc
+            )
+            from app.application.hwpx.task_hwpx_sync import try_sync_plan_hwpx
+
+            try_sync_plan_hwpx(
+                self,
+                region_id,
+                task_id,
+                next_doc,
+                card_title=card_title,
+            )
+            runtime["businessPlanByTaskId"][tid] = next_doc
+            result["plan"] = self._clone_business_plan(next_doc)
+
+        if evaluation is not None:
+            current = self._get_or_create_evaluation(data, tid, card_title=card_title)
+            next_eval = self._merge_business_evaluation(current, evaluation)
+            next_eval = self._sync_evaluation_detail_rows_from_performance(
+                region_id, tid, next_eval
+            )
+            plan_form = None
+            plan_stored = runtime["businessPlanByTaskId"].get(tid)
+            if isinstance(plan_stored, dict):
+                plan_form = plan_stored.get("formData")
+            from app.application.hwpx.task_hwpx_sync import try_sync_evaluation_hwpx
+
+            try_sync_evaluation_hwpx(
+                self,
+                region_id,
+                task_id,
+                next_eval,
+                plan_form=plan_form if isinstance(plan_form, dict) else None,
+                card_title=card_title,
+            )
+            runtime["evaluationByTaskId"][tid] = next_eval
+            result["evaluation"] = self._clone_evaluation(next_eval)
+
+        self._save(region_id, DOMAIN_TASK_DETAIL, data)
+
+        if evaluation is not None:
+            program_name = result["evaluation"].get("programName") or business_name_for_task(
+                tid, card_title=card_title
+            )
+            self.append_version_entry(
+                region_id,
+                action="사업평가를 저장했습니다.",
+                target=program_name,
+                action_type="update_description",
+                project_name=program_name,
+                user=user,
+            )
+
+        if plan is not None:
+            project_name = result["plan"].get("formData", {}).get("projectName") or business_name_for_task(
+                tid, card_title=card_title
+            )
+            self.append_version_entry(
+                region_id,
+                action="사업계획서를 저장했습니다.",
+                target=project_name,
+                action_type="update_description",
+                project_name=project_name,
+                user=user,
+            )
+
+        return result
+>>>>>>> dev2
 
     def save_business_plan(
         self,
@@ -1609,6 +2274,7 @@ class RegionStoreService:
         user: str = "시스템",
         card_title: str | None = None,
     ) -> dict:
+<<<<<<< HEAD
         data = self._load(region_id, DOMAIN_TASK_DETAIL)
         tid = self._normalize_task_id(task_id)
         current = self._get_or_create_business_plan_doc(data, tid, card_title=card_title)
@@ -1772,10 +2438,61 @@ class RegionStoreService:
             },
             "questions": [],
         }
+=======
+        saved = self.save_task_documents(
+            region_id,
+            task_id,
+            plan=payload,
+            user=user,
+            card_title=card_title,
+        )
+        return saved["plan"]
+
+    # --- survey (SurveyService) ---
+
+    def list_surveys(
+        self,
+        region_id: str,
+        *,
+        task_id: str | None = None,
+        status: str | None = None,
+        search: str | None = None,
+    ) -> list:
+        return self._surveys.list_surveys(
+            region_id, task_id=task_id, status=status, search=search
+        )
+
+    def get_survey_detail(
+        self,
+        region_id: str,
+        survey_id: str,
+        *,
+        task_id: str | None = None,
+    ) -> dict:
+        return self._surveys.get_survey_detail(
+            region_id, survey_id, task_id=task_id
+        )
+
+    def save_survey(
+        self,
+        region_id: str,
+        survey_id: str,
+        payload: dict,
+        *,
+        task_id: str | None = None,
+    ) -> dict:
+        return self._surveys.save_survey(
+            region_id, survey_id, payload, task_id=task_id
+        )
+
+    def get_survey_results(self, region_id: str, survey_id: str) -> dict:
+        return self._surveys.get_survey_results(region_id, survey_id)
+>>>>>>> dev2
 
     def submit_survey_response(
         self, region_id: str, survey_id: str, payload: dict
     ) -> dict:
+<<<<<<< HEAD
         if survey_id == "new":
             raise HTTPException(status_code=400, detail="저장된 설문이 아닙니다.")
 
@@ -1819,10 +2536,23 @@ class RegionStoreService:
         runtime["responses"].pop(survey_id, None)
         self._save(region_id, DOMAIN_SURVEY, data)
         return {"success": True, "deletedId": survey_id}
+=======
+        return self._surveys.submit_survey_response(region_id, survey_id, payload)
+
+    def delete_survey(self, region_id: str, survey_id: str) -> dict:
+        return self._surveys.delete_survey(region_id, survey_id)
+
+    def close_survey(self, region_id: str, survey_id: str) -> dict:
+        return self._surveys.close_survey(region_id, survey_id)
+
+    def duplicate_survey(self, region_id: str, survey_id: str) -> dict:
+        return self._surveys.duplicate_survey(region_id, survey_id)
+>>>>>>> dev2
 
     # --- approvals (전자결재) ---
 
     def list_approvals(self, region_id: str, *, status: str | None = None) -> list:
+<<<<<<< HEAD
         data = self._load_or_empty(region_id, DOMAIN_APPROVALS)
         docs = list(data.get("documents", []))
         if status and status != "all":
@@ -1876,10 +2606,23 @@ class RegionStoreService:
         data["documents"] = next_docs
         self._save(region_id, DOMAIN_APPROVALS, data)
         return {"success": True, "deletedId": approval_id}
+=======
+        return self._approvals.list(region_id, status=status)
+
+    def create_approval(self, region_id: str, body: dict) -> dict:
+        return self._approvals.create(region_id, body)
+
+    def update_approval(self, region_id: str, approval_id: str, body: dict) -> dict:
+        return self._approvals.update(region_id, approval_id, body)
+
+    def delete_approval(self, region_id: str, approval_id: str) -> dict:
+        return self._approvals.delete(region_id, approval_id)
+>>>>>>> dev2
 
     # --- chat ---
 
     def get_chat_config(self, region_id: str) -> dict:
+<<<<<<< HEAD
         return deepcopy(self._load(region_id, DOMAIN_CHAT))
 
     def save_chat_config(self, region_id: str, body: dict) -> dict:
@@ -1893,3 +2636,9 @@ class RegionStoreService:
                 current[key] = value
         self._save(region_id, DOMAIN_CHAT, current)
         return deepcopy(current)
+=======
+        return self._chat_config.get(region_id)
+
+    def save_chat_config(self, region_id: str, body: dict) -> dict:
+        return self._chat_config.save(region_id, body)
+>>>>>>> dev2

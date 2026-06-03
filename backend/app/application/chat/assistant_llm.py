@@ -19,6 +19,10 @@ VALID_SOURCES = {
     "organization",
     "ebooks",
     "survey",
+<<<<<<< HEAD
+=======
+    "documents",
+>>>>>>> dev2
     "help",
 }
 
@@ -67,7 +71,11 @@ async def answer_with_rag_llm(
 2. 검색 결과에 없는 수치는 추측하지 말고 없다고 말합니다.
 3. 금액은 원(₩) 단위, 천 단위 구분(,)을 사용합니다.
 4. 답변 맨 마지막 줄: [출처: rag, performance, dashboard] 형식
+<<<<<<< HEAD
    사용 키: aggregate, rag, performance, dashboard, kanban, organization, ebooks, survey
+=======
+   사용 키: aggregate, rag, performance, dashboard, kanban, organization, ebooks, survey, documents
+>>>>>>> dev2
 
 {rag.get("contextText", "")}
 

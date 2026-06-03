@@ -8,17 +8,21 @@ import { useAuth } from "@/components/auth/auth-provider"
 import { Sidebar } from "@/components/common/sidebar"
 import { Header } from "@/components/common/header"
 
+import { sortDepartmentsByPositionRank } from "@/lib/organization-groups"
+
 import { GroupPanel } from "./group-panel"
 import { EmployeeListPanel } from "./employee-list-panel"
 import { EmployeeDetailPanel } from "./employee-detail-panel"
 import { OrganizationEmployeeCreateDialog } from "./organization-employee-create-dialog"
 
+import { toast } from "@/hooks/use-toast"
 import { isFastApiMode } from "@/lib/api-client"
 import {
   getOrganizationContext,
   searchEmployees,
 } from "@/services/organization.service"
 import {
+  CreateEmployeeResult,
   Department,
   DetailTabType,
   Employee,
@@ -70,7 +74,7 @@ function addEmployeeToGroups(
 
 export function OrganizationPage() {
   const searchParams = useSearchParams()
-  const { session, refresh: refreshAuth } = useAuth()
+  const { syncFromEmployee } = useAuth()
   const [activeTab, setActiveTab] = useState<TabType>("department")
   const [departments, setDepartments] = useState<Department[]>([])
   const [positionGroups, setPositionGroups] = useState<Department[]>([])
@@ -128,16 +132,31 @@ export function OrganizationPage() {
       .then((context) => {
         if (!cancelled) {
           setOrganizationContext(context)
-          if (searchParams.get("me") === "1" && context.employeeId) {
-            void searchEmployees({}).then((result) => {
-              const me = result.employees.find(
-                (e) => e.id === context.employeeId,
-              )
-              if (me) {
-                setSelectedEmployee(me)
-                setOpenSelfEdit(true)
-              }
-            })
+          if (searchParams.get("me") === "1") {
+            if (!context.employeeId) {
+              toast({
+                title: "내 정보를 연결할 수 없습니다",
+                description:
+                  "로그인 계정과 조직도 직원이 연결되어 있지 않습니다. 관리자에게 문의해 주세요.",
+                variant: "destructive",
+              })
+            } else {
+              void searchEmployees({}).then((result) => {
+                const me = result.employees.find(
+                  (e) => e.id === context.employeeId,
+                )
+                if (me) {
+                  setSelectedEmployee(me)
+                  setOpenSelfEdit(true)
+                } else {
+                  toast({
+                    title: "내 정보를 찾을 수 없습니다",
+                    description: "조직도에서 본인 직원 정보를 확인해 주세요.",
+                    variant: "destructive",
+                  })
+                }
+              })
+            }
           }
         }
       })
@@ -154,12 +173,17 @@ export function OrganizationPage() {
     activeTab === "department" ? departments : positionGroups
 
   const listGroups = useMemo(() => {
-    const source = activeTab === "department" ? departments : positionGroups
+    const isDepartment = activeTab === "department"
+    // 부서별(조직도) 보기는 부장 → 팀장 → 사원(실무직) 위계 순으로 정렬한다.
+    // 직책별 보기는 이미 POSITION_CATALOG 순서로 그룹핑되어 있어 그대로 둔다.
+    const source = isDepartment
+      ? sortDepartmentsByPositionRank(departments)
+      : positionGroups
     const canAdd = organizationContext?.permissions.canCreateEmployee
     return source.filter(
       (group) =>
         group.id !== "all" &&
-        (group.employees.length > 0 || (canAdd && activeTab === "department")),
+        (group.employees.length > 0 || (canAdd && isDepartment)),
     )
   }, [activeTab, departments, positionGroups, organizationContext])
 
@@ -169,18 +193,13 @@ export function OrganizationPage() {
       setPositionGroups((prev) => patchEmployeeInGroups(prev, updated))
       setSelectedEmployee(updated)
 
-      if (
-        organizationContext?.employeeId === updated.id ||
-        session?.email === updated.email
-      ) {
-        await refreshAuth()
-      }
+      await syncFromEmployee(updated, organizationContext?.employeeId)
     },
-    [organizationContext?.employeeId, refreshAuth, session?.email],
+    [organizationContext?.employeeId, syncFromEmployee],
   )
 
   const handleEmployeeCreated = useCallback(
-    async (created: Employee) => {
+    async (created: CreateEmployeeResult) => {
       if (isFastApiMode()) {
         await reload()
       } else {
@@ -197,6 +216,11 @@ export function OrganizationPage() {
             : [...prev, created.departmentId!],
         )
       }
+      const initialPassword = created.initialPassword ?? created.email
+      toast({
+        title: "직원이 추가되었습니다",
+        description: `로그인 이메일: ${created.email} · 초기 비밀번호: ${initialPassword}`,
+      })
     },
     [reload],
   )

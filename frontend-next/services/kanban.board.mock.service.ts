@@ -1,5 +1,8 @@
 import { loadRegionStore } from "@/lib/auth/load-region-store"
 import type { RegionId } from "@/lib/auth/regions"
+import { filterProjectsByAssignee } from "@/lib/kanban/project-access"
+import { flattenOrganizationEmployees } from "@/lib/kanban/assignable-staff"
+import { departmentsData } from "@/lib/mocks/organization.mock"
 import { columnTypesMock } from "./kanban.board.types"
 import type {
   ColumnType,
@@ -21,10 +24,18 @@ export async function getProjects(
   regionId?: RegionId,
 ): Promise<KanbanProject[]> {
   const kanban = await getKanban(regionId)
-  return kanban.projectsMock.filter((project) => project.year === year)
+  const byYear = kanban.projectsMock.filter((project) => project.year === year)
+  return filterProjectsByAssignee(byYear, regionId)
 }
 
 export async function getStaffList(regionId?: RegionId): Promise<Staff[]> {
+  const fromOrganization = flattenOrganizationEmployees({
+    departments: departmentsData,
+    positionGroups: [],
+    employees: departmentsData.flatMap((department) => department.employees),
+  })
+  if (fromOrganization.length > 0) return fromOrganization
+
   const kanban = await getKanban(regionId)
   return kanban.staffMock
 }

@@ -80,6 +80,8 @@ export interface SaveSurveyPayload {
   questions: SurveyQuestion[]
   style?: Partial<SurveyStyle>
   settings?: Partial<SurveySettings>
+  /** 칸반 업무(카드) 연결 */
+  taskId?: string
 }
 
 export interface SaveSurveyResult {
@@ -109,6 +111,12 @@ export interface SurveyTextResponse {
   votes: number
 }
 
+/** 척도형 문항 점수 분포 — `score`(1~최대)별 응답 수 */
+export interface SurveyScalePoint {
+  score: number
+  count: number
+}
+
 export interface SurveyQuestionResult {
   questionId: string
   type: SurveyQuestionType
@@ -121,6 +129,10 @@ export interface SurveyQuestionResult {
   textResponses?: SurveyTextResponse[]
   otherText?: string
   otherCount?: number
+  /** 척도형 점수 분포 (1~최대 점수) */
+  scaleData?: SurveyScalePoint[]
+  /** 척도형/만족도 문항의 평균 점수 */
+  average?: number
 }
 
 export interface SurveyResultsSummary {
@@ -128,6 +140,8 @@ export interface SurveyResultsSummary {
   totalTarget: number
   averageSatisfaction: number
   completionRate: number
+  /** 긍정 응답률(top-box) — 만족+매우만족(또는 4점 이상) 비율(%) */
+  positiveRate?: number
 }
 
 export interface SurveyResults {
@@ -155,4 +169,27 @@ export interface SubmitSurveyResponseResult {
   responseId: string
   submittedAt: string
   message: string
+}
+
+/** 새 설문 생성용 템플릿 본문 (id·taskId 제외한 설문 상세) */
+export type SurveyTemplateContent = Omit<SurveyDetail, "id" | "taskId">
+
+/**
+ * 사회복지 사업평가 양식(HWPX 사업평가/사업계획서)을 참고한 설문 템플릿.
+ * 목적·대상·성과지표(설문)·분석방법이 사업평가 평가도구 흐름과 연결된다.
+ */
+export interface SurveyTemplate {
+  id: string
+  /** 템플릿 이름 (예: 프로그램 만족도 조사) */
+  name: string
+  /** 한 줄 설명 */
+  summary: string
+  /** 분류 (예: 만족도조사 / 사후평가) */
+  category: string
+  /** 검색·필터용 태그 */
+  tags: string[]
+  /** 문항 수 (목록 표시용) */
+  questionCount: number
+  /** 에디터에 채워질 설문 본문 */
+  content: SurveyTemplateContent
 }

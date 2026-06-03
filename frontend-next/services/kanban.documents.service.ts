@@ -9,7 +9,7 @@ import type {
 
 export type { DocumentsReportQuery } from "./kanban.documents.api.service"
 
-const useMockApi = process.env.NEXT_PUBLIC_USE_MOCK_API === "true"
+import { shouldUseMockApi } from "@/lib/api-service-mode"
 
 type KanbanDocumentsService = {
   getKanbanDocuments: () => Promise<KanbanDocumentsResponse>
@@ -28,7 +28,7 @@ type KanbanDocumentsService = {
   ) => Promise<unknown>
 }
 
-const documentsService: KanbanDocumentsService = useMockApi
+const documentsService: KanbanDocumentsService = shouldUseMockApi()
   ? mockService
   : apiService
 

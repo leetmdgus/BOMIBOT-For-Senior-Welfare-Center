@@ -1,6 +1,6 @@
 # FastAPI 라우트 맵 (`/api/v1`)
 
-로컬: http://127.0.0.1:8020/docs · 프로덕션: https://api-workspace.bomi.ai.kr/docs
+로컬: http://127.0.0.1:9001/docs · 프로덕션: https://api-workspace.bomi.ai.kr/docs
 
 목록 갱신:
 
@@ -59,5 +59,19 @@ python scripts/list-routes.py
 | Reports | `/api/v1/reports` |
 | Chat | `/api/v1/chat/*` |
 
+<<<<<<< HEAD
+=======
+## Automation (문서자동화)
+
+| Method | Path | 설명 |
+|--------|------|------|
+| POST | `/api/v1/automation/hwpx/parse` | HWPX 업로드 → `frontendJson` |
+| POST | `/api/v1/automation/hwpx/export` | 원본 HWPX + `frontendJson` → HWPX 다운로드 |
+| POST | `/api/v1/automation/documents/analyze` | 증빙·문서 파일 분석 (폴더 트리에서 선택) |
+| GET | `/api/v1/automation/documents/supported-extensions` | 지원 확장자 목록 |
+
+프론트: `https://workspace.bomi.ai.kr/automation` · multipart/form-data · `Authorization` + `X-Region-Id` 필요
+
+>>>>>>> dev2
 프론트 `*.api.service.ts`는 `NEXT_PUBLIC_API_BASE_URL` 설정 시 위 경로로 **직접** 호출합니다.  
 레거시 `/api/*` 는 `app/api/[[...path]]` 가 동일하게 프록시합니다.

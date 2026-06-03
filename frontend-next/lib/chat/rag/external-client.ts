@@ -11,6 +11,7 @@ const VALID_SOURCES = new Set<string>([
   "organization",
   "ebooks",
   "survey",
+  "documents",
   "help",
 ])
 

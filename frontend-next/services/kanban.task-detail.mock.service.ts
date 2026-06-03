@@ -6,10 +6,12 @@ import {
   bootstrapEvaluation,
   bootstrapTaskSurveys,
 } from "@/lib/kanban/task-detail-bootstrap"
+import { syncPlanSubProjectsFromPerformance } from "@/lib/kanban/load-performance-sub-project-names"
 import {
   normalizeTaskId,
   resolveKanbanCardTitle,
 } from "@/lib/kanban/resolve-card-title"
+import type { KanbanProject } from "./kanban.board.types"
 import type {
   BusinessEvaluationData,
   BusinessEvaluationTemplate,
@@ -18,6 +20,7 @@ import type {
   SaveBusinessEvaluationPayload,
   SaveBusinessPlanPayload,
   Survey,
+  SurveyStatus,
 } from "./kanban.task-detail.types"
 
 type TaskDetailRuntime = {
@@ -30,7 +33,8 @@ const runtimeByRegion = new Map<RegionId, TaskDetailRuntime>()
 
 async function getTaskDetailRuntime(regionId?: RegionId) {
   const store = await loadRegionStore({ regionId })
-  let runtime = runtimeByRegion.get(store.regionId)
+  const storeRegionId = store.regionId as RegionId
+  let runtime = runtimeByRegion.get(storeRegionId)
 
   if (!runtime) {
     runtime = {
@@ -38,7 +42,7 @@ async function getTaskDetailRuntime(regionId?: RegionId) {
       businessPlanByTaskId: new Map(),
       surveysByTaskId: new Map(),
     }
-    runtimeByRegion.set(store.regionId, runtime)
+    runtimeByRegion.set(storeRegionId, runtime)
   }
 
   return { store, runtime }
@@ -62,7 +66,10 @@ async function resolveCardTitle(
   regionId?: RegionId,
 ): Promise<string | null> {
   const { store } = await getTaskDetailRuntime(regionId)
-  return resolveKanbanCardTitle(taskId, store.kanban.projectsMock)
+  return resolveKanbanCardTitle(
+    taskId,
+    store.kanban.projectsMock as KanbanProject[],
+  )
 }
 
 async function getOrCreateEvaluation(
@@ -76,7 +83,7 @@ async function getOrCreateEvaluation(
 
   const cardTitle = await resolveCardTitle(taskId, regionId)
   const created = bootstrapEvaluation(
-    store.taskDetail.businessEvaluationData,
+    store.taskDetail.businessEvaluationData as BusinessEvaluationData,
     key,
     cardTitle,
   )
@@ -84,13 +91,15 @@ async function getOrCreateEvaluation(
   return created
 }
 
-function surveyCatalogFromStore(store: Awaited<ReturnType<typeof loadRegionStore>>) {
+function surveyCatalogFromStore(
+  store: Awaited<ReturnType<typeof loadRegionStore>>,
+): Survey[] {
   return store.survey.surveyListItemsMock.map((item) => ({
     id: item.id,
     title: item.title,
     program: item.program,
     date: item.date,
-    status: item.status,
+    status: item.status as SurveyStatus,
     endDate: item.endDate,
   }))
 }
@@ -122,11 +131,51 @@ export async function getSurveys(
 }
 
 export async function getEvaluationFiles(
-  _taskId: string,
+  taskId: string,
   regionId?: RegionId,
 ): Promise<EvaluationFile[]> {
   const { store } = await getTaskDetailRuntime(regionId)
-  return store.taskDetail.filesData
+  const key = tid(taskId)
+  type ManagerFile = {
+    id: string | number
+    name: string
+    type: string
+    taskId?: string | number
+    mimeType?: string
+  }
+  const managerFiles = (store.files?.files ?? []) as ManagerFile[]
+  const fromManager = managerFiles
+    .filter(
+      (item) =>
+        item.type !== "folder" &&
+        item.taskId &&
+        tid(String(item.taskId)) === key,
+    )
+    .map((item) => ({
+      id: String(item.id),
+      name: String(item.name),
+      type:
+        item.type === "image"
+          ? "이미지"
+          : item.type === "pdf"
+            ? "PDF"
+            : "첨부",
+      source: "file-manager" as const,
+      mimeType: item.mimeType,
+      fileType: item.type,
+    }))
+
+  const legacy = [...store.taskDetail.filesData]
+  const seen = new Set<string>()
+  const merged: EvaluationFile[] = []
+  for (const group of [legacy, fromManager]) {
+    for (const file of group) {
+      if (seen.has(file.id)) continue
+      seen.add(file.id)
+      merged.push(file)
+    }
+  }
+  return merged
 }
 
 export async function getViewTogetherFixedFiles(
@@ -162,7 +211,8 @@ export async function getBusinessEvaluation(
   taskId: string,
   regionId?: RegionId,
 ): Promise<BusinessEvaluationData> {
-  return cloneEvaluation(await getOrCreateEvaluation(taskId, regionId))
+  const evaluation = cloneEvaluation(await getOrCreateEvaluation(taskId, regionId))
+  return { ...evaluation, detailRows: [] }
 }
 
 export async function saveBusinessEvaluation(
@@ -176,13 +226,13 @@ export async function saveBusinessEvaluation(
   const next: BusinessEvaluationData = {
     ...current,
     ...payload,
-    goals: payload.goals ? [...payload.goals] : current.goals,
-    detailRows: payload.detailRows
-      ? payload.detailRows.map((row) => ({ ...row }))
-      : current.detailRows,
-    sections: payload.sections
-      ? payload.sections.map((section) => ({ ...section }))
-      : current.sections,
+    goals:
+      payload.goals !== undefined ? [...payload.goals] : current.goals,
+    detailRows: [],
+    sections:
+      payload.sections !== undefined
+        ? payload.sections.map((section) => ({ ...section }))
+        : current.sections,
   }
 
   runtime.evaluationByTaskId.set(key, next)
@@ -195,7 +245,7 @@ export async function completeBusinessEvaluation(
 ): Promise<BusinessEvaluationData> {
   const { store, runtime } = await getTaskDetailRuntime(regionId)
   const key = tid(taskId)
-  advanceTaskToNextProcess(taskId, store.kanban.projectsMock)
+  advanceTaskToNextProcess(taskId, store.kanban.projectsMock as KanbanProject[])
 
   const current = await getOrCreateEvaluation(taskId, regionId)
   const next: BusinessEvaluationData = {
@@ -230,7 +280,7 @@ async function getOrCreateBusinessPlan(
 
   const cardTitle = await resolveCardTitle(taskId, regionId)
   const created = bootstrapBusinessPlan(
-    store.businessPlan.defaultBusinessPlanDocument,
+    store.businessPlan.defaultBusinessPlanDocument as BusinessPlanDocument,
     key,
     cardTitle,
   )
@@ -242,7 +292,18 @@ export async function getBusinessPlan(
   taskId: string,
   regionId?: RegionId,
 ): Promise<BusinessPlanDocument> {
-  return cloneBusinessPlan(await getOrCreateBusinessPlan(taskId, regionId))
+  const doc = cloneBusinessPlan(await getOrCreateBusinessPlan(taskId, regionId))
+  const syncedSubProjects = await syncPlanSubProjectsFromPerformance(
+    taskId,
+    doc.formData.subProjects,
+  )
+  return {
+    ...doc,
+    formData: {
+      ...doc.formData,
+      subProjects: syncedSubProjects,
+    },
+  }
 }
 
 export async function saveBusinessPlan(
@@ -253,6 +314,11 @@ export async function saveBusinessPlan(
   const { runtime } = await getTaskDetailRuntime(regionId)
   const key = tid(taskId)
   const current = await getOrCreateBusinessPlan(taskId, regionId)
+  const rawFormData = payload.formData ?? current.formData
+  const syncedSubProjects = await syncPlanSubProjectsFromPerformance(
+    taskId,
+    rawFormData.subProjects,
+  )
   const next: BusinessPlanDocument = {
     isCompleted:
       payload.isCompleted !== undefined
@@ -262,11 +328,12 @@ export async function saveBusinessPlan(
       ? {
           ...payload.formData,
           goals: [...payload.formData.goals],
-          subProjects: payload.formData.subProjects.map((item) => ({
-            ...item,
-          })),
+          subProjects: syncedSubProjects,
         }
-      : current.formData,
+      : {
+          ...current.formData,
+          subProjects: syncedSubProjects,
+        },
     sections: payload.sections
       ? payload.sections.map((section) => ({ ...section }))
       : current.sections,
@@ -274,4 +341,32 @@ export async function saveBusinessPlan(
 
   runtime.businessPlanByTaskId.set(key, next)
   return cloneBusinessPlan(next)
+}
+
+export async function saveTaskDocuments(
+  taskId: string,
+  payload: {
+    plan?: SaveBusinessPlanPayload
+    evaluation?: SaveBusinessEvaluationPayload
+  },
+  regionId?: RegionId,
+): Promise<{
+  plan?: BusinessPlanDocument
+  evaluation?: BusinessEvaluationData
+}> {
+  const result: {
+    plan?: BusinessPlanDocument
+    evaluation?: BusinessEvaluationData
+  } = {}
+  if (payload.plan) {
+    result.plan = await saveBusinessPlan(taskId, payload.plan, regionId)
+  }
+  if (payload.evaluation) {
+    result.evaluation = await saveBusinessEvaluation(
+      taskId,
+      payload.evaluation,
+      regionId,
+    )
+  }
+  return result
 }

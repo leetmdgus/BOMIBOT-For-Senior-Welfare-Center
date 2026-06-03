@@ -84,4 +84,12 @@ class AuthRepository(ABC):
         department: str | None = None,
         role_display: str | None = None,
         profile_image_url: str | None = None,
+<<<<<<< HEAD
     ) -> None: ...
+=======
+        email: str | None = None,
+    ) -> None: ...
+
+    @abstractmethod
+    def update_password_hash(self, user_id: str, password_hash: str) -> None: ...
+>>>>>>> dev2

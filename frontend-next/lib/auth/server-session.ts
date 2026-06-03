@@ -13,6 +13,7 @@ export function parseSessionCookie(value: string | undefined): AuthSession | nul
   try {
     const session = JSON.parse(decodeURIComponent(value)) as AuthSession
     if (!session?.regionId || !isRegionId(session.regionId)) return null
+    if (!session.token) return null
     return session
   } catch {
     return null

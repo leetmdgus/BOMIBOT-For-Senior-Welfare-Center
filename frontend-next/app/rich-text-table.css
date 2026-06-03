@@ -11,6 +11,7 @@
   overflow: visible;
   vertical-align: top;
   cursor: text;
+  border: 1px solid #000;
 }
 
 .bp-rich-editor table.bp-rt-table td.bp-rt-cell-selected,

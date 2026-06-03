@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 
+import { applyProxyAuthHeaders } from "@/lib/auth/proxy-auth-headers"
 import {
   buildProxyUrl,
   getApiProxyBase,
@@ -60,6 +61,7 @@ async function proxyRequest(request: NextRequest, path: string[]) {
     const value = request.headers.get(name)
     if (value) headers.set(name, value)
   }
+  applyProxyAuthHeaders(request, headers)
 
   const init: RequestInit = {
     method: request.method,

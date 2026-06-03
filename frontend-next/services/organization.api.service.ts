@@ -1,12 +1,13 @@
 import { apiClient, apiUploadFormData, resolveApiPath } from "@/lib/api-client"
 
 import type {
+  CreateEmployeeInput,
+  CreateEmployeeResult,
   Department,
   DepartmentOption,
   Employee,
   OrganizationContext,
   OrganizationSearchResult,
-  CreateEmployeeInput,
   UpdateDepartmentInput,
   UpdateEmployeeInput,
 } from "./organization.types"
@@ -55,8 +56,8 @@ export async function getDepartmentOptions(): Promise<DepartmentOption[]> {
 
 export async function createEmployee(
   input: CreateEmployeeInput,
-): Promise<Employee> {
-  return apiClient.post<Employee>(EMPLOYEES_PATH, input)
+): Promise<CreateEmployeeResult> {
+  return apiClient.post<CreateEmployeeResult>(EMPLOYEES_PATH, input)
 }
 
 export async function updateEmployee(

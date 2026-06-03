@@ -1,14 +1,18 @@
 "use client"
 
 import type { ReactNode } from "react"
-import { MoreHorizontal, Star } from "lucide-react"
-import { useDraggable, useDroppable } from "@dnd-kit/core"
+import { GripVertical, MoreHorizontal, Star } from "lucide-react"
+import { useDroppable } from "@dnd-kit/core"
+import { useSortable } from "@dnd-kit/sortable"
+import { CSS } from "@dnd-kit/utilities"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { DropdownMenu, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
+
+import { shouldOpenFileOnPrimaryClick } from "@/lib/files/open-file-item"
 
 import { FileActionsMenu } from "./file-actions-menu"
 import { FileContextMenu } from "./file-context-menu"
@@ -44,20 +48,21 @@ function FileRow({
   onDownload,
 }: FileListProps & { item: FileItem; selected: boolean }) {
   const Icon = fileIcons[item.type]
-  const draggable = useDraggable({ id: item.id })
+  const sortable = useSortable({ id: item.id })
   const droppable = useDroppable({
     id: `folder:${item.id}`,
     disabled: item.type !== "folder",
   })
 
   const setRefs = (node: HTMLTableRowElement | null) => {
-    draggable.setNodeRef(node)
+    sortable.setNodeRef(node)
     if (item.type === "folder") droppable.setNodeRef(node)
   }
 
   return (
     <FileContextMenu
       item={item}
+      onOpen={onOpen}
       onCopy={onCopy}
       onRename={onRename}
       onShare={onShare}
@@ -68,19 +73,33 @@ function FileRow({
     >
       <tr
         ref={setRefs}
-        {...draggable.listeners}
-        {...draggable.attributes}
+        {...sortable.attributes}
         className={cn(
-          "cursor-grab border-b hover:bg-muted/50 active:cursor-grabbing",
+          "border-b hover:bg-muted/50",
           selected && "bg-muted/70",
           droppable.isOver && "bg-primary/10"
         )}
-        style={{ opacity: draggable.isDragging ? 0.55 : 1 }}
+        style={{
+          opacity: sortable.isDragging ? 0.4 : 1,
+          transform: CSS.Transform.toString(sortable.transform),
+          transition: sortable.transition,
+        }}
         onDoubleClick={() => onOpen(item)}
         onClick={(event) => {
+          // 폴더는 단일 클릭으로 진입 (파일 탐색기 UX)
+          if (item.type === "folder" && !(event.ctrlKey || event.metaKey || event.shiftKey)) {
+            void onOpen(item)
+            return
+          }
+          if (shouldOpenFileOnPrimaryClick(item, event)) {
+            void onOpen(item)
+            return
+          }
           if (event.ctrlKey || event.metaKey || event.shiftKey) {
             onSelect(item.id, true)
+            return
           }
+          onSelect(item.id, false)
         }}
       >
         <td className="w-10 p-4">
@@ -91,12 +110,22 @@ function FileRow({
             aria-label={`${item.name} 선택`}
           />
         </td>
+        <td className="w-9 p-2">
+          <button
+            type="button"
+            className="flex size-8 cursor-grab items-center justify-center rounded-md text-muted-foreground hover:bg-muted active:cursor-grabbing"
+            aria-label={`${item.name} 드래그하여 이동`}
+            {...sortable.listeners}
+            onClick={(event) => event.stopPropagation()}
+            onDoubleClick={(event) => event.stopPropagation()}
+          >
+            <GripVertical className="size-4" />
+          </button>
+        </td>
         <td className="p-4">
           <div className="flex items-center gap-3">
             <Icon className={cn("size-5", fileColors[item.type])} />
-            <button className="font-medium hover:underline" onClick={() => onOpen(item)}>
-              {item.name}
-            </button>
+            <span className="font-medium">{item.name}</span>
             {item.starred && <Star className="size-4 fill-amber-400 text-amber-400" />}
             {item.shared && (
               <Badge variant="secondary" className="text-[10px]">
@@ -117,6 +146,7 @@ function FileRow({
             </DropdownMenuTrigger>
             <FileActionsMenu
               item={item}
+              onOpen={onOpen}
               onCopy={onCopy}
               onRename={onRename}
               onShare={onShare}
@@ -139,6 +169,7 @@ export function FileList(props: FileListProps) {
         <thead>
           <tr className="border-b text-left text-sm text-muted-foreground">
             <th className="w-10 p-4"></th>
+            <th className="w-9 p-2"></th>
             <th className="p-4">이름</th>
             <th className="p-4">담당 업무</th>
             <th className="p-4">수정일</th>

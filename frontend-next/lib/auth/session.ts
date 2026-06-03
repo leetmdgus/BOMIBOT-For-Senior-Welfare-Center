@@ -47,6 +47,13 @@ export function setClientSession(session: AuthSession): void {
   document.cookie = serializeSessionForCookie(session)
 }
 
+/** 조직현황 등에서 프로필 변경 시 사이드바·헤더 즉시 반영 */
+export function patchClientSession(patch: Partial<AuthSession>): void {
+  const current = getClientSession()
+  if (!current) return
+  setClientSession({ ...current, ...patch })
+}
+
 /** localStorage만 있고 쿠키가 없으면 Next `/api/*` 프록시가 401 — 로그인 직후·구세션 복구 */
 export function ensureSessionCookie(): void {
   const session = getClientSession()

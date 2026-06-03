@@ -6,12 +6,12 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
 type DocumentSectionControlsProps = {
-  onMoveUp: () => void
-  onMoveDown: () => void
-  onDelete: () => void
+  onMoveUp?: () => void
+  onMoveDown?: () => void
+  onDelete?: () => void
   className?: string
-  /** bar: 블록 상단 툴바(대목차) · corner: 우측 아이콘(본문) */
-  layout?: "bar" | "corner"
+  /** bar: 블록 상단 툴바 · side: 표 우측 세로 · compact: 가로 미니 */
+  layout?: "bar" | "side" | "compact"
 }
 
 /** 문서 섹션(대목차·본문) 이동·삭제 */
@@ -20,7 +20,7 @@ export function DocumentSectionControls({
   onMoveDown,
   onDelete,
   className,
-  layout = "corner",
+  layout = "side",
 }: DocumentSectionControlsProps) {
   if (layout === "bar") {
     return (
@@ -58,7 +58,49 @@ export function DocumentSectionControls({
           onClick={onDelete}
         >
           <Trash2 className="mr-1 size-3.5" />
-          대목차 삭제
+          지우기
+        </Button>
+      </div>
+    )
+  }
+
+  if (layout === "compact") {
+    return (
+      <div
+        className={cn(
+          "print-hide inline-flex items-center gap-0.5",
+          className,
+        )}
+      >
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="size-5 p-0"
+          title="위로"
+          onClick={onMoveUp}
+        >
+          <ChevronUp className="size-3" />
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="size-5 p-0"
+          title="아래로"
+          onClick={onMoveDown}
+        >
+          <ChevronDown className="size-3" />
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="h-5 px-1 text-[10px] text-destructive hover:text-destructive"
+          title="블록 지우기"
+          onClick={onDelete}
+        >
+          지우기
         </Button>
       </div>
     )
@@ -67,7 +109,7 @@ export function DocumentSectionControls({
   return (
     <div
       className={cn(
-        "print-hide flex flex-col items-center gap-1",
+        "print-hide flex flex-col items-center gap-0.5 py-0.5",
         className,
       )}
     >
@@ -75,31 +117,31 @@ export function DocumentSectionControls({
         type="button"
         variant="ghost"
         size="sm"
-        className="size-7 p-0"
-        title="위로 이동"
+        className="size-5 p-0"
+        title="위로"
         onClick={onMoveUp}
       >
-        <ChevronUp className="size-4" />
+        <ChevronUp className="size-3" />
       </Button>
       <Button
         type="button"
         variant="ghost"
         size="sm"
-        className="size-7 p-0"
-        title="아래로 이동"
+        className="size-5 p-0"
+        title="아래로"
         onClick={onMoveDown}
       >
-        <ChevronDown className="size-4" />
+        <ChevronDown className="size-3" />
       </Button>
       <Button
         type="button"
         variant="ghost"
         size="sm"
-        className="size-7 p-0 text-destructive hover:text-destructive"
-        title="이 블록 삭제"
+        className="size-5 p-0 text-destructive hover:text-destructive"
+        title="지우기"
         onClick={onDelete}
       >
-        <Trash2 className="size-4" />
+        <Trash2 className="size-3" />
       </Button>
     </div>
   )

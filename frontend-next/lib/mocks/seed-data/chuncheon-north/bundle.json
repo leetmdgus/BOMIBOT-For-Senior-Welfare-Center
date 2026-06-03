@@ -1,0 +1,4879 @@
+{
+  "regionId": "chuncheon-north",
+  "orgName": "춘천북부노인복지관",
+  "dashboard": {
+    "statsData": [
+      {
+        "label": "인원 현황",
+        "labelEn": "PERSONNEL STATUS",
+        "value": "45",
+        "unit": "명",
+        "description": "전년 대비 2명 증가 (신규 채용 포함)",
+        "iconName": "Users",
+        "color": "bg-primary/10 text-primary",
+        "link": "전체 직원 현황 보기",
+        "goto": "/organization"
+      },
+      {
+        "label": "활성 프로젝트",
+        "labelEn": "ACTIVE PROJECTS",
+        "value": "12",
+        "unit": "개",
+        "description": "2026년도 사업계획 승인 완료 기준",
+        "iconName": "Layers",
+        "color": "bg-primary/10 text-primary",
+        "link": "사업계획 및 실적 관리",
+        "goto": "/kanban"
+      },
+      {
+        "label": "서비스 이용자",
+        "labelEn": "SERVICE USERS",
+        "value": "8,420",
+        "unit": "명",
+        "description": "최근 3개월 누적 이용자 추이",
+        "iconName": "TrendingUp",
+        "color": "bg-primary/10 text-primary",
+        "showChart": true
+      }
+    ],
+    "progressData": [
+      {
+        "label": "인원 달성률",
+        "value": 85,
+        "iconName": "Users",
+        "color": "bg-primary",
+        "textColor": "text-primary"
+      },
+      {
+        "label": "횟수 달성률",
+        "value": 92,
+        "iconName": "Calendar",
+        "color": "bg-success",
+        "textColor": "text-success"
+      },
+      {
+        "label": "예산 집행률",
+        "value": 74,
+        "iconName": "DollarSign",
+        "color": "bg-[hsl(280,60%,50%)]",
+        "textColor": "text-[hsl(280,60%,50%)]"
+      }
+    ],
+    "calendarEvents": [
+      {
+        "day": 4,
+        "title": "전체 주간업무회의",
+        "color": "bg-rose-500",
+        "category": "welfare"
+      },
+      {
+        "day": 5,
+        "title": "화요모임",
+        "color": "bg-rose-500",
+        "category": "welfare"
+      },
+      {
+        "day": 6,
+        "title": "주원여사회 어버이...",
+        "color": "bg-rose-500",
+        "category": "welfare"
+      },
+      {
+        "day": 6,
+        "title": "[BBC] 정기모임",
+        "color": "bg-rose-500",
+        "category": "welfare"
+      },
+      {
+        "day": 7,
+        "title": "주원공헌당식(전원...",
+        "color": "bg-rose-500",
+        "category": "welfare"
+      },
+      {
+        "day": 7,
+        "title": "복지3팀 회의",
+        "color": "bg-emerald-500",
+        "category": "team"
+      },
+      {
+        "day": 7,
+        "title": "노인복지관 현장점검",
+        "color": "bg-rose-500",
+        "category": "welfare"
+      },
+      {
+        "day": 8,
+        "title": "복지관 어버이날",
+        "color": "bg-rose-500",
+        "category": "welfare"
+      },
+      {
+        "day": 8,
+        "title": "춘천시어버이날기...",
+        "color": "bg-rose-500",
+        "category": "welfare"
+      },
+      {
+        "day": 11,
+        "title": "강진영 연차",
+        "color": "bg-rose-500",
+        "category": "welfare"
+      },
+      {
+        "day": 11,
+        "title": "스승의날 기념(노...",
+        "color": "bg-rose-500",
+        "category": "welfare"
+      },
+      {
+        "day": 11,
+        "title": "복지관 시설 점검",
+        "color": "bg-rose-500",
+        "category": "welfare"
+      },
+      {
+        "day": 11,
+        "title": "사회복지사 교육",
+        "color": "bg-rose-500",
+        "category": "welfare"
+      },
+      {
+        "day": 12,
+        "title": "관장님 연차(체결...",
+        "color": "bg-rose-500",
+        "category": "welfare"
+      },
+      {
+        "day": 12,
+        "title": "화요모임",
+        "color": "bg-rose-500",
+        "category": "welfare"
+      },
+      {
+        "day": 13,
+        "title": "[BBC] 회의",
+        "color": "bg-rose-500",
+        "category": "welfare"
+      },
+      {
+        "day": 13,
+        "title": "주원공헌당식(전국...",
+        "color": "bg-rose-500",
+        "category": "welfare"
+      },
+      {
+        "day": 13,
+        "title": "복지관 프로그램 기획",
+        "color": "bg-rose-500",
+        "category": "welfare"
+      },
+      {
+        "day": 14,
+        "title": "복지3팀 회의",
+        "color": "bg-emerald-500",
+        "category": "team"
+      },
+      {
+        "day": 14,
+        "title": "전통대 AI재활관련...",
+        "color": "bg-rose-500",
+        "category": "welfare"
+      },
+      {
+        "day": 15,
+        "title": "관장님 연차",
+        "color": "bg-rose-500",
+        "category": "welfare"
+      },
+      {
+        "day": 15,
+        "title": "체결중심회교학회...",
+        "color": "bg-rose-500",
+        "category": "welfare"
+      },
+      {
+        "day": 18,
+        "title": "전체 주간업무회의",
+        "color": "bg-rose-500",
+        "category": "welfare"
+      },
+      {
+        "day": 18,
+        "title": "의료, 간호영역에서...",
+        "color": "bg-rose-500",
+        "category": "welfare"
+      },
+      {
+        "day": 18,
+        "title": "복지관 월간 보고",
+        "color": "bg-rose-500",
+        "category": "welfare"
+      },
+      {
+        "day": 19,
+        "title": "사전투표 모의시험",
+        "color": "bg-rose-500",
+        "category": "welfare"
+      },
+      {
+        "day": 19,
+        "title": "강진영 재택근무",
+        "color": "bg-rose-500",
+        "category": "welfare"
+      },
+      {
+        "day": 19,
+        "title": "복지3팀 회의",
+        "color": "bg-emerald-500",
+        "category": "team"
+      },
+      {
+        "day": 19,
+        "title": "노인복지 정책 설명회",
+        "color": "bg-rose-500",
+        "category": "welfare"
+      },
+      {
+        "day": 19,
+        "title": "프로그램 운영 회의",
+        "color": "bg-rose-500",
+        "category": "welfare"
+      },
+      {
+        "day": 19,
+        "title": "자원봉사자 교육",
+        "color": "bg-rose-500",
+        "category": "welfare"
+      },
+      {
+        "day": 20,
+        "title": "가시박 사전답사(...",
+        "color": "bg-rose-500",
+        "category": "welfare"
+      },
+      {
+        "day": 20,
+        "title": "일자리교육 재택근무",
+        "color": "bg-rose-500",
+        "category": "welfare"
+      },
+      {
+        "day": 20,
+        "title": "복지3팀 회의",
+        "color": "bg-emerald-500",
+        "category": "team"
+      },
+      {
+        "day": 20,
+        "title": "치매예방 프로그램",
+        "color": "bg-rose-500",
+        "category": "welfare"
+      },
+      {
+        "day": 20,
+        "title": "건강검진 안내",
+        "color": "bg-rose-500",
+        "category": "welfare"
+      },
+      {
+        "day": 20,
+        "title": "어르신 생신잔치",
+        "color": "bg-rose-500",
+        "category": "welfare"
+      },
+      {
+        "day": 20,
+        "title": "복지관 시설 점검",
+        "color": "bg-rose-500",
+        "category": "welfare"
+      },
+      {
+        "day": 20,
+        "title": "사회복지사 워크숍",
+        "color": "bg-rose-500",
+        "category": "welfare"
+      },
+      {
+        "day": 20,
+        "title": "지역사회 연계 회의",
+        "color": "bg-rose-500",
+        "category": "welfare"
+      },
+      {
+        "day": 21,
+        "title": "다비치안경분사세...",
+        "color": "bg-rose-500",
+        "category": "welfare"
+      },
+      {
+        "day": 21,
+        "title": "직원 워크숍",
+        "color": "bg-rose-500",
+        "category": "welfare"
+      },
+      {
+        "day": 21,
+        "title": "복지3팀 회의",
+        "color": "bg-emerald-500",
+        "category": "team"
+      },
+      {
+        "day": 22,
+        "title": "노인일자리 및 자원...",
+        "color": "bg-rose-500",
+        "category": "welfare"
+      },
+      {
+        "day": 22,
+        "title": "사랑나눔법인 기관...",
+        "color": "bg-rose-500",
+        "category": "welfare"
+      },
+      {
+        "day": 22,
+        "title": "복지관 프로그램 평가",
+        "color": "bg-rose-500",
+        "category": "welfare"
+      },
+      {
+        "day": 25,
+        "title": "전체 주간업무회의",
+        "color": "bg-rose-500",
+        "category": "welfare"
+      },
+      {
+        "day": 26,
+        "title": "화요모임",
+        "color": "bg-rose-500",
+        "category": "welfare"
+      },
+      {
+        "day": 26,
+        "title": "직장선우회 예배",
+        "color": "bg-rose-500",
+        "category": "welfare"
+      },
+      {
+        "day": 26,
+        "title": "복지3팀 회의",
+        "color": "bg-emerald-500",
+        "category": "team"
+      },
+      {
+        "day": 26,
+        "title": "노인복지관 현장점검",
+        "color": "bg-rose-500",
+        "category": "welfare"
+      },
+      {
+        "day": 27,
+        "title": "[한국교도회] 정기...",
+        "color": "bg-rose-500",
+        "category": "welfare"
+      },
+      {
+        "day": 27,
+        "title": "죽산농협 축구",
+        "color": "bg-rose-500",
+        "category": "welfare"
+      },
+      {
+        "day": 27,
+        "title": "복지관 월간 보고",
+        "color": "bg-rose-500",
+        "category": "welfare"
+      },
+      {
+        "day": 28,
+        "title": "사전투표 모의시험",
+        "color": "bg-rose-500",
+        "category": "welfare"
+      },
+      {
+        "day": 28,
+        "title": "복지3팀 회의",
+        "color": "bg-emerald-500",
+        "category": "team"
+      },
+      {
+        "day": 28,
+        "title": "프로그램 운영 회의",
+        "color": "bg-rose-500",
+        "category": "welfare"
+      },
+      {
+        "day": 29,
+        "title": "사전투표협조",
+        "color": "bg-rose-500",
+        "category": "welfare"
+      },
+      {
+        "day": 29,
+        "title": "[지구지킴이] 가시...",
+        "color": "bg-rose-500",
+        "category": "welfare"
+      },
+      {
+        "day": 31,
+        "title": "사랑나눔(법인) 기...",
+        "color": "bg-rose-500",
+        "category": "welfare"
+      }
+    ],
+    "volunteerEvents": [
+      {
+        "id": "v-today-1",
+        "name": "박서연",
+        "program": "치매예방 프로그램 보조",
+        "day": 24,
+        "status": "scheduled"
+      },
+      {
+        "id": "v-today-2",
+        "name": "정하늘",
+        "program": "스마트폰 교육 봉사",
+        "day": 24,
+        "status": "scheduled"
+      },
+      {
+        "id": "v-today-3",
+        "name": "최민재",
+        "program": "식사 배식 봉사",
+        "day": 24,
+        "status": "scheduled"
+      },
+      {
+        "id": "v1",
+        "name": "휴먼잡스",
+        "program": "스마트폰중급",
+        "day": 27,
+        "status": "completed"
+      },
+      {
+        "id": "v2",
+        "name": "빠담빠담",
+        "program": "스마트폰기초1",
+        "day": 27,
+        "status": "completed"
+      },
+      {
+        "id": "v3",
+        "name": "빠담빠담",
+        "program": "키오스크",
+        "day": 27,
+        "status": "completed"
+      },
+      {
+        "id": "v4",
+        "name": "휴먼잡스",
+        "program": "스마트폰기초2",
+        "day": 27,
+        "status": "completed"
+      },
+      {
+        "id": "v5",
+        "name": "김영희",
+        "program": "원예치료 프로그램",
+        "day": 26,
+        "status": "completed"
+      },
+      {
+        "id": "v6",
+        "name": "이준호",
+        "program": "레크리에이션 보조",
+        "day": 25,
+        "status": "completed"
+      }
+    ]
+  },
+  "organization": {
+    "departmentsData": [
+      {
+        "id": "all",
+        "name": "전체 직원",
+        "count": 30,
+        "employees": []
+      },
+      {
+        "id": "management",
+        "name": "운영총괄",
+        "count": 3,
+        "employees": [
+          {
+            "id": "emp-management-1",
+            "name": "최기원",
+            "role": "관장",
+            "position": "관장",
+            "department": "운영총괄",
+            "email": "choi@north.welfare.org",
+            "phone": "010-1234-5678",
+            "joinDate": "2020-03-15",
+            "tenure": "6년 2개월",
+            "lastLogin": "2026-05-24 09:30"
+          },
+          {
+            "id": "emp-management-2",
+            "name": "이혜진",
+            "role": "부장",
+            "position": "부장",
+            "department": "운영총괄",
+            "email": "lee.hj@north.welfare.org",
+            "phone": "010-2345-6789",
+            "joinDate": "2018-07-02",
+            "tenure": "7년 10개월",
+            "lastLogin": "2026-05-24 11:05"
+          },
+          {
+            "id": "emp-management-3",
+            "name": "이승현",
+            "role": "사회복지사",
+            "position": "사회복지사",
+            "department": "운영총괄",
+            "email": "test@gmail.com",
+            "phone": "010-9804-8978",
+            "joinDate": "2026-04-29",
+            "tenure": "0년 0개월",
+            "lastLogin": "2026-05-24 14:11",
+            "isAdmin": true,
+            "profileImage": "/이승현_증명사진.jpg"
+          }
+        ]
+      },
+      {
+        "id": "support",
+        "name": "운영지원팀",
+        "count": 6,
+        "employees": [
+          {
+            "id": "emp-support-1",
+            "name": "김민수",
+            "role": "팀장",
+            "position": "팀장",
+            "department": "운영지원팀",
+            "email": "kim.ms@north.welfare.org",
+            "phone": "010-3456-7890",
+            "joinDate": "2019-01-10",
+            "tenure": "7년 4개월",
+            "lastLogin": "2026-05-23 17:42"
+          },
+          {
+            "id": "emp-support-2",
+            "name": "박서연",
+            "role": "사무원",
+            "position": "사무원",
+            "department": "운영지원팀",
+            "email": "park.sy@north.welfare.org",
+            "phone": "010-4567-8901",
+            "joinDate": "2021-05-20",
+            "tenure": "5년 0개월",
+            "lastLogin": "2026-05-24 08:55"
+          },
+          {
+            "id": "emp-support-3",
+            "name": "정우진",
+            "role": "사무원",
+            "position": "사무원",
+            "department": "운영지원팀",
+            "email": "jung.wj@north.welfare.org",
+            "phone": "010-5678-9012",
+            "joinDate": "2022-03-07",
+            "tenure": "4년 2개월",
+            "lastLogin": "2026-05-22 16:20"
+          },
+          {
+            "id": "emp-support-4",
+            "name": "한지원",
+            "role": "사무원",
+            "position": "사무원",
+            "department": "운영지원팀",
+            "email": "han.jw@north.welfare.org",
+            "phone": "010-6789-0123",
+            "joinDate": "2023-08-14",
+            "tenure": "2년 9개월",
+            "lastLogin": "2026-05-24 10:18"
+          },
+          {
+            "id": "emp-support-5",
+            "name": "오현우",
+            "role": "사무원",
+            "position": "사무원",
+            "department": "운영지원팀",
+            "email": "oh.hw@north.welfare.org",
+            "phone": "010-7890-1234",
+            "joinDate": "2020-11-30",
+            "tenure": "5년 6개월",
+            "lastLogin": "2026-05-21 15:33"
+          },
+          {
+            "id": "emp-support-6",
+            "name": "송예린",
+            "role": "사회복지사",
+            "position": "사회복지사",
+            "department": "운영지원팀",
+            "email": "song.yr@north.welfare.org",
+            "phone": "010-8901-2345",
+            "joinDate": "2024-02-19",
+            "tenure": "2년 3개월",
+            "lastLogin": "2026-05-24 13:07"
+          }
+        ]
+      },
+      {
+        "id": "welfare1",
+        "name": "복지1팀",
+        "count": 5,
+        "employees": [
+          {
+            "id": "emp-welfare1-1",
+            "name": "강도현",
+            "role": "팀장",
+            "position": "팀장",
+            "department": "복지1팀",
+            "email": "kang.dh@north.welfare.org",
+            "phone": "010-9012-3456",
+            "joinDate": "2017-09-04",
+            "tenure": "8년 8개월",
+            "lastLogin": "2026-05-24 09:12"
+          },
+          {
+            "id": "emp-welfare1-2",
+            "name": "윤수빈",
+            "role": "사회복지사",
+            "position": "사회복지사",
+            "department": "복지1팀",
+            "email": "yoon.sb@north.welfare.org",
+            "phone": "010-0123-4567",
+            "joinDate": "2021-04-12",
+            "tenure": "5년 1개월",
+            "lastLogin": "2026-05-23 18:40"
+          },
+          {
+            "id": "emp-welfare1-3",
+            "name": "임재호",
+            "role": "사회복지사",
+            "position": "사회복지사",
+            "department": "복지1팀",
+            "email": "lim.jh@north.welfare.org",
+            "phone": "010-1122-3344",
+            "joinDate": "2022-06-01",
+            "tenure": "3년 11개월",
+            "lastLogin": "2026-05-24 11:50"
+          },
+          {
+            "id": "emp-welfare1-4",
+            "name": "지민영",
+            "role": "사회복지사",
+            "position": "사회복지사",
+            "department": "복지1팀",
+            "email": "bae.sy@north.welfare.org",
+            "phone": "010-2233-4455",
+            "joinDate": "2023-01-16",
+            "tenure": "3년 4개월",
+            "lastLogin": "2026-05-22 14:25"
+          },
+          {
+            "id": "emp-welfare1-5",
+            "name": "배소영",
+            "role": "물리치료사",
+            "position": "물리치료사",
+            "department": "복지1팀",
+            "email": "noh.jh@north.welfare.org",
+            "phone": "010-3344-5566",
+            "joinDate": "2024-07-08",
+            "tenure": "1년 10개월",
+            "lastLogin": "2026-05-24 08:30"
+          }
+        ]
+      },
+      {
+        "id": "welfare2",
+        "name": "복지2팀",
+        "count": 6,
+        "employees": [
+          {
+            "id": "emp-welfare2-1",
+            "name": "서민지",
+            "role": "팀장",
+            "position": "팀장",
+            "department": "복지2팀",
+            "email": "seo.mj@north.welfare.org",
+            "phone": "010-4455-6677",
+            "joinDate": "2018-02-26",
+            "tenure": "8년 3개월",
+            "lastLogin": "2026-05-24 10:05"
+          },
+          {
+            "id": "emp-welfare2-2",
+            "name": "유태영",
+            "role": "사회복지사",
+            "position": "사회복지사",
+            "department": "복지2팀",
+            "email": "yoo.ty@north.welfare.org",
+            "phone": "010-5566-7788",
+            "joinDate": "2020-08-03",
+            "tenure": "5년 9개월",
+            "lastLogin": "2026-05-23 16:55"
+          },
+          {
+            "id": "emp-welfare2-3",
+            "name": "홍성준",
+            "role": "사회복지사",
+            "position": "사회복지사",
+            "department": "복지2팀",
+            "email": "hong.sj@north.welfare.org",
+            "phone": "010-6677-8899",
+            "joinDate": "2021-11-15",
+            "tenure": "4년 6개월",
+            "lastLogin": "2026-05-24 12:40"
+          },
+          {
+            "id": "emp-welfare2-4",
+            "name": "정영인",
+            "role": "사회복지사",
+            "position": "사회복지사",
+            "department": "복지2팀",
+            "email": "kwak.eb@north.welfare.org",
+            "phone": "010-7788-9900",
+            "joinDate": "2022-09-19",
+            "tenure": "3년 8개월",
+            "lastLogin": "2026-05-21 09:48"
+          },
+          {
+            "id": "emp-welfare2-5",
+            "name": "곽은비",
+            "role": "영양사",
+            "position": "영양사",
+            "department": "복지2팀",
+            "email": "cha.ms@north.welfare.org",
+            "phone": "010-8899-0011",
+            "joinDate": "2023-12-04",
+            "tenure": "2년 5개월",
+            "lastLogin": "2026-05-24 07:58"
+          },
+          {
+            "id": "emp-welfare2-6",
+            "name": "노지훈",
+            "role": "물리치료사",
+            "position": "물리치료사",
+            "department": "복지2팀",
+            "email": "jeon.hn@north.welfare.org",
+            "phone": "010-9900-1122",
+            "joinDate": "2025-01-20",
+            "tenure": "1년 4개월",
+            "lastLogin": "2026-05-23 13:22"
+          }
+        ]
+      },
+      {
+        "id": "welfare3",
+        "name": "복지3팀",
+        "count": 8,
+        "employees": [
+          {
+            "id": "emp-welfare3-1",
+            "name": "문재윤",
+            "role": "팀장",
+            "position": "팀장",
+            "department": "복지3팀",
+            "email": "moon.jy@north.welfare.org",
+            "phone": "010-1010-2020",
+            "joinDate": "2016-06-13",
+            "tenure": "9년 11개월",
+            "lastLogin": "2026-05-24 08:15"
+          },
+          {
+            "id": "emp-welfare3-2",
+            "name": "권수진",
+            "role": "사회복지사",
+            "position": "사회복지사",
+            "department": "복지3팀",
+            "email": "kwon.sj@north.welfare.org",
+            "phone": "010-2020-3030",
+            "joinDate": "2019-10-21",
+            "tenure": "6년 7개월",
+            "lastLogin": "2026-05-24 11:28"
+          },
+          {
+            "id": "emp-welfare3-3",
+            "name": "신동욱",
+            "role": "사회복지사",
+            "position": "사회복지사",
+            "department": "복지3팀",
+            "email": "shin.dw@north.welfare.org",
+            "phone": "010-3030-4040",
+            "joinDate": "2021-02-01",
+            "tenure": "5년 3개월",
+            "lastLogin": "2026-05-22 17:10"
+          },
+          {
+            "id": "emp-welfare3-4",
+            "name": "조아린",
+            "role": "사회복지사",
+            "position": "사회복지사",
+            "department": "복지3팀",
+            "email": "cho.ar@north.welfare.org",
+            "phone": "010-4040-5050",
+            "joinDate": "2022-04-18",
+            "tenure": "4년 1개월",
+            "lastLogin": "2026-05-23 15:44"
+          },
+          {
+            "id": "emp-welfare3-5",
+            "name": "김연수",
+            "role": "사회복지사",
+            "position": "사회복지사",
+            "department": "복지3팀",
+            "email": "heo.jh@north.welfare.org",
+            "phone": "010-5050-6060",
+            "joinDate": "2023-03-27",
+            "tenure": "3년 2개월",
+            "lastLogin": "2026-05-24 09:52"
+          },
+          {
+            "id": "emp-welfare3-6",
+            "name": "허준호",
+            "role": "시설근무자",
+            "position": "시설근무자",
+            "department": "복지3팀",
+            "email": "ryu.jm@north.welfare.org",
+            "phone": "010-6060-7070",
+            "joinDate": "2023-09-11",
+            "tenure": "2년 8개월",
+            "lastLogin": "2026-05-21 14:05"
+          },
+          {
+            "id": "emp-welfare3-7",
+            "name": "류정민",
+            "role": "시설근무자",
+            "position": "시설근무자",
+            "department": "복지3팀",
+            "email": "nam.jy@north.welfare.org",
+            "phone": "010-7070-8080",
+            "joinDate": "2024-05-06",
+            "tenure": "2년 0개월",
+            "lastLogin": "2026-05-24 10:33"
+          },
+          {
+            "id": "emp-welfare3-8",
+            "name": "전하늘",
+            "role": "운전사",
+            "position": "운전사",
+            "department": "복지3팀",
+            "email": "pyo.sh@north.welfare.org",
+            "phone": "010-8080-9090",
+            "joinDate": "2025-03-03",
+            "tenure": "1년 2개월",
+            "lastLogin": "2026-05-23 12:18"
+          }
+        ]
+      },
+      {
+        "id": "resource",
+        "name": "자원개발팀",
+        "count": 2,
+        "employees": [
+          {
+            "id": "emp-resource-1",
+            "name": "장미래",
+            "role": "팀장",
+            "position": "팀장",
+            "department": "자원개발팀",
+            "email": "jang.mr@north.welfare.org",
+            "phone": "010-9090-0101",
+            "joinDate": "2019-04-22",
+            "tenure": "7년 1개월",
+            "lastLogin": "2026-05-24 13:45"
+          },
+          {
+            "id": "emp-resource-2",
+            "name": "고영수",
+            "role": "취업전문가",
+            "position": "취업전문가",
+            "department": "자원개발팀",
+            "email": "ko.ys@north.welfare.org",
+            "phone": "010-0101-1212",
+            "joinDate": "2022-07-25",
+            "tenure": "3년 10개월",
+            "lastLogin": "2026-05-22 11:30"
+          }
+        ]
+      }
+    ]
+  },
+  "kanban": {
+    "projectsMock": [
+      {
+        "id": "proj1",
+        "number": "1",
+        "title": "상담",
+        "team": "복지1팀",
+        "manager": "김영수 사회복지사",
+        "image": "/Counseling-removebg-preview.png",
+        "year": "2026",
+        "categories": [
+          {
+            "id": "cat1",
+            "title": "실적관리",
+            "color": "bg-success",
+            "tasks": [
+              {
+                "id": "task1",
+                "title": "일반상담 및 정보제공사업",
+                "description": "상담 인원 및 횟수 데이터 입력",
+                "assignee": "김영수",
+                "completedCount": 15,
+                "totalCount": 20
+              }
+            ]
+          },
+          {
+            "id": "cat2",
+            "title": "사업계획",
+            "color": "bg-primary",
+            "tasks": [
+              {
+                "id": "task2",
+                "title": "전문상담사업",
+                "description": "연간 사업 목표 및 예산 수립",
+                "assignee": "김영수",
+                "completedCount": 8,
+                "totalCount": 12
+              }
+            ]
+          },
+          {
+            "id": "cat3",
+            "title": "만족도조사",
+            "color": "bg-accent",
+            "tasks": [
+              {
+                "id": "task3",
+                "title": "이용자관리 및 이용자권리증진사업",
+                "description": "상반기 프로그램 만족도 조사",
+                "assignee": "김영수",
+                "completedCount": 45,
+                "totalCount": 100
+              }
+            ]
+          },
+          {
+            "id": "cat4",
+            "title": "사업평가",
+            "color": "bg-priority-high",
+            "tasks": [
+              {
+                "id": "task4",
+                "title": "평생교육지원사업",
+                "description": "성과 분석 및 개선 사항 도출",
+                "assignee": "김영수",
+                "completedCount": 3,
+                "totalCount": 10
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "proj2",
+        "number": "2",
+        "title": "교육",
+        "team": "노인 정보화 교육",
+        "manager": "박미영",
+        "image": "/Education-removebg-preview.png",
+        "year": "2026",
+        "categories": [
+          {
+            "id": "cat5",
+            "title": "실적관리",
+            "color": "bg-success",
+            "tasks": [
+              {
+                "id": "task5",
+                "title": "취미여가지원사업",
+                "description": "4월 스마트폰 활용 교육 실적 등록",
+                "assignee": "박미영",
+                "completedCount": 28,
+                "totalCount": 30
+              }
+            ]
+          },
+          {
+            "id": "cat6",
+            "title": "사업계획",
+            "color": "bg-primary",
+            "tasks": [
+              {
+                "id": "task6",
+                "title": "문화예술지원사업",
+                "description": "하반기 정보화 교육 커리큘럼 수립",
+                "assignee": "박미영",
+                "completedCount": 5,
+                "totalCount": 15
+              }
+            ]
+          },
+          {
+            "id": "cat7",
+            "title": "만족도조사",
+            "color": "bg-accent",
+            "tasks": []
+          },
+          {
+            "id": "cat8",
+            "title": "사업평가",
+            "color": "bg-priority-high",
+            "tasks": []
+          }
+        ]
+      },
+      {
+        "id": "proj3",
+        "number": "1",
+        "title": "교육",
+        "team": "노인 정보화 교육",
+        "manager": "박미영",
+        "image": "/Education-removebg-preview.png",
+        "year": "2025",
+        "categories": [
+          {
+            "id": "cat9",
+            "title": "실적관리",
+            "color": "bg-success",
+            "tasks": [
+              {
+                "id": "task7",
+                "title": "읍면동평생학습지원사업",
+                "description": "4월 스마트폰 활용 교육 실적 등록",
+                "assignee": "박미영",
+                "completedCount": 28,
+                "totalCount": 30
+              }
+            ]
+          },
+          {
+            "id": "cat10",
+            "title": "사업계획",
+            "color": "bg-primary",
+            "tasks": [
+              {
+                "id": "task8",
+                "title": "노인복지증진사업",
+                "description": "하반기 정보화 교육 커리큘럼 수립",
+                "assignee": "박미영",
+                "completedCount": 5,
+                "totalCount": 15
+              }
+            ]
+          },
+          {
+            "id": "cat11",
+            "title": "만족도조사",
+            "color": "bg-accent",
+            "tasks": []
+          },
+          {
+            "id": "cat12",
+            "title": "사업평가",
+            "color": "bg-priority-high",
+            "tasks": []
+          }
+        ]
+      }
+    ],
+    "staffMock": [
+      {
+        "id": "1",
+        "name": "김태민",
+        "team": "복지 1팀",
+        "position": "사회복지사"
+      },
+      {
+        "id": "2",
+        "name": "이창환",
+        "team": "복지 1팀",
+        "position": "사회복지사"
+      },
+      {
+        "id": "3",
+        "name": "이승현",
+        "team": "복지 1팀",
+        "position": "사회복지사"
+      },
+      {
+        "id": "4",
+        "name": "김영수",
+        "team": "복지 2팀",
+        "position": "사회복지사"
+      },
+      {
+        "id": "5",
+        "name": "박지연",
+        "team": "복지 2팀",
+        "position": "사회복지사"
+      },
+      {
+        "id": "6",
+        "name": "최민수",
+        "team": "운영지원팀",
+        "position": "사회복지사"
+      }
+    ],
+    "projectImageOptions": [
+      {
+        "label": "상담",
+        "value": "/Counseling-removebg-preview.png"
+      },
+      {
+        "label": "교육",
+        "value": "/Education-removebg-preview.png"
+      },
+      {
+        "label": "건강",
+        "value": "/Health-removebg-preview.png"
+      },
+      {
+        "label": "돌봄",
+        "value": "/Care-removebg-preview.png"
+      },
+      {
+        "label": "지역사회",
+        "value": "/Community-removebg-preview.png"
+      }
+    ],
+    "subProjects": [
+      {
+        "id": "sub1",
+        "projectId": "proj1",
+        "name": "신규회원 이용상담",
+        "category": "--",
+        "planPeople": 80,
+        "planCount": 80,
+        "planBudget": 0,
+        "actualPeople": 127,
+        "actualCount": 127,
+        "month": "1월"
+      },
+      {
+        "id": "sub2",
+        "projectId": "proj1",
+        "name": "신규회원 가입",
+        "category": "--",
+        "planPeople": 80,
+        "planCount": 80,
+        "planBudget": 0,
+        "actualPeople": 127,
+        "actualCount": 127,
+        "month": "1월"
+      },
+      {
+        "id": "sub3",
+        "projectId": "proj1",
+        "name": "신규회원 교육",
+        "category": "--",
+        "planPeople": 80,
+        "planCount": 80,
+        "planBudget": 0,
+        "actualPeople": 116,
+        "actualCount": 116,
+        "month": "1월"
+      },
+      {
+        "id": "sub4",
+        "projectId": "proj1",
+        "name": "정보제공상담",
+        "category": "--",
+        "planPeople": 0,
+        "planCount": 0,
+        "planBudget": 0,
+        "actualPeople": 0,
+        "actualCount": 0,
+        "month": "1월"
+      },
+      {
+        "id": "sub5",
+        "projectId": "proj1",
+        "name": "신규회원 이용상담",
+        "category": "--",
+        "planPeople": 80,
+        "planCount": 80,
+        "planBudget": 0,
+        "actualPeople": 93,
+        "actualCount": 93,
+        "month": "2월"
+      },
+      {
+        "id": "sub6",
+        "projectId": "proj1",
+        "name": "신규회원 가입",
+        "category": "--",
+        "planPeople": 80,
+        "planCount": 80,
+        "planBudget": 0,
+        "actualPeople": 93,
+        "actualCount": 93,
+        "month": "2월"
+      },
+      {
+        "id": "sub7",
+        "projectId": "proj1",
+        "name": "신규회원 교육",
+        "category": "--",
+        "planPeople": 80,
+        "planCount": 80,
+        "planBudget": 0,
+        "actualPeople": 124,
+        "actualCount": 124,
+        "month": "2월"
+      },
+      {
+        "id": "sub8",
+        "projectId": "proj1",
+        "name": "신규회원 이용상담",
+        "category": "--",
+        "planPeople": 80,
+        "planCount": 80,
+        "planBudget": 0,
+        "actualPeople": 73,
+        "actualCount": 73,
+        "month": "3월"
+      },
+      {
+        "id": "sub9",
+        "projectId": "proj1",
+        "name": "신규회원 가입",
+        "category": "--",
+        "planPeople": 80,
+        "planCount": 80,
+        "planBudget": 0,
+        "actualPeople": 73,
+        "actualCount": 73,
+        "month": "3월"
+      },
+      {
+        "id": "sub10",
+        "projectId": "proj1",
+        "name": "신규회원 교육",
+        "category": "--",
+        "planPeople": 80,
+        "planCount": 80,
+        "planBudget": 0,
+        "actualPeople": 62,
+        "actualCount": 62,
+        "month": "3월"
+      }
+    ],
+    "performanceReports": [
+      {
+        "id": "report1",
+        "category": "상담",
+        "projectName": "일반상담 및 정보제공사업",
+        "subProjects": [
+          {
+            "name": "신규회원 이용상담",
+            "detail": "",
+            "jan": {
+              "planPeople": 80,
+              "actualPeople": 127,
+              "planCount": 80,
+              "actualCount": 127,
+              "planBudget": 0,
+              "actualBudget": 0
+            },
+            "feb": {
+              "planPeople": 80,
+              "actualPeople": 93,
+              "planCount": 80,
+              "actualCount": 93,
+              "planBudget": 0,
+              "actualBudget": 0
+            },
+            "mar": {
+              "planPeople": 80,
+              "actualPeople": 73,
+              "planCount": 80,
+              "actualCount": 73,
+              "planBudget": 0,
+              "actualBudget": 0
+            }
+          },
+          {
+            "name": "신규회원 가입",
+            "detail": "",
+            "jan": {
+              "planPeople": 80,
+              "actualPeople": 127,
+              "planCount": 80,
+              "actualCount": 127,
+              "planBudget": 0,
+              "actualBudget": 0
+            },
+            "feb": {
+              "planPeople": 80,
+              "actualPeople": 93,
+              "planCount": 80,
+              "actualCount": 93,
+              "planBudget": 0,
+              "actualBudget": 0
+            },
+            "mar": {
+              "planPeople": 80,
+              "actualPeople": 73,
+              "planCount": 80,
+              "actualCount": 73,
+              "planBudget": 0,
+              "actualBudget": 0
+            }
+          }
+        ],
+        "subtotal": {
+          "planPeople": 240,
+          "actualPeople": 370,
+          "planCount": 240,
+          "actualCount": 370,
+          "planBudget": 0,
+          "actualBudget": 0
+        }
+      }
+    ],
+    "budgetReports": [
+      {
+        "id": "budget1",
+        "category": "사업비",
+        "subCategory": "사업비",
+        "projectName": "일반상담 및 정보제공사업",
+        "budget2026": 15000000,
+        "budget2025": 0,
+        "income": 15000000,
+        "subsidy": 0,
+        "donation": 0,
+        "transfer": 0,
+        "misc": 0,
+        "total": 15000000,
+        "ratio": "100%"
+      },
+      {
+        "id": "budget5",
+        "category": "사업비",
+        "subCategory": "사업비",
+        "projectName": "전문상담사업",
+        "budget2026": 3738000,
+        "budget2025": 0,
+        "income": 2880000,
+        "subsidy": 858000,
+        "donation": 0,
+        "transfer": 0,
+        "misc": 0,
+        "total": 3738000,
+        "ratio": "100%"
+      }
+    ],
+    "businessPlanReports": {
+      "summary": {
+        "totalProjects": 30,
+        "totalPeople": 808039,
+        "totalCount": 199908,
+        "totalBudget": 6867246003
+      },
+      "items": [
+        {
+          "id": "plan1",
+          "mainCategory": "1",
+          "subCategory": "일반상담 및 정보제공사업",
+          "details": [
+            {
+              "name": "신규회원 이용상담",
+              "people": 960,
+              "count": 960,
+              "budget": 0,
+              "purpose": "초기상담을 통한 욕구별 서비스 안내",
+              "target": "복지관 신규등록 회원",
+              "period": "2026년 1월 1일 ~ 2026년 12월 31일",
+              "method": "초기상담 및 복지관 이용 관련 상담",
+              "evaluation": "내부기안(실적보고서), 이용자 명부, 상담일지"
+            }
+          ],
+          "subtotal": {
+            "people": 2960,
+            "count": 2965,
+            "budget": 15000000,
+            "content": "사업수입 15,000,000"
+          }
+        }
+      ]
+    },
+    "taskPathMapMock": {
+      "실적관리": "performance",
+      "사업계획": "business-plan",
+      "만족도조사": "survey",
+      "사업평가": "evaluation"
+    },
+    "categoryColumnTypeMapMock": {
+      "실적관리": "실적관리",
+      "사업계획": "사업계획",
+      "사업계획서": "사업계획",
+      "만족도조사": "만족도조사",
+      "사업평가": "사업평가"
+    },
+    "defaultColumnTypeMock": "실적관리"
+  },
+  "documents": {
+    "performanceReportRows": [
+      {
+        "majorCategory": "상담",
+        "majorCategoryRowSpan": 12,
+        "projectName": "일반상담 및 정보제공사업",
+        "projectNameRowSpan": 11,
+        "subProjectName": "신규회원 이용상담",
+        "detailCategory": "홍보",
+        "planPeople": 40,
+        "actualPeople": 45,
+        "planCount": 40,
+        "actualCount": 45,
+        "planBudget": 0,
+        "rowType": "data"
+      },
+      {
+        "majorCategory": "",
+        "projectName": "",
+        "subProjectName": "신규회원 이용상담",
+        "detailCategory": "프로그램진행",
+        "planPeople": 40,
+        "actualPeople": 82,
+        "planCount": 40,
+        "actualCount": 82,
+        "planBudget": 0,
+        "rowType": "data"
+      },
+      {
+        "majorCategory": "",
+        "projectName": "",
+        "subProjectName": "신규회원 가입",
+        "detailCategory": "홍보",
+        "planPeople": 40,
+        "actualPeople": 45,
+        "planCount": 40,
+        "actualCount": 45,
+        "planBudget": 0,
+        "rowType": "data"
+      },
+      {
+        "majorCategory": "",
+        "projectName": "",
+        "subProjectName": "신규회원 가입",
+        "detailCategory": "프로그램진행",
+        "planPeople": 40,
+        "actualPeople": 82,
+        "planCount": 40,
+        "actualCount": 82,
+        "planBudget": 0,
+        "rowType": "data"
+      },
+      {
+        "majorCategory": "",
+        "projectName": "",
+        "subProjectName": "신규회원 교육",
+        "detailCategory": "홍보",
+        "planPeople": 40,
+        "actualPeople": 38,
+        "planCount": 40,
+        "actualCount": 38,
+        "planBudget": 0,
+        "rowType": "data"
+      },
+      {
+        "majorCategory": "",
+        "projectName": "",
+        "subProjectName": "신규회원 교육",
+        "detailCategory": "프로그램진행",
+        "planPeople": 40,
+        "actualPeople": 78,
+        "planCount": 40,
+        "actualCount": 78,
+        "planBudget": 0,
+        "rowType": "data"
+      },
+      {
+        "majorCategory": "",
+        "projectName": "사업 소계 > 일반상담 및 정보제공사업 소계",
+        "subProjectName": "",
+        "detailCategory": "",
+        "planPeople": 240,
+        "actualPeople": 370,
+        "planCount": 240,
+        "actualCount": 370,
+        "planBudget": 0,
+        "rowType": "subtotal"
+      },
+      {
+        "majorCategory": "",
+        "projectName": "전문상담사업",
+        "projectNameRowSpan": 4,
+        "subProjectName": "전문상담",
+        "detailCategory": "프로그램진행",
+        "planPeople": 80,
+        "actualPeople": 95,
+        "planCount": 80,
+        "actualCount": 95,
+        "planBudget": 3738000,
+        "rowType": "data"
+      },
+      {
+        "majorCategory": "",
+        "projectName": "",
+        "subProjectName": "전문상담",
+        "detailCategory": "사례관리",
+        "planPeople": 80,
+        "actualPeople": 88,
+        "planCount": 80,
+        "actualCount": 88,
+        "planBudget": 0,
+        "rowType": "data"
+      },
+      {
+        "majorCategory": "",
+        "projectName": "사업 소계 > 전문상담사업 소계",
+        "subProjectName": "",
+        "detailCategory": "",
+        "planPeople": 160,
+        "actualPeople": 183,
+        "planCount": 160,
+        "actualCount": 183,
+        "planBudget": 3738000,
+        "rowType": "subtotal"
+      }
+    ],
+    "budgetReportRows": [
+      {
+        "gwan": "",
+        "hang": "",
+        "mok": "합계",
+        "budgetCurrent": 6867906003,
+        "budgetPrevious": 0,
+        "income": 700310188,
+        "subsidy": 5901551500,
+        "sponsor": 260784315,
+        "transfer": 4600000,
+        "misc": 660000,
+        "amount": 6867906003,
+        "ratio": "100%",
+        "rowType": "total"
+      },
+      {
+        "gwan": "사업비",
+        "hang": "사업비",
+        "mok": "일반상담 및 정보제공사업",
+        "budgetCurrent": 15000000,
+        "budgetPrevious": 0,
+        "income": 15000000,
+        "subsidy": 0,
+        "sponsor": 0,
+        "transfer": 0,
+        "misc": 0,
+        "amount": 15000000,
+        "ratio": "100%",
+        "rowType": "data"
+      },
+      {
+        "gwan": "사업비",
+        "hang": "사업비",
+        "mok": "전문상담사업",
+        "budgetCurrent": 2880000,
+        "budgetPrevious": 0,
+        "income": 2880000,
+        "subsidy": 0,
+        "sponsor": 0,
+        "transfer": 0,
+        "misc": 0,
+        "amount": 2880000,
+        "ratio": "77%",
+        "rowType": "data"
+      },
+      {
+        "gwan": "",
+        "hang": "",
+        "mok": "전문상담사업",
+        "budgetCurrent": 858000,
+        "budgetPrevious": 0,
+        "income": 0,
+        "subsidy": 858000,
+        "sponsor": 0,
+        "transfer": 0,
+        "misc": 0,
+        "amount": 858000,
+        "ratio": "23%",
+        "rowType": "data"
+      },
+      {
+        "gwan": "사업비",
+        "hang": "사업비",
+        "mok": "정보제공상담",
+        "budgetCurrent": 5000000,
+        "budgetPrevious": 0,
+        "income": 3000000,
+        "subsidy": 2000000,
+        "sponsor": 0,
+        "transfer": 0,
+        "misc": 0,
+        "amount": 5000000,
+        "ratio": "100%",
+        "rowType": "data"
+      }
+    ],
+    "businessPlanReportMock": {
+      "stats": [
+        {
+          "label": "총 사업 수",
+          "value": "30",
+          "color": "text-sky-600"
+        },
+        {
+          "label": "총 연인원",
+          "value": "808,039",
+          "unit": "명",
+          "color": "text-emerald-600"
+        },
+        {
+          "label": "총 연횟수",
+          "value": "199,908",
+          "unit": "회",
+          "color": "text-violet-600"
+        },
+        {
+          "label": "총 예산",
+          "value": "6,867,246,003",
+          "unit": "원",
+          "color": "text-amber-600"
+        }
+      ],
+      "projects": [
+        {
+          "category": "1",
+          "subCategory": "일반상담 및 정보제공사업",
+          "subtotal": {
+            "people": 2960,
+            "count": 2965,
+            "budget": 15000000,
+            "content": "사업수입 15,000,000"
+          },
+          "items": [
+            {
+              "name": "신규회원 이용상담",
+              "people": 960,
+              "count": 960,
+              "budget": 0,
+              "purpose": "초기상담을 통한 욕구별 서비스 안내",
+              "target": "복지관 신규등록 회원",
+              "period": "2026.01.01 ~ 2026.12.31",
+              "method": "초기상담 및 복지관 이용 관련 상담",
+              "evaluation": "내부기안(실적보고서), 이용자 명부, 상담일지"
+            },
+            {
+              "name": "신규회원 가입",
+              "people": 960,
+              "count": 965,
+              "budget": 15000000,
+              "purpose": "신규회원 등록 및 서비스 연계",
+              "target": "복지관 신규등록 회원",
+              "period": "2026.01.01 ~ 2026.12.31",
+              "method": "회원 등록 및 서비스 안내",
+              "evaluation": "내부기안(실적보고서), 이용자 명부"
+            },
+            {
+              "name": "신규회원 교육",
+              "people": 960,
+              "count": 960,
+              "budget": 0,
+              "purpose": "신규회원 대상 복지관 이용 교육",
+              "target": "복지관 신규등록 회원",
+              "period": "2026.01.01 ~ 2026.12.31",
+              "method": "교육 프로그램 운영",
+              "evaluation": "내부기안(실적보고서), 교육일지"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "versionHistory": {
+    "entries": [
+      {
+        "id": "vh-1",
+        "user": "김영수",
+        "userTeam": "복지1팀",
+        "target": "3월 상담 실적 등록",
+        "projectName": "상담",
+        "actionType": "update_title",
+        "action": "카드 제목을 수정했습니다.",
+        "date": "2026-05-19T17:30:00",
+        "canRestore": true,
+        "changes": [
+          {
+            "label": "제목",
+            "before": "3월 상담 실적",
+            "after": "3월 상담 실적 등록"
+          },
+          {
+            "label": "칸반",
+            "before": "실적관리",
+            "after": "실적관리"
+          }
+        ]
+      },
+      {
+        "id": "vh-2",
+        "user": "이승현",
+        "userTeam": "복지3팀",
+        "target": "2026 사업계획서 수립",
+        "projectName": "상담",
+        "actionType": "move_card",
+        "action": "카드를 다른 칸반으로 이동했습니다.",
+        "date": "2026-05-19T16:12:00",
+        "canRestore": true,
+        "changes": [
+          {
+            "label": "칸반",
+            "before": "실적관리",
+            "after": "사업계획"
+          },
+          {
+            "label": "순서",
+            "before": "2번째",
+            "after": "1번째"
+          }
+        ]
+      },
+      {
+        "id": "vh-3",
+        "user": "박수현",
+        "userTeam": "복지2팀",
+        "target": "이용자 만족도 설문 배포",
+        "projectName": "상담",
+        "actionType": "update_description",
+        "action": "카드 설명을 수정했습니다.",
+        "date": "2026-05-19T15:40:00",
+        "canRestore": false,
+        "changes": [
+          {
+            "label": "설명",
+            "before": "상반기 설문 초안",
+            "after": "상반기 프로그램 만족도 조사"
+          }
+        ]
+      },
+      {
+        "id": "vh-4",
+        "user": "김태민",
+        "userTeam": "복지1팀",
+        "target": "어르신 건강교실",
+        "projectName": "건강증진",
+        "actionType": "update_assignee",
+        "action": "담당자를 변경했습니다.",
+        "date": "2026-05-18T14:20:00",
+        "canRestore": true,
+        "changes": [
+          {
+            "label": "담당자",
+            "before": "이승현",
+            "after": "김태민"
+          }
+        ]
+      },
+      {
+        "id": "vh-5",
+        "user": "관리자",
+        "userTeam": "운영팀",
+        "target": "방문요양 A/B 평가",
+        "projectName": "방문요양",
+        "actionType": "create_task",
+        "action": "새 업무 카드를 추가했습니다.",
+        "date": "2026-05-18T11:05:00",
+        "canRestore": true,
+        "changes": [
+          {
+            "label": "제목",
+            "after": "방문요양 A/B 평가"
+          },
+          {
+            "label": "칸반",
+            "after": "사업평가"
+          }
+        ]
+      },
+      {
+        "id": "vh-6",
+        "user": "김연수",
+        "userTeam": "복지2팀",
+        "target": "임시 테스트 카드",
+        "projectName": "프로그램",
+        "actionType": "delete_task",
+        "action": "업무 카드를 삭제했습니다.",
+        "date": "2026-05-17T09:50:00",
+        "canRestore": false,
+        "changes": [
+          {
+            "label": "제목",
+            "before": "임시 테스트 카드"
+          },
+          {
+            "label": "칸반",
+            "before": "실적관리"
+          }
+        ]
+      },
+      {
+        "id": "vh-7",
+        "user": "김영수",
+        "userTeam": "복지1팀",
+        "target": "상담",
+        "projectName": "상담",
+        "actionType": "update_project",
+        "action": "프로젝트 정보를 수정했습니다.",
+        "date": "2026-05-16T18:00:00",
+        "canRestore": true,
+        "changes": [
+          {
+            "label": "프로젝트명",
+            "before": "상담 사업",
+            "after": "상담"
+          }
+        ]
+      },
+      {
+        "id": "vh-8",
+        "user": "관리자",
+        "userTeam": "운영팀",
+        "target": "건강증진",
+        "projectName": "건강증진",
+        "actionType": "create_project",
+        "action": "신규 사업을 등록했습니다.",
+        "date": "2026-05-15T10:00:00",
+        "canRestore": false,
+        "changes": [
+          {
+            "label": "사업명",
+            "after": "건강증진"
+          },
+          {
+            "label": "연도",
+            "after": "2026"
+          }
+        ]
+      }
+    ]
+  },
+  "files": {
+    "files": [
+      {
+        "id": "file1",
+        "name": "2026년 사업계획서.docx",
+        "type": "document",
+        "size": "2.4 MB",
+        "modifiedAt": "2026-05-10",
+        "folder": "사업계획"
+      },
+      {
+        "id": "file2",
+        "name": "예산집행현황.xlsx",
+        "type": "spreadsheet",
+        "size": "1.8 MB",
+        "modifiedAt": "2026-05-09",
+        "folder": "예산관리"
+      },
+      {
+        "id": "file3",
+        "name": "프로그램 홍보 이미지.png",
+        "type": "image",
+        "size": "5.2 MB",
+        "modifiedAt": "2026-05-08",
+        "folder": "홍보자료"
+      }
+    ]
+  },
+  "filesManager": {
+    "taskOptions": [
+      {
+        "id": "task-1",
+        "name": "상담 [1-1 일반상담]"
+      },
+      {
+        "id": "task-2",
+        "name": "2026년 사업계획"
+      },
+      {
+        "id": "task-3",
+        "name": "직원교육"
+      },
+      {
+        "id": "task-4",
+        "name": "복지1팀 운영"
+      }
+    ],
+    "initialFiles": [
+      {
+        "id": "folder-1",
+        "name": "2026년 사업계획서",
+        "type": "folder",
+        "parentId": null,
+        "createdAt": "2026-05-01T09:00:00",
+        "modifiedAt": "2026-05-10T12:00:00",
+        "shared": true,
+        "permission": "team",
+        "taskId": "task-2",
+        "taskName": "2026년 사업계획"
+      },
+      {
+        "id": "folder-2",
+        "name": "운영보고서",
+        "type": "folder",
+        "parentId": null,
+        "createdAt": "2026-05-02T09:00:00",
+        "modifiedAt": "2026-05-08T12:00:00",
+        "permission": "private",
+        "taskId": "task-4",
+        "taskName": "복지1팀 운영"
+      },
+      {
+        "id": "folder-3",
+        "name": "복지1팀 자료",
+        "type": "folder",
+        "parentId": null,
+        "createdAt": "2026-05-03T09:00:00",
+        "modifiedAt": "2026-05-07T12:00:00",
+        "starred": true,
+        "permission": "private",
+        "taskId": "task-4",
+        "taskName": "복지1팀 운영"
+      },
+      {
+        "id": "folder-4",
+        "name": "직원교육자료",
+        "type": "folder",
+        "parentId": null,
+        "createdAt": "2026-05-04T09:00:00",
+        "modifiedAt": "2026-05-05T12:00:00",
+        "permission": "private",
+        "taskId": "task-3",
+        "taskName": "직원교육"
+      },
+      {
+        "id": "file-1",
+        "name": "3월 실적보고서.docx",
+        "type": "document",
+        "parentId": null,
+        "size": "2.4 MB",
+        "createdAt": "2026-05-04T09:00:00",
+        "modifiedAt": "2026-05-10T12:00:00",
+        "starred": true,
+        "permission": "private",
+        "taskId": "task-1",
+        "taskName": "상담 [1-1 일반상담]"
+      },
+      {
+        "id": "file-2",
+        "name": "이용자 만족도조사 결과.xlsx",
+        "type": "spreadsheet",
+        "parentId": null,
+        "size": "1.8 MB",
+        "createdAt": "2026-05-03T09:00:00",
+        "modifiedAt": "2026-05-09T12:00:00",
+        "permission": "private",
+        "taskId": "task-4",
+        "taskName": "복지1팀 운영"
+      },
+      {
+        "id": "file-3",
+        "name": "프로그램 홍보 이미지.png",
+        "type": "image",
+        "parentId": "folder-3",
+        "size": "5.2 MB",
+        "createdAt": "2026-05-02T09:00:00",
+        "modifiedAt": "2026-05-08T12:00:00",
+        "permission": "private",
+        "taskId": "task-4",
+        "taskName": "복지1팀 운영"
+      },
+      {
+        "id": "file-4",
+        "name": "상담일지_4월.hwp",
+        "type": "document",
+        "parentId": "folder-1",
+        "size": "860 KB",
+        "createdAt": "2026-05-01T09:00:00",
+        "modifiedAt": "2026-05-07T12:00:00",
+        "permission": "team",
+        "taskId": "task-1",
+        "taskName": "상담 [1-1 일반상담]"
+      }
+    ],
+    "defaultRecentIds": [
+      "folder-1",
+      "file-1",
+      "file-2",
+      "folder-3"
+    ]
+  },
+  "ebooks": {
+    "categories": [
+      "전체",
+      "운영보고서",
+      "리플릿",
+      "소식지",
+      "안내서",
+      "기념집"
+    ],
+    "booksData": [
+      {
+        "id": "1",
+        "title": "2025년도 운영계획보고서",
+        "team": "기획전략팀",
+        "category": "운영보고서",
+        "thumbnail": "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=400&h=300&fit=crop"
+      }
+    ],
+    "categoryStyles": {
+      "전체": "bg-muted text-muted-foreground",
+      "운영보고서": "bg-blue-100 text-blue-700",
+      "리플릿": "bg-pink-100 text-pink-700",
+      "소식지": "bg-green-100 text-green-700",
+      "안내서": "bg-amber-100 text-amber-700",
+      "기념집": "bg-purple-100 text-purple-700"
+    },
+    "suggestedQuestions": [
+      {
+        "icon": {},
+        "text": "2분기에 실적횟수가 가장 많은 사업은 뭐야?"
+      },
+      {
+        "icon": {},
+        "text": "사회 프로그램에 배정된 예산 중 남은 잔액이 있어?"
+      },
+      {
+        "icon": {},
+        "text": "세대 통합 참여자 명단만 따로 추출해서 표로 만들어줘."
+      },
+      {
+        "icon": {},
+        "text": "현재 사업계획서의 기대효과 부분을 요약해줘."
+      }
+    ]
+  },
+  "performanceInput": {
+    "inputManagementRows": [
+      {
+        "id": "d11c9bfa-b89b-4276-9b9b-cf221d2c0e16",
+        "selected": false,
+        "subProject": "선택",
+        "detailCategory": "기타",
+        "month": "4월",
+        "planPeople": 0,
+        "planCount": 0,
+        "planBudget": 0,
+        "actualPeople": 199,
+        "actualCount": 24,
+        "actualExpense": 898100,
+        "content": "웹매거진 제작 및 발송",
+        "fundingSources": [
+          "비"
+        ],
+        "actualFunding": [
+          {
+            "source": "비",
+            "amount": 898100
+          }
+        ]
+      },
+      {
+        "id": "4054e0b7-3e67-47e0-8026-594f866c56cd",
+        "selected": false,
+        "subProject": "신규회원 이용상담",
+        "detailCategory": "홍보",
+        "month": "1월",
+        "planPeople": 0,
+        "planCount": 1,
+        "planBudget": 0,
+        "actualPeople": 0,
+        "actualCount": 1,
+        "actualExpense": 0,
+        "content": "온라인 게시물 관리대장"
+      },
+      {
+        "id": "48e9b878-c1c5-4677-bb6f-7473be5260e0",
+        "selected": false,
+        "subProject": "신규회원 이용상담",
+        "detailCategory": "설문조사",
+        "month": "1월",
+        "planPeople": 3000,
+        "planCount": 1,
+        "planBudget": 50000,
+        "actualPeople": 3481,
+        "actualCount": 1,
+        "actualExpense": 50000,
+        "content": "웹매거진 제작 및 발송",
+        "fundingSources": [
+          "비"
+        ],
+        "planFunding": [
+          {
+            "source": "비",
+            "amount": 50000
+          }
+        ],
+        "actualFunding": [
+          {
+            "source": "비",
+            "amount": 50000
+          }
+        ]
+      },
+      {
+        "id": "a30ded44-df85-4146-9d3d-8c978bfaf8b1",
+        "selected": false,
+        "subProject": "신규회원 이용상담",
+        "detailCategory": "홍보",
+        "month": "2월",
+        "planPeople": 0,
+        "planCount": 1,
+        "planBudget": 0,
+        "actualPeople": 0,
+        "actualCount": 1,
+        "actualExpense": 0,
+        "content": "온라인 게시물 관리대장"
+      },
+      {
+        "id": "150d903d-43af-4d3d-a907-1ea5e55e0bbf",
+        "selected": false,
+        "subProject": "신규회원 이용상담",
+        "detailCategory": "설문조사",
+        "month": "2월",
+        "planPeople": 3000,
+        "planCount": 1,
+        "planBudget": 50000,
+        "actualPeople": 3396,
+        "actualCount": 1,
+        "actualExpense": 50000,
+        "content": "웹매거진 제작 및 발송",
+        "fundingSources": [
+          "비"
+        ],
+        "planFunding": [
+          {
+            "source": "비",
+            "amount": 50000
+          }
+        ],
+        "actualFunding": [
+          {
+            "source": "비",
+            "amount": 50000
+          }
+        ]
+      },
+      {
+        "id": "2f888616-85fd-4624-954e-6c465730e97b",
+        "selected": false,
+        "subProject": "신규회원 이용상담",
+        "detailCategory": "홍보",
+        "month": "3월",
+        "planPeople": 0,
+        "planCount": 1,
+        "planBudget": 0,
+        "actualPeople": 0,
+        "actualCount": 1,
+        "actualExpense": 0,
+        "content": "온라인 게시물 관리대장"
+      },
+      {
+        "id": "7bb5477c-e84f-4e85-8407-bdae9bf349c3",
+        "selected": false,
+        "subProject": "신규회원 이용상담",
+        "detailCategory": "설문조사",
+        "month": "3월",
+        "planPeople": 3000,
+        "planCount": 1,
+        "planBudget": 50000,
+        "actualPeople": 3457,
+        "actualCount": 1,
+        "actualExpense": 50000,
+        "content": "웹매거진 제작 및 발송",
+        "fundingSources": [
+          "비"
+        ],
+        "planFunding": [
+          {
+            "source": "비",
+            "amount": 50000
+          }
+        ],
+        "actualFunding": [
+          {
+            "source": "비",
+            "amount": 50000
+          }
+        ]
+      },
+      {
+        "id": "e652762e-7c95-4124-ba17-8c45f80779ba",
+        "selected": false,
+        "subProject": "신규회원 이용상담",
+        "detailCategory": "홍보",
+        "month": "4월",
+        "planPeople": 0,
+        "planCount": 1,
+        "planBudget": 0,
+        "actualPeople": 0,
+        "actualCount": 1,
+        "actualExpense": 0,
+        "content": "온라인 게시물 관리대장"
+      },
+      {
+        "id": "8a0cf110-0934-4a7f-9f36-5083fb36f29e",
+        "selected": false,
+        "subProject": "신규회원 이용상담",
+        "detailCategory": "설문조사",
+        "month": "4월",
+        "planPeople": 3000,
+        "planCount": 1,
+        "planBudget": 50000,
+        "actualPeople": 3410,
+        "actualCount": 1,
+        "actualExpense": 50000,
+        "content": "웹매거진 제작 및 발송",
+        "fundingSources": [
+          "비"
+        ],
+        "planFunding": [
+          {
+            "source": "비",
+            "amount": 50000
+          }
+        ],
+        "actualFunding": [
+          {
+            "source": "비",
+            "amount": 50000
+          }
+        ]
+      },
+      {
+        "id": "8913befb-99e5-45cd-bca5-e277e5cfe01c",
+        "selected": false,
+        "subProject": "신규회원 이용상담",
+        "detailCategory": "홍보",
+        "month": "5월",
+        "planPeople": 0,
+        "planCount": 1,
+        "planBudget": 0,
+        "actualPeople": 0,
+        "actualCount": 1,
+        "actualExpense": 0,
+        "content": "온라인 게시물 관리대장"
+      },
+      {
+        "id": "c176a917-2a87-478e-9b17-dc8d3a467c62",
+        "selected": false,
+        "subProject": "신규회원 이용상담",
+        "detailCategory": "설문조사",
+        "month": "5월",
+        "planPeople": 3000,
+        "planCount": 1,
+        "planBudget": 50000,
+        "actualPeople": 3512,
+        "actualCount": 1,
+        "actualExpense": 50000,
+        "content": "웹매거진 제작 및 발송",
+        "fundingSources": [
+          "비"
+        ],
+        "planFunding": [
+          {
+            "source": "비",
+            "amount": 50000
+          }
+        ],
+        "actualFunding": [
+          {
+            "source": "비",
+            "amount": 50000
+          }
+        ]
+      },
+      {
+        "id": "526b8ce1-09b8-4985-810e-90b11b07ee74",
+        "selected": false,
+        "subProject": "선택",
+        "detailCategory": "기타",
+        "month": "5월",
+        "planPeople": 0,
+        "planCount": 0,
+        "planBudget": 0,
+        "actualPeople": 210,
+        "actualCount": 26,
+        "actualExpense": 920000,
+        "content": "온라인 게시물 관리대장",
+        "fundingSources": [
+          "비"
+        ],
+        "actualFunding": [
+          {
+            "source": "비",
+            "amount": 920000
+          }
+        ]
+      },
+      {
+        "id": "9c4673e6-eabe-4bbe-8b3e-165d70e5dc91",
+        "selected": false,
+        "subProject": "사진공모전",
+        "detailCategory": "홍보",
+        "month": "1월",
+        "planPeople": 10,
+        "planCount": 10,
+        "planBudget": 40000,
+        "actualPeople": 10,
+        "actualCount": 10,
+        "actualExpense": 38000,
+        "content": "",
+        "fundingSources": [
+          "비"
+        ]
+      },
+      {
+        "id": "cc27a9ae-9deb-413b-a48c-275e81e4e9bc",
+        "selected": false,
+        "subProject": "사진공모전",
+        "detailCategory": "홍보",
+        "month": "2월",
+        "planPeople": 10,
+        "planCount": 10,
+        "planBudget": 40000,
+        "actualPeople": 9,
+        "actualCount": 9,
+        "actualExpense": 38000,
+        "content": "",
+        "fundingSources": [
+          "비"
+        ]
+      },
+      {
+        "id": "13496455-c6f6-4c0b-8287-b52982e5ce69",
+        "selected": false,
+        "subProject": "사진공모전",
+        "detailCategory": "홍보",
+        "month": "5월",
+        "planPeople": 11,
+        "planCount": 11,
+        "planBudget": 42000,
+        "actualPeople": 10,
+        "actualCount": 10,
+        "actualExpense": 39500,
+        "content": "",
+        "fundingSources": [
+          "비"
+        ]
+      },
+      {
+        "id": "40f11edb-96ff-4ebd-a1d4-485bf3f8d25e",
+        "selected": false,
+        "subProject": "나눔릴레이",
+        "detailCategory": "프로그램진행",
+        "month": "1월",
+        "planPeople": 16,
+        "planCount": 16,
+        "planBudget": 100000,
+        "actualPeople": 15,
+        "actualCount": 16,
+        "actualExpense": 95000,
+        "content": "",
+        "fundingSources": [
+          "지",
+          "비"
+        ]
+      },
+      {
+        "id": "d10c5382-f541-4747-afc7-e64273dfa21c",
+        "selected": false,
+        "subProject": "나눔릴레이",
+        "detailCategory": "프로그램진행",
+        "month": "2월",
+        "planPeople": 17,
+        "planCount": 17,
+        "planBudget": 100000,
+        "actualPeople": 16,
+        "actualCount": 17,
+        "actualExpense": 96000,
+        "content": "",
+        "fundingSources": [
+          "지",
+          "비"
+        ]
+      },
+      {
+        "id": "da344efc-7ea6-447f-aa05-8033575e5637",
+        "selected": false,
+        "subProject": "나눔릴레이",
+        "detailCategory": "프로그램진행",
+        "month": "5월",
+        "planPeople": 18,
+        "planCount": 18,
+        "planBudget": 105000,
+        "actualPeople": 17,
+        "actualCount": 18,
+        "actualExpense": 98000,
+        "content": "",
+        "fundingSources": [
+          "지",
+          "비"
+        ]
+      },
+      {
+        "id": "3d0447eb-e5da-44f4-ba8b-b13419eeb3d5",
+        "selected": false,
+        "subProject": "나눔릴레이",
+        "detailCategory": "홍보",
+        "month": "5월",
+        "planPeople": 5,
+        "planCount": 5,
+        "planBudget": 18000,
+        "actualPeople": 5,
+        "actualCount": 5,
+        "actualExpense": 17500,
+        "content": "",
+        "fundingSources": [
+          "비"
+        ]
+      },
+      {
+        "id": "ac390549-5941-43b4-8b4a-82d82febbd0d",
+        "selected": false,
+        "subProject": "지역사회 조직화",
+        "detailCategory": "프로그램진행",
+        "month": "5월",
+        "planPeople": 15,
+        "planCount": 15,
+        "planBudget": 75000,
+        "actualPeople": 14,
+        "actualCount": 15,
+        "actualExpense": 73000,
+        "content": "",
+        "fundingSources": [
+          "기"
+        ]
+      },
+      {
+        "id": "42473e1c-a5b6-4be5-8165-3511abc95510",
+        "selected": false,
+        "subProject": "나눔릴레이 홍보",
+        "detailCategory": "홍보",
+        "month": "5월",
+        "planPeople": 8,
+        "planCount": 8,
+        "planBudget": 28000,
+        "actualPeople": 8,
+        "actualCount": 8,
+        "actualExpense": 27000,
+        "content": "",
+        "fundingSources": [
+          "비"
+        ]
+      },
+      {
+        "id": "275cf8f0-9214-4858-ad9f-24f6520a5306",
+        "selected": false,
+        "subProject": "발대식",
+        "detailCategory": "프로그램진행",
+        "month": "5월",
+        "planPeople": 10,
+        "planCount": 10,
+        "planBudget": 50000,
+        "actualPeople": 10,
+        "actualCount": 10,
+        "actualExpense": 49000,
+        "content": "",
+        "fundingSources": [
+          "법"
+        ]
+      },
+      {
+        "id": "bff8eb05-7acb-46e0-8cca-b8e9354cd33c",
+        "selected": false,
+        "subProject": "모금 활동",
+        "detailCategory": "프로그램진행",
+        "month": "5월",
+        "planPeople": 12,
+        "planCount": 12,
+        "planBudget": 62000,
+        "actualPeople": 12,
+        "actualCount": 12,
+        "actualExpense": 60000,
+        "content": "",
+        "fundingSources": [
+          "지"
+        ]
+      },
+      {
+        "id": "303a346a-8943-43b2-b093-99d56182b726",
+        "selected": false,
+        "subProject": "모금결과 안내",
+        "detailCategory": "홍보",
+        "month": "5월",
+        "planPeople": 7,
+        "planCount": 7,
+        "planBudget": 18000,
+        "actualPeople": 7,
+        "actualCount": 7,
+        "actualExpense": 18000,
+        "content": "",
+        "fundingSources": [
+          "사"
+        ]
+      }
+    ],
+    "defaultDetailCategories": [
+      "홍보",
+      "프로그램진행",
+      "설문조사",
+      "사후관리상담",
+      "기타"
+    ],
+    "performanceSubProjectChips": [
+      {
+        "id": 1,
+        "label": "신규회원 이용상담",
+        "color": "#8fd3ff"
+      },
+      {
+        "id": 2,
+        "label": "신규회원 가입",
+        "color": "#ffe58f"
+      },
+      {
+        "id": 3,
+        "label": "신규회원 교육",
+        "color": "#ff9c8f"
+      },
+      {
+        "id": 4,
+        "label": "정보제공상담",
+        "color": "#ff9cdf"
+      }
+    ]
+  },
+  "performanceSummary": {
+    "performanceSummarySeedRows": [
+      {
+        "id": "1",
+        "subProject": "사진공모전",
+        "detailCategory": "홍보",
+        "fundingSources": [
+          "비"
+        ],
+        "plan": {
+          "total": {
+            "people": 130,
+            "count": 130,
+            "budget": 500000
+          },
+          "monthly": {
+            "1월": {
+              "people": 10,
+              "count": 10,
+              "budget": 40000
+            },
+            "2월": {
+              "people": 10,
+              "count": 10,
+              "budget": 40000
+            },
+            "3월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "4월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "5월": {
+              "people": 11,
+              "count": 11,
+              "budget": 42000
+            },
+            "6월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "7월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "8월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "9월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "10월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "11월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "12월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            }
+          }
+        },
+        "actual": {
+          "total": {
+            "people": 128,
+            "count": 128,
+            "budget": 480000
+          },
+          "monthly": {
+            "1월": {
+              "people": 10,
+              "count": 10,
+              "budget": 38000
+            },
+            "2월": {
+              "people": 9,
+              "count": 9,
+              "budget": 38000
+            },
+            "3월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "4월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "5월": {
+              "people": 10,
+              "count": 10,
+              "budget": 39500
+            },
+            "6월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "7월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "8월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "9월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "10월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "11월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "12월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            }
+          }
+        }
+      },
+      {
+        "id": "2",
+        "subProject": "나눔릴레이",
+        "detailCategory": "프로그램진행",
+        "fundingSources": [
+          "지",
+          "비"
+        ],
+        "plan": {
+          "total": {
+            "people": 200,
+            "count": 200,
+            "budget": 1200000
+          },
+          "monthly": {
+            "1월": {
+              "people": 16,
+              "count": 16,
+              "budget": 100000
+            },
+            "2월": {
+              "people": 17,
+              "count": 17,
+              "budget": 100000
+            },
+            "3월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "4월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "5월": {
+              "people": 18,
+              "count": 18,
+              "budget": 105000
+            },
+            "6월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "7월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "8월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "9월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "10월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "11월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "12월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            }
+          }
+        },
+        "actual": {
+          "total": {
+            "people": 195,
+            "count": 198,
+            "budget": 1150000
+          },
+          "monthly": {
+            "1월": {
+              "people": 15,
+              "count": 16,
+              "budget": 95000
+            },
+            "2월": {
+              "people": 16,
+              "count": 17,
+              "budget": 96000
+            },
+            "3월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "4월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "5월": {
+              "people": 17,
+              "count": 18,
+              "budget": 98000
+            },
+            "6월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "7월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "8월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "9월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "10월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "11월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "12월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            }
+          }
+        }
+      },
+      {
+        "id": "2b",
+        "subProject": "나눔릴레이",
+        "detailCategory": "홍보",
+        "fundingSources": [
+          "비"
+        ],
+        "plan": {
+          "total": {
+            "people": 60,
+            "count": 60,
+            "budget": 200000
+          },
+          "monthly": {
+            "1월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "2월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "3월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "4월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "5월": {
+              "people": 5,
+              "count": 5,
+              "budget": 18000
+            },
+            "6월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "7월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "8월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "9월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "10월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "11월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "12월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            }
+          }
+        },
+        "actual": {
+          "total": {
+            "people": 58,
+            "count": 59,
+            "budget": 190000
+          },
+          "monthly": {
+            "1월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "2월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "3월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "4월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "5월": {
+              "people": 5,
+              "count": 5,
+              "budget": 17500
+            },
+            "6월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "7월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "8월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "9월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "10월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "11월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "12월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            }
+          }
+        }
+      },
+      {
+        "id": "3",
+        "subProject": "지역사회 조직화",
+        "detailCategory": "프로그램진행",
+        "fundingSources": [
+          "기"
+        ],
+        "plan": {
+          "total": {
+            "people": 180,
+            "count": 180,
+            "budget": 900000
+          },
+          "monthly": {
+            "1월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "2월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "3월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "4월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "5월": {
+              "people": 15,
+              "count": 15,
+              "budget": 75000
+            },
+            "6월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "7월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "8월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "9월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "10월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "11월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "12월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            }
+          }
+        },
+        "actual": {
+          "total": {
+            "people": 172,
+            "count": 175,
+            "budget": 880000
+          },
+          "monthly": {
+            "1월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "2월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "3월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "4월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "5월": {
+              "people": 14,
+              "count": 15,
+              "budget": 73000
+            },
+            "6월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "7월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "8월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "9월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "10월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "11월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "12월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            }
+          }
+        }
+      },
+      {
+        "id": "4",
+        "subProject": "나눔릴레이 홍보",
+        "detailCategory": "홍보",
+        "fundingSources": [
+          "비"
+        ],
+        "plan": {
+          "total": {
+            "people": 90,
+            "count": 90,
+            "budget": 300000
+          },
+          "monthly": {
+            "1월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "2월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "3월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "4월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "5월": {
+              "people": 8,
+              "count": 8,
+              "budget": 28000
+            },
+            "6월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "7월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "8월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "9월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "10월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "11월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "12월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            }
+          }
+        },
+        "actual": {
+          "total": {
+            "people": 88,
+            "count": 88,
+            "budget": 290000
+          },
+          "monthly": {
+            "1월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "2월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "3월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "4월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "5월": {
+              "people": 8,
+              "count": 8,
+              "budget": 27000
+            },
+            "6월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "7월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "8월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "9월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "10월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "11월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "12월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            }
+          }
+        }
+      },
+      {
+        "id": "5",
+        "subProject": "발대식",
+        "detailCategory": "프로그램진행",
+        "fundingSources": [
+          "법"
+        ],
+        "plan": {
+          "total": {
+            "people": 120,
+            "count": 120,
+            "budget": 600000
+          },
+          "monthly": {
+            "1월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "2월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "3월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "4월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "5월": {
+              "people": 10,
+              "count": 10,
+              "budget": 50000
+            },
+            "6월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "7월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "8월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "9월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "10월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "11월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "12월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            }
+          }
+        },
+        "actual": {
+          "total": {
+            "people": 118,
+            "count": 119,
+            "budget": 590000
+          },
+          "monthly": {
+            "1월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "2월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "3월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "4월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "5월": {
+              "people": 10,
+              "count": 10,
+              "budget": 49000
+            },
+            "6월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "7월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "8월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "9월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "10월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "11월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "12월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            }
+          }
+        }
+      },
+      {
+        "id": "6",
+        "subProject": "모금 활동",
+        "detailCategory": "프로그램진행",
+        "fundingSources": [
+          "지"
+        ],
+        "plan": {
+          "total": {
+            "people": 150,
+            "count": 150,
+            "budget": 750000
+          },
+          "monthly": {
+            "1월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "2월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "3월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "4월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "5월": {
+              "people": 12,
+              "count": 12,
+              "budget": 62000
+            },
+            "6월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "7월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "8월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "9월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "10월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "11월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "12월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            }
+          }
+        },
+        "actual": {
+          "total": {
+            "people": 145,
+            "count": 148,
+            "budget": 720000
+          },
+          "monthly": {
+            "1월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "2월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "3월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "4월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "5월": {
+              "people": 12,
+              "count": 12,
+              "budget": 60000
+            },
+            "6월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "7월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "8월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "9월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "10월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "11월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "12월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            }
+          }
+        }
+      },
+      {
+        "id": "7",
+        "subProject": "모금결과 안내",
+        "detailCategory": "홍보",
+        "fundingSources": [
+          "사"
+        ],
+        "plan": {
+          "total": {
+            "people": 80,
+            "count": 80,
+            "budget": 200000
+          },
+          "monthly": {
+            "1월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "2월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "3월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "4월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "5월": {
+              "people": 7,
+              "count": 7,
+              "budget": 18000
+            },
+            "6월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "7월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "8월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "9월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "10월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "11월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "12월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            }
+          }
+        },
+        "actual": {
+          "total": {
+            "people": 80,
+            "count": 80,
+            "budget": 200000
+          },
+          "monthly": {
+            "1월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "2월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "3월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "4월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "5월": {
+              "people": 7,
+              "count": 7,
+              "budget": 18000
+            },
+            "6월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "7월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "8월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "9월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "10월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "11월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            },
+            "12월": {
+              "people": 0,
+              "count": 0,
+              "budget": 0
+            }
+          }
+        }
+      }
+    ]
+  },
+  "monthlyPlan": {
+    "monthlyPlanMonths": [
+      "1월",
+      "2월",
+      "3월",
+      "4월",
+      "5월",
+      "6월",
+      "7월",
+      "8월",
+      "9월",
+      "10월",
+      "11월",
+      "12월"
+    ]
+  },
+  "survey": {
+    "surveyListItemsMock": [
+      {
+        "id": "1",
+        "title": "공간 이용 만족도 조사",
+        "program": "상담 [1-1 일반상담]",
+        "date": "2026.03.01",
+        "status": "진행중",
+        "endDate": "2026-08-10",
+        "responseCount": 4,
+        "totalTarget": 30,
+        "satisfaction": 4.2
+      },
+      {
+        "id": "2",
+        "title": "스마트폰 활용 교육 만족도 조사",
+        "program": "디지털 역량강화 프로그램",
+        "status": "완료",
+        "endDate": "2026-06-30",
+        "responseCount": 189,
+        "totalTarget": 200,
+        "satisfaction": 4.5
+      },
+      {
+        "id": "3",
+        "title": "노년사회화교육 상반기 만족도 조사",
+        "program": "노년사회화교육 지원사업",
+        "status": "예정",
+        "endDate": "2026-09-15",
+        "responseCount": 0,
+        "totalTarget": 150,
+        "satisfaction": 0
+      },
+      {
+        "id": "4",
+        "title": "건강체조 프로그램 참여자 평가",
+        "program": "어르신 건강증진 프로그램",
+        "status": "진행중",
+        "endDate": "2026-08-31",
+        "responseCount": 87,
+        "totalTarget": 120,
+        "satisfaction": 4.1
+      },
+      {
+        "id": "5",
+        "title": "독거노인 정서지원 서비스 만족도 조사",
+        "program": "지역사회 통합돌봄 사업",
+        "status": "임시",
+        "endDate": "2026-10-01",
+        "responseCount": 12,
+        "totalTarget": 80,
+        "satisfaction": 3.8
+      }
+    ],
+    "surveyDetailsMock": {
+      "1": {
+        "id": "1",
+        "overview": {
+          "purpose": [
+            "이용 공간 및 서비스에 대한 만족도와 개선 의견을 파악한다."
+          ],
+          "limitations": [
+            "응답 표본 수가 제한적일 수 있으며, 주관적 평가가 포함됩니다."
+          ],
+          "name": "공간 이용 만족도 조사",
+          "startDate": "2026-03-01",
+          "endDate": "2026-12-31",
+          "target": "시설 이용 참여자",
+          "method": "온라인 설문 (네이버 폼 유형)",
+          "staff": "운영팀",
+          "sampleCount": "200",
+          "analysisMethod": "기술통계, 5점 척도, 교차분석"
+        },
+        "basicInfo": {
+          "title": "공간 이용 만족도 조사",
+          "description": "시설·환경·서비스에 대한 의견을 작성해 주세요.",
+          "category": "만족도조사",
+          "status": "active"
+        },
+        "questions": [
+          {
+            "id": "q-matrix-1",
+            "type": "matrix",
+            "title": "공간 내용 평가",
+            "description": "해당 부분에서 불편함을 느꼈다면 아래 개선 항목에서 꼭 적어주세요.",
+            "required": true,
+            "options": [],
+            "rows": [
+              "분위기",
+              "소음",
+              "청결",
+              "쾌적",
+              "동선/거리",
+              "스터디 환경",
+              "스피커"
+            ],
+            "columns": [
+              "매우 불만족",
+              "불만족",
+              "보통",
+              "만족",
+              "매우 만족"
+            ]
+          },
+          {
+            "id": "q-scale-1",
+            "type": "scale",
+            "title": "전반적인 만족도",
+            "description": "1점(매우 불만족) ~ 10점(매우 만족)",
+            "required": true,
+            "options": [],
+            "rows": [],
+            "columns": []
+          },
+          {
+            "id": "q-text-1",
+            "type": "text",
+            "title": "이용하면서 타 스터디룸, 파티룸에 비해 긍정적인 부분 구체적으로 적어주세요!",
+            "description": "",
+            "required": false,
+            "options": [],
+            "rows": [],
+            "columns": []
+          },
+          {
+            "id": "q-text-2",
+            "type": "text",
+            "title": "이용하면서 타 스터디룸, 파티룸에 비해 부정적인 부분 구체적으로 적어주세요!",
+            "description": "",
+            "required": false,
+            "options": [],
+            "rows": [],
+            "columns": []
+          },
+          {
+            "id": "q-choice-price",
+            "type": "choice",
+            "title": "해당 공간을 실제로 구매하신다면 납득할 만한 최대 가격은 얼마인가요?",
+            "description": "",
+            "required": false,
+            "options": [
+              "5,000원 미만",
+              "5,000원",
+              "7,000원",
+              "9,000원",
+              "12,000원 이상"
+            ],
+            "rows": [],
+            "columns": []
+          }
+        ],
+        "style": {
+          "themeColor": "oklch(0.55 0.2 260)",
+          "coverTitle": "매우 주관적으로 설문 부탁드립니다.",
+          "coverDescription": "스터디·영화 공간, 스튜디오 등 이용 경험에 대한 솔직한 의견을 남겨주세요. 응답은 서비스 개선에만 활용됩니다.",
+          "coverPeriodLabel": "2023.07.27. 오후 05:36 ~ 제한 없음",
+          "thankYouMessage": "설문에 참여해 주셔서 감사합니다."
+        },
+        "settings": {
+          "acceptResponses": true,
+          "allowDuplicate": false,
+          "showProgress": true
+        },
+        "taskId": "1"
+      },
+      "2": {
+        "id": "2",
+        "overview": {
+          "purpose": [
+            "이용 공간 및 서비스에 대한 만족도와 개선 의견을 파악한다."
+          ],
+          "limitations": [
+            "응답 표본 수가 제한적일 수 있으며, 주관적 평가가 포함됩니다."
+          ],
+          "name": "공간 이용 만족도 조사",
+          "startDate": "2026-03-01",
+          "endDate": "2026-12-31",
+          "target": "시설 이용 참여자",
+          "method": "온라인 설문 (네이버 폼 유형)",
+          "staff": "운영팀",
+          "sampleCount": "200",
+          "analysisMethod": "기술통계, 5점 척도, 교차분석"
+        },
+        "basicInfo": {
+          "title": "스마트폰 활용 교육 만족도 조사",
+          "description": "교육 내용과 강사, 교재에 대한 의견을 작성해 주세요.",
+          "category": "만족도조사",
+          "status": "closed"
+        },
+        "questions": [
+          {
+            "id": "q-matrix-1",
+            "type": "matrix",
+            "title": "공간 내용 평가",
+            "description": "해당 부분에서 불편함을 느꼈다면 아래 개선 항목에서 꼭 적어주세요.",
+            "required": true,
+            "options": [],
+            "rows": [
+              "분위기",
+              "소음",
+              "청결",
+              "쾌적",
+              "동선/거리",
+              "스터디 환경",
+              "스피커"
+            ],
+            "columns": [
+              "매우 불만족",
+              "불만족",
+              "보통",
+              "만족",
+              "매우 만족"
+            ]
+          },
+          {
+            "id": "q-scale-1",
+            "type": "scale",
+            "title": "전반적인 만족도",
+            "description": "1점(매우 불만족) ~ 10점(매우 만족)",
+            "required": true,
+            "options": [],
+            "rows": [],
+            "columns": []
+          },
+          {
+            "id": "q-text-1",
+            "type": "text",
+            "title": "이용하면서 타 스터디룸, 파티룸에 비해 긍정적인 부분 구체적으로 적어주세요!",
+            "description": "",
+            "required": false,
+            "options": [],
+            "rows": [],
+            "columns": []
+          },
+          {
+            "id": "q-text-2",
+            "type": "text",
+            "title": "이용하면서 타 스터디룸, 파티룸에 비해 부정적인 부분 구체적으로 적어주세요!",
+            "description": "",
+            "required": false,
+            "options": [],
+            "rows": [],
+            "columns": []
+          },
+          {
+            "id": "q-choice-price",
+            "type": "choice",
+            "title": "해당 공간을 실제로 구매하신다면 납득할 만한 최대 가격은 얼마인가요?",
+            "description": "",
+            "required": false,
+            "options": [
+              "5,000원 미만",
+              "5,000원",
+              "7,000원",
+              "9,000원",
+              "12,000원 이상"
+            ],
+            "rows": [],
+            "columns": []
+          }
+        ],
+        "style": {
+          "themeColor": "oklch(0.55 0.2 260)",
+          "coverTitle": "스마트폰 활용 교육 만족도 조사",
+          "coverDescription": "참여하신 프로그램에 대한 솔직한 의견을 남겨주세요. 응답 내용은 서비스 개선 목적으로만 활용됩니다.",
+          "coverPeriodLabel": "2025.12.01 ~ 2025.12.15",
+          "thankYouMessage": "설문에 참여해 주셔서 감사합니다."
+        },
+        "settings": {
+          "acceptResponses": false,
+          "allowDuplicate": false,
+          "showProgress": true
+        }
+      },
+      "3": {
+        "id": "3",
+        "overview": {
+          "purpose": [
+            "이용 공간 및 서비스에 대한 만족도와 개선 의견을 파악한다."
+          ],
+          "limitations": [
+            "응답 표본 수가 제한적일 수 있으며, 주관적 평가가 포함됩니다."
+          ],
+          "name": "공간 이용 만족도 조사",
+          "startDate": "2026-03-01",
+          "endDate": "2026-12-31",
+          "target": "시설 이용 참여자",
+          "method": "온라인 설문 (네이버 폼 유형)",
+          "staff": "운영팀",
+          "sampleCount": "200",
+          "analysisMethod": "기술통계, 5점 척도, 교차분석"
+        },
+        "basicInfo": {
+          "title": "노년사회화교육 상반기 만족도 조사",
+          "description": "교육 프로그램에 대한 의견을 작성해 주세요.",
+          "category": "만족도조사",
+          "status": "draft"
+        },
+        "questions": [
+          {
+            "id": "q-matrix-1",
+            "type": "matrix",
+            "title": "공간 내용 평가",
+            "description": "해당 부분에서 불편함을 느꼈다면 아래 개선 항목에서 꼭 적어주세요.",
+            "required": true,
+            "options": [],
+            "rows": [
+              "분위기",
+              "소음",
+              "청결",
+              "쾌적",
+              "동선/거리",
+              "스터디 환경",
+              "스피커"
+            ],
+            "columns": [
+              "매우 불만족",
+              "불만족",
+              "보통",
+              "만족",
+              "매우 만족"
+            ]
+          },
+          {
+            "id": "q-scale-1",
+            "type": "scale",
+            "title": "전반적인 만족도",
+            "description": "1점(매우 불만족) ~ 10점(매우 만족)",
+            "required": true,
+            "options": [],
+            "rows": [],
+            "columns": []
+          },
+          {
+            "id": "q-text-1",
+            "type": "text",
+            "title": "이용하면서 타 스터디룸, 파티룸에 비해 긍정적인 부분 구체적으로 적어주세요!",
+            "description": "",
+            "required": false,
+            "options": [],
+            "rows": [],
+            "columns": []
+          },
+          {
+            "id": "q-text-2",
+            "type": "text",
+            "title": "이용하면서 타 스터디룸, 파티룸에 비해 부정적인 부분 구체적으로 적어주세요!",
+            "description": "",
+            "required": false,
+            "options": [],
+            "rows": [],
+            "columns": []
+          },
+          {
+            "id": "q-choice-price",
+            "type": "choice",
+            "title": "해당 공간을 실제로 구매하신다면 납득할 만한 최대 가격은 얼마인가요?",
+            "description": "",
+            "required": false,
+            "options": [
+              "5,000원 미만",
+              "5,000원",
+              "7,000원",
+              "9,000원",
+              "12,000원 이상"
+            ],
+            "rows": [],
+            "columns": []
+          }
+        ],
+        "style": {
+          "themeColor": "oklch(0.55 0.2 260)",
+          "coverTitle": "노년사회화교육 상반기 만족도 조사",
+          "coverDescription": "참여하신 프로그램에 대한 솔직한 의견을 남겨주세요. 응답 내용은 서비스 개선 목적으로만 활용됩니다.",
+          "coverPeriodLabel": "2026.09.15 마감 예정",
+          "thankYouMessage": "설문에 참여해 주셔서 감사합니다."
+        },
+        "settings": {
+          "acceptResponses": false,
+          "allowDuplicate": false,
+          "showProgress": true
+        }
+      },
+      "4": {
+        "id": "4",
+        "overview": {
+          "purpose": [
+            "이용 공간 및 서비스에 대한 만족도와 개선 의견을 파악한다."
+          ],
+          "limitations": [
+            "응답 표본 수가 제한적일 수 있으며, 주관적 평가가 포함됩니다."
+          ],
+          "name": "공간 이용 만족도 조사",
+          "startDate": "2026-03-01",
+          "endDate": "2026-12-31",
+          "target": "시설 이용 참여자",
+          "method": "온라인 설문 (네이버 폼 유형)",
+          "staff": "운영팀",
+          "sampleCount": "200",
+          "analysisMethod": "기술통계, 5점 척도, 교차분석"
+        },
+        "basicInfo": {
+          "title": "건강체조 프로그램 참여자 평가",
+          "description": "프로그램 운영 및 강사에 대한 의견을 작성해 주세요.",
+          "category": "만족도조사",
+          "status": "active"
+        },
+        "questions": [
+          {
+            "id": "q-matrix-1",
+            "type": "matrix",
+            "title": "공간 내용 평가",
+            "description": "해당 부분에서 불편함을 느꼈다면 아래 개선 항목에서 꼭 적어주세요.",
+            "required": true,
+            "options": [],
+            "rows": [
+              "분위기",
+              "소음",
+              "청결",
+              "쾌적",
+              "동선/거리",
+              "스터디 환경",
+              "스피커"
+            ],
+            "columns": [
+              "매우 불만족",
+              "불만족",
+              "보통",
+              "만족",
+              "매우 만족"
+            ]
+          },
+          {
+            "id": "q-scale-1",
+            "type": "scale",
+            "title": "전반적인 만족도",
+            "description": "1점(매우 불만족) ~ 10점(매우 만족)",
+            "required": true,
+            "options": [],
+            "rows": [],
+            "columns": []
+          },
+          {
+            "id": "q-text-1",
+            "type": "text",
+            "title": "이용하면서 타 스터디룸, 파티룸에 비해 긍정적인 부분 구체적으로 적어주세요!",
+            "description": "",
+            "required": false,
+            "options": [],
+            "rows": [],
+            "columns": []
+          },
+          {
+            "id": "q-text-2",
+            "type": "text",
+            "title": "이용하면서 타 스터디룸, 파티룸에 비해 부정적인 부분 구체적으로 적어주세요!",
+            "description": "",
+            "required": false,
+            "options": [],
+            "rows": [],
+            "columns": []
+          }
+        ],
+        "style": {
+          "themeColor": "oklch(0.55 0.2 260)",
+          "coverTitle": "건강체조 프로그램 참여자 평가",
+          "coverDescription": "참여하신 건강체조 프로그램에 대한 솔직한 의견을 남겨주세요.",
+          "coverPeriodLabel": "2026.03.01 ~ 2026.08.31",
+          "thankYouMessage": "설문에 참여해 주셔서 감사합니다."
+        },
+        "settings": {
+          "acceptResponses": true,
+          "allowDuplicate": false,
+          "showProgress": true
+        }
+      },
+      "5": {
+        "id": "5",
+        "overview": {
+          "purpose": [
+            "이용 공간 및 서비스에 대한 만족도와 개선 의견을 파악한다."
+          ],
+          "limitations": [
+            "응답 표본 수가 제한적일 수 있으며, 주관적 평가가 포함됩니다."
+          ],
+          "name": "공간 이용 만족도 조사",
+          "startDate": "2026-03-01",
+          "endDate": "2026-12-31",
+          "target": "시설 이용 참여자",
+          "method": "온라인 설문 (네이버 폼 유형)",
+          "staff": "운영팀",
+          "sampleCount": "200",
+          "analysisMethod": "기술통계, 5점 척도, 교차분석"
+        },
+        "basicInfo": {
+          "title": "독거노인 정서지원 서비스 만족도 조사",
+          "description": "서비스 만족도와 개선 의견을 작성해 주세요.",
+          "category": "만족도조사",
+          "status": "draft"
+        },
+        "questions": [
+          {
+            "id": "q-matrix-1",
+            "type": "matrix",
+            "title": "공간 내용 평가",
+            "description": "해당 부분에서 불편함을 느꼈다면 아래 개선 항목에서 꼭 적어주세요.",
+            "required": true,
+            "options": [],
+            "rows": [
+              "분위기",
+              "소음",
+              "청결",
+              "쾌적",
+              "동선/거리",
+              "스터디 환경",
+              "스피커"
+            ],
+            "columns": [
+              "매우 불만족",
+              "불만족",
+              "보통",
+              "만족",
+              "매우 만족"
+            ]
+          },
+          {
+            "id": "q-scale-1",
+            "type": "scale",
+            "title": "전반적인 만족도",
+            "description": "1점(매우 불만족) ~ 10점(매우 만족)",
+            "required": true,
+            "options": [],
+            "rows": [],
+            "columns": []
+          },
+          {
+            "id": "q-text-1",
+            "type": "text",
+            "title": "이용하면서 타 스터디룸, 파티룸에 비해 긍정적인 부분 구체적으로 적어주세요!",
+            "description": "",
+            "required": false,
+            "options": [],
+            "rows": [],
+            "columns": []
+          },
+          {
+            "id": "q-text-2",
+            "type": "text",
+            "title": "이용하면서 타 스터디룸, 파티룸에 비해 부정적인 부분 구체적으로 적어주세요!",
+            "description": "",
+            "required": false,
+            "options": [],
+            "rows": [],
+            "columns": []
+          },
+          {
+            "id": "q-choice-price",
+            "type": "choice",
+            "title": "해당 공간을 실제로 구매하신다면 납득할 만한 최대 가격은 얼마인가요?",
+            "description": "",
+            "required": false,
+            "options": [
+              "5,000원 미만",
+              "5,000원",
+              "7,000원",
+              "9,000원",
+              "12,000원 이상"
+            ],
+            "rows": [],
+            "columns": []
+          }
+        ],
+        "style": {
+          "themeColor": "oklch(0.55 0.2 260)",
+          "coverTitle": "독거노인 정서지원 서비스 만족도 조사",
+          "coverDescription": "참여하신 프로그램에 대한 솔직한 의견을 남겨주세요. 응답 내용은 서비스 개선 목적으로만 활용됩니다.",
+          "coverPeriodLabel": "2026.10.01 마감 예정",
+          "thankYouMessage": "설문에 참여해 주셔서 감사합니다."
+        },
+        "settings": {
+          "acceptResponses": false,
+          "allowDuplicate": false,
+          "showProgress": true
+        }
+      },
+      "new": {
+        "id": "new",
+        "overview": {
+          "purpose": [
+            "이용 공간 및 서비스에 대한 만족도와 개선 의견을 파악한다."
+          ],
+          "limitations": [
+            "응답 표본 수가 제한적일 수 있으며, 주관적 평가가 포함됩니다."
+          ],
+          "name": "공간 이용 만족도 조사",
+          "startDate": "2026-03-01",
+          "endDate": "2026-12-31",
+          "target": "시설 이용 참여자",
+          "method": "온라인 설문 (네이버 폼 유형)",
+          "staff": "운영팀",
+          "sampleCount": "200",
+          "analysisMethod": "기술통계, 5점 척도, 교차분석"
+        },
+        "basicInfo": {
+          "title": "",
+          "description": "",
+          "category": "만족도조사",
+          "status": "draft"
+        },
+        "questions": [],
+        "style": {
+          "themeColor": "oklch(0.55 0.2 260)",
+          "coverTitle": "새 설문",
+          "coverDescription": "설문 제목과 설명을 입력해 주세요.",
+          "coverPeriodLabel": "기간 미설정",
+          "thankYouMessage": "설문에 참여해 주셔서 감사합니다."
+        },
+        "settings": {
+          "acceptResponses": true,
+          "allowDuplicate": false,
+          "showProgress": true
+        }
+      }
+    },
+    "surveyResultsMock": {
+      "1": {
+        "surveyId": "1",
+        "summary": {
+          "totalResponses": 4,
+          "totalTarget": 30,
+          "averageSatisfaction": 4.2,
+          "completionRate": 100
+        },
+        "questions": [
+          {
+            "questionId": "q-matrix-1",
+            "type": "matrix",
+            "title": "1. 공연 내용 평가",
+            "subtitle": "공간·프로그램 내용에 대한 평가",
+            "answeredCount": 4,
+            "skippedCount": 0,
+            "matrixChart": [
+              {
+                "name": "상반기",
+                "매우불만족": 0,
+                "불만족": 0,
+                "보통": 1,
+                "만족": 2,
+                "매우만족": 1
+              },
+              {
+                "name": "하반기",
+                "매우불만족": 0,
+                "불만족": 1,
+                "보통": 0,
+                "만족": 2,
+                "매우만족": 1
+              }
+            ]
+          },
+          {
+            "questionId": "q-text-2",
+            "type": "text",
+            "title": "5. 개선되어야 할 부분",
+            "subtitle": "부정적 경험 및 개선 요청",
+            "answeredCount": 4,
+            "skippedCount": 0,
+            "textResponses": [
+              {
+                "id": "t1",
+                "text": "스피커 음량이 조금 커서 집중이 어려웠습니다. 시간대별 볼륨 조절이 있으면 좋겠어요.",
+                "votes": 1
+              },
+              {
+                "id": "t2",
+                "text": "주말에는 예약 대기가 길어서 이용이 불편했습니다.",
+                "votes": 1
+              },
+              {
+                "id": "t3",
+                "text": "전반적으로 만족하지만 환기가 더 잘 되면 좋겠습니다.",
+                "votes": 1
+              },
+              {
+                "id": "t4",
+                "text": "청결 상태는 좋았으나 휴게 공간 의자가 부족했습니다.",
+                "votes": 1
+              }
+            ]
+          },
+          {
+            "questionId": "q-choice-price",
+            "type": "choice",
+            "title": "6. 해당 공간을 실제로 구매하신다면 납득할만한 최대 가격은?",
+            "answeredCount": 4,
+            "skippedCount": 0,
+            "pieData": [
+              {
+                "name": "5,000원 미만",
+                "value": 1,
+                "color": "#3b82f6"
+              },
+              {
+                "name": "5,000원",
+                "value": 1,
+                "color": "#22c55e"
+              },
+              {
+                "name": "7,000원",
+                "value": 1,
+                "color": "#f59e0b"
+              },
+              {
+                "name": "9,000원",
+                "value": 0,
+                "color": "#ef4444"
+              },
+              {
+                "name": "12,000원 이상",
+                "value": 0,
+                "color": "#8b5cf6"
+              },
+              {
+                "name": "기타",
+                "value": 1,
+                "color": "#64748b"
+              }
+            ],
+            "otherText": "8000원",
+            "otherCount": 1
+          }
+        ]
+      }
+    },
+    "defaultSurveyStyle": {
+      "themeColor": "oklch(0.55 0.2 260)",
+      "coverTitle": "춘천북부노인복지관 프로그램 만족도 조사",
+      "coverDescription": "참여하신 프로그램에 대한 솔직한 의견을 남겨주세요. 응답 내용은 서비스 개선 목적으로만 활용됩니다.",
+      "coverPeriodLabel": "2026.03.01 ~ 2026.03.31",
+      "thankYouMessage": "설문에 참여해 주셔서 감사합니다."
+    }
+  },
+  "taskDetail": {
+    "businessEvaluationData": {
+      "team": "복지1팀",
+      "manager": "복지1팀 김연수 사회복지사",
+      "period": "2026-01-01 ~ 2026-12-31",
+      "programName": "",
+      "target": "춘천시 거주 만 60세 이상 어르신 중 복지관 이용 희망자 및 이용자",
+      "planCount": "2,960명 / 2,965회",
+      "planBudget": "금 15,000,000원 (천오백만)",
+      "actualCount": "896명 / 896회",
+      "actualExpense": "-",
+      "purpose": "개별 욕구에 적합한 상담으로 정보 및 복지서비스를 제공하여 건강하고 안정적인 노후 생활 지원",
+      "goals": [
+        "초기상담을 통한 욕구 파악으로 이용자 편리성 증진",
+        "기관 사업 및 이용 규정에 대한 이해도 향상",
+        "전문지식 제공으로 노년기 문제 해결 능력 강화"
+      ],
+      "performanceIndicator": "",
+      "evaluationTool": "",
+      "keyFactorAnalysis": "",
+      "goalAppropriacy": "",
+      "suggestion": "",
+      "supervision": "",
+      "evaluationDate": "2026-01-15",
+      "isCompleted": false,
+      "detailRows": [
+        {
+          "label": "사업공간 확보",
+          "content": "상담실·프로그램실 등 사업 수행 공간 확보 및 운영"
+        },
+        {
+          "label": "사업 홍보",
+          "content": "기관 홈페이지, 안내문, 지역 네트워크를 통한 홍보"
+        },
+        {
+          "label": "운영 일정",
+          "content": "연간 운영 일정에 따른 상담·교육 프로그램 진행"
+        },
+        {
+          "label": "평가 방법",
+          "content": "만족도 조사, 실적 대비 목표 달성도, 슈퍼비전"
+        }
+      ],
+      "sections": [
+        {
+          "id": "sec-1",
+          "type": "heading",
+          "title": "I. 사업의 배경 및 필요성",
+          "content": ""
+        },
+        {
+          "id": "sec-2",
+          "type": "body",
+          "title": "",
+          "content": "1. 대상자 욕구 및 문제점\n통계청의 고령자 통계에 따르면 고령화 대응의 필요성이 더욱 증가할 것으로 예상됩니다.\n\n2. 지역사회 환경적 특성\n지역 내 복지 자원 연계를 통한 서비스 접근성 강화가 필요합니다."
+        }
+      ]
+    },
+    "filesData": [
+      {
+        "id": "eval-1",
+        "name": "2025 세대통합 사업 평가서",
+        "type": "평가서"
+      },
+      {
+        "id": "eval-2",
+        "name": "2025 세대통합 실적 내역서",
+        "type": "내역서"
+      },
+      {
+        "id": "eval-3",
+        "name": "2025 세대통합 운영 지침서",
+        "type": "지침서"
+      },
+      {
+        "id": "eval-4",
+        "name": "2025 세대통합 결과표",
+        "type": "결과표"
+      },
+      {
+        "id": "eval-5",
+        "name": "2025 세대통합 사업계획서",
+        "type": "계획서"
+      }
+    ],
+    "viewTogetherFixedFiles": [
+      {
+        "id": "fixed-template",
+        "name": "기본틀",
+        "type": "틀"
+      },
+      {
+        "id": "fixed-plan-template",
+        "name": "사회복지사업 단위사업계획서 (양식)",
+        "type": "틀"
+      },
+      {
+        "id": "fixed-plan",
+        "name": "사회복지사업 단위사업계획서",
+        "type": "계획서"
+      }
+    ]
+  },
+  "businessPlan": {
+    "defaultBusinessPlanDocument": {
+      "isCompleted": false,
+      "sections": [
+        {
+          "id": 1,
+          "type": "heading",
+          "title": "I. 사업의 배경 및 필요성"
+        },
+        {
+          "id": 2,
+          "type": "body",
+          "title": "",
+          "content": "<h3 class=\"doc-section\">1. 대상자 욕구 및 문제점</h3><p><br></p><p class=\"doc-body\">통계청의 고령자 통계에 따르면 고령화 대응의 필요성이 더욱 증가할 것으로 예상된다. 지역 내 어르신의 정보 접근성과 복지서비스 연계에 대한 상담 수요가 지속적으로 증가하고 있다.</p><p><br></p><h3 class=\"doc-section\">2. 사업 추진 필요성</h3><p><br></p><p class=\"doc-body\">초기상담을 통해 이용자 욕구를 파악하고 적합한 서비스를 안내함으로써 이용 편의성을 높이고, 기관 사업 이해도를 제고할 필요가 있다.</p><p><br></p>"
+        },
+        {
+          "id": 3,
+          "type": "heading",
+          "title": "II. 서비스 지역, 서비스 대상 및 실인원수"
+        },
+        {
+          "id": 4,
+          "type": "body",
+          "title": "",
+          "content": "<h3 class=\"doc-section\">1. 서비스 지역</h3><p><br></p><p class=\"doc-body\">춘천시 관내 (복지관이 위치한 관할 지역)</p><p><br></p><h3 class=\"doc-section\">2. 서비스 대상</h3><p><br></p><p class=\"doc-body\">춘천시 거주 만 60세 이상 어르신 중 복지관 이용 희망자 및 이용자</p><p><br></p><h3 class=\"doc-section-plain\">4. 실인원수</h3><p><br></p><table class=\"bp-rt-table bp-formal-table bp-staff-table w-full border-collapse border border-black text-[10px] my-2\"><colgroup><col style=\"width:28%\"><col style=\"width:52%\"><col style=\"width:20%\"></colgroup>\n<thead><tr>\n<th class=\"border border-black bg-[#e6e6e6] p-2 text-center text-[10px] font-semibold\">대상구분</th><th class=\"border border-black bg-[#e6e6e6] p-2 text-center text-[10px] font-semibold\">서비스대상자 산출근거</th><th class=\"border border-black bg-[#e6e6e6] p-2 text-center text-[10px] font-semibold\">단위수(명)</th>\n</tr></thead><tbody><tr>\n<td class=\"border border-black bg-white p-2 text-center align-middle text-[10px] font-medium\"><span class=\"doc-cell-num\">①</span> 신규회원 이용상담</td>\n<td class=\"border border-black bg-white p-2 align-top text-[10px] leading-relaxed\">월 80명 × 12개월</td>\n<td class=\"border border-black bg-white p-2 text-right align-middle text-[10px] doc-num\">960*</td>\n</tr><tr>\n<td class=\"border border-black bg-white p-2 text-center align-middle text-[10px] font-medium\"><span class=\"doc-cell-num\">②</span> 신규회원 가입</td>\n<td class=\"border border-black bg-white p-2 align-top text-[10px] leading-relaxed\">월 80명 × 12개월</td>\n<td class=\"border border-black bg-white p-2 text-right align-middle text-[10px] doc-num\">960**</td>\n</tr><tr>\n<td class=\"border border-black bg-white p-2 text-center align-middle text-[10px] font-medium\"><span class=\"doc-cell-num\">③</span> 신규회원 교육</td>\n<td class=\"border border-black bg-white p-2 align-top text-[10px] leading-relaxed\">월 80명 × 12개월 × 90%</td>\n<td class=\"border border-black bg-white p-2 text-right align-middle text-[10px] doc-num\">960**</td>\n</tr><tr>\n<td class=\"border border-black bg-white p-2 text-center align-middle text-[10px] font-medium\"><span class=\"doc-cell-num\">④</span> 정보제공상담</td>\n<td class=\"border border-black bg-white p-2 align-top text-[10px] leading-relaxed\">월 80명 × 1개월</td>\n<td class=\"border border-black bg-white p-2 text-right align-middle text-[10px] doc-num\">80***</td>\n</tr></tbody></table>\n<p class=\"doc-footnote\">* 신규회원 이용상담 산출 내역을 입력하세요.</p>\n<p class=\"doc-footnote\">** 신규회원 가입·교육 산출 내역을 입력하세요.</p>\n<p class=\"doc-footnote\">*** 정보제공상담 산출 내역을 입력하세요.</p>\n<p><br></p>"
+        },
+        {
+          "id": 5,
+          "type": "heading",
+          "title": "III. 사업 목적 및 평가방법"
+        },
+        {
+          "id": 6,
+          "type": "table",
+          "title": "1. 사업의 목적 및 목표",
+          "content": "{\"preset\":\"purpose-goals\"}"
+        },
+        {
+          "id": 7,
+          "type": "heading",
+          "title": "IV. 사업내용"
+        },
+        {
+          "id": 8,
+          "type": "body",
+          "title": "",
+          "content": "<h3 class=\"doc-section\">1. 사업 추진 개요</h3><p><br></p><p class=\"doc-body\">세부사업별 추진 일정·담당·횟수는 아래 사업내용 표에 기재합니다.</p><p><br></p><h3 class=\"doc-section\">2. 세부 사업</h3><p><br></p><p class=\"doc-body\">신규회원 이용상담, 신규회원 가입, 신규회원 교육, 정보제공상담 프로그램을 연중 운영합니다.</p><p><br></p>"
+        },
+        {
+          "id": 9,
+          "type": "file",
+          "title": ""
+        }
+      ],
+      "formData": {
+        "projectName": "일반상담 및 정보제공사업",
+        "purpose": "개별 욕구에 적합한 상담으로 정보 및 복지서비스를 제공하여 건강하고 안정적인 노후 생활 지원",
+        "goals": [
+          "초기상담을 통한 욕구 파악으로 이용자 편리성 증진",
+          "기관 사업 및 이용 규정에 대한 이해도 향상",
+          "전문지식 제공으로 노년기 문제 해결 능력 강화"
+        ],
+        "period": "2026-01-01 ~ 2026-12-31",
+        "target": "춘천시 거주 만 60세 이상 어르신 중 복지관 이용 희망자 및 이용자",
+        "totalCount": "2,960명 / 2,965회",
+        "budget": "금 15,000,000원 (천오백만)",
+        "budgetCategory": "사업비-사업비-상담사업비",
+        "manager": "복지1팀 김연수 사회복지사",
+        "subProjects": [
+          {
+            "name": "신규회원 이용상담",
+            "output": "신규회원 이용상담 (960명 / 960회)\n- 상반기 80명×6개월=480명 / 480회\n- 하반기 80명×6개월=480명 / 480회",
+            "outcome": "초기상담을 통한 이용자 편리성 증진"
+          },
+          {
+            "name": "신규회원 가입",
+            "output": "신규회원 가입 (960명 / 960회)\n- 상반기 80명×6개월=480명 / 480회\n- 하반기 80명×6개월=480명 / 480회",
+            "outcome": ""
+          },
+          {
+            "name": "신규회원 교육",
+            "output": "신규회원 교육 (960명 / 960회)\n- 상반기 80명×6개월×90%=480명 / 480회\n- 하반기 80명×6개월×90%=480명 / 480회",
+            "outcome": "기관 사업 및 이용 규정에 대한 이해도 향상"
+          },
+          {
+            "name": "정보제공상담",
+            "output": "정보제공상담 (80명 / 80회)",
+            "outcome": "전문지식 제공으로 노년기 문제 해결 능력 강화"
+          }
+        ]
+      }
+    },
+    "defaultBusinessPlanFormData": {
+      "projectName": "일반상담 및 정보제공사업",
+      "purpose": "개별 욕구에 적합한 상담으로 정보 및 복지서비스를 제공하여 건강하고 안정적인 노후 생활 지원",
+      "goals": [
+        "초기상담을 통한 욕구 파악으로 이용자 편리성 증진",
+        "기관 사업 및 이용 규정에 대한 이해도 향상",
+        "전문지식 제공으로 노년기 문제 해결 능력 강화"
+      ],
+      "period": "2026-01-01 ~ 2026-12-31",
+      "target": "춘천시 거주 만 60세 이상 어르신 중 복지관 이용 희망자 및 이용자",
+      "totalCount": "2,960명 / 2,965회",
+      "budget": "금 15,000,000원 (천오백만)",
+      "budgetCategory": "사업비-사업비-상담사업비",
+      "manager": "복지1팀 김연수 사회복지사",
+      "subProjects": [
+        {
+          "name": "신규회원 이용상담",
+          "output": "신규회원 이용상담 (960명 / 960회)\n- 상반기 80명×6개월=480명 / 480회\n- 하반기 80명×6개월=480명 / 480회",
+          "outcome": "초기상담을 통한 이용자 편리성 증진"
+        },
+        {
+          "name": "신규회원 가입",
+          "output": "신규회원 가입 (960명 / 960회)\n- 상반기 80명×6개월=480명 / 480회\n- 하반기 80명×6개월=480명 / 480회",
+          "outcome": ""
+        },
+        {
+          "name": "신규회원 교육",
+          "output": "신규회원 교육 (960명 / 960회)\n- 상반기 80명×6개월×90%=480명 / 480회\n- 하반기 80명×6개월×90%=480명 / 480회",
+          "outcome": "기관 사업 및 이용 규정에 대한 이해도 향상"
+        },
+        {
+          "name": "정보제공상담",
+          "output": "정보제공상담 (80명 / 80회)",
+          "outcome": "전문지식 제공으로 노년기 문제 해결 능력 강화"
+        }
+      ]
+    },
+    "businessPlanAiDraftBody": "1. 대상자 욕구 및 문제점\n고령 인구 증가에 따라 정보·복지서비스 상담 수요가 확대되고 있으며, 초기 상담을 통한 맞춤형 안내가 필요합니다.\n\n2. 사업 추진 필요성\n이용자 편의성 제고와 기관 사업 이해도 향상을 위해 체계적인 상담·정보제공 체계를 마련합니다."
+  },
+  "chat": {
+    "chatCsConfigMock": {
+      "welcomeMessage": "안녕하세요, 봄이봇 고객지원입니다. 이슈 내용을 자세히 적어 주시고, 화면 캡처·오류 영상(동영상)도 첨부해 주시면 담당자가 이메일로 도와드릴게요.",
+      "placeholderReply": "문의가 접수되었습니다. 담당 CS팀이 확인 후 이메일로 답변드리겠습니다.",
+      "inputPlaceholder": "이슈 내용을 입력하세요. (Shift+Enter 줄바꿈, Enter 전송)",
+      "csEmail": "bomi20260413@gmail.com",
+      "maxAttachments": 5,
+      "maxMessageLength": 5000,
+      "maxImageSizeMb": 10,
+      "maxVideoSizeMb": 100,
+      "suggestions": [
+        {
+          "id": "s1",
+          "text": "화면에 오류가 나요. 캡처 첨부할게요.",
+          "icon": "alert"
+        },
+        {
+          "id": "s2",
+          "text": "기능 사용 방법이 궁금합니다.",
+          "icon": "help"
+        },
+        {
+          "id": "s3",
+          "text": "실적/예산 데이터가 맞지 않아요.",
+          "icon": "search"
+        },
+        {
+          "id": "s4",
+          "text": "로그인·권한 관련 문의입니다.",
+          "icon": "fileText"
+        }
+      ]
+    },
+    "chatAssistantConfigMock": {
+      "welcomeMessage": "안녕하세요! 봄이봇 데이터 어시스턴트입니다. RAG로 관련 문서를 찾고, 실적·대시보드·칸반·설문 데이터를 근거로 답해 드립니다.",
+      "inputPlaceholder": "예: 5월 실적 예산 합계, 온라인홍보 실적 요약…",
+      "thinkingLabel": "관련 데이터를 검색하는 중…",
+      "suggestions": [
+        {
+          "id": "a1",
+          "text": "계획/실적 데이터 전체 요약해줘",
+          "icon": "barChart"
+        },
+        {
+          "id": "a2",
+          "text": "5월 계획·실적 예산 합계는?",
+          "icon": "search"
+        },
+        {
+          "id": "a3",
+          "text": "온라인홍보 세목 실적 알려줘",
+          "icon": "fileText"
+        },
+        {
+          "id": "a4",
+          "text": "대시보드 현황 요약해줘",
+          "icon": "clock"
+        },
+        {
+          "id": "a5",
+          "text": "칸반 업무가 몇 개야?",
+          "icon": "help"
+        },
+        {
+          "id": "a6",
+          "text": "전체 데이터 통합 요약",
+          "icon": "barChart"
+        },
+        {
+          "id": "a7",
+          "text": "신규회원 이용상담 5월 실적 알려줘",
+          "icon": "search"
+        }
+      ]
+    },
+    "chatAppConfigMock": {
+      "cs": {
+        "welcomeMessage": "안녕하세요, 봄이봇 고객지원입니다. 이슈 내용을 자세히 적어 주시고, 화면 캡처·오류 영상(동영상)도 첨부해 주시면 담당자가 이메일로 도와드릴게요.",
+        "placeholderReply": "문의가 접수되었습니다. 담당 CS팀이 확인 후 이메일로 답변드리겠습니다.",
+        "inputPlaceholder": "이슈 내용을 입력하세요. (Shift+Enter 줄바꿈, Enter 전송)",
+        "csEmail": "bomi20260413@gmail.com",
+        "maxAttachments": 5,
+        "maxMessageLength": 5000,
+        "maxImageSizeMb": 10,
+        "maxVideoSizeMb": 100,
+        "suggestions": [
+          {
+            "id": "s1",
+            "text": "화면에 오류가 나요. 캡처 첨부할게요.",
+            "icon": "alert"
+          },
+          {
+            "id": "s2",
+            "text": "기능 사용 방법이 궁금합니다.",
+            "icon": "help"
+          },
+          {
+            "id": "s3",
+            "text": "실적/예산 데이터가 맞지 않아요.",
+            "icon": "search"
+          },
+          {
+            "id": "s4",
+            "text": "로그인·권한 관련 문의입니다.",
+            "icon": "fileText"
+          }
+        ]
+      },
+      "assistant": {
+        "welcomeMessage": "안녕하세요! 봄이봇 데이터 어시스턴트입니다. RAG로 관련 문서를 찾고, 실적·대시보드·칸반·설문 데이터를 근거로 답해 드립니다.",
+        "inputPlaceholder": "예: 5월 실적 예산 합계, 온라인홍보 실적 요약…",
+        "thinkingLabel": "관련 데이터를 검색하는 중…",
+        "suggestions": [
+          {
+            "id": "a1",
+            "text": "계획/실적 데이터 전체 요약해줘",
+            "icon": "barChart"
+          },
+          {
+            "id": "a2",
+            "text": "5월 계획·실적 예산 합계는?",
+            "icon": "search"
+          },
+          {
+            "id": "a3",
+            "text": "온라인홍보 세목 실적 알려줘",
+            "icon": "fileText"
+          },
+          {
+            "id": "a4",
+            "text": "대시보드 현황 요약해줘",
+            "icon": "clock"
+          },
+          {
+            "id": "a5",
+            "text": "칸반 업무가 몇 개야?",
+            "icon": "help"
+          },
+          {
+            "id": "a6",
+            "text": "전체 데이터 통합 요약",
+            "icon": "barChart"
+          },
+          {
+            "id": "a7",
+            "text": "신규회원 이용상담 5월 실적 알려줘",
+            "icon": "search"
+          }
+        ]
+      }
+    }
+  }
+}

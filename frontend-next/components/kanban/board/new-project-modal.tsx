@@ -17,8 +17,11 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { ProjectImagePicker } from "./project-image-picker"
 import {
+  loadAssignableStaff,
+  resolveCurrentUserStaff,
+} from "@/lib/kanban/assignable-staff"
+import {
   getProjectImageOptions,
-  getStaffList,
 } from "@/services/kanban.board.service"
 import type { ProjectImageOption, Staff } from "@/services/kanban.board.types"
 import type { TaskFormData } from "./task-modal"
@@ -35,6 +38,7 @@ interface NewProjectModalProps {
 type FormErrors = {
   projectName?: string
   projectImage?: string
+  assignee?: string
 }
 
 export function NewProjectModal({
@@ -75,16 +79,20 @@ export function NewProjectModal({
     setOptionsLoadError(null)
 
     Promise.all([
-      staffListProp?.length ? Promise.resolve(staffListProp) : getStaffList(),
+      staffListProp?.length ? Promise.resolve(staffListProp) : loadAssignableStaff(),
       projectImagesProp?.length
         ? Promise.resolve(projectImagesProp)
         : getProjectImageOptions(),
     ])
-      .then(([staff, images]) => {
+      .then(async ([staff, images]) => {
         if (cancelled) return
         setStaffList(staff)
         setProjectImages(images)
         if (images.length === 1) setProjectImage(images[0].value)
+        const selfStaff = await resolveCurrentUserStaff(staff)
+        if (selfStaff && !cancelled) {
+          setSelectedStaffId(selfStaff.id)
+        }
         if (images.length === 0) {
           setOptionsLoadError(
             "사업 이미지 목록을 불러오지 못했습니다. 새로고침 후 다시 시도해 주세요.",
@@ -95,7 +103,7 @@ export function NewProjectModal({
         console.error("신규 사업 모달 데이터 로드 실패:", error)
         if (!cancelled) {
           setOptionsLoadError(
-            "모달 데이터를 불러오지 못했습니다. API(8020) 실행 여부를 확인해 주세요.",
+            "모달 데이터를 불러오지 못했습니다. API(9001) 실행 여부를 확인해 주세요.",
           )
         }
       })
@@ -119,6 +127,10 @@ export function NewProjectModal({
       nextErrors.projectImage = "사업 이미지를 선택해 주세요."
     }
 
+    if (!selectedStaffId) {
+      nextErrors.assignee = "담당자(본인)를 선택해 주세요."
+    }
+
     setErrors(nextErrors)
     return Object.keys(nextErrors).length === 0
   }
@@ -126,7 +138,9 @@ export function NewProjectModal({
   const handleSubmit = async () => {
     if (!validate()) return
 
-    const assignee = staffList.find((staff) => staff.id === selectedStaffId)
+    const assignee =
+      staffList.find((staff) => staff.id === selectedStaffId) ??
+      (await resolveCurrentUserStaff(staffList))
 
     try {
       setIsSubmitting(true)
@@ -232,7 +246,12 @@ export function NewProjectModal({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="assignee">담당자</Label>
+              <Label htmlFor="assignee">
+                담당자 <span className="text-destructive">*</span>
+                <span className="ml-1 text-xs font-normal text-muted-foreground">
+                  (조직도 등록 직원 · 본인 기본)
+                </span>
+              </Label>
               <select
                 id="assignee"
                 value={selectedStaffId}
@@ -240,13 +259,16 @@ export function NewProjectModal({
                 onChange={(event) => setSelectedStaffId(event.target.value)}
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
-                <option value="">담당자 선택 (선택)</option>
+                <option value="">담당자 선택</option>
                 {staffList.map((staff) => (
                   <option key={staff.id} value={staff.id}>
                     {staff.team} {staff.name} {staff.position}
                   </option>
                 ))}
               </select>
+              {errors.assignee ? (
+                <p className="text-xs text-destructive">{errors.assignee}</p>
+              ) : null}
             </div>
           </div>
         </div>

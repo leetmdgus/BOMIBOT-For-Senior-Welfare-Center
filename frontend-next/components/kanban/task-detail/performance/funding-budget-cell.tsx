@@ -32,6 +32,7 @@ type FundingBudgetCellProps = {
   entries: PerformanceFundingEntry[]
   variant: "plan" | "actual"
   isActive?: boolean
+  readOnly?: boolean
   onChange: (entries: PerformanceFundingEntry[]) => void
 }
 
@@ -39,6 +40,7 @@ export function FundingBudgetCell({
   entries,
   variant,
   isActive,
+  readOnly = false,
   onChange,
 }: FundingBudgetCellProps) {
   const [open, setOpen] = useState(false)
@@ -68,6 +70,38 @@ export function FundingBudgetCell({
 
   const removeSource = (source: PerformanceFundingSource) => {
     onChange(entries.filter((entry) => entry.source !== source))
+  }
+
+  if (readOnly) {
+    return (
+      <div
+        className={cn(
+          "flex min-h-8 w-full flex-col items-stretch justify-center gap-0.5 px-2 py-1 text-sm text-slate-600",
+          isActive && "bg-white",
+        )}
+      >
+        {entries.length === 0 ? (
+          <span className="text-center text-xs text-muted-foreground">—</span>
+        ) : (
+          entries.map((entry) => (
+            <span
+              key={entry.source}
+              className="flex items-center justify-end gap-1 tabular-nums"
+            >
+              <span
+                className={cn(
+                  "inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded px-0.5 text-[10px] font-bold text-white",
+                  FUNDING_SOURCE_COLORS[entry.source],
+                )}
+              >
+                {entry.source}
+              </span>
+              <span>{entry.amount.toLocaleString()}</span>
+            </span>
+          ))
+        )}
+      </div>
+    )
   }
 
   return (

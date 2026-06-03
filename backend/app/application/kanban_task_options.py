@@ -4,6 +4,10 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
+<<<<<<< HEAD
+=======
+from app.application.kanban_access import KanbanAccessContext
+>>>>>>> dev2
 from app.application.services.kanban_board_service import KanbanBoardService
 from app.domain.scoped_ids import strip_scope
 
@@ -16,13 +20,22 @@ def _kanban_lookup_years() -> list[str]:
 def list_kanban_task_options(
     kanban: KanbanBoardService,
     region_id: str,
+<<<<<<< HEAD
+=======
+    *,
+    access: KanbanAccessContext | None = None,
+>>>>>>> dev2
 ) -> list[dict[str, str]]:
     """파일 담당 업무 선택 목록 — 칸반 카드명(업무명)만 표시."""
     options: list[dict[str, str]] = []
     seen: set[str] = set()
 
     for year in _kanban_lookup_years():
+<<<<<<< HEAD
         for project in kanban.list_projects(region_id, year):
+=======
+        for project in kanban.list_projects(region_id, year, access=access):
+>>>>>>> dev2
             for category in project.get("categories", []):
                 for task in category.get("tasks", []):
                     task_id = strip_scope(str(task.get("id") or ""))
@@ -40,21 +53,44 @@ def resolve_kanban_task_name(
     kanban: KanbanBoardService,
     region_id: str,
     task_id: str,
+<<<<<<< HEAD
 ) -> str | None:
     """담당 업무 표시명 = 칸반 카드명."""
     return resolve_kanban_card_title(kanban, region_id, task_id)
+=======
+    *,
+    access: KanbanAccessContext | None = None,
+) -> str | None:
+    """담당 업무 표시명 = 칸반 카드명."""
+    return resolve_kanban_card_title(kanban, region_id, task_id, access=access)
+>>>>>>> dev2
 
 
 def resolve_kanban_card_title(
     kanban: KanbanBoardService,
     region_id: str,
     task_id: str,
+<<<<<<< HEAD
 ) -> str | None:
     """칸반 업무 카드명(업무명). 사업계획·평가의 사업명과 동일하게 사용."""
     needle = strip_scope(task_id)
 
     for year in _kanban_lookup_years():
         for project in kanban.list_projects(region_id, year):
+=======
+    *,
+    access: KanbanAccessContext | None = None,
+) -> str | None:
+    """칸반 업무 카드명(업무명). 사업계획·평가의 사업명과 동일하게 사용."""
+    title = kanban.resolve_task_title(region_id, task_id)
+    if title:
+        return title
+
+    needle = strip_scope(task_id)
+
+    for year in _kanban_lookup_years():
+        for project in kanban.list_projects(region_id, year, access=access):
+>>>>>>> dev2
             for category in project.get("categories", []):
                 for task in category.get("tasks", []):
                     if strip_scope(str(task.get("id", ""))) != needle:
@@ -69,9 +105,17 @@ def apply_kanban_tasks_to_file_manager_state(
     state: dict,
     kanban: KanbanBoardService,
     region_id: str,
+<<<<<<< HEAD
 ) -> dict:
     """taskOptions·파일 taskName을 칸반 카드명으로 동기화."""
     options = list_kanban_task_options(kanban, region_id)
+=======
+    *,
+    access: KanbanAccessContext | None = None,
+) -> dict:
+    """taskOptions·파일 taskName을 칸반 카드명으로 동기화."""
+    options = list_kanban_task_options(kanban, region_id, access=access)
+>>>>>>> dev2
     state["taskOptions"] = options
     by_id = {opt["id"]: opt["name"] for opt in options}
     for item in state.get("files") or []:
@@ -79,7 +123,11 @@ def apply_kanban_tasks_to_file_manager_state(
         if not task_id:
             continue
         tid = strip_scope(str(task_id))
+<<<<<<< HEAD
         title = resolve_kanban_card_title(kanban, region_id, tid)
+=======
+        title = resolve_kanban_card_title(kanban, region_id, tid, access=access)
+>>>>>>> dev2
         if title:
             item["taskName"] = title
         elif tid in by_id:

@@ -22,11 +22,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { useAuth } from "@/components/auth/auth-provider"
 import {
   canAssignTeamLeader,
   canFullHrEdit,
+  isSelfEmployee,
   isSelfProfileEdit,
 } from "@/lib/organization-permissions"
+import { changePassword } from "@/services/auth.service"
 import {
   getDepartmentOptions,
   updateEmployee,
@@ -53,14 +56,21 @@ export function OrganizationEmployeeEditDialog({
   onOpenChange,
   onSaved,
 }: OrganizationEmployeeEditDialogProps) {
+  const { syncFromEmployee } = useAuth()
   const [form, setForm] = useState<UpdateEmployeeInput>({})
   const [departments, setDepartments] = useState<DepartmentOption[]>([])
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [currentPassword, setCurrentPassword] = useState("")
+  const [newPassword, setNewPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
 
   const selfOnly = isSelfProfileEdit(context, employee)
+  const isMe = isSelfEmployee(context, employee)
   const fullHr = canFullHrEdit(context, employee)
   const showTeamLeaderToggle = canAssignTeamLeader(context.permissions)
+  const wantsPasswordChange =
+    Boolean(currentPassword || newPassword || confirmPassword)
 
   useEffect(() => {
     if (!open) return
@@ -77,6 +87,9 @@ export function OrganizationEmployeeEditDialog({
       isAdmin: employee.isAdmin ?? false,
     })
     setError(null)
+    setCurrentPassword("")
+    setNewPassword("")
+    setConfirmPassword("")
     if (fullHr) {
       getDepartmentOptions()
         .then(setDepartments)
@@ -88,11 +101,35 @@ export function OrganizationEmployeeEditDialog({
     setIsSaving(true)
     setError(null)
     try {
+      if (isMe && wantsPasswordChange) {
+        if (!currentPassword || !newPassword || !confirmPassword) {
+          throw new Error("비밀번호 변경 시 세 필드를 모두 입력해 주세요.")
+        }
+        if (newPassword !== confirmPassword) {
+          throw new Error("새 비밀번호 확인이 일치하지 않습니다.")
+        }
+        if (newPassword.length < 6) {
+          throw new Error("새 비밀번호는 6자 이상이어야 합니다.")
+        }
+        await changePassword({
+          currentPassword,
+          newPassword,
+        })
+        setCurrentPassword("")
+        setNewPassword("")
+        setConfirmPassword("")
+      }
+
       const payload: UpdateEmployeeInput = {
         name: form.name?.trim(),
         email: form.email?.trim(),
         phone: form.phone?.trim(),
-        profileImage: form.profileImage?.trim() || "",
+      }
+
+      const nextProfile = form.profileImage?.trim() ?? ""
+      const prevProfile = employee.profileImage?.trim() ?? ""
+      if (nextProfile !== prevProfile) {
+        payload.profileImage = nextProfile
       }
 
       if (fullHr) {
@@ -107,6 +144,7 @@ export function OrganizationEmployeeEditDialog({
       }
 
       const updated = await updateEmployee(employee.id, payload)
+      await syncFromEmployee(updated, context.employeeId)
       onSaved(updated)
       onOpenChange(false)
     } catch (err) {
@@ -133,6 +171,11 @@ export function OrganizationEmployeeEditDialog({
             onProfileImageChange={(url) =>
               setForm((prev) => ({ ...prev, profileImage: url }))
             }
+            onUploadComplete={(url) => {
+              const withPhoto = { ...employee, profileImage: url }
+              void syncFromEmployee(withPhoto, context.employeeId)
+              onSaved(withPhoto)
+            }}
           />
 
           <Field label="이름">
@@ -190,12 +233,15 @@ export function OrganizationEmployeeEditDialog({
             </p>
           )}
 
-          <Field label="이메일">
+          <Field label="이메일 (로그인 ID)">
             <Input
               type="email"
               value={form.email ?? ""}
               onChange={(e) => setForm((prev) => ({ ...prev, email: e.target.value }))}
             />
+            <p className="text-xs text-muted-foreground">
+              변경 시 로그인에 사용하는 이메일도 함께 바뀝니다. 비밀번호는 그대로 유지됩니다.
+            </p>
           </Field>
 
           <Field label="휴대전화">
@@ -215,6 +261,39 @@ export function OrganizationEmployeeEditDialog({
                 }
               />
             </Field>
+          )}
+
+          {isMe && (
+            <div className="space-y-3 rounded-lg border border-border p-3">
+              <p className="text-sm font-medium">비밀번호 변경</p>
+              <p className="text-xs text-muted-foreground">
+                변경하지 않으려면 비워 두세요. 저장 시 프로필과 함께 반영됩니다.
+              </p>
+              <Field label="현재 비밀번호">
+                <Input
+                  type="password"
+                  autoComplete="current-password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                />
+              </Field>
+              <Field label="새 비밀번호 (6자 이상)">
+                <Input
+                  type="password"
+                  autoComplete="new-password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                />
+              </Field>
+              <Field label="새 비밀번호 확인">
+                <Input
+                  type="password"
+                  autoComplete="new-password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                />
+              </Field>
+            </div>
           )}
 
           {showTeamLeaderToggle && fullHr && (

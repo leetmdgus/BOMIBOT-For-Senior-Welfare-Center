@@ -19,6 +19,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
+import { useAuth } from "@/components/auth/auth-provider"
 import { cn } from "@/lib/utils"
 
 import {
@@ -49,6 +50,9 @@ export function EbooksToolbar({
   onSortChange,
   onSearchChange,
 }: EbooksToolbarProps) {
+  const { session } = useAuth()
+  const orgName = session?.orgName ?? "복지관"
+
   return (
     <>
       <header className="mb-6 flex items-center justify-between border-b border-border bg-card px-6 py-4">
@@ -58,7 +62,7 @@ export function EbooksToolbar({
           </h1>
 
           <p className="text-sm text-muted-foreground">
-            산하기관 &gt; 춘천북부노인복지관
+            산하기관 &gt; {orgName}
             &gt; 전자책자
           </p>
         </div>

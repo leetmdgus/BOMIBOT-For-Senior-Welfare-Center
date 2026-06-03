@@ -36,6 +36,13 @@ class KanbanBoardRepository(ABC):
     @abstractmethod
     def list_projects(self, region_id: str, year: str) -> list[KanbanProjectRecord]: ...
 
+<<<<<<< HEAD
+=======
+    def get_project_for_task(
+        self, region_id: str, task_id: str
+    ) -> KanbanProjectRecord | None: ...
+
+>>>>>>> dev2
     @abstractmethod
     def get_project(self, region_id: str, project_id: str) -> KanbanProjectRecord | None: ...
 
@@ -118,3 +125,9 @@ class KanbanBoardRepository(ABC):
         to_category_id: str,
         over_task_id: str | None = None,
     ) -> KanbanTaskRecord | None: ...
+<<<<<<< HEAD
+=======
+
+    @abstractmethod
+    def get_task_title(self, region_id: str, task_id: str) -> str | None: ...
+>>>>>>> dev2

@@ -10,7 +10,11 @@ from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from app.core.security import hash_password
+<<<<<<< HEAD
 from app.application.services.region_store_service import (
+=======
+from app.domain.region_store_domains import (
+>>>>>>> dev2
     DOMAIN_APPROVALS,
     DOMAIN_CHAT,
     DOMAIN_EBOOKS,
@@ -76,6 +80,10 @@ ADMIN_USERS = [
         "role_display": "관리자",
         "role_type": "admin",
         "department": "운영총괄",
+<<<<<<< HEAD
+=======
+        "employee_id": "chuncheon-east:emp-management-3",
+>>>>>>> dev2
         "profile_image_url": None,
     },
 ]
@@ -87,10 +95,26 @@ def _load_json(name: str) -> dict | list:
         return json.load(handle)
 
 
+<<<<<<< HEAD
+=======
+def _region_seed_prefix(region_id: str) -> str:
+    return "" if region_id == "chuncheon-north" else f"{region_id}-"
+
+
+def _load_region_json(region_id: str, base_name: str) -> dict | list:
+    """Prefer region-specific seed file (e.g. chuncheon-east-organization.json)."""
+    prefixed = f"{_region_seed_prefix(region_id)}{base_name}.json"
+    if (SEED_DIR / prefixed).exists():
+        return _load_json(prefixed)
+    return _load_json(f"{base_name}.json")
+
+
+>>>>>>> dev2
 def _scoped_id(region_id: str, raw_id: str) -> str:
     return f"{region_id}:{raw_id}"
 
 
+<<<<<<< HEAD
 def seed_all(session: Session, *, force: bool = False) -> None:
     if force:
         _clear_region_scoped_tables(session)
@@ -99,6 +123,9 @@ def seed_all(session: Session, *, force: bool = False) -> None:
     if existing and not force:
         return
 
+=======
+def _sync_region_metadata(session: Session) -> None:
+>>>>>>> dev2
     for region in REGIONS:
         session.merge(
             RegionModel(
@@ -109,6 +136,21 @@ def seed_all(session: Session, *, force: bool = False) -> None:
             )
         )
 
+<<<<<<< HEAD
+=======
+
+def seed_all(session: Session, *, force: bool = False) -> None:
+    _sync_region_metadata(session)
+
+    if force:
+        _clear_region_scoped_tables(session)
+
+    existing = session.scalar(select(RegionModel.id).limit(1))
+    if existing and not force:
+        session.commit()
+        return
+
+>>>>>>> dev2
     for admin in ADMIN_USERS:
         session.merge(
             UserModel(
@@ -125,10 +167,13 @@ def seed_all(session: Session, *, force: bool = False) -> None:
             )
         )
 
+<<<<<<< HEAD
     departments_payload = _load_json("organization.json")
     dashboard_payload = _load_json("dashboard.json")
     kanban_payload = _load_json("kanban_projects.json")
 
+=======
+>>>>>>> dev2
     chat_payload = _load_json("chat.json")
     ontology_payload = (
         _load_json("ontology.json") if (SEED_DIR / "ontology.json").exists() else None
@@ -136,18 +181,69 @@ def seed_all(session: Session, *, force: bool = False) -> None:
 
     for region in REGIONS:
         region_id = region["id"]
+<<<<<<< HEAD
         _seed_organization(session, region_id, departments_payload)
         _seed_dashboard(session, region_id, dashboard_payload)
         _seed_kanban(session, region_id, kanban_payload)
+=======
+        _seed_organization(
+            session, region_id, _load_region_json(region_id, "organization")
+        )
+        _seed_dashboard(session, region_id, _load_region_json(region_id, "dashboard"))
+        _seed_kanban(session, region_id, _load_region_json(region_id, "kanban_projects"))
+>>>>>>> dev2
         _seed_region_json_stores(session, region_id, chat_payload, ontology_payload)
 
     session.commit()
 
 
+<<<<<<< HEAD
 def seed_missing_json_stores(session: Session) -> None:
     """Add JSON domains when DB already has regions (no --force)."""
     existing_region = session.scalar(select(RegionModel.id).limit(1))
     if not existing_region:
+=======
+def sync_organizations(session: Session) -> None:
+    """조직현황 시드 JSON → DB (동부/북부 직원 목록 갱신)."""
+    _sync_region_metadata(session)
+    for region in REGIONS:
+        region_id = region["id"]
+        session.execute(delete(EmployeeModel).where(EmployeeModel.region_id == region_id))
+        session.execute(delete(DepartmentModel).where(DepartmentModel.region_id == region_id))
+        _seed_organization(
+            session, region_id, _load_region_json(region_id, "organization")
+        )
+    for admin in ADMIN_USERS:
+        existing_user = session.get(UserModel, admin["id"])
+        session.merge(
+            UserModel(
+                id=admin["id"],
+                region_id=admin["region_id"],
+                email=admin["email"],
+                password_hash=(
+                    existing_user.password_hash
+                    if existing_user
+                    else hash_password(admin["password"])
+                ),
+                name=admin["name"],
+                role_display=admin["role_display"],
+                role_type=admin["role_type"],
+                department=admin["department"],
+                employee_id=admin.get("employee_id"),
+                profile_image_url=admin.get("profile_image_url"),
+            )
+        )
+    session.commit()
+
+
+def seed_missing_json_stores(session: Session) -> None:
+    """Add JSON domains when DB already has regions (no --force)."""
+    _sync_region_metadata(session)
+
+    existing_region = session.scalar(select(RegionModel.id).limit(1))
+    if not existing_region:
+        session.commit()
+>>>>>>> dev2
         return
 
     chat_config = _load_json("chat.json") if (SEED_DIR / "chat.json").exists() else None
@@ -155,7 +251,10 @@ def seed_missing_json_stores(session: Session) -> None:
 
     for region in REGIONS:
         region_id = region["id"]
+<<<<<<< HEAD
         prefix = "" if region_id == "chuncheon-north" else f"{region_id}-"
+=======
+>>>>>>> dev2
         for domain, base_name in JSON_STORE_SEEDS:
             exists = session.scalar(
                 select(RegionJsonStoreModel.domain).where(
@@ -165,7 +264,11 @@ def seed_missing_json_stores(session: Session) -> None:
             )
             if exists:
                 continue
+<<<<<<< HEAD
             payload = _load_json(f"{prefix}{base_name}.json")
+=======
+            payload = _load_region_json(region_id, base_name)
+>>>>>>> dev2
             session.merge(
                 RegionJsonStoreModel(
                     region_id=region_id,
@@ -224,9 +327,14 @@ def _seed_region_json_stores(
     chat_payload: dict,
     ontology_payload: dict | None = None,
 ) -> None:
+<<<<<<< HEAD
     prefix = "" if region_id == "chuncheon-north" else f"{region_id}-"
     for domain, base_name in JSON_STORE_SEEDS:
         payload = _load_json(f"{prefix}{base_name}.json")
+=======
+    for domain, base_name in JSON_STORE_SEEDS:
+        payload = _load_region_json(region_id, base_name)
+>>>>>>> dev2
         session.merge(
             RegionJsonStoreModel(
                 region_id=region_id,

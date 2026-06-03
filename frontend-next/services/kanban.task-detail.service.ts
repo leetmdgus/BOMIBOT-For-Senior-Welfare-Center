@@ -1,9 +1,8 @@
+import { shouldUseMockApi } from "@/lib/api-service-mode"
 import * as apiService from "./kanban.task-detail.api.service"
 import * as mockService from "./kanban.task-detail.mock.service"
 
-const useMockApi = process.env.NEXT_PUBLIC_USE_MOCK_API === "true"
-
-const taskDetailService = useMockApi ? mockService : apiService
+const taskDetailService = shouldUseMockApi() ? mockService : apiService
 
 export const getSurveys = taskDetailService.getSurveys
 export const getEvaluationFiles = taskDetailService.getEvaluationFiles
@@ -17,3 +16,12 @@ export const completeBusinessEvaluation =
   taskDetailService.completeBusinessEvaluation
 export const getBusinessPlan = taskDetailService.getBusinessPlan
 export const saveBusinessPlan = taskDetailService.saveBusinessPlan
+export const saveTaskDocuments = taskDetailService.saveTaskDocuments
+
+export const downloadBusinessPlanHwpx = shouldUseMockApi()
+  ? undefined
+  : apiService.downloadBusinessPlanHwpx
+
+export const downloadBusinessEvaluationHwpx = shouldUseMockApi()
+  ? undefined
+  : apiService.downloadBusinessEvaluationHwpx

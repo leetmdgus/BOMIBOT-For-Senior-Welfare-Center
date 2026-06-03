@@ -1,8 +1,14 @@
 # 배포 아키텍처
 
+<<<<<<< HEAD
 > **프론트:** Vercel  
 > **백엔드 API:** `https://api-workspace.bomi.ai.kr`  
 > **로컬 개발:** 프론트 `http://localhost:3000` · API `http://127.0.0.1:8020`
+=======
+> **프론트:** `https://workspace.bomi.ai.kr` (Vercel)  
+> **백엔드 API:** `https://api-workspace.bomi.ai.kr`  
+> **로컬 개발:** 프론트 `http://localhost:9000` · API `http://127.0.0.1:9001`
+>>>>>>> dev2
 
 브라우저는 **Vercel에 올라간 Next.js**에서 직접 **FastAPI**를 호출합니다 (`NEXT_PUBLIC_API_BASE_URL` + CORS).
 
@@ -43,7 +49,11 @@
 ### 로컬 (`.env.local`)
 
 ```env
+<<<<<<< HEAD
 NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8020
+=======
+NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:9001
+>>>>>>> dev2
 NEXT_PUBLIC_USE_MOCK_API=false
 ```
 
@@ -120,11 +130,19 @@ docker compose exec api python scripts/seed.py   # 최초 1회
 | `backend/docker-compose.yml` | `api` + `db` (Postgres 16) |
 | `backend/docker-compose.prod.yml` | DB 포트 미노출, `APP_ENV=production` |
 
+<<<<<<< HEAD
 Nginx는 호스트에서 `127.0.0.1:8020` → 컨테이너 `api` 서비스로 프록시합니다.
 
 ### 리버스 프록시 (Nginx 등)
 
 - TLS 종료 후 `uvicorn app.main:app --host 127.0.0.1 --port 8020` (또는 Docker `8020`)
+=======
+Nginx는 호스트에서 `127.0.0.1:9001` → 컨테이너 `api` 서비스로 프록시합니다.
+
+### 리버스 프록시 (Nginx 등)
+
+- TLS 종료 후 `uvicorn app.main:app --host 127.0.0.1 --port 9001` (또는 Docker `9001`)
+>>>>>>> dev2
 - `X-Forwarded-Proto`, `X-Forwarded-For` 전달 권장
 
 ---

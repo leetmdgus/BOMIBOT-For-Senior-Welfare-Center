@@ -1,12 +1,13 @@
 import { format, parseISO } from "date-fns"
 import { ko } from "date-fns/locale"
 
+import { shouldUseMockApi } from "@/lib/api-service-mode"
+import { documentSectionsForHwpxExport, mergeFlushedDocumentSections } from "@/lib/hwpx/document-sections-for-export"
 import { hwpxSectionsFromDocumentSections } from "@/lib/hwpx/export-sections"
 import {
   downloadHwpxDocument,
   formTableRow,
   HWPX_COL,
-  summaryTableRows,
   type HwpxDocument,
   type HwpxSection,
   type HwpxTable,
@@ -17,10 +18,20 @@ import {
   lineSlotDisplayValue,
   parseLineSlots,
 } from "@/lib/line-slot-utils"
+import { buildHwpxDownloadFilename } from "@/lib/hwpx/hwpx-filename"
+import { toSaveBusinessEvaluationPayload } from "@/lib/kanban/evaluation-save-payload"
+import { downloadBusinessEvaluationHwpx as downloadFromApi } from "@/services/kanban.task-detail.service"
 import type {
   BusinessEvaluationData,
   BusinessPlanFormData,
+  EvaluationSection,
 } from "@/services/kanban.task-detail.types"
+
+function documentSectionsForHwpx(
+  sections: EvaluationSection[],
+): EvaluationSection[] {
+  return documentSectionsForHwpxExport(sections) as EvaluationSection[]
+}
 
 function slotLines(value: string): string {
   const lines = parseLineSlots(value)
@@ -31,35 +42,12 @@ function slotLines(value: string): string {
 function formatEvalDate(iso: string): string {
   if (!iso?.trim()) return "-"
   try {
-    return format(parseISO(iso), "yyyy.MM.dd", { locale: ko })
+    return format(parseISO(iso), "yyyy년 MM월 dd일", { locale: ko })
   } catch {
     return iso
   }
 }
 
-function planReferenceSection(form: BusinessPlanFormData): HwpxSection {
-  return {
-    title: "사업계획서 (참고)",
-    tables: [
-      {
-        colWidths: [...HWPX_COL.label2],
-        rows: summaryTableRows([
-          ["사업명", form.projectName],
-          ["목적", slotLines(form.purpose) || "-"],
-          ["목표", form.goals.filter(Boolean).map((g) => `• ${g}`).join("\n") || "-"],
-          ["사업기간", form.period],
-          ["대상", form.target],
-          ["총인원(명/회)", form.totalCount],
-          ["예산(원)", form.budget],
-          ["예산과목", form.budgetCategory],
-          ["담당자", form.manager],
-        ]),
-      },
-    ],
-  }
-}
-
-/** 화면 최종사업평가서 요약표와 동일한 4열·병합 구조 */
 function evaluationSummaryTable(
   evaluation: BusinessEvaluationData,
 ): HwpxTable {
@@ -109,19 +97,12 @@ function evaluationSummaryTable(
       { text: "제언 및 향후 계획", header: true },
       { text: slotLines(evaluation.suggestion), colSpan: 2 },
     ],
-    [{ text: "슈퍼비전", header: true, colSpan: 4 }],
-    [{ text: slotLines(evaluation.supervision), colSpan: 4 }],
   ]
 
-  if (evaluation.detailRows.length > 0) {
-    rows.push(
-      [{ text: "세부 항목", header: true, colSpan: 4 }],
-      ...evaluation.detailRows.map((row) => [
-        { text: row.label, header: true, colSpan: 1 },
-        { text: row.content || "-", colSpan: 3 },
-      ]),
-    )
-  }
+  rows.push(
+    [{ text: "슈퍼비전", header: true, colSpan: 4 }],
+    [{ text: slotLines(evaluation.supervision), colSpan: 4 }],
+  )
 
   return {
     colWidths: [...HWPX_COL.form4],
@@ -131,13 +112,8 @@ function evaluationSummaryTable(
 
 export function buildBusinessEvaluationHwpx(
   evaluation: BusinessEvaluationData,
-  planForm?: BusinessPlanFormData | null,
 ): HwpxDocument {
   const sections: HwpxSection[] = []
-
-  if (planForm?.projectName || planForm?.purpose) {
-    sections.push(planReferenceSection(planForm))
-  }
 
   const title = evaluation.programName
     ? `${evaluation.programName} 최종사업평가서`
@@ -150,9 +126,9 @@ export function buildBusinessEvaluationHwpx(
   })
 
   sections.push(
-    ...hwpxSectionsFromDocumentSections(evaluation.sections, {
-      formData: planForm,
-    }),
+    ...hwpxSectionsFromDocumentSections(
+      documentSectionsForHwpx(evaluation.sections),
+    ),
   )
 
   return {
@@ -162,10 +138,46 @@ export function buildBusinessEvaluationHwpx(
 }
 
 export async function downloadBusinessEvaluationHwpx(
-  evaluation: BusinessEvaluationData,
-  planForm?: BusinessPlanFormData | null,
+  taskId: string,
+  payload?: {
+    evaluation?: BusinessEvaluationData
+    planForm?: BusinessPlanFormData | null
+  },
 ): Promise<void> {
-  const doc = buildBusinessEvaluationHwpx(evaluation, planForm)
-  const baseName = evaluation.programName || "사업평가서"
-  await downloadHwpxDocument(baseName, doc)
+  const evaluation = payload?.evaluation
+  const planForm = payload?.planForm ?? null
+  const exportEvaluation = evaluation
+    ? {
+        ...toSaveBusinessEvaluationPayload(evaluation),
+        sections: documentSectionsForHwpx(
+          mergeFlushedDocumentSections(evaluation.sections ?? []),
+        ),
+      }
+    : undefined
+
+  if (!shouldUseMockApi() && downloadFromApi) {
+    await downloadFromApi(taskId, {
+      evaluation: exportEvaluation,
+      planForm,
+    })
+    return
+  }
+
+  if (!evaluation) {
+    throw new Error("evaluation data is required for mock HWPX download")
+  }
+
+  const doc = buildBusinessEvaluationHwpx({
+    ...evaluation,
+    sections: exportEvaluation?.sections ?? [],
+  })
+  const filename = buildHwpxDownloadFilename(
+    evaluation.programName || planForm?.projectName,
+    "evaluation",
+    evaluation.period || planForm?.period,
+  )
+  await downloadHwpxDocument(
+    filename.replace(/\.hwpx$/i, ""),
+    doc,
+  )
 }

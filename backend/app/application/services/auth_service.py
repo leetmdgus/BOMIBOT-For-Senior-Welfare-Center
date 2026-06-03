@@ -128,3 +128,28 @@ class AuthService:
         if not user:
             return None
         return self._build_session(user)
+<<<<<<< HEAD
+=======
+
+    def get_user_by_id(self, user_id: str) -> UserRecord | None:
+        return self._auth_repo.get_user_by_id(user_id)
+
+    def change_password(
+        self,
+        user_id: str,
+        *,
+        current_password: str,
+        new_password: str,
+    ) -> None:
+        user = self._auth_repo.get_user_by_id(user_id)
+        if not user:
+            raise LookupError("사용자를 찾을 수 없습니다.")
+        if not verify_password(current_password, user.password_hash):
+            raise ValueError("현재 비밀번호가 올바르지 않습니다.")
+        normalized = new_password.strip()
+        if len(normalized) < 6:
+            raise ValueError("새 비밀번호는 6자 이상이어야 합니다.")
+        if verify_password(normalized, user.password_hash):
+            raise ValueError("새 비밀번호는 현재 비밀번호와 달라야 합니다.")
+        self._auth_repo.update_password_hash(user_id, hash_password(normalized))
+>>>>>>> dev2

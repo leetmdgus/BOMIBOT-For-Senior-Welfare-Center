@@ -154,7 +154,11 @@ docker compose exec api python scripts/seed.py --force
 |------|------|
 | `password authentication failed` | `.env` `POSTGRES_PASSWORD` ≠ 볼륨 생성 시 비밀번호 → `docker compose down -v` 후 재기동 (데이터 삭제 주의) |
 | CORS | `CORS_ORIGINS` + `CORS_ALLOW_*_REGEX` 확인 |
+<<<<<<< HEAD
 | 502 Bad Gateway | `docker ps`, `curl http://127.0.0.1:8020/health` |
+=======
+| 502 Bad Gateway | `docker ps`, `curl http://127.0.0.1:9001/health` |
+>>>>>>> dev2
 | 챗봇 규칙만 | `GEMINI_API_KEY` + `/health` `llm: true` |
 
 관련: [PRODUCTION_BOOTSTRAP.md](./PRODUCTION_BOOTSTRAP.md) · [VERCEL_ENV.md](./VERCEL_ENV.md)

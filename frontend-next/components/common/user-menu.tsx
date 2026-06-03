@@ -33,6 +33,7 @@ export function UserMenu() {
           aria-label="계정 메뉴"
         >
           <EmployeeAvatar
+            key={session.profileImage ?? session.id}
             employee={{
               name: session.name,
               role: session.role,
@@ -41,6 +42,7 @@ export function UserMenu() {
             }}
             className="size-7"
             fallbackClassName="text-xs"
+            imageCacheKey={session.profileImage}
           />
           <span className="hidden max-w-[8rem] truncate sm:inline">
             {session.name}

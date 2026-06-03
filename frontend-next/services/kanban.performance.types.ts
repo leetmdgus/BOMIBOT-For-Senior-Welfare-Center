@@ -62,6 +62,17 @@ export interface PerformanceSubProjectChip {
   color: string
 }
 
+/** 추경(계획 버전) 스냅샷 — 동결된 이전 버전 1개 */
+export interface PlanSnapshot {
+  id: string
+  /** "기본계획", "1차추경", "2차추경" ... */
+  label: string
+  /** 동결 시점의 입력관리 행 깊은 복사본 */
+  rows: PerformanceRow[]
+  /** 표시용 생성시각 (KST ISO) */
+  createdAt: string
+}
+
 export interface PerformanceInputMeta {
   subProjectChips: PerformanceSubProjectChip[]
   detailCategories: string[]

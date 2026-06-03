@@ -2,7 +2,15 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 
 from app.application.services.auth_service import AuthService
 from app.interfaces.api.deps import get_auth_service, require_user_id
+<<<<<<< HEAD
 from app.interfaces.api.v1.schemas.auth import LoginRequest, SignupRequest
+=======
+from app.interfaces.api.v1.schemas.auth import (
+    ChangePasswordRequest,
+    LoginRequest,
+    SignupRequest,
+)
+>>>>>>> dev2
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -63,3 +71,25 @@ def session(
 @router.post("/logout")
 def logout():
     return {"ok": True}
+<<<<<<< HEAD
+=======
+
+
+@router.patch("/password")
+def change_password(
+    body: ChangePasswordRequest,
+    user_id: str = Depends(require_user_id),
+    auth_service: AuthService = Depends(get_auth_service),
+):
+    try:
+        auth_service.change_password(
+            user_id,
+            current_password=body.currentPassword,
+            new_password=body.newPassword,
+        )
+    except LookupError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+    return {"ok": True}
+>>>>>>> dev2

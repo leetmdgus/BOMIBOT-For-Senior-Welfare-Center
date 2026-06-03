@@ -1,6 +1,15 @@
 import uuid
 from datetime import UTC, datetime
 
+<<<<<<< HEAD
+=======
+from app.application.kanban_access import (
+    KanbanAccessContext,
+    can_access_task_record,
+    can_manage_project_record,
+    filter_project_payloads,
+)
+>>>>>>> dev2
 from app.domain.repositories.kanban_repository import (
     KanbanBoardRepository,
     KanbanCategoryRecord,
@@ -29,6 +38,35 @@ class KanbanBoardService:
             return str(project.year)
         return str(datetime.now(UTC).year)
 
+<<<<<<< HEAD
+=======
+    def resolve_task_title(self, region_id: str, task_id: str) -> str | None:
+        """칸반 업무 카드명 — SQL 단건 조회(연도별 전체 프로젝트 스캔 없음)."""
+        return self._kanban_repo.get_task_title(region_id, task_id)
+
+    def build_task_meta_index(self, region_id: str) -> dict[str, dict[str, str]]:
+        """업무 ID → 연도·사업(프로젝트)·칸반 컬럼 메타 (사업문서 검색 필터용)."""
+        from datetime import UTC, datetime
+
+        current = datetime.now(UTC).year
+        index: dict[str, dict[str, str]] = {}
+        for year in range(current - 3, current + 2):
+            for project in self._kanban_repo.list_projects(region_id, str(year)):
+                major = str(project.title or "").strip()
+                project_year = str(project.year or year)
+                for category in project.categories:
+                    cat_title = str(category.title or "").strip()
+                    for task in category.tasks:
+                        tid = strip_scope(task.id)
+                        index[tid] = {
+                            "year": project_year,
+                            "majorCategory": major,
+                            "categoryTitle": cat_title,
+                            "taskTitle": str(task.title or tid).strip() or tid,
+                        }
+        return index
+
+>>>>>>> dev2
     def _log_version(
         self,
         region_id: str,
@@ -251,9 +289,66 @@ class KanbanBoardService:
                     return category, task
         return None, None
 
+<<<<<<< HEAD
     def list_projects(self, region_id: str, year: str) -> list[dict]:
         projects = self._kanban_repo.list_projects(region_id, year)
         return [self._project_payload(p) for p in projects]
+=======
+    def list_projects(
+        self,
+        region_id: str,
+        year: str,
+        *,
+        access: KanbanAccessContext | None = None,
+    ) -> list[dict]:
+        projects = self._kanban_repo.list_projects(region_id, year)
+        payloads = [self._project_payload(p) for p in projects]
+        return filter_project_payloads(payloads, access)
+
+    def get_project_record(
+        self, region_id: str, project_id: str
+    ) -> KanbanProjectRecord | None:
+        return self._kanban_repo.get_project(region_id, project_id)
+
+    def assert_project_access(
+        self,
+        region_id: str,
+        project_id: str,
+        access: KanbanAccessContext | None,
+    ) -> KanbanProjectRecord:
+        from fastapi import HTTPException, status
+
+        project = self._kanban_repo.get_project(region_id, project_id)
+        if not project:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
+        if access and not can_manage_project_record(project, access):
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
+        return project
+
+    def assert_task_access(
+        self,
+        region_id: str,
+        task_id: str,
+        access: KanbanAccessContext | None,
+    ) -> None:
+        from fastapi import HTTPException, status
+
+        if access is None or access.bypass:
+            return
+        project = self._kanban_repo.get_project_for_task(region_id, task_id)
+        if not project:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
+        task_record: KanbanTaskRecord | None = None
+        for category in project.categories:
+            for task in category.tasks:
+                if strip_scope(task.id) == strip_scope(task_id):
+                    task_record = task
+                    break
+            if task_record:
+                break
+        if not task_record or not can_access_task_record(project, task_record, access):
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
+>>>>>>> dev2
 
     def create_project(
         self, region_id: str, body: dict, *, user: str = "시스템"
@@ -263,9 +358,17 @@ class KanbanBoardService:
         assignees = body.get("assignees") or []
         manager = None
         team = None
+<<<<<<< HEAD
         if assignees:
             first = assignees[0]
             manager = first.get("name")
+=======
+        names: list[str] = []
+        if assignees:
+            first = assignees[0]
+            names = [str(a.get("name", "")).strip() for a in assignees if a.get("name")]
+            manager = ", ".join(names) if names else first.get("name")
+>>>>>>> dev2
             team = first.get("team")
         year = str(body.get("year") or datetime.now(UTC).year)
         count = self._kanban_repo.count_projects(region_id, year)
@@ -280,7 +383,15 @@ class KanbanBoardService:
                     id=SqlAlchemyKanbanBoardRepository.new_task_id(region_id),
                     title=task_title,
                     description=body.get("description") or "",
+<<<<<<< HEAD
                     assignee=assignees[0].get("name", "") if assignees else "",
+=======
+                    assignee=(
+                        ", ".join(names)
+                        if names
+                        else (assignees[0].get("name", "") if assignees else "")
+                    ),
+>>>>>>> dev2
                     completed_count=0,
                     total_count=0,
                 )
@@ -566,8 +677,11 @@ class KanbanBoardService:
 
         project = self._kanban_repo.get_project(region_id, project_id)
         from_category, existing = self._find_task_context(project, task_id)
+<<<<<<< HEAD
         if not existing or not from_category:
             return None
+=======
+>>>>>>> dev2
 
         scoped_to_category_id = strip_scope(str(to_category_id))
         to_category = next(
@@ -578,10 +692,19 @@ class KanbanBoardService:
             ),
             None,
         )
+<<<<<<< HEAD
         if not to_category:
             return None
 
         scoped_from_category_id = strip_scope(str(from_category_id))
+=======
+
+        scoped_from_category_id = (
+            strip_scope(from_category.id)
+            if from_category
+            else strip_scope(str(from_category_id))
+        )
+>>>>>>> dev2
         moved = self._kanban_repo.move_task(
             region_id,
             project_id,
@@ -593,9 +716,30 @@ class KanbanBoardService:
         if not moved:
             return None
 
+<<<<<<< HEAD
         project_name = project.title if project else ""
         project_year = str(project.year) if project else str(datetime.now(UTC).year)
         same_column = scoped_from_category_id == scoped_to_category_id
+=======
+        if not from_category or not to_category:
+            project = self._kanban_repo.get_project(region_id, project_id)
+            from_category, existing = self._find_task_context(project, task_id)
+            if not to_category and project:
+                to_category = next(
+                    (
+                        category
+                        for category in project.categories
+                        if strip_scope(category.id) == scoped_to_category_id
+                    ),
+                    None,
+                )
+
+        project_name = project.title if project else ""
+        project_year = str(project.year) if project else str(datetime.now(UTC).year)
+        same_column = scoped_from_category_id == scoped_to_category_id
+        from_title = from_category.title if from_category else scoped_from_category_id
+        to_title = to_category.title if to_category else scoped_to_category_id
+>>>>>>> dev2
         self._log_version(
             region_id,
             action=(
@@ -611,8 +755,13 @@ class KanbanBoardService:
             changes=[
                 {
                     "label": "순서" if same_column else "칸반",
+<<<<<<< HEAD
                     "before": from_category.title,
                     "after": to_category.title,
+=======
+                    "before": from_title,
+                    "after": to_title,
+>>>>>>> dev2
                 }
             ],
             can_restore=True,

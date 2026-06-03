@@ -1,6 +1,16 @@
 import JSZip from "jszip"
 
 import {
+  decodeHtmlEntities,
+  encodeHwpxUtf8,
+  escapeXml,
+  hpTextRun,
+  hpTextRuns,
+  sanitizeHwpxText,
+} from "@/lib/hwpx/hwpx-encoding"
+import {
+  buildCellBorderFillXml,
+  buildCharPrXml,
   buildContainerXml,
   buildHeaderXml,
   buildManifestXml,
@@ -14,6 +24,12 @@ import {
   HWPX_STYLE,
 } from "@/lib/hwpx/hwpx-skeleton"
 
+export {
+  decodeHtmlEntities,
+  escapeXml,
+  sanitizeHwpxText,
+} from "@/lib/hwpx/hwpx-encoding"
+
 export type HwpxParagraph = {
   text: string
   /** title | heading | body */
@@ -26,6 +42,10 @@ export type HwpxTableCell = {
   rowSpan?: number
   /** 표 헤더(라벨) 셀 — 배경·굵게 */
   header?: boolean
+  /** 셀 배경색 (#RRGGBB) — 지정 시 전용 borderFill 생성 */
+  backgroundColor?: string
+  /** 셀 글자 크기 (px) — 지정 시 전용 charPr 생성 */
+  fontSizePx?: number
 }
 
 export type HwpxTable = {
@@ -56,30 +76,110 @@ function nextTblId(): string {
   return String(tblIdSeq++)
 }
 
+/** 동적 charPr(글자 크기)·borderFill(셀 배경색) 레지스트리 — 빌드 1회당 초기화 */
+type ResourceRegistry = {
+  charProps: Map<string, { id: number; xml: string }>
+  borderFills: Map<string, { id: number; xml: string }>
+  nextCharId: number
+  nextBorderId: number
+}
+
+let resources: ResourceRegistry = createResourceRegistry()
+
+function createResourceRegistry(): ResourceRegistry {
+  return {
+    charProps: new Map(),
+    borderFills: new Map(),
+    // 기본 charPr 0~3, borderFill 0~2 다음부터 할당
+    nextCharId: 4,
+    nextBorderId: 3,
+  }
+}
+
 function resetIds(): void {
   paraIdSeq = 1
   tblIdSeq = 1
+  resources = createResourceRegistry()
 }
 
-/** XML·한글에서 깨지는 제어문자 제거 */
-export function sanitizeHwpxText(value: string): string {
-  return value
-    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, "")
-    .replace(/\uFFFE|\uFFFF/g, "")
-    .replace(/\r\n/g, "\n")
-    .replace(/\r/g, "\n")
+/** px 글자 크기 → HWPX charPr 높이(HWPUNIT, 1pt=100). 안전 범위로 clamp */
+function fontSizePxToHeight(px: number): number {
+  const pt = Math.round(px)
+  return Math.min(Math.max(pt * 100, 400), 5000)
 }
 
-export function escapeXml(value: string): string {
-  return sanitizeHwpxText(value)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&apos;")
+function normalizeHexColor(color: string): string | null {
+  const value = color.trim()
+  if (!value || value.toLowerCase() === "transparent") return null
+  const hex = /^#([0-9a-fA-F]{6})$/.exec(value)
+  if (hex) return `#${hex[1].toUpperCase()}`
+  const short = /^#([0-9a-fA-F]{3})$/.exec(value)
+  if (short) {
+    const [r, g, b] = short[1].split("")
+    return `#${r}${r}${g}${g}${b}${b}`.toUpperCase()
+  }
+  const rgb = /^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/.exec(value)
+  if (rgb) {
+    const toHex = (n: string) => Number(n).toString(16).padStart(2, "0")
+    return `#${toHex(rgb[1])}${toHex(rgb[2])}${toHex(rgb[3])}`.toUpperCase()
+  }
+  return null
+}
+
+/** 셀의 charPrIDRef — 글자 크기 지정 시 전용 charPr 생성/재사용 */
+function resolveCellCharId(cell: HwpxTableCell): number {
+  const baseId = cell.header ? HWPX_CHAR.label : HWPX_CHAR.body
+  if (!cell.fontSizePx) return baseId
+
+  const height = fontSizePxToHeight(cell.fontSizePx)
+  const baseHeight = cell.header ? 900 : 1000
+  if (height === baseHeight) return baseId
+
+  const key = `${baseId}:${height}`
+  const existing = resources.charProps.get(key)
+  if (existing) return existing.id
+
+  const id = resources.nextCharId++
+  resources.charProps.set(key, {
+    id,
+    xml: buildCharPrXml(id, height, {
+      bold: cell.header,
+      textColor: cell.header ? "#1E293B" : "#111827",
+    }),
+  })
+  return id
+}
+
+/** 셀의 borderFillIDRef — 배경색 지정 시 전용 borderFill 생성/재사용 */
+function resolveCellBorderId(cell: HwpxTableCell): number {
+  const baseId = cell.header ? HWPX_BORDER.headerCell : HWPX_BORDER.table
+  if (!cell.backgroundColor) return baseId
+
+  const color = normalizeHexColor(cell.backgroundColor)
+  if (!color) return baseId
+
+  const key = color
+  const existing = resources.borderFills.get(key)
+  if (existing) return existing.id
+
+  const id = resources.nextBorderId++
+  resources.borderFills.set(key, {
+    id,
+    xml: buildCellBorderFillXml(id, color),
+  })
+  return id
 }
 
 const HWPX_LINE_AREA = 42520
+
+function addUtf8File(
+  zip: JSZip,
+  path: string,
+  content: string,
+  options?: JSZip.JSZipFileOptions,
+): void {
+  zip.file(path, encodeHwpxUtf8(content), { ...options, binary: true })
+}
 
 function linesegarrayXml(charHeight = 1000, vertpos = 0): string {
   const baseline = Math.floor(charHeight * 0.85)
@@ -91,15 +191,18 @@ export function stripHtml(html: string): string {
   if (typeof document !== "undefined") {
     const el = document.createElement("div")
     el.innerHTML = html
-    return (el.textContent ?? el.innerText ?? "").trim()
+    return sanitizeHwpxText((el.textContent ?? el.innerText ?? "").trim())
   }
-  return html
-    .replace(/<br\s*\/?>/gi, "\n")
-    .replace(/<\/p>/gi, "\n")
-    .replace(/<\/li>/gi, "\n")
-    .replace(/<[^>]+>/g, "")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim()
+  const decoded = decodeHtmlEntities(html)
+  return sanitizeHwpxText(
+    decoded
+      .replace(/<br\s*\/?>/gi, "\n")
+      .replace(/<\/p>/gi, "\n")
+      .replace(/<\/li>/gi, "\n")
+      .replace(/<[^>]+>/g, "")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim(),
+  )
 }
 
 function paragraphXml(
@@ -126,20 +229,7 @@ function paragraphXml(
         ? HWPX_CHAR.heading
         : HWPX_CHAR.body
 
-  const safe = sanitizeHwpxText(text)
-  const lines = safe.split("\n")
-  const runs =
-    lines.length === 0 || (lines.length === 1 && !lines[0])
-      ? `<hp:run charPrIDRef="${charId}"><hp:t> </hp:t></hp:run>`
-      : lines
-          .map((line, index) => {
-            const breakXml =
-              index < lines.length - 1
-                ? `<hp:run charPrIDRef="${charId}"><hp:lineBreak/></hp:run>`
-                : ""
-            return `<hp:run charPrIDRef="${charId}"><hp:t>${escapeXml(line || " ")}</hp:t></hp:run>${breakXml}`
-          })
-          .join("")
+  const runs = hpTextRuns(charId, text)
 
   const charHeight =
     variant === "title" ? 1800 : variant === "heading" ? 1200 : 1000
@@ -210,25 +300,17 @@ function tableXml(table: HwpxTable): string {
           for (let c = colIndex; c < colIndex + colSpan; c++) {
             cellWidth += colWidths[c] ?? 0
           }
-          const borderId = cell.header
-            ? HWPX_BORDER.headerCell
-            : HWPX_BORDER.table
-          const charId = cell.header ? HWPX_CHAR.label : HWPX_CHAR.body
+          const borderId = resolveCellBorderId(cell)
+          const charId = resolveCellCharId(cell)
           const paraId = cell.header ? HWPX_PARA.center : HWPX_PARA.body
           const styleId = cell.header ? HWPX_STYLE.label : HWPX_STYLE.body
-          const text = sanitizeHwpxText(cell.text) || " "
-          const lines = text.split("\n")
-          const runs = lines
-            .map((line, li) => {
-              const br =
-                li < lines.length - 1
-                  ? `<hp:run charPrIDRef="${charId}"><hp:lineBreak/></hp:run>`
-                  : ""
-              return `<hp:run charPrIDRef="${charId}"><hp:t>${escapeXml(line)}</hp:t></hp:run>${br}`
-            })
-            .join("")
+          const runs = hpTextRuns(charId, cell.text || " ")
 
-          const cellCharHeight = cell.header ? 900 : 1000
+          const cellCharHeight = cell.fontSizePx
+            ? fontSizePxToHeight(cell.fontSizePx)
+            : cell.header
+              ? 900
+              : 1000
           const cellPara = `<hp:p id="${nextParaId()}" paraPrIDRef="${paraId}" styleIDRef="${styleId}" pageBreak="0" columnBreak="0" merged="0">${runs}${linesegarrayXml(cellCharHeight)}</hp:p>`
 
           return `<hp:tc name="" header="${cell.header ? 1 : 0}" hasMargin="0" protect="0" editable="0" dirty="0" borderFillIDRef="${borderId}">
@@ -338,16 +420,24 @@ export async function buildHwpxBlob(doc: HwpxDocument): Promise<Blob> {
   const zip = new JSZip()
   const title = doc.title || "문서"
 
-  zip.file("mimetype", "application/hwp+zip", { compression: "STORE" })
-  zip.file("META-INF/container.xml", buildContainerXml())
-  zip.file("META-INF/manifest.xml", buildManifestXml())
-  zip.file("version.xml", buildVersionXml())
-  zip.file("settings.xml", buildSettingsXml())
-  zip.file("Contents/content.hpf", buildContentHpf(title))
-  zip.file("Contents/header.xml", buildHeaderXml(title))
-  zip.file("Contents/section0.xml", buildSection0Xml(doc.sections))
-  zip.file("Meta/meta.xml", buildMetaXml(title))
-  zip.file("Preview/PrvText.txt", buildPreviewText(doc))
+  // section0을 먼저 만들어 동적 charPr/borderFill(셀색·글자크기)을 수집한 뒤
+  // header.xml에 해당 정의를 주입한다.
+  const section0Xml = buildSection0Xml(doc.sections)
+  const headerExtras = {
+    charProps: [...resources.charProps.values()].map((entry) => entry.xml),
+    borderFills: [...resources.borderFills.values()].map((entry) => entry.xml),
+  }
+
+  addUtf8File(zip, "mimetype", "application/hwp+zip", { compression: "STORE" })
+  addUtf8File(zip, "META-INF/container.xml", buildContainerXml())
+  addUtf8File(zip, "META-INF/manifest.xml", buildManifestXml())
+  addUtf8File(zip, "version.xml", buildVersionXml())
+  addUtf8File(zip, "settings.xml", buildSettingsXml())
+  addUtf8File(zip, "Contents/content.hpf", buildContentHpf(title))
+  addUtf8File(zip, "Contents/header.xml", buildHeaderXml(title, headerExtras))
+  addUtf8File(zip, "Contents/section0.xml", section0Xml)
+  addUtf8File(zip, "Meta/meta.xml", buildMetaXml(title))
+  addUtf8File(zip, "Preview/PrvText.txt", `\uFEFF${buildPreviewText(doc)}`)
 
   return zip.generateAsync({
     type: "blob",
@@ -357,7 +447,9 @@ export async function buildHwpxBlob(doc: HwpxDocument): Promise<Blob> {
 }
 
 export function downloadHwpxFile(filename: string, blob: Blob): void {
-  const safeName = filename.replace(/[<>:"/\\|?*]/g, "_").replace(/\s+/g, "_")
+  const safeName = sanitizeHwpxText(filename)
+    .replace(/[<>:"/\\|?*]/g, "_")
+    .replace(/\s+/g, "_")
   const url = URL.createObjectURL(blob)
   const anchor = document.createElement("a")
   anchor.href = url

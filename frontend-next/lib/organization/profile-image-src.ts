@@ -14,8 +14,21 @@ function isProfileUploadEndpoint(path: string): boolean {
   return /\/employees\/[^/]+\/profile-image\/?$/i.test(path)
 }
 
+function encodeApiProfileContentPath(path: string): string {
+  const match = path.match(
+    /^(\/api(?:\/v1)?\/employees\/profile-content\/)(.+)$/i,
+  )
+  if (!match) return path
+  const prefix = match[1].replace("/api/v1/", "/api/")
+  const key = encodeURIComponent(match[2])
+  return `${prefix}${key}`
+}
+
 /** 직원 프로필 URL — API 업로드 경로·public·blob 지원 */
-export function resolveProfileImageSrc(path: string): string {
+export function resolveProfileImageSrc(
+  path: string,
+  options?: { cacheBust?: string | number },
+): string {
   const trimmed = path.trim()
   if (!trimmed) return trimmed
 
@@ -23,11 +36,21 @@ export function resolveProfileImageSrc(path: string): string {
     return ""
   }
 
-  if (trimmed.startsWith("/api/v1/")) {
-    return resolveApiPath(trimmed.replace("/api/v1", "/api"), trimmed)
+  let resolved = trimmed
+  if (trimmed.startsWith("/api/v1/") || trimmed.startsWith("/api/")) {
+    const apiPath = trimmed.startsWith("/api/v1/")
+      ? resolveApiPath(trimmed.replace("/api/v1", "/api"), trimmed)
+      : trimmed
+    resolved = encodeApiProfileContentPath(apiPath)
   }
+
+  if (options?.cacheBust !== undefined && options.cacheBust !== "") {
+    const separator = resolved.includes("?") ? "&" : "?"
+    return `${resolved}${separator}v=${encodeURIComponent(String(options.cacheBust))}`
+  }
+
   if (trimmed.startsWith("/api/")) {
-    return trimmed
+    return resolved
   }
   if (
     trimmed.startsWith("blob:") ||

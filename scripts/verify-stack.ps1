@@ -3,7 +3,11 @@ $ErrorActionPreference = "Stop"
 $repoRoot = Split-Path $PSScriptRoot -Parent
 $backend = Join-Path $repoRoot "backend"
 $frontend = Join-Path $repoRoot "frontend-next"
+<<<<<<< HEAD
 $base = "http://127.0.0.1:8020"
+=======
+$base = "http://127.0.0.1:9001"
+>>>>>>> dev2
 
 $ok = $true
 
@@ -39,10 +43,17 @@ try {
 $envLocal = Join-Path $frontend ".env.local"
 if (Test-Path $envLocal) {
   $content = Get-Content $envLocal -Raw
+<<<<<<< HEAD
   if ($content -match "NEXT_PUBLIC_API_BASE_URL\s*=\s*http://127\.0\.0\.1:8020") {
     Pass "frontend .env.local → 127.0.0.1:8020"
   } else {
     Fail ".env.local missing NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8020"
+=======
+  if ($content -match "127\.0\.0\.1:9001") {
+    Pass "frontend .env.local → API 127.0.0.1:9001"
+  } else {
+    Fail ".env.local missing API proxy/base URL http://127.0.0.1:9001"
+>>>>>>> dev2
   }
   if ($content -match "NEXT_PUBLIC_USE_MOCK_API\s*=\s*false") {
     Pass "frontend USE_MOCK_API=false"

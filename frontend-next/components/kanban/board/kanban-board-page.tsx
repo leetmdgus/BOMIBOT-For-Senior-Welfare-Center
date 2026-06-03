@@ -21,11 +21,14 @@ import { SubHeader } from "@/components/kanban/board/subheader"
 import { ProjectSection } from "@/components/kanban/board/project-section"
 
 import {
+  formatTaskAssigneeField,
+  loadAssignableStaff,
+} from "@/lib/kanban/assignable-staff"
+import {
   createProject,
   createTask,
   getProjectImageOptions,
   getProjects,
-  getStaffList,
   updateProject,
 } from "@/services/kanban.board.service"
 import {
@@ -77,7 +80,7 @@ export function KanbanBoardPage() {
         }
         const [newProjects, staff, images] = await Promise.all([
           getProjects(year),
-          getStaffList(),
+          loadAssignableStaff(),
           getProjectImageOptions(),
         ])
         setProjects(newProjects)
@@ -175,7 +178,7 @@ export function KanbanBoardPage() {
   const hasSearchQuery = searchQuery.trim().length > 0
 
   const normalizeTask = (task: Partial<Task>): Task => ({
-    id: task.id ?? crypto.randomUUID(),
+    id: task.id?.trim() ?? "",
     title: task.title ?? "",
     description: task.description ?? "",
     assignee: task.assignee ?? "",
@@ -222,7 +225,7 @@ export function KanbanBoardPage() {
     await createTask(projectId, categoryId, {
       title: data.title,
       description: data.description ?? "",
-      assignee: data.assignees?.[0]?.name ?? "",
+      assignee: formatTaskAssigneeField(data.assignees),
     })
 
     await refreshProjects()
@@ -305,7 +308,9 @@ export function KanbanBoardPage() {
                       ...project,
                       categories: project.categories.map((category) => ({
                         ...category,
-                        tasks: category.tasks.map(normalizeTask),
+                        tasks: category.tasks
+                          .map(normalizeTask)
+                          .filter((task) => task.id.length > 0),
                       })),
                     }}
                     year={year}

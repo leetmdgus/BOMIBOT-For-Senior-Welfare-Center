@@ -23,9 +23,15 @@ function Test-PortOwner($port) {
 
 Write-Host "=== BOMIBOT local dev ===" -ForegroundColor Cyan
 
+<<<<<<< HEAD
 $pyProc = Test-PortOwner 8020
 if ($pyProc) {
   Write-Host "Port 8020: local Python (uvicorn?) PID $($pyProc.Id) — stopping..." -ForegroundColor Yellow
+=======
+$pyProc = Test-PortOwner 9001
+if ($pyProc) {
+  Write-Host "Port 9001: local Python (uvicorn?) PID $($pyProc.Id) — stopping..." -ForegroundColor Yellow
+>>>>>>> dev2
   Stop-Process -Id $pyProc.Id -Force -ErrorAction SilentlyContinue
   Start-Sleep -Seconds 2
 }
@@ -51,8 +57,13 @@ if ($Frontend) {
 } else {
   Write-Host @"
 
+<<<<<<< HEAD
 API ready: http://127.0.0.1:8020/docs
 Frontend:  cd frontend-next && pnpm dev
+=======
+API ready: http://127.0.0.1:9001/docs
+Frontend:  http://localhost:9000  (cd frontend-next && pnpm dev)
+>>>>>>> dev2
 Or:        .\scripts\dev.ps1 -Frontend
 "@ -ForegroundColor Green
 }

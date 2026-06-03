@@ -27,7 +27,7 @@ export const versionHistoryMock: VersionHistoryEntry[] = [
   {
     id: "vh-2",
     user: "이승현",
-    userTeam: "복지3팀",
+    userTeam: "복지1팀",
     target: "2026 사업계획서 수립",
     projectName: "상담",
     actionType: "move_card",

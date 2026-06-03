@@ -12,6 +12,8 @@ interface EmployeeAvatarProps {
   className?: string
   fallbackClassName?: string
   variant?: "circle" | "square"
+  /** 업로드 직후 이미지 캐시 무효화 */
+  imageCacheKey?: string | number
 }
 
 export function EmployeeAvatar({
@@ -19,11 +21,14 @@ export function EmployeeAvatar({
   className,
   fallbackClassName,
   variant = "circle",
+  imageCacheKey,
 }: EmployeeAvatarProps) {
   const isSquare = variant === "square"
   const shapeClass = isSquare ? "rounded-xl" : "rounded-full"
   const profileSrc = employee.profileImage
-    ? resolveProfileImageSrc(employee.profileImage)
+    ? resolveProfileImageSrc(employee.profileImage, {
+        cacheBust: imageCacheKey,
+      })
     : undefined
 
   return (

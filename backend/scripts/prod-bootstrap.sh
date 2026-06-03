@@ -30,7 +30,11 @@ else
 fi
 
 if [ -n "$SMOKE" ]; then
+<<<<<<< HEAD
   curl -fsS "http://127.0.0.1:${API_PORT:-8020}/health"
+=======
+  curl -fsS "http://127.0.0.1:${API_PORT:-9001}/health"
+>>>>>>> dev2
 fi
 
 echo "Bootstrap done."

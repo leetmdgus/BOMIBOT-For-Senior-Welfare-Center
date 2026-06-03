@@ -122,12 +122,14 @@ export function Sidebar() {
               <>
                 <div className="relative shrink-0">
                   <EmployeeAvatar
+                    key={session?.profileImage ?? session?.id}
                     employee={profileUser}
                     className={cn(
                       "border-2 border-card",
                       collapsed ? "size-10" : "size-12",
                     )}
                     fallbackClassName={collapsed ? "text-sm" : "text-base"}
+                    imageCacheKey={session?.profileImage}
                   />
                   <span className="absolute bottom-0 right-0 size-3 rounded-full border-2 border-card bg-success" />
                 </div>

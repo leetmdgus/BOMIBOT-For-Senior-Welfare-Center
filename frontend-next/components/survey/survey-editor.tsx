@@ -56,13 +56,14 @@ export const SurveyEditor = forwardRef<
   SurveyEditorHandle,
   {
     id: string
+    taskId?: string
     initialDetail?: SurveyDetail
     scrollRoot?: HTMLElement | null
     onSaved?: (detail: SurveyDetail) => void
     onSavingChange?: (isSaving: boolean) => void
   }
 >(function SurveyEditor(
-  { id, initialDetail, scrollRoot, onSaved, onSavingChange },
+  { id, taskId, initialDetail, scrollRoot, onSaved, onSavingChange },
   ref
 ) {
   const [selectedTab, setSelectedTab] = useState<SurveySidebarTab>("outline")
@@ -143,9 +144,12 @@ export const SurveyEditor = forwardRef<
         questions,
         style: initialDetail?.style,
         settings: initialDetail?.settings,
+        taskId: taskId ?? initialDetail?.taskId,
       })
 
-      const nextDetail = await getSurveyDetail(result.id)
+      const nextDetail = await getSurveyDetail(result.id, {
+        taskId: taskId ?? initialDetail?.taskId,
+      })
       onSaved?.(nextDetail)
 
       if (saveType === "publish") {

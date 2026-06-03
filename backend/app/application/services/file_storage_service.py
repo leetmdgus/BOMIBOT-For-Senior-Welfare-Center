@@ -47,6 +47,16 @@ class FileStorageService:
         mime_type, _ = mimetypes.guess_type(filename)
         return storage_key, mime_type or "application/octet-stream"
 
+<<<<<<< HEAD
+=======
+    def exists(self, region_id: str, storage_key: str | None) -> bool:
+        if not storage_key:
+            return False
+        if ".." in storage_key or "/" in storage_key or "\\" in storage_key:
+            return False
+        return (self._region_dir(region_id) / storage_key).is_file()
+
+>>>>>>> dev2
     def resolve_path(self, region_id: str, storage_key: str) -> Path:
         if not storage_key or ".." in storage_key or "/" in storage_key or "\\" in storage_key:
             raise HTTPException(
@@ -57,7 +67,14 @@ class FileStorageService:
         if not path.is_file():
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
+<<<<<<< HEAD
                 detail="File content not found",
+=======
+                detail=(
+                    "파일 본문을 찾을 수 없습니다. "
+                    "서버 저장소가 초기화되었을 수 있습니다. 파일을 다시 업로드해 주세요."
+                ),
+>>>>>>> dev2
             )
         return path
 

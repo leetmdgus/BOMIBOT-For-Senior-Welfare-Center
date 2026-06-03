@@ -22,7 +22,8 @@ settings = get_settings()
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     cors_origins = resolve_cors_origins(settings)
-    cors_regex = resolve_cors_origin_regex(settings)
+
+=======    cors_regex = resolve_cors_origin_regex(settings)
     logger.info(
         "Starting %s [%s] cors_origins=%s cors_regex=%s",
         settings.app_name,
@@ -77,8 +78,19 @@ if settings.trusted_host_list and settings.is_production:
     )
 
 # CORS — 마지막 등록 = 가장 바깥 미들웨어 (OPTIONS preflight 우선 처리)
-app.add_middleware(CORSMiddleware, **cors_middleware_kwargs(settings))
-
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "https://workspace.bomi.ai.kr",
+        "https://localhost:5143",
+        "https://localhost:3000",
+        "https://localhost:9000",
+        "http://10.50.209.5:9000"
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 def _read_alembic_revision() -> str | None:
     try:

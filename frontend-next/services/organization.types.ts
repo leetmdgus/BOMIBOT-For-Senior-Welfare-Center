@@ -49,6 +49,11 @@ export interface CreateEmployeeInput {
   isAdmin?: boolean
 }
 
+/** 직원 추가 API 응답 — 초기 로그인 비밀번호 안내 */
+export type CreateEmployeeResult = Employee & {
+  initialPassword?: string
+}
+
 export interface UpdateEmployeeInput {
   name?: string
   role?: string

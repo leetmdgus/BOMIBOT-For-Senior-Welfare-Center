@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 
 import { ApiError } from "@/lib/api-client"
+import { formatTaskAssigneeField } from "@/lib/kanban/assignable-staff"
 import { cn } from "@/lib/utils"
 import { toast } from "@/hooks/use-toast"
 import { Button } from "@/components/ui/button"
@@ -170,28 +171,36 @@ export function ProjectSection({
     data: TaskFormData
   ) => {
     try {
-      const sourceCategory = categories.find(
-        (category) => category.id === categoryId
+      const owningCategory = categories.find((category) =>
+        category.tasks.some((task) => task.id === taskId)
       )
+      const resolvedCategoryId = owningCategory?.id ?? categoryId
 
-      const currentTask = sourceCategory?.tasks.find(
+      const currentTask = owningCategory?.tasks.find(
         (task) => task.id === taskId
       )
 
-      if (!currentTask) return
+      if (!currentTask || !taskId.trim()) return
 
       const updatedTask: Task = {
         ...currentTask,
         title: data.title,
         description: data.description ?? "",
-        assignee: data.assignees?.[0]?.name ?? currentTask.assignee,
+        assignee:
+          data.assignees.length > 0
+            ? formatTaskAssigneeField(data.assignees)
+            : currentTask.assignee,
       }
 
-      await updateTask(project.id, categoryId, taskId, updatedTask)
+      await updateTask(project.id, resolvedCategoryId, taskId, {
+        title: updatedTask.title,
+        description: updatedTask.description,
+        assignee: updatedTask.assignee,
+      })
 
       setCategories((prev) =>
         prev.map((category) =>
-          category.id === categoryId
+          category.id === resolvedCategoryId
             ? {
                 ...category,
                 tasks: category.tasks.map((task) =>
@@ -206,12 +215,27 @@ export function ProjectSection({
       console.error("업무 수정 실패:", error)
       setCategories(project.categories)
       onProjectCategoriesChange?.(project.id, project.categories)
+      const message =
+        error instanceof ApiError
+          ? error.message
+          : "업무를 서버에 저장하지 못했습니다."
+      toast({
+        variant: "destructive",
+        title: "업무 수정 실패",
+        description: `${message} (업무 ID: ${taskId})`,
+      })
+      throw error
     }
   }
 
   const handleDeleteTask = async (categoryId: string, taskId: string) => {
     try {
-      await deleteTask(project.id, categoryId, taskId)
+      const resolvedCategoryId =
+        categories.find((category) =>
+          category.tasks.some((task) => task.id === taskId),
+        )?.id ?? categoryId
+
+      await deleteTask(project.id, resolvedCategoryId, taskId)
 
       setCategories((prev) =>
         prev.map((category) =>
@@ -581,6 +605,7 @@ export function ProjectSection({
                     columnType={columnType}
                     projectId={project.id}
                     projectName={projectTitle}
+                    projectTeam={project.team}
                     staffList={staffList}
                     projectImages={projectImages}
                     year={year}

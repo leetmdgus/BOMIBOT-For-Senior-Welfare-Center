@@ -3,6 +3,7 @@
 import {
   Copy,
   Download,
+  ExternalLink,
   Pencil,
   Share2,
   Star,
@@ -19,6 +20,7 @@ import type { FileItem } from "./file-types"
 
 interface FileActionsMenuProps {
   item: FileItem
+  onOpen: (item: FileItem) => void
   onCopy: (item: FileItem) => void
   onRename: (item: FileItem) => void
   onShare: (item: FileItem) => void
@@ -30,6 +32,7 @@ interface FileActionsMenuProps {
 
 export function FileActionsMenu({
   item,
+  onOpen,
   onCopy,
   onRename,
   onShare,
@@ -40,6 +43,12 @@ export function FileActionsMenu({
 }: FileActionsMenuProps) {
   return (
     <DropdownMenuContent align="end">
+      {item.type !== "folder" && item.hasContent ? (
+        <DropdownMenuItem onClick={() => void onOpen(item)}>
+          <ExternalLink className="mr-2 size-4" />
+          열기
+        </DropdownMenuItem>
+      ) : null}
       <DropdownMenuItem
         onClick={() =>
           item.type === "folder" ? onExport(item) : onDownload(item)

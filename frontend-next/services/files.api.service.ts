@@ -76,6 +76,7 @@ export async function patchFile(
 export async function saveFileManagerState(body: {
   files?: unknown[]
   recentIds?: string[]
+  folderOrderByParentId?: Record<string, string[]>
 }): Promise<FileManagerState> {
   const result = await apiClient.put<FileManagerState>(fileManagerPath, body)
   invalidateApiGetCache("files:manager")

@@ -23,9 +23,11 @@ export function GreetingCard({ currentTime }: GreetingCardProps) {
       <CardContent className="flex items-center justify-between p-6">
         <div className="flex items-center gap-4">
           <EmployeeAvatar
+            key={session.profileImage ?? session.id}
             employee={profileUser}
             className="size-12"
             fallbackClassName="text-lg"
+            imageCacheKey={session.profileImage}
           />
 
           <div>

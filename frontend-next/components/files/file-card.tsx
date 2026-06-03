@@ -1,13 +1,17 @@
 "use client"
 
-import { MoreHorizontal, Star } from "lucide-react"
-import { useDraggable, useDroppable } from "@dnd-kit/core"
+import { GripVertical, MoreHorizontal, Star } from "lucide-react"
+import { useDroppable } from "@dnd-kit/core"
+import { useSortable } from "@dnd-kit/sortable"
+import { CSS } from "@dnd-kit/utilities"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { DropdownMenu, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
+
+import { shouldOpenFileOnPrimaryClick } from "@/lib/files/open-file-item"
 
 import { fileColors, fileIcons } from "./file-icons"
 import type { FileItem } from "./file-types"
@@ -42,20 +46,27 @@ export function FileCard({
   onDownload,
 }: FileCardProps) {
   const Icon = fileIcons[item.type]
-  const draggable = useDraggable({ id: item.id })
+  const sortable = useSortable({ id: item.id })
   const droppable = useDroppable({
     id: `folder:${item.id}`,
     disabled: item.type !== "folder",
   })
 
   const setRefs = (node: HTMLDivElement | null) => {
-    draggable.setNodeRef(node)
+    sortable.setNodeRef(node)
     if (item.type === "folder") droppable.setNodeRef(node)
+  }
+
+  const style: React.CSSProperties = {
+    opacity: sortable.isDragging ? 0.4 : 1,
+    transform: CSS.Transform.toString(sortable.transform),
+    transition: sortable.transition,
   }
 
   return (
     <FileContextMenu
       item={item}
+      onOpen={onOpen}
       onCopy={onCopy}
       onRename={onRename}
       onShare={onShare}
@@ -66,21 +77,29 @@ export function FileCard({
     >
       <div
         ref={setRefs}
-        {...draggable.listeners}
-        {...draggable.attributes}
+        {...sortable.attributes}
         className={cn(
-          "group relative cursor-grab rounded-xl border bg-card p-4 transition-all hover:shadow-md active:cursor-grabbing",
+          "group relative rounded-xl border bg-card p-4 transition-all hover:shadow-md",
           selected && "ring-2 ring-primary",
           droppable.isOver && "ring-2 ring-primary/50"
         )}
-        style={{
-          opacity: draggable.isDragging ? 0.55 : 1,
-        }}
+        style={style}
         onDoubleClick={() => onOpen(item)}
         onClick={(event) => {
+          // 폴더는 단일 클릭으로 진입 (파일 탐색기 UX)
+          if (item.type === "folder" && !(event.ctrlKey || event.metaKey || event.shiftKey)) {
+            void onOpen(item)
+            return
+          }
+          if (shouldOpenFileOnPrimaryClick(item, event)) {
+            void onOpen(item)
+            return
+          }
           if (event.ctrlKey || event.metaKey || event.shiftKey) {
             onSelect(item.id, true)
+            return
           }
+          onSelect(item.id, false)
         }}
       >
         <div className="absolute left-2 top-2 opacity-0 transition-opacity group-hover:opacity-100">
@@ -91,6 +110,17 @@ export function FileCard({
             aria-label={`${item.name} 선택`}
           />
         </div>
+
+        <button
+          type="button"
+          className="absolute bottom-2 right-2 flex size-7 cursor-grab items-center justify-center rounded-md text-muted-foreground opacity-0 transition-opacity hover:bg-muted active:cursor-grabbing group-hover:opacity-100"
+          aria-label={`${item.name} 드래그하여 이동`}
+          {...sortable.listeners}
+          onClick={(event) => event.stopPropagation()}
+          onDoubleClick={(event) => event.stopPropagation()}
+        >
+          <GripVertical className="size-4" />
+        </button>
 
         <div className="absolute right-2 top-2 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
           {item.starred && <Star className="size-4 fill-amber-400 text-amber-400" />}
@@ -108,6 +138,7 @@ export function FileCard({
             </DropdownMenuTrigger>
             <FileActionsMenu
               item={item}
+              onOpen={onOpen}
               onCopy={onCopy}
               onRename={onRename}
               onShare={onShare}
@@ -119,10 +150,7 @@ export function FileCard({
           </DropdownMenu>
         </div>
 
-        <div
-          className="mb-3 flex h-20 items-center justify-center rounded-lg bg-muted/50"
-          onClick={() => onOpen(item)}
-        >
+        <div className="mb-3 flex h-20 items-center justify-center rounded-lg bg-muted/50">
           <Icon className={cn("size-10", fileColors[item.type])} />
         </div>
 

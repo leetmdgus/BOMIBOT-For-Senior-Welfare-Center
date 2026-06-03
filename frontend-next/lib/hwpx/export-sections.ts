@@ -91,8 +91,6 @@ export function hwpxSectionsFromDocumentSections(
   const result: HwpxSection[] = []
 
   for (const section of sections) {
-    if (section.type === "file") continue
-
     if (section.type === "heading") {
       result.push({
         paragraphs: [{ text: section.title || "대목차", variant: "heading" }],

@@ -25,6 +25,7 @@ import {
 } from "./file-utils"
 import { syncFileTaskNames } from "@/lib/files/sync-file-task-names"
 import { TASK_FILTER_NONE } from "./task-filter-control"
+import type { FileManagerState } from "@/services/files.types"
 
 function matchesTaskFilter(item: FileItem, taskFilterId: string | null): boolean {
   if (!taskFilterId) return true
@@ -48,15 +49,9 @@ function mapApiFile(raw: Record<string, unknown>): FileItem {
     taskName: raw.taskName ? String(raw.taskName) : undefined,
     storageKey: raw.storageKey ? String(raw.storageKey) : undefined,
     mimeType: raw.mimeType ? String(raw.mimeType) : undefined,
-    hasContent: Boolean(raw.hasContent ?? raw.storageKey),
+    hasContent: Boolean(raw.hasContent),
+    contentMissing: Boolean(raw.contentMissing),
   }
-}
-
-function isPreviewable(item: FileItem): boolean {
-  const mime = item.mimeType ?? ""
-  if (mime.startsWith("image/")) return true
-  if (mime === "application/pdf") return true
-  return item.type === "image" || item.type === "pdf"
 }
 
 export function useFileManager() {
@@ -68,6 +63,9 @@ export function useFileManager() {
   const [taskFilterId, setTaskFilterId] = useState<string | null>(null)
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [recentIds, setRecentIds] = useState<string[]>([])
+  const [folderOrderByParentId, setFolderOrderByParentId] = useState<
+    NonNullable<FileManagerState["folderOrderByParentId"]>
+  >({})
   const [managerTaskOptions, setManagerTaskOptions] = useState<TaskOption[]>([])
   const hydratedRef = useRef(false)
 
@@ -77,6 +75,7 @@ export function useFileManager() {
     setManagerTaskOptions(options)
     setFiles(syncFileTaskNames(state.files, options))
     setRecentIds(state.recentIds)
+    setFolderOrderByParentId(state.folderOrderByParentId ?? {})
     hydratedRef.current = true
   }, [])
 
@@ -91,12 +90,13 @@ export function useFileManager() {
     const timer = setTimeout(() => {
       void saveFileManagerState({
         recentIds,
+        folderOrderByParentId,
       }).catch((error) => {
         console.error("파일 관리 상태 저장 실패:", error)
       })
     }, 800)
     return () => clearTimeout(timer)
-  }, [recentIds])
+  }, [recentIds, folderOrderByParentId])
 
   useEffect(() => {
     if (isFastApiMode() || !hydratedRef.current || files.length === 0) return
@@ -104,17 +104,24 @@ export function useFileManager() {
       void saveFileManagerState({
         files,
         recentIds,
+        folderOrderByParentId,
       }).catch((error) => {
         console.error("파일 트리 저장 실패:", error)
       })
     }, 1200)
     return () => clearTimeout(timer)
-  }, [files, recentIds])
+  }, [files, recentIds, folderOrderByParentId])
 
   const [renameTarget, setRenameTarget] = useState<FileItem | null>(null)
   const [shareTarget, setShareTarget] = useState<FileItem | null>(null)
   const [uploadOpen, setUploadOpen] = useState(false)
   const [newFolderOpen, setNewFolderOpen] = useState(false)
+  const [previewTarget, setPreviewTarget] = useState<FileItem | null>(null)
+
+  const setCurrentFolderOrder = (orderedIds: string[]) => {
+    const key = currentFolderId ?? "root"
+    setFolderOrderByParentId((prev) => ({ ...prev, [key]: orderedIds }))
+  }
 
   const parentFolderId = useMemo(() => {
     return files.find((item) => item.id === currentFolderId)?.parentId ?? null
@@ -134,7 +141,21 @@ export function useFileManager() {
       return item.parentId === currentFolderId
     })
 
-    return sortFiles(scopedFiles, sortKey)
+    const sorted = sortFiles(scopedFiles, sortKey)
+    if (useFlatView || sortKey !== "name") return sorted
+
+    const key = currentFolderId ?? "root"
+    const order = folderOrderByParentId[key]
+    if (!order || order.length === 0) return sorted
+    const indexById = new Map(order.map((id, index) => [id, index]))
+    return [...sorted].sort((a, b) => {
+      const ia = indexById.get(a.id)
+      const ib = indexById.get(b.id)
+      if (ia === undefined && ib === undefined) return 0
+      if (ia === undefined) return 1
+      if (ib === undefined) return -1
+      return ia - ib
+    })
   }, [files, currentFolderId, searchQuery, sortKey, taskFilterId, useFlatView])
 
   const taskFilterLabel = useMemo(() => {
@@ -196,31 +217,7 @@ export function useFileManager() {
       return
     }
 
-    if (item.hasContent && downloadFileBlob) {
-      try {
-        const blob = await downloadFileBlob(item.id)
-
-        if (isPreviewable(item)) {
-          const url = URL.createObjectURL(blob)
-          window.open(url, "_blank", "noopener,noreferrer")
-          window.setTimeout(() => URL.revokeObjectURL(url), 120_000)
-          return
-        }
-
-        triggerBlobDownload(blob, item.name)
-        return
-      } catch (error) {
-        console.error("파일 열기 실패:", error)
-        window.alert(
-          error instanceof Error ? error.message : "파일을 열거나 다운로드하지 못했습니다.",
-        )
-        return
-      }
-    }
-
-    window.alert(
-      "이 항목은 예시 데이터입니다. 「파일 업로드」로 올린 파일부터 서버에 실제 파일로 저장·다운로드됩니다.",
-    )
+    setPreviewTarget(item)
   }
 
   const toggleSelect = (id: string, additive = true) => {
@@ -455,39 +452,38 @@ export function useFileManager() {
     const nextName = name.trim()
     if (!nextName) return
 
-    if (isFastApiMode() && createFile) {
-      try {
-        const created = await createFile({
-          name: nextName,
-          type: "folder",
-          parentId: currentFolderId,
-          permission: "private",
-        })
-        setFiles((prev) => [
-          ...prev,
-          mapApiFile(created as Record<string, unknown>),
-        ])
-        return
-      } catch (error) {
-        console.error("폴더 생성 실패:", error)
-        window.alert("폴더 생성에 실패했습니다.")
-        return
-      }
-    }
+    const parentFolder = currentFolderId
+      ? files.find((item) => item.id === currentFolderId)
+      : null
+    const taskId =
+      taskFilterId && taskFilterId !== TASK_FILTER_NONE
+        ? taskFilterId
+        : parentFolder?.taskId
+    const task = taskId
+      ? managerTaskOptions.find((item) => item.id === taskId)
+      : undefined
 
-    const now = new Date().toISOString()
-    setFiles((prev) => [
-      ...prev,
-      {
-        id: crypto.randomUUID(),
+    try {
+      const created = await createFile({
         name: nextName,
         type: "folder",
         parentId: currentFolderId,
-        createdAt: now,
-        modifiedAt: now,
         permission: "private",
-      },
-    ])
+        ...(taskId ? { taskId, taskName: task?.name } : {}),
+      })
+      setFiles((prev) => [
+        ...prev,
+        syncFileTaskNames(
+          [mapApiFile(created as Record<string, unknown>)],
+          managerTaskOptions,
+        )[0],
+      ])
+    } catch (error) {
+      console.error("폴더 생성 실패:", error)
+      window.alert(
+        error instanceof Error ? error.message : "폴더 생성에 실패했습니다.",
+      )
+    }
   }
 
   const uploadFiles = async (uploadedFiles: File[], taskId: string) => {
@@ -572,6 +568,7 @@ export function useFileManager() {
     visibleFiles,
     recentFiles,
     selectedIds,
+    setSelectedIds,
     selectedItems,
     viewMode,
     sortKey,
@@ -582,6 +579,8 @@ export function useFileManager() {
     setTaskFilterId,
     renameTarget,
     shareTarget,
+    previewTarget,
+    setPreviewTarget,
     uploadOpen,
     newFolderOpen,
     setCurrentFolderId,
@@ -612,5 +611,6 @@ export function useFileManager() {
     uploadFiles,
     exportItem,
     exportSelected,
+    setCurrentFolderOrder,
   }
 }

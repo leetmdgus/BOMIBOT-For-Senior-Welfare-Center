@@ -10,24 +10,10 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
+import { formatKstDateTime } from "@/lib/datetime-kst"
 import { cn } from "@/lib/utils"
 import type { VersionHistoryEntry } from "@/services/kanban.version-history.types"
 import { VERSION_HISTORY_ACTION_LABELS } from "@/services/kanban.version-history.types"
-
-function formatHistoryDate(date: string) {
-  const parsed = new Date(date)
-
-  if (Number.isNaN(parsed.getTime())) return date
-
-  return new Intl.DateTimeFormat("ko-KR", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  }).format(parsed)
-}
 
 interface VersionHistoryItemProps {
   entry: VersionHistoryEntry
@@ -81,7 +67,7 @@ export function VersionHistoryItem({
               </p>
 
               <p className="text-xs text-muted-foreground">
-                {formatHistoryDate(entry.date)}
+                {formatKstDateTime(entry.date)}
               </p>
             </div>
 

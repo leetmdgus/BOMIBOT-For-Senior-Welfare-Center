@@ -90,8 +90,18 @@
       "type": "틀"
     },
     {
+<<<<<<< HEAD
       "id": "fixed-plan",
       "name": "사업계획서",
+=======
+      "id": "fixed-plan-template",
+      "name": "사회복지사업 단위사업계획서 (양식)",
+      "type": "틀"
+    },
+    {
+      "id": "fixed-plan",
+      "name": "사회복지사업 단위사업계획서",
+>>>>>>> dev2
       "type": "계획서"
     }
   ],

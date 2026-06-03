@@ -20,6 +20,8 @@ export interface FileItem {
   storageKey?: string
   mimeType?: string
   hasContent?: boolean
+  /** storageKey는 있으나 서버 디스크에 본문 없음 */
+  contentMissing?: boolean
 }
 
 export interface TaskOption {

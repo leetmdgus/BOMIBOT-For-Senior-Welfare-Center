@@ -48,5 +48,16 @@ if [ "${SEED_MISSING_JSON_ON_STARTUP}" = "true" ]; then
   python scripts/seed.py --missing-json || true
 fi
 
+<<<<<<< HEAD
+=======
+PLAN_HWPX="/app/app/application/hwpx/templates/render/plan.hwpx"
+EVAL_HWPX="/app/app/application/hwpx/templates/render/evaluation.hwpx"
+if [ ! -s "$PLAN_HWPX" ] || [ ! -s "$EVAL_HWPX" ]; then
+  echo "[entrypoint] ERROR: HWPX render templates missing ($PLAN_HWPX)" >&2
+  echo "[entrypoint] Rebuild image after: scripts/sync_hwpx_render_templates.sh" >&2
+  exit 1
+fi
+
+>>>>>>> dev2
 echo "[entrypoint] Starting: $*"
 exec "$@"

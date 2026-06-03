@@ -22,7 +22,7 @@ const USE_API_PROXY =
 const USE_MOCK_API = process.env.NEXT_PUBLIC_USE_MOCK_API === "true"
 
 /** 로컬 FastAPI 직연동 URL — 브라우저에서 쓰면 CORS·Workbox ERR_FAILED */
-const LOCAL_API_PATTERN = /^https?:\/\/(localhost|127\.0\.0\.1):8020\/?$/i
+const LOCAL_API_PATTERN = /^https?:\/\/(localhost|127\.0\.0\.1):9001\/?$/i
 
 function isLocalApiBase(base: string): boolean {
   return LOCAL_API_PATTERN.test(base)
@@ -124,6 +124,21 @@ function formatApiErrorMessage(
   if (status === 401) {
     return "로그인이 만료되었거나 인증 정보가 없습니다. 다시 로그인해 주세요."
   }
+  if (status === 404) {
+    const msg =
+      typeof body === "object" && body !== null && "error" in body
+        ? String((body as { error?: unknown }).error ?? "")
+        : ""
+    if (
+      msg.includes("파일 본문") ||
+      msg.includes("File content not found") ||
+      msg.includes("업로드된 실제 파일이 없습니다")
+    ) {
+      return msg.includes("예시")
+        ? msg
+        : "파일 본문을 찾을 수 없습니다. 서버 저장소 초기화 등으로 삭제되었을 수 있습니다. 다시 업로드해 주세요."
+    }
+  }
   if (status === 502 || status === 503) {
     const detail =
       typeof body === "object" && body !== null && "detail" in body
@@ -134,7 +149,7 @@ function formatApiErrorMessage(
         ? String((body as { target?: unknown }).target ?? "")
         : ""
     const hint =
-      "FastAPI(8020)가 실행 중인지 확인하세요: cd backend && docker compose up -d api"
+      "FastAPI(9001)가 실행 중인지 확인하세요: cd backend && docker compose up -d api"
     if (detail.includes("ECONNREFUSED") || detail.includes("fetch failed")) {
       return `API 서버에 연결할 수 없습니다. ${hint}${target ? ` (${target})` : ""}`
     }
@@ -194,11 +209,27 @@ export async function apiFetch<T>(
     headers.set(header, value)
   }
 
-  const response = await fetch(buildUrl(path), {
-    ...fetchInit,
-    headers,
-    credentials: "include",
-  })
+  let response: Response
+  try {
+    response = await fetch(buildUrl(path), {
+      ...fetchInit,
+      headers,
+      credentials: "include",
+    })
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : String(error)
+    const proxyHint =
+      typeof window !== "undefined" && useBrowserProxy()
+        ? " FastAPI(9001) 실행 여부와 frontend-next/.env.local 의 API_PROXY_URL을 확인하세요."
+        : " API 서버(URL) 연결을 확인하세요."
+    throw new ApiError(
+      message === "Failed to fetch"
+        ? `API 서버에 연결할 수 없습니다.${proxyHint}`
+        : `네트워크 오류: ${message}`,
+      0,
+    )
+  }
 
   if (!response.ok) {
     let body: unknown
@@ -276,12 +307,71 @@ export async function apiFetchBlobWithMeta(
     )
   }
 
+  const blob = await response.blob()
+  const contentType = (response.headers.get("content-type") ?? "").toLowerCase()
+  if (
+    contentType.includes("application/json") ||
+    contentType.includes("text/")
+  ) {
+    throw new ApiError(
+      "파일 대신 오류 응답을 받았습니다. API 서버 상태를 확인하세요.",
+      response.status,
+    )
+  }
+
   return {
-    blob: await response.blob(),
+    blob,
     filename: parseContentDispositionFilename(
       response.headers.get("content-disposition"),
     ),
   }
+}
+
+export async function apiFetchText(
+  path: string,
+  init?: RequestInit,
+): Promise<string> {
+  const session = getClientSession()
+  const headers = new Headers(init?.headers)
+
+  if (!headers.has("Content-Type") && init?.body) {
+    headers.set("Content-Type", "application/json")
+  }
+
+  if (session?.token) {
+    headers.set("Authorization", `Bearer ${session.token}`)
+  }
+
+  if (session?.regionId) {
+    headers.set("X-Region-Id", session.regionId)
+  }
+
+  if (session?.name) {
+    const { header, value } = encodeUserNameHeader(session.name)
+    headers.set(header, value)
+  }
+
+  const response = await fetch(buildUrl(path), {
+    ...init,
+    headers,
+    credentials: "include",
+  })
+
+  if (!response.ok) {
+    let body: unknown
+    try {
+      body = await response.json()
+    } catch {
+      body = undefined
+    }
+    throw new ApiError(
+      formatApiErrorMessage(path, response.status, body),
+      response.status,
+      body,
+    )
+  }
+
+  return response.text()
 }
 
 export async function apiUploadFormData<T>(
@@ -304,12 +394,24 @@ export async function apiUploadFormData<T>(
     headers.set(header, value)
   }
 
-  const response = await fetch(buildUrl(path), {
-    method: "POST",
-    headers,
-    body: formData,
-    credentials: "include",
-  })
+  let response: Response
+  try {
+    response = await fetch(buildUrl(path), {
+      method: "POST",
+      headers,
+      body: formData,
+      credentials: "include",
+    })
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : String(error)
+    throw new ApiError(
+      message === "Failed to fetch"
+        ? "프로필 사진 업로드에 실패했습니다. API 서버(9001) 연결을 확인해 주세요."
+        : `네트워크 오류: ${message}`,
+      0,
+    )
+  }
 
   if (!response.ok) {
     let body: unknown
@@ -318,7 +420,11 @@ export async function apiUploadFormData<T>(
     } catch {
       body = undefined
     }
-    throw new ApiError(`업로드 실패: ${response.status}`, response.status, body)
+    throw new ApiError(
+      formatApiErrorMessage(path, response.status, body),
+      response.status,
+      body,
+    )
   }
 
   return (await response.json()) as T

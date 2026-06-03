@@ -12,8 +12,10 @@ import {
   isSelfEmployee,
 } from "@/lib/organization-permissions"
 import type { RegionId } from "@/lib/auth/regions"
+import { registerUser, updateMockUserEmail } from "@/lib/mocks/auth-users.mock"
 import type {
   CreateEmployeeInput,
+  CreateEmployeeResult,
   Department,
   DepartmentOption,
   Employee,
@@ -168,7 +170,7 @@ export async function getDepartmentOptions(
 
 export async function createEmployee(
   input: CreateEmployeeInput,
-): Promise<Employee> {
+): Promise<CreateEmployeeResult> {
   const context = await getOrganizationContext()
   if (!canCreateEmployee(context.permissions)) {
     throw new Error("직원 추가 권한이 없습니다.")
@@ -194,7 +196,20 @@ export async function createEmployee(
     profileImage: input.profileImage,
   }
   employeeOverrides.set(created.id, created)
-  return created
+
+  const session = getClientSession()
+  if (session?.regionId) {
+    const email = created.email.trim().toLowerCase()
+    registerUser({
+      email,
+      password: email,
+      name: created.name,
+      department: created.department,
+      regionId: session.regionId,
+    })
+  }
+
+  return { ...created, initialPassword: created.email.trim().toLowerCase() }
 }
 
 export async function updateEmployee(
@@ -218,10 +233,15 @@ export async function updateEmployee(
     isSelfEmployee(context, current) && !canFullHrEdit(context, current)
 
   if (selfOnly) {
+    const nextEmail = (input.email?.trim() ?? current.email).toLowerCase()
+    const session = getClientSession()
+    if (session?.regionId && nextEmail !== current.email.toLowerCase()) {
+      updateMockUserEmail(current.email, nextEmail, session.regionId)
+    }
     const updated: Employee = {
       ...current,
       name: input.name?.trim() ?? current.name,
-      email: input.email?.trim() ?? current.email,
+      email: nextEmail,
       phone: input.phone?.trim() ?? current.phone,
       profileImage: input.profileImage ?? current.profileImage,
     }
@@ -236,6 +256,12 @@ export async function updateEmployee(
   const deptList = await getDepartmentOptions()
   const dept = deptList.find((d) => d.id === input.departmentId)
 
+  const nextEmail = (input.email?.trim() ?? current.email).toLowerCase()
+  const session = getClientSession()
+  if (session?.regionId && nextEmail !== current.email.toLowerCase()) {
+    updateMockUserEmail(current.email, nextEmail, session.regionId)
+  }
+
   const updated: Employee = {
     ...current,
     name: input.name?.trim() ?? current.name,
@@ -243,7 +269,7 @@ export async function updateEmployee(
     position: input.position?.trim() ?? current.position,
     departmentId: input.departmentId ?? current.departmentId,
     department: dept?.name ?? current.department,
-    email: input.email?.trim() ?? current.email,
+    email: nextEmail,
     phone: input.phone?.trim() ?? current.phone,
     joinDate: input.joinDate?.trim() ?? current.joinDate,
     profileImage: input.profileImage ?? current.profileImage,

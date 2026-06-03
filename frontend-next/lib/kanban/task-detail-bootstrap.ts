@@ -47,15 +47,20 @@ export function bootstrapBusinessPlan(
   cardTitle?: string | null,
 ): BusinessPlanDocument {
   const title = businessNameForTask(taskId, cardTitle)
+  const form = source.formData
   return {
     ...source,
     formData: {
-      ...source.formData,
-      goals: [...source.formData.goals],
-      subProjects: source.formData.subProjects.map((item) => ({ ...item })),
+      ...form,
+      subProjects: form.subProjects.map((item) => ({ ...item })),
       projectName: title,
-      purpose: `${title} 대상자에게 맞춤형 서비스를 제공하고 사업 목표 달성을 위한 연간 추진 계획`,
-      goals: source.formData.goals.map((_, index) => `${title} 목표 ${index + 1}`),
+      purpose:
+        form.purpose.trim() ||
+        `${title} 대상자에게 맞춤형 서비스를 제공하고 사업 목표 달성을 위한 연간 추진 계획`,
+      goals:
+        form.goals.length > 0
+          ? [...form.goals]
+          : [`${title} 목표 1`, `${title} 목표 2`, `${title} 목표 3`],
     },
     sections: source.sections.map((section) => ({ ...section })),
   }

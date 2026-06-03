@@ -54,6 +54,10 @@ async def resolve_rag_for_question(
     input_rows: list[dict[str, Any]] | None = None,
     books: list[dict[str, Any]] | None = None,
     kanban_projects: list[dict[str, Any]] | None = None,
+<<<<<<< HEAD
+=======
+    business_documents: list[dict[str, Any]] | None = None,
+>>>>>>> dev2
 ) -> dict[str, Any]:
     try:
         external = await _fetch_external_rag(settings, question)
@@ -68,5 +72,10 @@ async def resolve_rag_for_question(
         books=books,
         kanban_projects=kanban_projects,
     )
+<<<<<<< HEAD
+=======
+    if business_documents:
+        corpus = [*corpus, *business_documents]
+>>>>>>> dev2
     chunks = retrieve_rag_chunks(question, corpus, settings.rag_top_k)
     return {"chunks": chunks, "contextText": format_rag_context(chunks)}

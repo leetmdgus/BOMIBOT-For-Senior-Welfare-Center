@@ -70,7 +70,7 @@
 
 | 변수 (연동 시 권장) | 용도 |
 |---------------------|------|
-| `NEXT_PUBLIC_API_BASE_URL` | 프로덕션: `https://api-workspace.bomi.ai.kr` · 로컬: `http://127.0.0.1:8020` ([DEPLOYMENT.md](../../docs/DEPLOYMENT.md)) |
+| `NEXT_PUBLIC_API_BASE_URL` | 프로덕션: `https://api-workspace.bomi.ai.kr` · 로컬: `http://127.0.0.1:9001` ([DEPLOYMENT.md](../../docs/DEPLOYMENT.md)) |
 | `NEXT_PUBLIC_USE_MOCK_API` | `false` 시 `*.api.service` → FastAPI |
 
 ---

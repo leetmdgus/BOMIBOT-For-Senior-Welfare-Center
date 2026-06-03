@@ -6,6 +6,7 @@ import {
 } from "@/lib/auth/session"
 import type {
   AuthSession,
+  ChangePasswordRequest,
   LoginRequest,
   SignupRequest,
 } from "./auth.types"
@@ -30,10 +31,7 @@ export async function signup(request: SignupRequest): Promise<AuthSession> {
   return session
 }
 
-export async function getSession(): Promise<AuthSession | null> {
-  const local = getClientSession()
-  if (local) return local
-
+async function fetchSessionFromServer(): Promise<AuthSession | null> {
   try {
     const session = await apiClient.get<AuthSession>(
       resolveApiPath("/api/auth/session", "/api/v1/auth/session"),
@@ -43,6 +41,29 @@ export async function getSession(): Promise<AuthSession | null> {
   } catch {
     return null
   }
+}
+
+export async function getSession(): Promise<AuthSession | null> {
+  const local = getClientSession()
+  if (local) return local
+  return fetchSessionFromServer()
+}
+
+/** localStorage 캐시 무시 — 프로필 사진 등 서버 변경 반영 */
+export async function refreshSession(): Promise<AuthSession | null> {
+  const local = getClientSession()
+  if (!local?.token) return fetchSessionFromServer()
+  const refreshed = await fetchSessionFromServer()
+  return refreshed ?? local
+}
+
+export async function changePassword(
+  request: ChangePasswordRequest,
+): Promise<void> {
+  await apiClient.patch<void>(
+    resolveApiPath("/api/auth/password", "/api/v1/auth/password"),
+    request,
+  )
 }
 
 export async function logout(): Promise<void> {

@@ -9,13 +9,14 @@ import {
   ContextMenuSeparator,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu"
-import { Copy, Download, Pencil, Share2, Star, Trash2 } from "lucide-react"
+import { Copy, Download, ExternalLink, Pencil, Share2, Star, Trash2 } from "lucide-react"
 
 import type { FileItem } from "./file-types"
 
 interface FileContextMenuProps {
   item: FileItem
   children: ReactNode
+  onOpen: (item: FileItem) => void
   onCopy: (item: FileItem) => void
   onRename: (item: FileItem) => void
   onShare: (item: FileItem) => void
@@ -28,6 +29,7 @@ interface FileContextMenuProps {
 export function FileContextMenu({
   item,
   children,
+  onOpen,
   onCopy,
   onRename,
   onShare,
@@ -40,6 +42,12 @@ export function FileContextMenu({
     <ContextMenu>
       <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
       <ContextMenuContent>
+        {item.type !== "folder" && item.hasContent ? (
+          <ContextMenuItem onClick={() => void onOpen(item)}>
+            <ExternalLink className="mr-2 size-4" />
+            열기
+          </ContextMenuItem>
+        ) : null}
         <ContextMenuItem
           onClick={() =>
             item.type === "folder" ? onExport(item) : onDownload(item)

@@ -32,6 +32,11 @@ export interface LoginRequest {
   regionId: RegionId
 }
 
+export interface ChangePasswordRequest {
+  currentPassword: string
+  newPassword: string
+}
+
 export interface SignupRequest {
   email: string
   password: string

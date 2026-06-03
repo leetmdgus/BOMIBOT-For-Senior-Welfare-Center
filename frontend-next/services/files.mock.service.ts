@@ -6,6 +6,11 @@ import { buildFolderZipBlob } from "@/lib/files/build-folder-zip"
 import { triggerBlobDownload } from "@/lib/files/download-blob"
 import { loadKanbanTaskOptions } from "@/lib/files/kanban-task-options"
 import { syncFileTaskNames } from "@/lib/files/sync-file-task-names"
+import { filterFileTree } from "@/lib/files/file-access"
+import {
+  collectAccessibleTaskIds,
+  shouldBypassProjectAccess,
+} from "@/lib/kanban/project-access"
 import { getProjects } from "@/services/kanban.board.mock.service"
 import type { FileManagerState, FilesListResponse } from "./files.types"
 
@@ -20,12 +25,25 @@ export async function getFileManagerState(
     getProjects(year, regionId),
   )
 
-  const files = syncFileTaskNames(store.filesManager.initialFiles, taskOptions)
+  let files = syncFileTaskNames(store.filesManager.initialFiles, taskOptions)
+  const bypass = await shouldBypassProjectAccess()
+  let allowed: Set<string> | null = null
+  if (!bypass) {
+    const year = String(new Date().getFullYear())
+    const projects = await getProjects(year, regionId)
+    allowed = collectAccessibleTaskIds(projects)
+    files = filterFileTree(files, allowed)
+  }
+
+  const filteredTaskOptions = bypass
+    ? taskOptions
+    : taskOptions.filter((opt) => allowed?.has(opt.id))
 
   return {
     files,
-    taskOptions,
+    taskOptions: filteredTaskOptions,
     recentIds: store.filesManager.defaultRecentIds,
+    folderOrderByParentId: (store.filesManager as any).folderOrderByParentId ?? {},
   }
 }
 
@@ -39,7 +57,17 @@ export async function getFilesList(
 ): Promise<FilesListResponse> {
   const store = await loadRegionStore({ regionId })
 
-  const legacyFiles = store.files.files
+  let legacyFiles = store.files.files
+  if (!(await shouldBypassProjectAccess())) {
+    const year = String(new Date().getFullYear())
+    const projects = await getProjects(year, regionId)
+    const allowed = collectAccessibleTaskIds(projects)
+    legacyFiles = legacyFiles.filter((file) => {
+      const taskId = (file as { taskId?: string }).taskId
+      return Boolean(taskId && allowed.has(taskId))
+    })
+  }
+
   let filteredFiles = legacyFiles
 
   if (params?.folder && params.folder !== "전체") {
@@ -83,6 +111,7 @@ export async function saveFileManagerState(
   body: {
     files?: unknown[]
     recentIds?: string[]
+    folderOrderByParentId?: Record<string, string[]>
   },
   regionId?: RegionId,
 ): Promise<FileManagerState> {
@@ -93,6 +122,9 @@ export async function saveFileManagerState(
   }
   if (body.recentIds) {
     store.filesManager.defaultRecentIds = body.recentIds
+  }
+  if (body.folderOrderByParentId) {
+    ;(store.filesManager as any).folderOrderByParentId = body.folderOrderByParentId
   }
   return getFileManagerState(regionId)
 }

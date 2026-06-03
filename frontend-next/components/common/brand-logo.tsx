@@ -62,7 +62,8 @@ export function BrandLogo({
         alt="BOMI"
         width={styles.width}
         height={styles.height}
-        className={cn("h-auto w-auto max-w-full object-contain object-center", styles.img)}
+        className={cn("max-w-full object-contain object-center", styles.img)}
+        style={{ width: "auto", height: "auto" }}
         priority={priority}
       />
     </span>

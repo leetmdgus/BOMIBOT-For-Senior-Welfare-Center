@@ -13,16 +13,20 @@ type EmployeeProfileImageFieldProps = {
   employee: Pick<Employee, "id" | "name" | "profileImage">
   profileImage: string
   onProfileImageChange: (url: string) => void
+  /** 업로드 성공 시 부모 목록·상세 패널 즉시 반영 */
+  onUploadComplete?: (url: string) => void
 }
 
 export function EmployeeProfileImageField({
   employee,
   profileImage,
   onProfileImageChange,
+  onUploadComplete,
 }: EmployeeProfileImageFieldProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [isUploading, setIsUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [previewVersion, setPreviewVersion] = useState(0)
 
   async function handleFileChange(file: File | undefined) {
     if (!file) return
@@ -30,7 +34,10 @@ export function EmployeeProfileImageField({
     setError(null)
     try {
       const result = await uploadEmployeeProfileImage(employee.id, file)
-      onProfileImageChange(result.profileImage ?? "")
+      const url = result.profileImage ?? ""
+      onProfileImageChange(url)
+      setPreviewVersion(Date.now())
+      onUploadComplete?.(url)
     } catch (err) {
       setError(err instanceof Error ? err.message : "업로드에 실패했습니다.")
     } finally {
@@ -50,6 +57,7 @@ export function EmployeeProfileImageField({
           }}
           className="size-20"
           variant="square"
+          imageCacheKey={previewVersion || undefined}
         />
         <div className="flex flex-col gap-2">
           <input

@@ -1,6 +1,6 @@
 # 로컬 / 서버 공통 — API + PostgreSQL
 # 사용: docker compose up -d --build --remove-orphans
-# API: http://127.0.0.1:8020  |  DB 호스트 포트 기본 5433 (5432 충돌 방지)
+# API: http://127.0.0.1:9001  |  DB 호스트 포트 기본 5433 (5432 충돌 방지)
 
 services:
   db:
@@ -37,7 +37,11 @@ services:
       db:
         condition: service_healthy
     ports:
+<<<<<<< HEAD
       - "${API_PORT:-8020}:8020"
+=======
+      - "${API_PORT:-9001}:9001"
+>>>>>>> dev2
     environment:
       APP_ENV: ${APP_ENV:-development}
       DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER:-bomibot}:${POSTGRES_PASSWORD:-bomibot}@db:5432/${POSTGRES_DB:-bomibot}
@@ -49,7 +53,11 @@ services:
       CORS_ALLOW_BOMI_REGEX: ${CORS_ALLOW_BOMI_REGEX:-true}
       TRUSTED_HOSTS: ${TRUSTED_HOSTS:-api-workspace.bomi.ai.kr,localhost,127.0.0.1}
       AUTO_CREATE_TABLES: ${AUTO_CREATE_TABLES:-true}
+<<<<<<< HEAD
       RUN_ALEMBIC_ON_STARTUP: ${RUN_ALEMBIC_ON_STARTUP:-false}
+=======
+      RUN_ALEMBIC_ON_STARTUP: ${RUN_ALEMBIC_ON_STARTUP:-true}
+>>>>>>> dev2
       RUN_SEED_ON_STARTUP: ${RUN_SEED_ON_STARTUP:-true}
       SEED_MISSING_JSON_ON_STARTUP: ${SEED_MISSING_JSON_ON_STARTUP:-true}
       SMTP_HOST: ${SMTP_HOST:-smtp.gmail.com}
@@ -63,8 +71,17 @@ services:
       RAG_API_URL: ${RAG_API_URL:-}
       RAG_API_KEY: ${RAG_API_KEY:-}
       RAG_TOP_K: ${RAG_TOP_K:-8}
+<<<<<<< HEAD
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8020/health"]
+=======
+      FILES_STORAGE_DIR: /app/storage/uploads
+    volumes:
+      # 업로드·HWPX 동기화 바이너리 — 볼륨 없으면 컨테이너 재빌드 시 DB만 남고 본문 404
+      - bomibot_uploads:/app/storage/uploads
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:9001/health"]
+>>>>>>> dev2
       interval: 30s
       timeout: 5s
       retries: 3
@@ -72,3 +89,7 @@ services:
 
 volumes:
   bomibot_pgdata:
+<<<<<<< HEAD
+=======
+  bomibot_uploads:
+>>>>>>> dev2

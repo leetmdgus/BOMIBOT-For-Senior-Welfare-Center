@@ -1,4 +1,15 @@
+import { escapeXml } from "@/lib/hwpx/hwpx-encoding"
+
 /** OWPML header / 패키지 골격 — 한글 2014+ 호환 최소 세트 */
+
+const HWPX_FONT_FACE = "맑은 고딕"
+
+function fontfaceBlock(lang: string): string {
+  const charset = lang === "LATIN" ? "LATIN" : "HANGUL"
+  return `<hh:fontface lang="${lang}" fontCnt="1">
+        <hh:font id="0" face="${HWPX_FONT_FACE}" charset="${charset}" type="TTF" isEmbedded="0"/>
+      </hh:fontface>`
+}
 
 export const HWPX_STYLE = {
   body: 0,
@@ -25,8 +36,59 @@ export const HWPX_BORDER = {
   headerCell: 2,
 } as const
 
-export function buildHeaderXml(documentTitle: string): string {
+/** 동적 charPr 1개 — 본문 charPr를 기반으로 글자 높이(HWPUNIT)만 변경 */
+export function buildCharPrXml(
+  id: number,
+  height: number,
+  options?: { bold?: boolean; textColor?: string },
+): string {
+  const textColor = options?.textColor ?? "#111827"
+  const bold = options?.bold ? "<hh:bold/>" : ""
+  return `<hh:charPr id="${id}" height="${height}" textColor="${textColor}" shadeColor="none" useFontSpace="0" useKerning="0" symMark="NONE" borderFillIDRef="0">
+        <hh:fontRef hangul="0" latin="0" hanja="0" japanese="0" other="0" symbol="0" user="0"/>
+        <hh:ratio hangul="100" latin="100" hanja="100" japanese="100" other="100" symbol="100" user="100"/>
+        <hh:spacing hangul="0" latin="0" hanja="0" japanese="0" other="0" symbol="0" user="0"/>
+        <hh:relSz hangul="100" latin="100" hanja="100" japanese="100" other="100" symbol="100" user="100"/>
+        <hh:offset hangul="0" latin="0" hanja="0" japanese="0" other="0" symbol="0" user="0"/>
+        ${bold}<hh:underline type="NONE"/>
+        <hh:strikeout shape="NONE" color="#000000"/>
+        <hh:outline type="NONE"/>
+        <hh:shadow type="NONE" color="#BDBDBD" offsetX="0" offsetY="0"/>
+      </hh:charPr>`
+}
+
+/** 동적 borderFill 1개 — 표 테두리(SOLID) + 셀 배경색(fillBrush) */
+export function buildCellBorderFillXml(id: number, faceColor: string): string {
+  return `<hh:borderFill id="${id}" threeD="0" shadow="0" centerLine="NONE" breakCellSeparateLine="0">
+        <hh:slash type="NONE" Crooked="0" isCounter="0"/>
+        <hh:backSlash type="NONE" Crooked="0" isCounter="0"/>
+        <hh:left type="SOLID" width="0.12 mm" color="#000000"/>
+        <hh:right type="SOLID" width="0.12 mm" color="#000000"/>
+        <hh:top type="SOLID" width="0.12 mm" color="#000000"/>
+        <hh:bottom type="SOLID" width="0.12 mm" color="#000000"/>
+        <hh:diagonal type="NONE" width="0.1 mm" color="#000000"/>
+        <hc:fillBrush>
+          <hc:winBrush faceColor="${escapeXml(faceColor)}" hatchColor="#000000" alpha="0"/>
+        </hc:fillBrush>
+      </hh:borderFill>`
+}
+
+export type HwpxHeaderExtras = {
+  /** 추가 charPr XML (id는 4부터) */
+  charProps?: string[]
+  /** 추가 borderFill XML (id는 3부터) */
+  borderFills?: string[]
+}
+
+export function buildHeaderXml(
+  documentTitle: string,
+  extras?: HwpxHeaderExtras,
+): string {
   const title = escapeXml(documentTitle || "문서")
+  const extraCharProps = extras?.charProps ?? []
+  const extraBorderFills = extras?.borderFills ?? []
+  const borderFillCnt = 3 + extraBorderFills.length
+  const charPrCnt = 4 + extraCharProps.length
   return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <hh:head xmlns:hh="http://www.hancom.co.kr/hwpml/2011/head"
          xmlns:hc="http://www.hancom.co.kr/hwpml/2011/core"
@@ -34,15 +96,16 @@ export function buildHeaderXml(documentTitle: string): string {
          version="1.5" secCnt="1">
   <hh:beginNum page="1" footnote="1" endnote="1" pic="1" tbl="1" equation="1"/>
   <hh:refList>
-    <hh:fontfaces itemCnt="2">
-      <hh:fontface lang="HANGUL" fontCnt="1">
-        <hh:font id="0" face="맑은 고딕" charset="HANGUL" type="TTF" isEmbedded="0"/>
-      </hh:fontface>
-      <hh:fontface lang="LATIN" fontCnt="1">
-        <hh:font id="0" face="맑은 고딕" charset="LATIN" type="TTF" isEmbedded="0"/>
-      </hh:fontface>
+    <hh:fontfaces itemCnt="7">
+      ${fontfaceBlock("HANGUL")}
+      ${fontfaceBlock("LATIN")}
+      ${fontfaceBlock("HANJA")}
+      ${fontfaceBlock("JAPANESE")}
+      ${fontfaceBlock("OTHER")}
+      ${fontfaceBlock("SYMBOL")}
+      ${fontfaceBlock("USER")}
     </hh:fontfaces>
-    <hh:borderFills itemCnt="3">
+    <hh:borderFills itemCnt="${borderFillCnt}">
       <hh:borderFill id="0" threeD="0" shadow="0" centerLine="NONE" breakCellSeparateLine="0">
         <hh:slash type="NONE" Crooked="0" isCounter="0"/>
         <hh:backSlash type="NONE" Crooked="0" isCounter="0"/>
@@ -73,8 +136,9 @@ export function buildHeaderXml(documentTitle: string): string {
           <hc:winBrush faceColor="#ECECEC" hatchColor="#000000" alpha="0"/>
         </hc:fillBrush>
       </hh:borderFill>
+      ${extraBorderFills.join("\n      ")}
     </hh:borderFills>
-    <hh:charProperties itemCnt="4">
+    <hh:charProperties itemCnt="${charPrCnt}">
       <hh:charPr id="${HWPX_CHAR.body}" height="1000" textColor="#111827" shadeColor="none" useFontSpace="0" useKerning="0" symMark="NONE" borderFillIDRef="0">
         <hh:fontRef hangul="0" latin="0" hanja="0" japanese="0" other="0" symbol="0" user="0"/>
         <hh:ratio hangul="100" latin="100" hanja="100" japanese="100" other="100" symbol="100" user="100"/>
@@ -122,6 +186,7 @@ export function buildHeaderXml(documentTitle: string): string {
         <hh:outline type="NONE"/>
         <hh:shadow type="NONE" color="#BDBDBD" offsetX="0" offsetY="0"/>
       </hh:charPr>
+      ${extraCharProps.join("\n      ")}
     </hh:charProperties>
     <hh:tabProperties itemCnt="1">
       <hh:tabPr id="0" autoTabLeft="0" autoTabRight="0"/>
@@ -248,11 +313,3 @@ export function buildSectionOpenParagraph(): string {
 </hp:p>`
 }
 
-function escapeXml(value: string): string {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&apos;")
-}

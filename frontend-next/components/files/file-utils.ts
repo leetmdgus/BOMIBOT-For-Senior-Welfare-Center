@@ -1,5 +1,8 @@
 import type { FileItem, SortKey } from "./file-types"
 
+/** 클릭과 구분 — 이만큼 이상 움직였을 때만 드롭 이동 처리 */
+export const FILE_DRAG_MOVE_THRESHOLD_PX = 10
+
 export function getBreadcrumbs(files: FileItem[], currentFolderId: string | null) {
   const result: FileItem[] = []
   let cursor = currentFolderId
