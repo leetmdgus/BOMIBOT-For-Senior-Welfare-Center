@@ -1067,6 +1067,7 @@ export function InputManagementTab() {
                 <Checkbox
                   checked={allDisplayedSelected}
                   onCheckedChange={toggleAllDisplayedSelection}
+                  disabled={isViewingSnapshot}
                   aria-label="표시된 행 전체 선택"
                 />
               </Th>

@@ -1,0 +1,7 @@
+# pnpm 11+ 빌드 스크립트 승인 설정.
+# sharp 는 install 스크립트(네이티브 libvips 바이너리 확인/빌드)를 실행하는데,
+# pnpm 10+ 는 보안상 기본으로 빌드 스크립트를 차단한다.
+# pnpm 11 에서는 package.json#pnpm.onlyBuiltDependencies 가 더 이상 읽히지 않고
+# (제거됨 → allowBuilds 로 대체) 이 파일의 allowBuilds 만 인식된다.
+allowBuilds:
+  sharp: true
