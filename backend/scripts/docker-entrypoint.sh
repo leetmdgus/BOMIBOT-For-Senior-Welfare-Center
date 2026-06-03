@@ -48,8 +48,6 @@ if [ "${SEED_MISSING_JSON_ON_STARTUP}" = "true" ]; then
   python scripts/seed.py --missing-json || true
 fi
 
-<<<<<<< HEAD
-=======
 PLAN_HWPX="/app/app/application/hwpx/templates/render/plan.hwpx"
 EVAL_HWPX="/app/app/application/hwpx/templates/render/evaluation.hwpx"
 if [ ! -s "$PLAN_HWPX" ] || [ ! -s "$EVAL_HWPX" ]; then
@@ -58,6 +56,5 @@ if [ ! -s "$PLAN_HWPX" ] || [ ! -s "$EVAL_HWPX" ]; then
   exit 1
 fi
 
->>>>>>> dev2
 echo "[entrypoint] Starting: $*"
 exec "$@"

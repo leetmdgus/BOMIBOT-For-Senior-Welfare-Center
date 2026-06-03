@@ -16,11 +16,7 @@
         "role": "관장",
         "position": "관장",
         "department": "운영총괄",
-<<<<<<< HEAD
-        "email": "choi@welfare.org",
-=======
         "email": "choi@north.welfare.org",
->>>>>>> dev2
         "phone": "010-1234-5678",
         "joinDate": "2020-03-15",
         "tenure": "6년 2개월",
@@ -32,11 +28,7 @@
         "role": "부장",
         "position": "부장",
         "department": "운영총괄",
-<<<<<<< HEAD
-        "email": "lee.hj@welfare.org",
-=======
         "email": "lee.hj@north.welfare.org",
->>>>>>> dev2
         "phone": "010-2345-6789",
         "joinDate": "2018-07-02",
         "tenure": "7년 10개월",
@@ -69,20 +61,11 @@
         "role": "팀장",
         "position": "팀장",
         "department": "운영지원팀",
-<<<<<<< HEAD
-        "email": "kim.ms@welfare.org",
-        "phone": "010-3456-7890",
-        "joinDate": "2019-01-10",
-        "tenure": "7년 4개월",
-        "lastLogin": "2026-05-23 17:42",
-        "isTeamLeader": true
-=======
         "email": "kim.ms@north.welfare.org",
         "phone": "010-3456-7890",
         "joinDate": "2019-01-10",
         "tenure": "7년 4개월",
         "lastLogin": "2026-05-23 17:42"
->>>>>>> dev2
       },
       {
         "id": "emp-support-2",
@@ -90,11 +73,7 @@
         "role": "사무원",
         "position": "사무원",
         "department": "운영지원팀",
-<<<<<<< HEAD
-        "email": "park.sy@welfare.org",
-=======
         "email": "park.sy@north.welfare.org",
->>>>>>> dev2
         "phone": "010-4567-8901",
         "joinDate": "2021-05-20",
         "tenure": "5년 0개월",
@@ -106,11 +85,7 @@
         "role": "사무원",
         "position": "사무원",
         "department": "운영지원팀",
-<<<<<<< HEAD
-        "email": "jung.wj@welfare.org",
-=======
         "email": "jung.wj@north.welfare.org",
->>>>>>> dev2
         "phone": "010-5678-9012",
         "joinDate": "2022-03-07",
         "tenure": "4년 2개월",
@@ -122,11 +97,7 @@
         "role": "사무원",
         "position": "사무원",
         "department": "운영지원팀",
-<<<<<<< HEAD
-        "email": "han.jw@welfare.org",
-=======
         "email": "han.jw@north.welfare.org",
->>>>>>> dev2
         "phone": "010-6789-0123",
         "joinDate": "2023-08-14",
         "tenure": "2년 9개월",
@@ -138,11 +109,7 @@
         "role": "사무원",
         "position": "사무원",
         "department": "운영지원팀",
-<<<<<<< HEAD
-        "email": "oh.hw@welfare.org",
-=======
         "email": "oh.hw@north.welfare.org",
->>>>>>> dev2
         "phone": "010-7890-1234",
         "joinDate": "2020-11-30",
         "tenure": "5년 6개월",
@@ -154,11 +121,7 @@
         "role": "사회복지사",
         "position": "사회복지사",
         "department": "운영지원팀",
-<<<<<<< HEAD
-        "email": "song.yr@welfare.org",
-=======
         "email": "song.yr@north.welfare.org",
->>>>>>> dev2
         "phone": "010-8901-2345",
         "joinDate": "2024-02-19",
         "tenure": "2년 3개월",
@@ -177,11 +140,7 @@
         "role": "팀장",
         "position": "팀장",
         "department": "복지1팀",
-<<<<<<< HEAD
-        "email": "kang.dh@welfare.org",
-=======
         "email": "kang.dh@north.welfare.org",
->>>>>>> dev2
         "phone": "010-9012-3456",
         "joinDate": "2017-09-04",
         "tenure": "8년 8개월",
@@ -193,11 +152,7 @@
         "role": "사회복지사",
         "position": "사회복지사",
         "department": "복지1팀",
-<<<<<<< HEAD
-        "email": "yoon.sb@welfare.org",
-=======
         "email": "yoon.sb@north.welfare.org",
->>>>>>> dev2
         "phone": "010-0123-4567",
         "joinDate": "2021-04-12",
         "tenure": "5년 1개월",
@@ -209,11 +164,7 @@
         "role": "사회복지사",
         "position": "사회복지사",
         "department": "복지1팀",
-<<<<<<< HEAD
-        "email": "lim.jh@welfare.org",
-=======
         "email": "lim.jh@north.welfare.org",
->>>>>>> dev2
         "phone": "010-1122-3344",
         "joinDate": "2022-06-01",
         "tenure": "3년 11개월",
@@ -225,11 +176,7 @@
         "role": "사회복지사",
         "position": "사회복지사",
         "department": "복지1팀",
-<<<<<<< HEAD
-        "email": "bae.sy@welfare.org",
-=======
         "email": "bae.sy@north.welfare.org",
->>>>>>> dev2
         "phone": "010-2233-4455",
         "joinDate": "2023-01-16",
         "tenure": "3년 4개월",
@@ -241,11 +188,7 @@
         "role": "물리치료사",
         "position": "물리치료사",
         "department": "복지1팀",
-<<<<<<< HEAD
-        "email": "noh.jh@welfare.org",
-=======
         "email": "noh.jh@north.welfare.org",
->>>>>>> dev2
         "phone": "010-3344-5566",
         "joinDate": "2024-07-08",
         "tenure": "1년 10개월",
@@ -264,11 +207,7 @@
         "role": "팀장",
         "position": "팀장",
         "department": "복지2팀",
-<<<<<<< HEAD
-        "email": "seo.mj@welfare.org",
-=======
         "email": "seo.mj@north.welfare.org",
->>>>>>> dev2
         "phone": "010-4455-6677",
         "joinDate": "2018-02-26",
         "tenure": "8년 3개월",
@@ -280,11 +219,7 @@
         "role": "사회복지사",
         "position": "사회복지사",
         "department": "복지2팀",
-<<<<<<< HEAD
-        "email": "yoo.ty@welfare.org",
-=======
         "email": "yoo.ty@north.welfare.org",
->>>>>>> dev2
         "phone": "010-5566-7788",
         "joinDate": "2020-08-03",
         "tenure": "5년 9개월",
@@ -296,11 +231,7 @@
         "role": "사회복지사",
         "position": "사회복지사",
         "department": "복지2팀",
-<<<<<<< HEAD
-        "email": "hong.sj@welfare.org",
-=======
         "email": "hong.sj@north.welfare.org",
->>>>>>> dev2
         "phone": "010-6677-8899",
         "joinDate": "2021-11-15",
         "tenure": "4년 6개월",
@@ -312,11 +243,7 @@
         "role": "사회복지사",
         "position": "사회복지사",
         "department": "복지2팀",
-<<<<<<< HEAD
-        "email": "kwak.eb@welfare.org",
-=======
         "email": "kwak.eb@north.welfare.org",
->>>>>>> dev2
         "phone": "010-7788-9900",
         "joinDate": "2022-09-19",
         "tenure": "3년 8개월",
@@ -328,11 +255,7 @@
         "role": "영양사",
         "position": "영양사",
         "department": "복지2팀",
-<<<<<<< HEAD
-        "email": "cha.ms@welfare.org",
-=======
         "email": "cha.ms@north.welfare.org",
->>>>>>> dev2
         "phone": "010-8899-0011",
         "joinDate": "2023-12-04",
         "tenure": "2년 5개월",
@@ -344,11 +267,7 @@
         "role": "물리치료사",
         "position": "물리치료사",
         "department": "복지2팀",
-<<<<<<< HEAD
-        "email": "jeon.hn@welfare.org",
-=======
         "email": "jeon.hn@north.welfare.org",
->>>>>>> dev2
         "phone": "010-9900-1122",
         "joinDate": "2025-01-20",
         "tenure": "1년 4개월",
@@ -367,11 +286,7 @@
         "role": "팀장",
         "position": "팀장",
         "department": "복지3팀",
-<<<<<<< HEAD
-        "email": "moon.jy@welfare.org",
-=======
         "email": "moon.jy@north.welfare.org",
->>>>>>> dev2
         "phone": "010-1010-2020",
         "joinDate": "2016-06-13",
         "tenure": "9년 11개월",
@@ -383,11 +298,7 @@
         "role": "사회복지사",
         "position": "사회복지사",
         "department": "복지3팀",
-<<<<<<< HEAD
-        "email": "kwon.sj@welfare.org",
-=======
         "email": "kwon.sj@north.welfare.org",
->>>>>>> dev2
         "phone": "010-2020-3030",
         "joinDate": "2019-10-21",
         "tenure": "6년 7개월",
@@ -399,11 +310,7 @@
         "role": "사회복지사",
         "position": "사회복지사",
         "department": "복지3팀",
-<<<<<<< HEAD
-        "email": "shin.dw@welfare.org",
-=======
         "email": "shin.dw@north.welfare.org",
->>>>>>> dev2
         "phone": "010-3030-4040",
         "joinDate": "2021-02-01",
         "tenure": "5년 3개월",
@@ -415,11 +322,7 @@
         "role": "사회복지사",
         "position": "사회복지사",
         "department": "복지3팀",
-<<<<<<< HEAD
-        "email": "cho.ar@welfare.org",
-=======
         "email": "cho.ar@north.welfare.org",
->>>>>>> dev2
         "phone": "010-4040-5050",
         "joinDate": "2022-04-18",
         "tenure": "4년 1개월",
@@ -431,11 +334,7 @@
         "role": "사회복지사",
         "position": "사회복지사",
         "department": "복지3팀",
-<<<<<<< HEAD
-        "email": "heo.jh@welfare.org",
-=======
         "email": "heo.jh@north.welfare.org",
->>>>>>> dev2
         "phone": "010-5050-6060",
         "joinDate": "2023-03-27",
         "tenure": "3년 2개월",
@@ -447,11 +346,7 @@
         "role": "시설근무자",
         "position": "시설근무자",
         "department": "복지3팀",
-<<<<<<< HEAD
-        "email": "ryu.jm@welfare.org",
-=======
         "email": "ryu.jm@north.welfare.org",
->>>>>>> dev2
         "phone": "010-6060-7070",
         "joinDate": "2023-09-11",
         "tenure": "2년 8개월",
@@ -463,11 +358,7 @@
         "role": "시설근무자",
         "position": "시설근무자",
         "department": "복지3팀",
-<<<<<<< HEAD
-        "email": "nam.jy@welfare.org",
-=======
         "email": "nam.jy@north.welfare.org",
->>>>>>> dev2
         "phone": "010-7070-8080",
         "joinDate": "2024-05-06",
         "tenure": "2년 0개월",
@@ -479,11 +370,7 @@
         "role": "운전사",
         "position": "운전사",
         "department": "복지3팀",
-<<<<<<< HEAD
-        "email": "pyo.sh@welfare.org",
-=======
         "email": "pyo.sh@north.welfare.org",
->>>>>>> dev2
         "phone": "010-8080-9090",
         "joinDate": "2025-03-03",
         "tenure": "1년 2개월",
@@ -502,11 +389,7 @@
         "role": "팀장",
         "position": "팀장",
         "department": "자원개발팀",
-<<<<<<< HEAD
-        "email": "jang.mr@welfare.org",
-=======
         "email": "jang.mr@north.welfare.org",
->>>>>>> dev2
         "phone": "010-9090-0101",
         "joinDate": "2019-04-22",
         "tenure": "7년 1개월",
@@ -518,11 +401,7 @@
         "role": "취업전문가",
         "position": "취업전문가",
         "department": "자원개발팀",
-<<<<<<< HEAD
-        "email": "ko.ys@welfare.org",
-=======
         "email": "ko.ys@north.welfare.org",
->>>>>>> dev2
         "phone": "010-0101-1212",
         "joinDate": "2022-07-25",
         "tenure": "3년 10개월",

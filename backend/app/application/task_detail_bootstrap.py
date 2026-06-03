@@ -5,10 +5,7 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import Any
 
-<<<<<<< HEAD
-=======
 from app.application.hwpx.render.template_defaults import get_plan_template_defaults
->>>>>>> dev2
 from app.domain.scoped_ids import strip_scope
 
 # 업무별 연결 설문 시드 ID (task_detail.json taskDetailSurveys)
@@ -83,14 +80,6 @@ def bootstrap_business_plan(
     title = business_name_for_task(tid, card_title=card_title)
     form = doc.setdefault("formData", {})
     form["projectName"] = title
-<<<<<<< HEAD
-    form["purpose"] = (
-        f"{title} 대상자에게 맞춤형 서비스를 제공하고 "
-        "사업 목표 달성을 위한 연간 추진 계획"
-    )
-    if form.get("goals"):
-        form["goals"] = [f"{title} 목표 {index + 1}" for index in range(len(form["goals"]))]
-=======
     if not str(form.get("purpose") or "").strip():
         form["purpose"] = (
             f"{title} 대상자에게 맞춤형 서비스를 제공하고 "
@@ -107,7 +96,6 @@ def bootstrap_business_plan(
         else:
             default_form = source.get("formData") or {}
             form["subProjects"] = deepcopy(default_form.get("subProjects") or [])
->>>>>>> dev2
     return doc
 
 

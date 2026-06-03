@@ -22,8 +22,6 @@ class SqlAlchemyKanbanBoardRepository(KanbanBoardRepository):
     def __init__(self, session: Session) -> None:
         self._session = session
 
-<<<<<<< HEAD
-=======
     def _get_task(self, region_id: str, task_id: str) -> KanbanTaskModel | None:
         raw = strip_scope(str(task_id or "")).strip()
         if not raw:
@@ -53,7 +51,6 @@ class SqlAlchemyKanbanBoardRepository(KanbanBoardRepository):
             .options(joinedload(KanbanTaskModel.category))
         )
 
->>>>>>> dev2
     def list_projects(self, region_id: str, year: str) -> list[KanbanProjectRecord]:
         rows = self._query_projects(region_id, year).all()
         return [self._to_record(row) for row in rows]
@@ -68,8 +65,6 @@ class SqlAlchemyKanbanBoardRepository(KanbanBoardRepository):
         )
         return self._to_record(row) if row else None
 
-<<<<<<< HEAD
-=======
     def get_project_for_task(
         self, region_id: str, task_id: str
     ) -> KanbanProjectRecord | None:
@@ -79,7 +74,6 @@ class SqlAlchemyKanbanBoardRepository(KanbanBoardRepository):
         project_id = strip_scope(str(task.category.project_id))
         return self.get_project(region_id, project_id)
 
->>>>>>> dev2
     def count_projects(self, region_id: str, year: str) -> int:
         return int(
             self._session.scalar(
@@ -189,18 +183,12 @@ class SqlAlchemyKanbanBoardRepository(KanbanBoardRepository):
         task: KanbanTaskRecord,
     ) -> KanbanTaskRecord | None:
         category = self._session.get(
-<<<<<<< HEAD
-            KanbanCategoryModel, scope_id(region_id, category_id)
-        )
-        if not category or category.project_id != scope_id(region_id, project_id):
-=======
             KanbanCategoryModel,
             scope_id(region_id, strip_scope(category_id)),
         )
         if not category or category.project_id != scope_id(
             region_id, strip_scope(project_id)
         ):
->>>>>>> dev2
             return None
         max_order = self._session.scalar(
             select(func.coalesce(func.max(KanbanTaskModel.sort_order), -1)).where(
@@ -241,20 +229,9 @@ class SqlAlchemyKanbanBoardRepository(KanbanBoardRepository):
         completed_count: int | None = None,
         total_count: int | None = None,
     ) -> KanbanTaskRecord | None:
-<<<<<<< HEAD
-        task = self._session.get(KanbanTaskModel, scope_id(region_id, task_id))
-        if not task:
-            return None
-        category = task.category
-        if category.project_id != scope_id(region_id, project_id):
-            return None
-        if category.id != scope_id(region_id, category_id):
-            return None
-=======
         task = self._get_task(region_id, task_id)
         if not task:
             return None
->>>>>>> dev2
         if title is not None:
             task.title = title
         if description is not None:
@@ -282,20 +259,9 @@ class SqlAlchemyKanbanBoardRepository(KanbanBoardRepository):
         category_id: str,
         task_id: str,
     ) -> bool:
-<<<<<<< HEAD
-        task = self._session.get(KanbanTaskModel, scope_id(region_id, task_id))
-        if not task:
-            return False
-        category = task.category
-        if category.project_id != scope_id(region_id, project_id):
-            return False
-        if category.id != scope_id(region_id, category_id):
-            return False
-=======
         task = self._get_task(region_id, task_id)
         if not task:
             return False
->>>>>>> dev2
         self._session.delete(task)
         self._session.flush()
         return True
@@ -310,25 +276,12 @@ class SqlAlchemyKanbanBoardRepository(KanbanBoardRepository):
         to_category_id: str,
         over_task_id: str | None = None,
     ) -> KanbanTaskRecord | None:
-<<<<<<< HEAD
-        scoped_project_id = scope_id(region_id, project_id)
-        scoped_task_id = scope_id(region_id, strip_scope(task_id))
-        scoped_from_category_id = scope_id(region_id, strip_scope(from_category_id))
-        scoped_to_category_id = scope_id(region_id, strip_scope(to_category_id))
-
-        task = self._session.get(KanbanTaskModel, scoped_task_id)
-        if not task or task.category.project_id != scoped_project_id:
-            return None
-        if task.category_id != scoped_from_category_id:
-            return None
-=======
         scoped_project_id = scope_id(region_id, strip_scope(project_id))
         scoped_to_category_id = scope_id(region_id, strip_scope(to_category_id))
 
         task = self._get_task(region_id, task_id)
         if not task or task.category.project_id != scoped_project_id:
             return None
->>>>>>> dev2
 
         to_category = self._session.get(KanbanCategoryModel, scoped_to_category_id)
         if not to_category or to_category.project_id != scoped_project_id:
@@ -425,8 +378,6 @@ class SqlAlchemyKanbanBoardRepository(KanbanBoardRepository):
     @staticmethod
     def new_task_id(region_id: str) -> str:
         return scope_id(region_id, f"task-{uuid.uuid4().hex[:8]}")
-<<<<<<< HEAD
-=======
 
     def get_task_title(self, region_id: str, task_id: str) -> str | None:
         row = self._get_task(region_id, task_id)
@@ -434,4 +385,3 @@ class SqlAlchemyKanbanBoardRepository(KanbanBoardRepository):
             return None
         title = str(row.title or "").strip()
         return title or None
->>>>>>> dev2

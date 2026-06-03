@@ -13,10 +13,7 @@ from app.infrastructure.persistence.models.kanban import (
 )
 from app.infrastructure.persistence.models.organization import DepartmentModel, EmployeeModel
 from app.infrastructure.persistence.models.region_json_store import RegionJsonStoreModel
-<<<<<<< HEAD
-=======
 from app.infrastructure.persistence.models.survey import SurveyModel, SurveyResponseModel
->>>>>>> dev2
 
 __all__ = [
     "RegionModel",
@@ -32,9 +29,6 @@ __all__ = [
     "KanbanCategoryModel",
     "KanbanTaskModel",
     "RegionJsonStoreModel",
-<<<<<<< HEAD
-=======
     "SurveyModel",
     "SurveyResponseModel",
->>>>>>> dev2
 ]

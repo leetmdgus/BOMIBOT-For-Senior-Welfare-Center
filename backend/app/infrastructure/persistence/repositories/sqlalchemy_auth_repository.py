@@ -114,10 +114,7 @@ class SqlAlchemyAuthRepository(AuthRepository):
         department: str | None = None,
         role_display: str | None = None,
         profile_image_url: str | None = None,
-<<<<<<< HEAD
-=======
         email: str | None = None,
->>>>>>> dev2
     ) -> None:
         row = self._session.scalar(
             select(UserModel).where(UserModel.employee_id == employee_id)
@@ -132,8 +129,6 @@ class SqlAlchemyAuthRepository(AuthRepository):
             row.role_display = role_display
         if profile_image_url is not None:
             row.profile_image_url = profile_image_url
-<<<<<<< HEAD
-=======
         if email is not None:
             row.email = email.strip().lower()
         self._session.flush()
@@ -143,7 +138,6 @@ class SqlAlchemyAuthRepository(AuthRepository):
         if not row:
             raise LookupError("User not found")
         row.password_hash = password_hash
->>>>>>> dev2
         self._session.flush()
 
     @staticmethod

@@ -1,11 +1,7 @@
 {
   "inputManagementRows": [
     {
-<<<<<<< HEAD
-      "id": "e31a9767-6c73-4092-84ef-884262548f64",
-=======
       "id": "d11c9bfa-b89b-4276-9b9b-cf221d2c0e16",
->>>>>>> dev2
       "selected": false,
       "subProject": "선택",
       "detailCategory": "기타",
@@ -28,11 +24,7 @@
       ]
     },
     {
-<<<<<<< HEAD
-      "id": "1b0dee3d-e60b-464d-92bb-e40f7e892296",
-=======
       "id": "4054e0b7-3e67-47e0-8026-594f866c56cd",
->>>>>>> dev2
       "selected": false,
       "subProject": "신규회원 이용상담",
       "detailCategory": "홍보",
@@ -46,11 +38,7 @@
       "content": "온라인 게시물 관리대장"
     },
     {
-<<<<<<< HEAD
-      "id": "390d34c9-496d-4f45-a127-b3f7ea1a201f",
-=======
       "id": "48e9b878-c1c5-4677-bb6f-7473be5260e0",
->>>>>>> dev2
       "selected": false,
       "subProject": "신규회원 이용상담",
       "detailCategory": "설문조사",
@@ -79,11 +67,7 @@
       ]
     },
     {
-<<<<<<< HEAD
-      "id": "66d8b277-9f63-4460-b4a9-196a4919bb6f",
-=======
       "id": "a30ded44-df85-4146-9d3d-8c978bfaf8b1",
->>>>>>> dev2
       "selected": false,
       "subProject": "신규회원 이용상담",
       "detailCategory": "홍보",
@@ -97,11 +81,7 @@
       "content": "온라인 게시물 관리대장"
     },
     {
-<<<<<<< HEAD
-      "id": "4966431e-9fb2-4d50-9aba-86cea4bb3a24",
-=======
       "id": "150d903d-43af-4d3d-a907-1ea5e55e0bbf",
->>>>>>> dev2
       "selected": false,
       "subProject": "신규회원 이용상담",
       "detailCategory": "설문조사",
@@ -130,11 +110,7 @@
       ]
     },
     {
-<<<<<<< HEAD
-      "id": "f3ea2190-5b89-4851-a73d-d2e463c55069",
-=======
       "id": "2f888616-85fd-4624-954e-6c465730e97b",
->>>>>>> dev2
       "selected": false,
       "subProject": "신규회원 이용상담",
       "detailCategory": "홍보",
@@ -148,11 +124,7 @@
       "content": "온라인 게시물 관리대장"
     },
     {
-<<<<<<< HEAD
-      "id": "5dde3e58-694a-4c78-8b1f-0d442ed0dfbc",
-=======
       "id": "7bb5477c-e84f-4e85-8407-bdae9bf349c3",
->>>>>>> dev2
       "selected": false,
       "subProject": "신규회원 이용상담",
       "detailCategory": "설문조사",
@@ -181,11 +153,7 @@
       ]
     },
     {
-<<<<<<< HEAD
-      "id": "418cc8d2-35bb-476f-9ffa-861b5d666f49",
-=======
       "id": "e652762e-7c95-4124-ba17-8c45f80779ba",
->>>>>>> dev2
       "selected": false,
       "subProject": "신규회원 이용상담",
       "detailCategory": "홍보",
@@ -199,11 +167,7 @@
       "content": "온라인 게시물 관리대장"
     },
     {
-<<<<<<< HEAD
-      "id": "7c7887b9-b1b9-434d-b18b-6675d2d544d3",
-=======
       "id": "8a0cf110-0934-4a7f-9f36-5083fb36f29e",
->>>>>>> dev2
       "selected": false,
       "subProject": "신규회원 이용상담",
       "detailCategory": "설문조사",
@@ -232,11 +196,7 @@
       ]
     },
     {
-<<<<<<< HEAD
-      "id": "a95b4e22-15bc-40eb-9ceb-aa8f57e7b801",
-=======
       "id": "8913befb-99e5-45cd-bca5-e277e5cfe01c",
->>>>>>> dev2
       "selected": false,
       "subProject": "신규회원 이용상담",
       "detailCategory": "홍보",
@@ -250,11 +210,7 @@
       "content": "온라인 게시물 관리대장"
     },
     {
-<<<<<<< HEAD
-      "id": "cea89604-6191-4f2a-b7f5-36655b5f8e0b",
-=======
       "id": "c176a917-2a87-478e-9b17-dc8d3a467c62",
->>>>>>> dev2
       "selected": false,
       "subProject": "신규회원 이용상담",
       "detailCategory": "설문조사",
@@ -283,11 +239,7 @@
       ]
     },
     {
-<<<<<<< HEAD
-      "id": "3892f2fa-81fb-4b8e-a141-776f2ddbcfb4",
-=======
       "id": "526b8ce1-09b8-4985-810e-90b11b07ee74",
->>>>>>> dev2
       "selected": false,
       "subProject": "선택",
       "detailCategory": "기타",
@@ -310,11 +262,7 @@
       ]
     },
     {
-<<<<<<< HEAD
-      "id": "55f97e85-90e6-4d66-8467-a5f722a78384",
-=======
       "id": "9c4673e6-eabe-4bbe-8b3e-165d70e5dc91",
->>>>>>> dev2
       "selected": false,
       "subProject": "사진공모전",
       "detailCategory": "홍보",
@@ -331,11 +279,7 @@
       ]
     },
     {
-<<<<<<< HEAD
-      "id": "57d55c63-a5c5-4835-a68c-e4ef4b862793",
-=======
       "id": "cc27a9ae-9deb-413b-a48c-275e81e4e9bc",
->>>>>>> dev2
       "selected": false,
       "subProject": "사진공모전",
       "detailCategory": "홍보",
@@ -352,11 +296,7 @@
       ]
     },
     {
-<<<<<<< HEAD
-      "id": "4a7a0a0f-6ad6-4af4-a3c0-19737c09f34a",
-=======
       "id": "13496455-c6f6-4c0b-8287-b52982e5ce69",
->>>>>>> dev2
       "selected": false,
       "subProject": "사진공모전",
       "detailCategory": "홍보",
@@ -373,11 +313,7 @@
       ]
     },
     {
-<<<<<<< HEAD
-      "id": "a639dbb1-0d33-4cb0-aaac-08881b590773",
-=======
       "id": "40f11edb-96ff-4ebd-a1d4-485bf3f8d25e",
->>>>>>> dev2
       "selected": false,
       "subProject": "나눔릴레이",
       "detailCategory": "프로그램진행",
@@ -395,11 +331,7 @@
       ]
     },
     {
-<<<<<<< HEAD
-      "id": "5ba43980-2802-4cb5-a0cf-2629c5bd5299",
-=======
       "id": "d10c5382-f541-4747-afc7-e64273dfa21c",
->>>>>>> dev2
       "selected": false,
       "subProject": "나눔릴레이",
       "detailCategory": "프로그램진행",
@@ -417,11 +349,7 @@
       ]
     },
     {
-<<<<<<< HEAD
-      "id": "1319ad62-3b88-474b-a20d-88ce1f083271",
-=======
       "id": "da344efc-7ea6-447f-aa05-8033575e5637",
->>>>>>> dev2
       "selected": false,
       "subProject": "나눔릴레이",
       "detailCategory": "프로그램진행",
@@ -439,11 +367,7 @@
       ]
     },
     {
-<<<<<<< HEAD
-      "id": "22f671bc-4f88-49e1-bf46-7cdb0af349ca",
-=======
       "id": "3d0447eb-e5da-44f4-ba8b-b13419eeb3d5",
->>>>>>> dev2
       "selected": false,
       "subProject": "나눔릴레이",
       "detailCategory": "홍보",
@@ -460,11 +384,7 @@
       ]
     },
     {
-<<<<<<< HEAD
-      "id": "4ab14d3e-6c36-4e99-aeb1-4262161558e4",
-=======
       "id": "ac390549-5941-43b4-8b4a-82d82febbd0d",
->>>>>>> dev2
       "selected": false,
       "subProject": "지역사회 조직화",
       "detailCategory": "프로그램진행",
@@ -481,11 +401,7 @@
       ]
     },
     {
-<<<<<<< HEAD
-      "id": "ed969c8f-8410-4e2b-9efe-18d32f318f25",
-=======
       "id": "42473e1c-a5b6-4be5-8165-3511abc95510",
->>>>>>> dev2
       "selected": false,
       "subProject": "나눔릴레이 홍보",
       "detailCategory": "홍보",
@@ -502,11 +418,7 @@
       ]
     },
     {
-<<<<<<< HEAD
-      "id": "b06bd634-74c4-4894-b145-47e2078f1510",
-=======
       "id": "275cf8f0-9214-4858-ad9f-24f6520a5306",
->>>>>>> dev2
       "selected": false,
       "subProject": "발대식",
       "detailCategory": "프로그램진행",
@@ -523,11 +435,7 @@
       ]
     },
     {
-<<<<<<< HEAD
-      "id": "97d8cf5e-ca41-4891-8fed-0c9a34f5b178",
-=======
       "id": "bff8eb05-7acb-46e0-8cca-b8e9354cd33c",
->>>>>>> dev2
       "selected": false,
       "subProject": "모금 활동",
       "detailCategory": "프로그램진행",
@@ -544,11 +452,7 @@
       ]
     },
     {
-<<<<<<< HEAD
-      "id": "44e2a8f6-8063-4fe2-a9f6-b4c13d4706a5",
-=======
       "id": "303a346a-8943-43b2-b093-99d56182b726",
->>>>>>> dev2
       "selected": false,
       "subProject": "모금결과 안내",
       "detailCategory": "홍보",

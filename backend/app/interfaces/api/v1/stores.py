@@ -4,8 +4,6 @@ from typing import Annotated, Any
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile, status
 from fastapi.responses import FileResponse, Response
 
-<<<<<<< HEAD
-=======
 from app.application.files.document_preview import (
     is_previewable_filename,
     render_document_preview_fragment,
@@ -17,7 +15,6 @@ from app.application.kanban_access import (
     assert_files_payload_allowed,
     gather_accessible_task_ids,
 )
->>>>>>> dev2
 from app.application.kanban_task_options import (
     apply_kanban_tasks_to_file_manager_state,
     resolve_kanban_card_title,
@@ -27,11 +24,8 @@ from app.application.services.kanban_board_service import KanbanBoardService
 from app.application.services.region_store_service import RegionStoreService
 from app.domain.scoped_ids import strip_scope
 from app.interfaces.api.deps import (
-<<<<<<< HEAD
-=======
     REGION_IDS,
     get_kanban_access_context,
->>>>>>> dev2
     get_kanban_service,
     get_region_store_service,
     optional_user_display_name,
@@ -100,11 +94,6 @@ def files_manager(
     region_id: str = Depends(require_region_id),
     service: RegionStoreService = Depends(get_region_store_service),
     kanban: KanbanBoardService = Depends(get_kanban_service),
-<<<<<<< HEAD
-):
-    state = service.get_file_manager_state(region_id)
-    return apply_kanban_tasks_to_file_manager_state(state, kanban, region_id)
-=======
     access: KanbanAccessContext = Depends(get_kanban_access_context),
 ):
     allowed = gather_accessible_task_ids(kanban, region_id, access)
@@ -112,7 +101,6 @@ def files_manager(
     return apply_kanban_tasks_to_file_manager_state(
         state, kanban, region_id, access=access
     )
->>>>>>> dev2
 
 
 @router.put("/files/manager")
@@ -121,11 +109,6 @@ def save_files_manager(
     region_id: str = Depends(require_region_id),
     service: RegionStoreService = Depends(get_region_store_service),
     kanban: KanbanBoardService = Depends(get_kanban_service),
-<<<<<<< HEAD
-):
-    state = service.save_files_manager_state(region_id, body)
-    return apply_kanban_tasks_to_file_manager_state(state, kanban, region_id)
-=======
     access: KanbanAccessContext = Depends(get_kanban_access_context),
 ):
     allowed = gather_accessible_task_ids(kanban, region_id, access)
@@ -136,25 +119,18 @@ def save_files_manager(
     return apply_kanban_tasks_to_file_manager_state(
         state, kanban, region_id, access=access
     )
->>>>>>> dev2
 
 
 @router.get("/files")
 def list_files(
     region_id: str = Depends(require_region_id),
     service: RegionStoreService = Depends(get_region_store_service),
-<<<<<<< HEAD
-=======
     kanban: KanbanBoardService = Depends(get_kanban_service),
     access: KanbanAccessContext = Depends(get_kanban_access_context),
->>>>>>> dev2
     folder: str | None = Query(default=None),
     type: str | None = Query(default=None, alias="type"),
     search: str | None = Query(default=None),
 ):
-<<<<<<< HEAD
-    return service.list_files(region_id, folder=folder, file_type=type, search=search)
-=======
     allowed = gather_accessible_task_ids(kanban, region_id, access)
     return service.list_files(
         region_id,
@@ -163,7 +139,6 @@ def list_files(
         search=search,
         allowed_task_ids=allowed,
     )
->>>>>>> dev2
 
 
 @router.post("/files", status_code=status.HTTP_201_CREATED)
@@ -171,9 +146,6 @@ def create_file(
     body: dict[str, Any],
     region_id: str = Depends(require_region_id),
     service: RegionStoreService = Depends(get_region_store_service),
-<<<<<<< HEAD
-):
-=======
     kanban: KanbanBoardService = Depends(get_kanban_service),
     access: KanbanAccessContext = Depends(get_kanban_access_context),
 ):
@@ -186,7 +158,6 @@ def create_file(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="담당 업무를 지정한 뒤 파일을 추가해 주세요.",
         )
->>>>>>> dev2
     return service.create_file(region_id, body)
 
 
@@ -196,9 +167,6 @@ def patch_file(
     body: dict[str, Any],
     region_id: str = Depends(require_region_id),
     service: RegionStoreService = Depends(get_region_store_service),
-<<<<<<< HEAD
-):
-=======
     kanban: KanbanBoardService = Depends(get_kanban_service),
     access: KanbanAccessContext = Depends(get_kanban_access_context),
 ):
@@ -207,7 +175,6 @@ def patch_file(
     next_task = body.get("taskId") or body.get("task_id")
     if next_task and str(next_task).strip():
         kanban.assert_task_access(region_id, str(next_task).strip(), access)
->>>>>>> dev2
     return service.patch_file(region_id, file_id, body)
 
 
@@ -215,17 +182,12 @@ def patch_file(
 def delete_file(
     region_id: str = Depends(require_region_id),
     service: RegionStoreService = Depends(get_region_store_service),
-<<<<<<< HEAD
-    id: str = Query(...),
-):
-=======
     kanban: KanbanBoardService = Depends(get_kanban_service),
     access: KanbanAccessContext = Depends(get_kanban_access_context),
     id: str = Query(...),
 ):
     allowed = gather_accessible_task_ids(kanban, region_id, access)
     service.assert_file_access(region_id, id, allowed_task_ids=allowed)
->>>>>>> dev2
     return service.delete_file(region_id, id)
 
 
@@ -234,16 +196,11 @@ async def upload_files(
     region_id: str = Depends(require_region_id),
     service: RegionStoreService = Depends(get_region_store_service),
     kanban: KanbanBoardService = Depends(get_kanban_service),
-<<<<<<< HEAD
-=======
     access: KanbanAccessContext = Depends(get_kanban_access_context),
->>>>>>> dev2
     parent_id: Annotated[str | None, Form(alias="parentId")] = None,
     task_id: Annotated[str | None, Form(alias="taskId")] = None,
     files: list[UploadFile] = File(...),
 ):
-<<<<<<< HEAD
-=======
     if task_id and str(task_id).strip():
         kanban.assert_task_access(region_id, str(task_id).strip(), access)
     elif not access.bypass:
@@ -251,7 +208,6 @@ async def upload_files(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="담당 업무를 선택한 뒤 업로드해 주세요.",
         )
->>>>>>> dev2
     uploads: list[tuple[str, bytes, str | None]] = []
     for upload in files:
         content = await upload.read()
@@ -280,17 +236,6 @@ def download_file_content(
     file_id: str,
     region_id: str = Depends(require_region_id),
     service: RegionStoreService = Depends(get_region_store_service),
-<<<<<<< HEAD
-):
-    path, filename, media_type = service.get_download_file(region_id, file_id)
-    return FileResponse(
-        path,
-        media_type=media_type,
-        filename=filename,
-    )
-
-
-=======
     kanban: KanbanBoardService = Depends(get_kanban_service),
     access: KanbanAccessContext = Depends(get_kanban_access_context),
 ):
@@ -340,25 +285,11 @@ def preview_file_content(
     return {"html": html_fragment, "filename": filename}
 
 
->>>>>>> dev2
 @router.get("/files/{file_id}/export")
 def export_file_or_folder(
     file_id: str,
     region_id: str = Depends(require_region_id),
     service: RegionStoreService = Depends(get_region_store_service),
-<<<<<<< HEAD
-):
-    """폴더·파일(하위 포함) ZIP export."""
-    from urllib.parse import quote
-
-    payload, filename = service.build_export_archive(region_id, [file_id])
-    return Response(
-        content=payload,
-        media_type="application/zip",
-        headers={
-            "Content-Disposition": f'attachment; filename="{quote(filename)}"',
-        },
-=======
     kanban: KanbanBoardService = Depends(get_kanban_service),
     access: KanbanAccessContext = Depends(get_kanban_access_context),
 ):
@@ -373,7 +304,6 @@ def export_file_or_folder(
         content=payload,
         media_type="application/zip",
         headers={"Content-Disposition": attachment_content_disposition(filename)},
->>>>>>> dev2
     )
 
 
@@ -382,43 +312,25 @@ def export_files_bulk(
     body: dict[str, Any],
     region_id: str = Depends(require_region_id),
     service: RegionStoreService = Depends(get_region_store_service),
-<<<<<<< HEAD
-):
-    from urllib.parse import quote
-
-=======
     kanban: KanbanBoardService = Depends(get_kanban_service),
     access: KanbanAccessContext = Depends(get_kanban_access_context),
 ):
->>>>>>> dev2
     ids = body.get("ids") or body.get("fileIds") or []
     if not isinstance(ids, list) or not ids:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="ids array is required",
         )
-<<<<<<< HEAD
-    payload, filename = service.build_export_archive(
-        region_id,
-        [str(item) for item in ids],
-=======
     allowed = gather_accessible_task_ids(kanban, region_id, access)
     payload, filename = service.build_export_archive(
         region_id,
         [str(item) for item in ids],
         allowed_task_ids=allowed,
->>>>>>> dev2
     )
     return Response(
         content=payload,
         media_type="application/zip",
-<<<<<<< HEAD
-        headers={
-            "Content-Disposition": f'attachment; filename="{quote(filename)}"',
-        },
-=======
         headers={"Content-Disposition": attachment_content_disposition(filename)},
->>>>>>> dev2
     )
 
 
@@ -428,15 +340,11 @@ def copy_file(
     body: dict[str, Any],
     region_id: str = Depends(require_region_id),
     service: RegionStoreService = Depends(get_region_store_service),
-<<<<<<< HEAD
-):
-=======
     kanban: KanbanBoardService = Depends(get_kanban_service),
     access: KanbanAccessContext = Depends(get_kanban_access_context),
 ):
     allowed = gather_accessible_task_ids(kanban, region_id, access)
     service.assert_file_access(region_id, file_id, allowed_task_ids=allowed)
->>>>>>> dev2
     return service.copy_file_item(region_id, file_id, body)
 
 
@@ -445,10 +353,7 @@ def performance(
     region_id: str = Depends(require_region_id),
     service: RegionStoreService = Depends(get_region_store_service),
     kanban: KanbanBoardService = Depends(get_kanban_service),
-<<<<<<< HEAD
-=======
     access: KanbanAccessContext = Depends(get_kanban_access_context),
->>>>>>> dev2
     scope: str | None = Query(default=None),
     project_id: str | None = Query(default=None, alias="projectId"),
     month: str | None = Query(default=None),
@@ -460,10 +365,7 @@ def performance(
                 status_code=400,
                 detail="taskId is required for input-management scope",
             )
-<<<<<<< HEAD
-=======
         kanban.assert_task_access(region_id, str(task_id).strip(), access)
->>>>>>> dev2
         task_title = resolve_kanban_card_title(kanban, region_id, task_id)
         return {
             "data": service.get_input_management_rows(
@@ -518,11 +420,8 @@ def save_input_management(
     body: dict[str, Any],
     region_id: str = Depends(require_region_id),
     service: RegionStoreService = Depends(get_region_store_service),
-<<<<<<< HEAD
-=======
     kanban: KanbanBoardService = Depends(get_kanban_service),
     access: KanbanAccessContext = Depends(get_kanban_access_context),
->>>>>>> dev2
     user: str = Depends(optional_user_display_name),
     task_id: str | None = Query(default=None, alias="taskId"),
 ):
@@ -531,10 +430,7 @@ def save_input_management(
             status_code=400,
             detail="taskId is required for input-management save",
         )
-<<<<<<< HEAD
-=======
     kanban.assert_task_access(region_id, str(task_id).strip(), access)
->>>>>>> dev2
     rows = body.get("rows", [])
     if not isinstance(rows, list):
         rows = []
@@ -561,21 +457,14 @@ def reports(
     region_id: str = Depends(require_region_id),
     service: RegionStoreService = Depends(get_region_store_service),
     kanban: KanbanBoardService = Depends(get_kanban_service),
-<<<<<<< HEAD
-=======
     access: KanbanAccessContext = Depends(get_kanban_access_context),
->>>>>>> dev2
     type: str | None = Query(default=None),
     year: int | None = Query(default=None),
     quarter: int = Query(default=1, ge=1, le=4),
     periodMode: str = Query(default="quarter"),
 ):
     report_year = year if year is not None else datetime.now().year
-<<<<<<< HEAD
-    projects = kanban.list_projects(region_id, str(report_year))
-=======
     projects = kanban.list_projects(region_id, str(report_year), access=access)
->>>>>>> dev2
     return service.get_reports(
         region_id,
         type,
@@ -608,10 +497,6 @@ def performance_summary(
 def survey_list(
     region_id: str = Depends(require_region_id),
     service: RegionStoreService = Depends(get_region_store_service),
-<<<<<<< HEAD
-):
-    return service.list_surveys(region_id)
-=======
     kanban: KanbanBoardService = Depends(get_kanban_service),
     access: KanbanAccessContext = Depends(get_kanban_access_context),
     task_id: str | None = Query(default=None, alias="taskId"),
@@ -633,7 +518,6 @@ def survey_list(
         for item in items
         if strip_scope(str(item.get("taskId") or "")) in allowed
     ]
->>>>>>> dev2
 
 
 @router.get("/surveys/{survey_id}")
@@ -641,10 +525,6 @@ def survey_detail(
     survey_id: str,
     region_id: str = Depends(require_region_id),
     service: RegionStoreService = Depends(get_region_store_service),
-<<<<<<< HEAD
-):
-    return service.get_survey_detail(region_id, survey_id)
-=======
     kanban: KanbanBoardService = Depends(get_kanban_service),
     access: KanbanAccessContext = Depends(get_kanban_access_context),
     task_id: str | None = Query(default=None, alias="taskId"),
@@ -657,7 +537,6 @@ def survey_detail(
         if linked:
             kanban.assert_task_access(region_id, linked, access)
     return detail
->>>>>>> dev2
 
 
 @router.post("/surveys/{survey_id}")
@@ -666,14 +545,9 @@ def survey_save(
     body: dict,
     region_id: str = Depends(require_region_id),
     service: RegionStoreService = Depends(get_region_store_service),
-<<<<<<< HEAD
-):
-    return service.save_survey(region_id, survey_id, body)
-=======
     task_id: str | None = Query(default=None, alias="taskId"),
 ):
     return service.save_survey(region_id, survey_id, body, task_id=task_id)
->>>>>>> dev2
 
 
 @router.get("/surveys/{survey_id}/results")
@@ -695,8 +569,6 @@ def survey_responses(
     return service.submit_survey_response(region_id, survey_id, body)
 
 
-<<<<<<< HEAD
-=======
 # ── 공개(QR) 설문 — 로그인·task_id 불필요. 지역은 경로로 받고, 게시·응답중인 설문만 노출 ──
 
 
@@ -768,7 +640,6 @@ def survey_duplicate(
     return service.duplicate_survey(region_id, survey_id)
 
 
->>>>>>> dev2
 @router.delete("/surveys/{survey_id}")
 def delete_survey(
     survey_id: str,

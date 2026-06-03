@@ -12,11 +12,7 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build --
 
 echo "Waiting for API..."
 sleep 8
-<<<<<<< HEAD
-curl -fsS "http://127.0.0.1:${API_PORT:-8020}/health" || {
-=======
 curl -fsS "http://127.0.0.1:${API_PORT:-9001}/health" || {
->>>>>>> dev2
   echo "Health check failed — docker compose logs -f api"
   exit 1
 }

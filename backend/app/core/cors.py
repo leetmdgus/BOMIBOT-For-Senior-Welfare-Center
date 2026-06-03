@@ -99,11 +99,7 @@ def cors_middleware_kwargs(settings: Settings) -> dict:
         "allow_credentials": True,
         "allow_methods": ["*"] if settings.is_development else ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
         "allow_headers": allow_headers,
-<<<<<<< HEAD
-        "expose_headers": ["Content-Type"],
-=======
         "expose_headers": ["Content-Type", "Content-Disposition"],
->>>>>>> dev2
         "max_age": 600,
     }
     if origin_regex:
