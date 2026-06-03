@@ -1,0 +1,34 @@
+# 의존성·빌드 산출물 (이미지 안에서 재설치/재빌드)
+node_modules
+.next
+out
+
+# env — 이미지에 굽지 않음. 시크릿은 런타임 주입(compose environment)
+.env
+.env.local
+.env*.local
+
+# VCS / 에디터
+.git
+.gitignore
+.gitattributes
+.vscode
+.idea
+.DS_Store
+
+# Vercel / v0 샌드박스
+.vercel
+.snowflake
+.v0-trash
+__v0_runtime_loader.js
+__v0_devtools.tsx
+__v0_jsx-dev-runtime.ts
+
+# Docker
+Dockerfile
+.dockerignore
+
+# 로그
+npm-debug.log*
+pnpm-debug.log*
+*.log

@@ -5,6 +5,11 @@ const configDir = path.dirname(fileURLToPath(import.meta.url))
 const projectRoot = path.resolve(configDir)
 const workspaceRoot = path.resolve(configDir, "..")
 
+// Docker 빌드(NEXT_STANDALONE=true): self-contained standalone 서버 출력.
+// 트레이싱 루트도 앱 폴더로 한정해 .next/standalone/server.js 가 최상위에 생성되게 함.
+// 기본/Vercel 빌드(env 미설정)는 기존 동작 그대로 유지.
+const standalone = process.env.NEXT_STANDALONE === "true"
+
 const watchIgnored = [
   "**/node_modules/**",
   path.join(workspaceRoot, "Bomi-Slot-document-automatation"),
@@ -20,7 +25,8 @@ const nextConfig = {
     "localhost:9000",
   ],
 
-  outputFileTracingRoot: workspaceRoot,
+  output: standalone ? "standalone" : undefined,
+  outputFileTracingRoot: standalone ? projectRoot : workspaceRoot,
 
   experimental: {
     proxyClientMaxBodySize: "50mb",

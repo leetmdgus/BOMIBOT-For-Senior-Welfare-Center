@@ -1,0 +1,24 @@
+# 프로덕션 오버레이 (풀스택)
+# 사용: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+# 최초 1회 시드/마이그레이션:
+#   docker compose exec api alembic upgrade head
+#   docker compose exec api python scripts/seed.py --force
+
+services:
+  db:
+    ports: [] # DB 외부 미노출
+
+  api:
+    environment:
+      APP_ENV: production
+      AUTO_CREATE_TABLES: "false"
+      RUN_ALEMBIC_ON_STARTUP: "true"
+      RUN_SEED_ON_STARTUP: "false"
+      SEED_MISSING_JSON_ON_STARTUP: "false"
+
+  web:
+    environment:
+      NODE_ENV: production
+      # 프록시 모드 유지(브라우저 same-origin /api/* → api:9001). CORS 불필요.
+      # 프론트만 외부에 두고 API 를 다른 호스트로 보내려면 API_PROXY_URL 만 교체.
+      API_PROXY_URL: ${API_PROXY_URL:-http://api:9001}

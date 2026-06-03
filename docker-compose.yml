@@ -1,6 +1,15 @@
-# 로컬 / 서버 공통 — API + PostgreSQL
-# 사용: docker compose up -d --build --remove-orphans
-# API: http://127.0.0.1:9001  |  DB 호스트 포트 기본 5433 (5432 충돌 방지)
+# 풀스택 (web + api + db) — 한 번에 배포
+# 사용:
+#   cp .env.docker.example .env       # SECRET_KEY, POSTGRES_PASSWORD 등 수정
+#   docker compose up -d --build --remove-orphans
+#
+#   web  http://localhost:9000  (브라우저는 same-origin /api/* 만 호출 → CORS 불필요)
+#   api  http://localhost:9001  (web 컨테이너가 내부망 api:9001 로 프록시)
+#
+# 프로덕션:  docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+# 백엔드만:  cd backend && docker compose up -d
+#
+# ⚠️ db·api 정의는 backend/docker-compose.yml 과 동일하게 유지(동기화)할 것.
 
 services:
   db:
@@ -13,7 +22,6 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-bomibot}
     volumes:
       - bomibot_pgdata:/var/lib/postgresql/data
-    # API는 내부망 db:5432 로 접속. 호스트 매핑은 DBeaver 등 외부 접속용(5432 점유 시 5433 사용)
     ports:
       - "${POSTGRES_PORT:-5433}:5432"
     healthcheck:
@@ -29,7 +37,7 @@ services:
 
   api:
     build:
-      context: .
+      context: ./backend
       dockerfile: Dockerfile
     container_name: bomibot-api
     restart: unless-stopped
@@ -65,7 +73,6 @@ services:
       RAG_TOP_K: ${RAG_TOP_K:-8}
       FILES_STORAGE_DIR: /app/storage/uploads
     volumes:
-      # 업로드·HWPX 동기화 바이너리 — 볼륨 없으면 컨테이너 재빌드 시 DB만 남고 본문 404
       - bomibot_uploads:/app/storage/uploads
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://127.0.0.1:9001/health"]
@@ -73,6 +80,37 @@ services:
       timeout: 5s
       retries: 3
       start_period: 25s
+
+  web:
+    build:
+      context: ./frontend-next
+      dockerfile: Dockerfile
+      args:
+        # NEXT_PUBLIC_* 는 빌드 타임에 구워짐(아래 값 변경 시 --build 필요)
+        NEXT_PUBLIC_USE_API_PROXY: "true"
+        NEXT_PUBLIC_USE_MOCK_API: "false"
+        NEXT_PUBLIC_COLLABORATION_ENABLED: ${NEXT_PUBLIC_COLLABORATION_ENABLED:-false}
+    container_name: bomibot-web
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "${WEB_PORT:-9000}:9000"
+    environment:
+      NODE_ENV: production
+      PORT: "9000"
+      HOSTNAME: 0.0.0.0
+      # 브라우저 same-origin /api/* → Next 서버가 내부망 FastAPI 로 프록시 (런타임, 재빌드 불필요)
+      API_PROXY_URL: ${API_PROXY_URL:-http://api:9001}
+      # 프론트 서버사이드 LLM/메일 (lib/chat/*) — 미설정 시 해당 기능만 비활성
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_BASE_URL: ${GEMINI_BASE_URL:-https://factchat-cloud.mindlogic.ai/v1/gateway}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.0-flash}
+      SMTP_SERVICE: ${SMTP_SERVICE:-gmail}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      CS_EMAIL_TO: ${CS_EMAIL_TO:-}
 
 volumes:
   bomibot_pgdata:
