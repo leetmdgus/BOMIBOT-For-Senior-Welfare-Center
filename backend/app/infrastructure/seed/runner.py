@@ -6,7 +6,7 @@ import json
 from datetime import date
 from pathlib import Path
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete, select, update
 from sqlalchemy.orm import Session
 
 from app.core.security import hash_password
@@ -31,8 +31,11 @@ from app.infrastructure.persistence.models import (
     KanbanCategoryModel,
     KanbanProjectModel,
     KanbanTaskModel,
+    LoginEventModel,
     RegionJsonStoreModel,
     RegionModel,
+    SurveyModel,
+    SurveyResponseModel,
     UserModel,
     VolunteerEventModel,
 )
@@ -127,6 +130,23 @@ def seed_all(session: Session, *, force: bool = False) -> None:
         session.commit()
         return
 
+    chat_payload = _load_json("chat.json")
+    ontology_payload = (
+        _load_json("ontology.json") if (SEED_DIR / "ontology.json").exists() else None
+    )
+
+    for region in REGIONS:
+        region_id = region["id"]
+        _seed_organization(
+            session, region_id, _load_region_json(region_id, "organization")
+        )
+        _seed_dashboard(session, region_id, _load_region_json(region_id, "dashboard"))
+        _seed_kanban(session, region_id, _load_region_json(region_id, "kanban_projects"))
+        _seed_region_json_stores(session, region_id, chat_payload, ontology_payload)
+
+    # 관리자 계정은 users.employee_id → employees.id FK 이므로 직원 시드 이후에 생성
+    # (직원 INSERT 전에 admin 을 flush 하면 FK 위반).
+    session.flush()
     for admin in ADMIN_USERS:
         session.merge(
             UserModel(
@@ -143,26 +163,15 @@ def seed_all(session: Session, *, force: bool = False) -> None:
             )
         )
 
-    chat_payload = _load_json("chat.json")
-    ontology_payload = (
-        _load_json("ontology.json") if (SEED_DIR / "ontology.json").exists() else None
-    )
-
-    for region in REGIONS:
-        region_id = region["id"]
-        _seed_organization(
-            session, region_id, _load_region_json(region_id, "organization")
-        )
-        _seed_dashboard(session, region_id, _load_region_json(region_id, "dashboard"))
-        _seed_kanban(session, region_id, _load_region_json(region_id, "kanban_projects"))
-        _seed_region_json_stores(session, region_id, chat_payload, ontology_payload)
-
     session.commit()
 
 
 def sync_organizations(session: Session) -> None:
     """조직현황 시드 JSON → DB (동부/북부 직원 목록 갱신)."""
     _sync_region_metadata(session)
+    # users.employee_id → employees.id FK: 직원 삭제 전 참조 해제(아래 admin 머지에서 재설정).
+    session.execute(update(UserModel).values(employee_id=None))
+    session.flush()
     for region in REGIONS:
         region_id = region["id"]
         session.execute(delete(EmployeeModel).where(EmployeeModel.region_id == region_id))
@@ -170,6 +179,8 @@ def sync_organizations(session: Session) -> None:
         _seed_organization(
             session, region_id, _load_region_json(region_id, "organization")
         )
+    # 직원 재생성 후 flush → 아래 admin.employee_id FK 충족
+    session.flush()
     for admin in ADMIN_USERS:
         existing_user = session.get(UserModel, admin["id"])
         session.merge(
@@ -302,19 +313,25 @@ def _seed_region_json_stores(
 
 
 def _clear_region_scoped_tables(session: Session) -> None:
+    # FK 의존성 순서(자식 → 부모)로 삭제. 누락/역순이면 ForeignKeyViolation 발생:
+    #  login_events → users, users → employees, survey_responses → surveys 등.
     for model in (
-        RegionJsonStoreModel,
-        KanbanTaskModel,
-        KanbanCategoryModel,
-        KanbanProjectModel,
-        VolunteerEventModel,
-        CalendarEventModel,
-        DashboardProgressModel,
-        DashboardStatModel,
-        EmployeeModel,
-        DepartmentModel,
-        UserModel,
-        RegionModel,
+        LoginEventModel,          # → users
+        SurveyResponseModel,      # → surveys, regions
+        SurveyModel,              # → regions
+        KanbanTaskModel,          # → kanban_categories
+        KanbanCategoryModel,      # → kanban_projects
+        KanbanProjectModel,       # → regions
+        RegionJsonStoreModel,     # → regions
+        VolunteerEventModel,      # → regions
+        CalendarEventModel,       # → regions
+        DashboardProgressModel,   # → regions
+        DashboardStatModel,       # → regions
+        UserModel,                # → regions, employees (employees 보다 먼저)
+        EmployeeModel,            # → regions, departments
+        DepartmentModel,          # → regions
+        # RegionModel 은 삭제하지 않음 — _sync_region_metadata 가 upsert.
+        # 지우면 자식 재시드(employees·kanban 등)의 region FK 가 깨진다.
     ):
         session.execute(delete(model))
 
