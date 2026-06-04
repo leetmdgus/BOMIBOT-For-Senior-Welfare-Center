@@ -65,10 +65,5 @@ export interface PerformanceSubProjectChip {
   color: string
 }
 
-/** 입력관리 세목(세부사업명) 칩 목록 */
-export const performanceSubProjectChips: PerformanceSubProjectChip[] = [
-  { id: 1, label: "신규회원 이용상담", color: "#8fd3ff" },
-  { id: 2, label: "신규회원 가입", color: "#ffe58f" },
-  { id: 3, label: "신규회원 교육", color: "#ff9c8f" },
-  { id: 4, label: "정보제공상담", color: "#ff9cdf" },
-]
+/** 입력관리 세목(세부사업명) 칩 목록 — 기본 등록분 없음(필요 시 직접 추가) */
+export const performanceSubProjectChips: PerformanceSubProjectChip[] = []
