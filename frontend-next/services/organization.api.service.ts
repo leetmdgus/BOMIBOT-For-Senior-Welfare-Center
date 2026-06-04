@@ -1,4 +1,5 @@
 import { apiClient, apiUploadFormData, resolveApiPath } from "@/lib/api-client"
+import { cachedApiGet, invalidateApiGetCache } from "@/lib/api-get-cache"
 
 import type {
   CreateEmployeeInput,
@@ -44,7 +45,13 @@ const DEPARTMENTS_PATH = resolveApiPath(
 )
 
 export async function getOrganizationContext(): Promise<OrganizationContext> {
-  return apiClient.get<OrganizationContext>(CONTEXT_PATH)
+  // 사업관리 보드 필터(filterProjectsByAssignee)가 boards 응답 직후 직렬로 호출하던 조회.
+  // 짧은 TTL 캐시로 재방문·연도전환 시 추가 왕복 제거. 직원/부서 mutation 시 invalidateApiGetCache("org").
+  return cachedApiGet(
+    CONTEXT_PATH,
+    () => apiClient.get<OrganizationContext>(CONTEXT_PATH),
+    { key: "org:context", ttlMs: 60_000 },
+  )
 }
 
 export async function getDepartmentOptions(): Promise<DepartmentOption[]> {
@@ -57,20 +64,24 @@ export async function getDepartmentOptions(): Promise<DepartmentOption[]> {
 export async function createEmployee(
   input: CreateEmployeeInput,
 ): Promise<CreateEmployeeResult> {
-  return apiClient.post<CreateEmployeeResult>(EMPLOYEES_PATH, input)
+  const result = await apiClient.post<CreateEmployeeResult>(EMPLOYEES_PATH, input)
+  invalidateApiGetCache("org")
+  return result
 }
 
 export async function updateEmployee(
   employeeId: string,
   input: UpdateEmployeeInput,
 ): Promise<Employee> {
-  return apiClient.patch<Employee>(
+  const result = await apiClient.patch<Employee>(
     resolveApiPath(
       `/api/employees/${employeeId}`,
       `/api/v1/employees/${employeeId}`,
     ),
     input,
   )
+  invalidateApiGetCache("org")
+  return result
 }
 
 export async function deleteEmployee(employeeId: string): Promise<void> {
@@ -80,19 +91,22 @@ export async function deleteEmployee(employeeId: string): Promise<void> {
       `/api/v1/employees/${employeeId}`,
     ),
   )
+  invalidateApiGetCache("org")
 }
 
 export async function updateDepartment(
   departmentId: string,
   input: UpdateDepartmentInput,
 ): Promise<DepartmentOption> {
-  return apiClient.patch<DepartmentOption>(
+  const result = await apiClient.patch<DepartmentOption>(
     resolveApiPath(
       `/api/departments/${departmentId}`,
       `/api/v1/departments/${departmentId}`,
     ),
     input,
   )
+  invalidateApiGetCache("org")
+  return result
 }
 
 export async function uploadEmployeeProfileImage(
@@ -101,11 +115,13 @@ export async function uploadEmployeeProfileImage(
 ): Promise<{ profileImage: string }> {
   const formData = new FormData()
   formData.append("file", file)
-  return apiUploadFormData<{ profileImage: string }>(
+  const result = await apiUploadFormData<{ profileImage: string }>(
     resolveApiPath(
       `/api/employees/${employeeId}/profile-image`,
       `/api/v1/employees/${employeeId}/profile-image`,
     ),
     formData,
   )
+  invalidateApiGetCache("org")
+  return result
 }

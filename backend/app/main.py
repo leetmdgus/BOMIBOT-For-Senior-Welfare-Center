@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
@@ -69,6 +70,10 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
         content={"error": "Internal Server Error", "detail": str(exc)},
     )
 
+
+# JSON 응답 gzip 압축 (1KB 이상). 프로덕션 직연동(browser→FastAPI)에서 전송량 감소.
+# 주의: 로컬 Next 프록시 경로는 프록시가 압축 헤더 없이 재전송하므로 효과는 프로덕션 한정.
+app.add_middleware(GZipMiddleware, minimum_size=1024)
 
 # Host 헤더 검증 (프로덕션만). CORS보다 먼저 등록 → 요청 시 CORS가 먼저 실행됨
 if settings.trusted_host_list and settings.is_production:

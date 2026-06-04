@@ -34,6 +34,7 @@ import {
 import {
   filterKanbanProjects,
 } from "@/lib/kanban/filter-kanban-projects"
+import { resolveKanbanProjectAccessScope } from "@/lib/kanban/project-access"
 import {
   CreateProjectRequest,
   KanbanProject,
@@ -82,6 +83,9 @@ export function KanbanBoardPage() {
           getProjects(year),
           loadAssignableStaff(),
           getProjectImageOptions(),
+          // boards 응답 뒤 직렬로 붙던 조직 컨텍스트 조회를 boards와 동시에 선발사(캐시 워밍).
+          // admin은 내부에서 bypass라 네트워크 호출 없음. 결과는 getProjects 내부 필터가 캐시로 소비.
+          resolveKanbanProjectAccessScope(),
         ])
         setProjects(newProjects)
         setStaffList(staff)
