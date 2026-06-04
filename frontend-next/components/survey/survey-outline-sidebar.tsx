@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import { cn } from "@/lib/utils"
 import { surveySectionId } from "@/components/survey/use-survey-section-scroll"
+import type { SurveySettings } from "@/services/survey.types"
 
 export type SurveySidebarTab = "outline" | "style" | "settings"
 
@@ -23,6 +24,8 @@ interface SurveyOutlineSidebarProps {
   activeSectionId?: string
   onNavigate?: (sectionId: string) => void
   pageCount?: number
+  settings: SurveySettings
+  onSettingsChange: (settings: SurveySettings) => void
 }
 
 export function SurveyOutlineSidebar({
@@ -33,6 +36,8 @@ export function SurveyOutlineSidebar({
   activeSectionId,
   onNavigate,
   pageCount = 1,
+  settings,
+  onSettingsChange,
 }: SurveyOutlineSidebarProps) {
   const listRef = useRef<HTMLDivElement>(null)
   const activeItemRef = useRef<HTMLButtonElement>(null)
@@ -150,16 +155,44 @@ export function SurveyOutlineSidebar({
             <div className="space-y-4 text-sm">
               <div className="flex items-center justify-between">
                 <span className="text-foreground">응답 수집</span>
-                <Switch defaultChecked />
+                <Switch
+                  checked={settings.acceptResponses}
+                  onCheckedChange={(checked) =>
+                    onSettingsChange({ ...settings, acceptResponses: checked })
+                  }
+                />
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-foreground">중복 응답 허용</span>
-                <Switch />
+                <Switch
+                  checked={settings.allowDuplicate}
+                  onCheckedChange={(checked) =>
+                    onSettingsChange({ ...settings, allowDuplicate: checked })
+                  }
+                />
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-foreground">진행률 표시</span>
-                <Switch defaultChecked />
+                <Switch
+                  checked={settings.showProgress}
+                  onCheckedChange={(checked) =>
+                    onSettingsChange({ ...settings, showProgress: checked })
+                  }
+                />
               </div>
+
+              {!settings.acceptResponses ? (
+                <p className="rounded-md bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-700">
+                  응답 수집이 <strong>중지</strong>되었습니다. 저장(게시) 후
+                  응답자에게 “현재 이 설문은 응답을 받지 않습니다”로 표시되고
+                  제출이 차단됩니다.
+                </p>
+              ) : null}
+
+              <p className="text-xs leading-relaxed text-muted-foreground">
+                설문을 완전히 마감하려면 표지의 상태를 <strong>마감</strong>으로
+                바꾸세요. 변경 사항은 저장해야 응답 화면에 반영됩니다.
+              </p>
             </div>
           )}
         </div>

@@ -99,12 +99,21 @@ export const SurveyEditor = forwardRef<
     initialDetail?.questions ?? []
   )
 
+  const [settings, setSettings] = useState(
+    initialDetail?.settings ?? {
+      acceptResponses: true,
+      allowDuplicate: false,
+      showProgress: true,
+    }
+  )
+
   useEffect(() => {
     if (!initialDetail) return
 
     setOverview(initialDetail.overview)
     setBasicInfo(initialDetail.basicInfo)
     setQuestions(initialDetail.questions)
+    setSettings(initialDetail.settings)
   }, [initialDetail])
 
   const outlineSections = useMemo(() => {
@@ -145,7 +154,7 @@ export const SurveyEditor = forwardRef<
         },
         questions,
         style: initialDetail?.style,
-        settings: initialDetail?.settings,
+        settings,
         taskId: taskId ?? initialDetail?.taskId,
       })
 
@@ -365,6 +374,8 @@ export const SurveyEditor = forwardRef<
         sections={outlineSections}
         activeSectionId={activeSectionId}
         onNavigate={scrollToSection}
+        settings={settings}
+        onSettingsChange={setSettings}
       />
     </div>
   )

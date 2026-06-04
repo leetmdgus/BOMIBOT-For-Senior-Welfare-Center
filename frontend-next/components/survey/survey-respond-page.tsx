@@ -5,7 +5,7 @@ import Link from "next/link"
 import { useParams, useSearchParams } from "next/navigation"
 import { ArrowLeft, Loader2 } from "lucide-react"
 
-import { getPublicSurveyDetail, getSurveyDetail } from "@/services/survey.service"
+import { getPublicSurveyDetail } from "@/services/survey.service"
 import type { SurveyDetail } from "@/services/survey.types"
 import { getClientSession } from "@/lib/auth/session"
 import { BrandLogo } from "@/components/common/brand-logo"
@@ -18,9 +18,11 @@ export function SurveyRespondPage({ id: idFromProps }: { id?: string }) {
     idFromProps ??
     (typeof routeId === "string" ? routeId : Array.isArray(routeId) ? routeId[0] : "")
   const searchParams = useSearchParams()
-  const region = searchParams.get("region") ?? undefined
-  // 목록 back 링크용 — URL에 region이 없으면 로그인 세션 지역으로 폴백
-  const listRegion = region ?? getClientSession()?.regionId ?? undefined
+  // 비로그인(QR) 응답 — 항상 공개 엔드포인트만 사용한다.
+  // URL에 region이 없으면 로그인 세션 지역으로 폴백(작성자 미리보기 등).
+  const region =
+    searchParams.get("region") ?? getClientSession()?.regionId ?? undefined
+  const listRegion = region
 
   const [detail, setDetail] = useState<SurveyDetail | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -34,9 +36,9 @@ export function SurveyRespondPage({ id: idFromProps }: { id?: string }) {
       setLoadError(null)
 
       try {
-        const data = region
-          ? await getPublicSurveyDetail(region, id)
-          : await getSurveyDetail(id)
+        // 인증 엔드포인트(getSurveyDetail)는 비로그인 시 401 → 로그인 리다이렉트를
+        // 유발하므로, 공개 응답 페이지에서는 항상 공개 엔드포인트를 사용한다.
+        const data = await getPublicSurveyDetail(region ?? "", id)
         if (!cancelled) setDetail(data)
       } catch (error) {
         console.error("설문 로드 실패:", error)

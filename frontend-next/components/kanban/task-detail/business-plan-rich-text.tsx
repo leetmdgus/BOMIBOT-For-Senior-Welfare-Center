@@ -52,6 +52,7 @@ import {
 } from "@/components/ui/select"
 import { ColorPaletteButton } from "@/components/kanban/task-detail/rich-text-color-palette"
 import { RichTextTableContextMenuLayer } from "@/components/kanban/task-detail/rich-text-table-context-menu"
+import { RichTextImageToolbarLayer } from "@/components/kanban/task-detail/rich-text-image-toolbar-layer"
 import { RichTextTableSelectionLayer } from "@/components/kanban/task-detail/rich-text-table-selection-layer"
 import { RichTextTableStyleToolbar } from "@/components/kanban/task-detail/rich-text-table-style-toolbar"
 import { ClassicEditorToolbar } from "@/components/kanban/task-detail/classic-editor-toolbar"
@@ -802,6 +803,11 @@ export const BusinessPlanRichText = forwardRef<
             onChange={emitChange}
           />
           <RichTextTableContextMenuLayer
+            editorRoot={editorDom}
+            onChange={emitChange}
+            onBeforeMutation={snapshotBeforeChange}
+          />
+          <RichTextImageToolbarLayer
             editorRoot={editorDom}
             onChange={emitChange}
             onBeforeMutation={snapshotBeforeChange}
