@@ -53,6 +53,7 @@ import {
 } from "./performance-summary.constants"
 import { normalizeDetailCategory } from "./input-rows-to-summary"
 import { usePerformance } from "./performance-provider"
+import { downloadSummaryCsv } from "./performance-summary-export"
 
 type Metrics = { people: number; count: number; budget: number }
 
@@ -365,6 +366,24 @@ export function PerformanceSummaryView({
     resetSummaryRowFilter()
   }
 
+  const handleDownload = () => {
+    if (orderedDisplayRows.length === 0) {
+      window.alert("내보낼 데이터가 없습니다.")
+      return
+    }
+    const sourceLabel =
+      FUNDING_SOURCES.find((source) => source.value === selectedSource)?.label ??
+      "전체"
+    downloadSummaryCsv({
+      variant,
+      rows: orderedDisplayRows,
+      displayMonths,
+      planVersion,
+      monthLabel: selectedMonth,
+      sourceLabel,
+    })
+  }
+
   const handleSubProjectClick = (subProject: string) => {
     setFocusedSubProject(subProject)
     setFocusedDetailCategory(null)
@@ -479,8 +498,8 @@ export function PerformanceSummaryView({
             type="button"
             variant="outline"
             size="sm"
-            className="gap-2 bg-slate-100"
-            onClick={() => window.alert("다운로드 기능은 API 연동 후 제공됩니다.")}
+            className="gap-2"
+            onClick={handleDownload}
           >
             <Download className="size-4" />
             다운로드
