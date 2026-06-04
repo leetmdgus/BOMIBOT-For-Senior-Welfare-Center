@@ -74,6 +74,15 @@ def department_options(
     return {"departments": organization_service.list_department_options(region_id)}
 
 
+@router.get("/public/departments/{region_id}")
+def public_department_options(
+    region_id: str,
+    organization_service: OrganizationService = Depends(get_organization_service),
+):
+    """회원가입(비로그인)용 부서 목록 — 인증 불필요, 지역은 경로로 받는다."""
+    return {"departments": organization_service.list_department_options(region_id)}
+
+
 @router.post("/employees", status_code=status.HTTP_201_CREATED)
 def create_employee(
     body: CreateEmployeeBody,

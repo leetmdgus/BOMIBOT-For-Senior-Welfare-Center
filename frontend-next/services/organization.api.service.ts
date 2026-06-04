@@ -61,6 +61,18 @@ export async function getDepartmentOptions(): Promise<DepartmentOption[]> {
   return data.departments
 }
 
+// 회원가입(비로그인)용 — 지역별 부서 목록을 공개 엔드포인트에서 조회한다.
+export async function getPublicDepartmentOptions(
+  regionId: string,
+): Promise<DepartmentOption[]> {
+  const path = resolveApiPath(
+    `/api/public/departments/${encodeURIComponent(regionId)}`,
+    `/api/v1/public/departments/${encodeURIComponent(regionId)}`,
+  )
+  const data = await apiClient.get<{ departments: DepartmentOption[] }>(path)
+  return data.departments
+}
+
 export async function createEmployee(
   input: CreateEmployeeInput,
 ): Promise<CreateEmployeeResult> {
