@@ -86,7 +86,12 @@ export function bootstrapInputRowsForTask(
     task4: "평생교육지원사업",
     task6: "문화예술지원사업",
   }
-  const title = titles[taskId] ?? taskId
+
+  // 데모용으로 미리 정의된 task만 시드 행을 생성한다.
+  // 신규로 만든 실적관리(임의 taskId)는 기본 데이터 없이 빈 표로 시작한다.
+  const title = titles[taskId]
+  if (!title) return []
+
   const monthByTask: Record<string, string> = {
     task1: "2월",
     task3: "6월",

@@ -17,7 +17,6 @@ import {
   Plus,
   QrCode,
   Search,
-  Star,
   TrendingUp,
   Users,
 } from "lucide-react"
@@ -180,6 +179,37 @@ export function SatisfactionSurveyTab() {
     img.src = svg64
   }
 
+  const handleCopyQrImage = () => {
+    const svg = qrRef.current?.querySelector("svg")
+    if (!svg) return
+    const xml = new XMLSerializer().serializeToString(svg)
+    const svg64 = `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(xml)))}`
+    const img = new Image()
+    img.onload = () => {
+      const size = 1024
+      const canvas = document.createElement("canvas")
+      canvas.width = size
+      canvas.height = size
+      const ctx = canvas.getContext("2d")
+      if (!ctx) return
+      ctx.fillStyle = "#ffffff"
+      ctx.fillRect(0, 0, size, size)
+      ctx.drawImage(img, 0, 0, size, size)
+      canvas.toBlob(async (blob) => {
+        if (!blob) return
+        try {
+          await navigator.clipboard.write([
+            new ClipboardItem({ "image/png": blob }),
+          ])
+          alert("QR 이미지가 복사되었습니다.")
+        } catch {
+          alert("이미지 복사를 지원하지 않는 브라우저입니다. PNG 저장을 이용해 주세요.")
+        }
+      }, "image/png")
+    }
+    img.src = svg64
+  }
+
   const qrUrl = qrSurvey ? respondUrlFor(qrSurvey.id) : ""
 
   return (
@@ -216,11 +246,6 @@ export function SatisfactionSurveyTab() {
           icon={<Users className="size-4 text-amber-500" />}
           label="총 응답"
           value={`${stats.responses}명`}
-        />
-        <StatCard
-          icon={<Star className="size-4 text-yellow-500" />}
-          label="평균 만족도"
-          value={`${stats.satisfaction.toFixed(2)}점`}
         />
       </div>
 
@@ -270,15 +295,8 @@ export function SatisfactionSurveyTab() {
               </Link>
 
               <div className="flex items-center gap-3">
-                <Link
-                  href={
-                    taskId
-                      ? `/survey/${survey.id}/respond?taskId=${encodeURIComponent(taskId)}`
-                      : `/survey/${survey.id}/respond`
-                  }
-                  target="_blank"
-                >
-                  <Button size="sm">응답하기</Button>
+                <Link href={surveyHref(survey.id, "view=edit")}>
+                  <Button size="sm">수정하기</Button>
                 </Link>
                 <Link href={surveyHref(survey.id, "view=results")}>
                   <Button variant="outline" size="sm">
@@ -347,20 +365,32 @@ export function SatisfactionSurveyTab() {
             <p className="w-full break-all text-center text-xs text-muted-foreground">
               {qrUrl}
             </p>
-            <div className="flex w-full gap-2">
+            <div className="flex w-full flex-col gap-2">
+              <div className="flex w-full gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex-1"
+                  onClick={handleCopyQrImage}
+                  disabled={!qrUrl}
+                >
+                  <Copy className="mr-2 size-4" />
+                  QR 복사
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex-1"
+                  onClick={handleDownloadQrPng}
+                  disabled={!qrUrl}
+                >
+                  <Download className="mr-2 size-4" />
+                  PNG 저장
+                </Button>
+              </div>
               <Button
                 type="button"
-                variant="outline"
-                className="flex-1"
-                onClick={handleDownloadQrPng}
-                disabled={!qrUrl}
-              >
-                <Download className="mr-2 size-4" />
-                PNG 저장
-              </Button>
-              <Button
-                type="button"
-                className="flex-1"
+                className="w-full"
                 disabled={!qrUrl}
                 onClick={() =>
                   qrUrl && window.open(qrUrl, "_blank", "noopener,noreferrer")

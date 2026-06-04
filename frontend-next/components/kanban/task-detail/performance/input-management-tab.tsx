@@ -1030,7 +1030,10 @@ export function InputManagementTab() {
           </div>
         ) : null}
 
-        <div ref={tableScrollRef} className="overflow-x-auto">
+        <div
+          ref={tableScrollRef}
+          className="max-h-[60vh] overflow-auto overscroll-contain"
+        >
         <DndContext
           sensors={dragSensors}
           collisionDetection={closestCenter}

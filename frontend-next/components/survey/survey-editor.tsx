@@ -7,14 +7,7 @@ import {
   useMemo,
   useState,
 } from "react"
-import {
-  Calendar,
-  Copy,
-  GripVertical,
-  MoreHorizontal,
-  Plus,
-  Trash2,
-} from "lucide-react"
+import { Calendar, Copy, Plus, Trash2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -46,6 +39,15 @@ import type {
 type QuestionType = SurveyQuestionType
 
 const createId = () => crypto.randomUUID()
+
+// 가·나·다·라… 순서 마커. 한글 음절 코드는 +1 증가가 아니므로(가 다음이 각)
+// String.fromCharCode(44032 + index)는 가·각·갂… 이 되어 잘못된다. 배열로 매핑.
+const KOREAN_ORDER_MARKERS = [
+  "가", "나", "다", "라", "마", "바", "사", "아", "자", "차",
+  "카", "타", "파", "하",
+]
+const koreanOrderMarker = (index: number) =>
+  KOREAN_ORDER_MARKERS[index] ?? `${index + 1}`
 
 export interface SurveyEditorHandle {
   saveDraft: () => void
@@ -233,7 +235,7 @@ export const SurveyEditor = forwardRef<
       type,
       title: "",
       description: "",
-      required: false,
+      required: true,
       multiple: false,
       options: type === "choice" ? [""] : [],
       rows: type === "matrix" ? [""] : [],
@@ -244,6 +246,12 @@ export const SurveyEditor = forwardRef<
     }
 
     setQuestions((prev) => [...prev, newQuestion])
+    // 새 문항이 그려진 뒤(더블 rAF) 해당 문항으로 스크롤.
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() =>
+        scrollToSection(surveyQuestionSectionId(newQuestion.id)),
+      ),
+    )
   }
 
   const updateQuestion = (
@@ -426,7 +434,7 @@ function SurveyOverviewForm({
             {overview.purpose.map((purpose, index) => (
               <div key={index} className="flex gap-2">
                 <span className="pt-2 text-muted-foreground">
-                  {String.fromCharCode(44032 + index)}.
+                  {koreanOrderMarker(index)}.
                 </span>
                 <Input
                   value={purpose}
@@ -557,7 +565,7 @@ function SurveyOverviewForm({
             {overview.limitations.map((limitation, index) => (
               <div key={index} className="flex gap-2">
                 <span className="pt-2 text-muted-foreground">
-                  {String.fromCharCode(44032 + index)}.
+                  {koreanOrderMarker(index)}.
                 </span>
                 <Input
                   value={limitation}
@@ -743,8 +751,6 @@ function QuestionEditor({
     >
       <div className="mb-4 flex items-center justify-between gap-4">
         <div className="flex items-center gap-2">
-          <GripVertical className="size-4 text-muted-foreground" />
-
           <Select value={question.type} onValueChange={changeType}>
             <SelectTrigger className="w-48">
               <SelectValue />
@@ -795,10 +801,6 @@ function QuestionEditor({
             onClick={() => onDelete(question.id)}
           >
             <Trash2 className="size-4 text-destructive" />
-          </Button>
-
-          <Button type="button" variant="ghost" size="icon">
-            <MoreHorizontal className="size-4" />
           </Button>
         </div>
       </div>

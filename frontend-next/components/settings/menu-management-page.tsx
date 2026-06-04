@@ -26,6 +26,7 @@ import {
 
 export function MenuManagementPage() {
   const { session, logout, isLoading } = useAuth()
+  const isAdmin = session?.roleType === "admin"
   const [hiddenHrefs, setHiddenHrefs] = useState<string[]>([])
 
   useEffect(() => {

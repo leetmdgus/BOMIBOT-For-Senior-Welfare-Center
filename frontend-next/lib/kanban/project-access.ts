@@ -75,16 +75,18 @@ function filterProjectTasks(
 ): KanbanProject | null {
   if (hasFullProjectAccess(project, scope)) return project
 
-  const categories = project.categories
-    .map((category) => ({
-      ...category,
-      tasks: category.tasks.filter((task) =>
-        canAccessTask(project, task, scope),
-      ),
-    }))
-    .filter((category) => category.tasks.length > 0)
+  const categories = project.categories.map((category) => ({
+    ...category,
+    tasks: category.tasks.filter((task) =>
+      canAccessTask(project, task, scope),
+    ),
+  }))
 
-  if (categories.length === 0) return null
+  // 접근 가능한 카드가 하나도 없으면 사업 자체를 숨긴다.
+  // 있으면 빈 컬럼도 그대로 둬서 4개 컬럼(실적관리·사업계획·만족도조사·사업평가) 구조를 보존한다.
+  // (예전엔 빈 컬럼을 제거해, 팀원이 새 사업을 만들면 실적관리 한 컬럼만 보였음)
+  if (!categories.some((category) => category.tasks.length > 0)) return null
+
   return { ...project, categories }
 }
 

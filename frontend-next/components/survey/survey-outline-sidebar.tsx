@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useRef } from "react"
-import { GripVertical } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
@@ -122,16 +121,7 @@ export function SurveyOutlineSidebar({
                             : "text-muted-foreground hover:bg-muted hover:text-foreground"
                         )}
                       >
-                        <span
-                          className={cn(
-                            "shrink-0 text-xs",
-                            isActive ? "text-primary" : "text-primary/70"
-                          )}
-                        >
-                          {section.type}
-                        </span>
                         <span className="line-clamp-2 flex-1">{section.label}</span>
-                        <GripVertical className="size-3.5 shrink-0 opacity-0 group-hover:opacity-60" />
                       </button>
                     )
                   })
