@@ -50,6 +50,9 @@ import { useCollaborationRoom } from "@/lib/collaboration/use-collaboration-room
 import { isCollaborationAvailable } from "@/lib/collaboration/ws-url"
 import { getCurrentYearString } from "@/lib/current-year"
 
+/** 사업관리 보드 필터(연도·검색어)를 세션 동안 유지 — 페이지 이동 후 복원 */
+const KANBAN_FILTER_KEY = "bomibot:kanban-board-filter"
+
 
 export function KanbanBoardPage() {
   const { session } = useAuth()
@@ -62,6 +65,42 @@ export function KanbanBoardPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
+  // 저장 effect의 첫 실행(마운트)은 건너뛴다 — 복원 전 기본값으로 덮어쓰지 않도록.
+  const filterSaveReadyRef = useRef(false)
+
+  // 마운트 시 직전 세션의 필터(연도·검색어) 복원. (SSR/하이드레이션 안전하게 마운트 후)
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem(KANBAN_FILTER_KEY)
+      if (saved) {
+        const parsed = JSON.parse(saved) as {
+          year?: string
+          searchQuery?: string
+        }
+        if (typeof parsed.year === "string" && parsed.year) setYear(parsed.year)
+        if (typeof parsed.searchQuery === "string")
+          setSearchQuery(parsed.searchQuery)
+      }
+    } catch {
+      // sessionStorage 접근 불가 시 무시
+    }
+  }, [])
+
+  // 필터 변경 시 저장. 첫 실행(마운트)은 스킵해 복원 전 기본값 저장을 막는다.
+  useEffect(() => {
+    if (!filterSaveReadyRef.current) {
+      filterSaveReadyRef.current = true
+      return
+    }
+    try {
+      sessionStorage.setItem(
+        KANBAN_FILTER_KEY,
+        JSON.stringify({ year, searchQuery }),
+      )
+    } catch {
+      // 무시
+    }
+  }, [year, searchQuery])
 
   const [editModalOpen, setEditModalOpen] = useState(false)
   const [selectedProject, setSelectedProject] = useState<KanbanProject | null>(

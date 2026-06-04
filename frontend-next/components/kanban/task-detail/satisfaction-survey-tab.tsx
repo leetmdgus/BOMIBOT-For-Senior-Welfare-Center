@@ -231,7 +231,7 @@ export function SatisfactionSurveyTab() {
         </Link>
       </div>
 
-      <div className="mb-6 grid grid-cols-4 gap-4">
+      <div className="mb-6 grid grid-cols-3 gap-4">
         <StatCard
           icon={<FileText className="size-4" />}
           label="총 설문"
@@ -277,7 +277,7 @@ export function SatisfactionSurveyTab() {
               key={survey.id}
               className="group flex items-center justify-between rounded-xl border border-border bg-card p-4 transition-shadow hover:shadow-md"
             >
-              <Link href={surveyHref(survey.id)} className="flex-1">
+              <Link href={surveyHref(survey.id, "view=edit")} className="flex-1">
                 <div className="mb-1 flex items-center gap-2">
                   <span className="font-medium transition-colors hover:text-primary">
                     {survey.title}
