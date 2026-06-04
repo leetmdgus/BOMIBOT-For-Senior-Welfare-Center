@@ -73,6 +73,15 @@ export async function updateEmployee(
   )
 }
 
+export async function deleteEmployee(employeeId: string): Promise<void> {
+  await apiClient.delete<void>(
+    resolveApiPath(
+      `/api/employees/${employeeId}`,
+      `/api/v1/employees/${employeeId}`,
+    ),
+  )
+}
+
 export async function updateDepartment(
   departmentId: string,
   input: UpdateDepartmentInput,

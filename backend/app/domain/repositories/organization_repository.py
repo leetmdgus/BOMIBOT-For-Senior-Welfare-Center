@@ -101,6 +101,9 @@ class OrganizationRepository(ABC):
     ) -> EmployeeRecord | None: ...
 
     @abstractmethod
+    def delete_employee(self, region_id: str, employee_id: str) -> bool: ...
+
+    @abstractmethod
     def update_department(
         self, region_id: str, department_id: str, patch: DepartmentUpdate
     ) -> DepartmentRecord | None: ...

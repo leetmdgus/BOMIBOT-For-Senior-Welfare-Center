@@ -10,6 +10,7 @@ export const getOrganizationContext = organizationService.getOrganizationContext
 export const getDepartmentOptions = organizationService.getDepartmentOptions
 export const createEmployee = organizationService.createEmployee
 export const updateEmployee = organizationService.updateEmployee
+export const deleteEmployee = organizationService.deleteEmployee
 export const uploadEmployeeProfileImage =
   organizationService.uploadEmployeeProfileImage
 export const updateDepartment = organizationService.updateDepartment

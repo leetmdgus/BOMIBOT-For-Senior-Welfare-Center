@@ -1,6 +1,6 @@
 from datetime import UTC, datetime
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from app.domain.repositories.auth_repository import (
@@ -138,6 +138,18 @@ class SqlAlchemyAuthRepository(AuthRepository):
         if not row:
             raise LookupError("User not found")
         row.password_hash = password_hash
+        self._session.flush()
+
+    def delete_user_by_employee_id(self, employee_id: str) -> None:
+        """직원 삭제 시 연결된 로그인 계정 제거 (login_events → users 순서로 FK 해제)."""
+        users = self._session.scalars(
+            select(UserModel).where(UserModel.employee_id == employee_id)
+        ).all()
+        for user in users:
+            self._session.execute(
+                delete(LoginEventModel).where(LoginEventModel.user_id == user.id)
+            )
+            self._session.delete(user)
         self._session.flush()
 
     @staticmethod

@@ -7,6 +7,7 @@ import {
 import {
   canAssignTeamLeader,
   canCreateEmployee,
+  canDeleteEmployee,
   canEditDepartment,
   canFullHrEdit,
   isSelfEmployee,
@@ -25,6 +26,7 @@ import type {
 } from "./organization.types"
 
 const employeeOverrides = new Map<string, Employee>()
+const deletedEmployeeIds = new Set<string>()
 
 function filterEmployee(
   employee: Employee,
@@ -65,7 +67,26 @@ function filterDepartments(
 
 async function getOrganizationData(regionId?: RegionId) {
   const store = await loadRegionStore({ regionId })
-  return store.organization.departmentsData
+  const data = store.organization.departmentsData
+  if (deletedEmployeeIds.size === 0) return data
+
+  // 삭제된 직원을 원본 데이터에서 제거하고 부서별 인원수를 다시 계산한다.
+  const totalRemaining = data.reduce((sum, dept) => {
+    if (dept.id === "all") return sum
+    return (
+      sum + dept.employees.filter((e) => !deletedEmployeeIds.has(e.id)).length
+    )
+  }, 0)
+
+  return data.map((dept) => {
+    if (dept.id === "all") {
+      return { ...dept, count: totalRemaining }
+    }
+    const employees = dept.employees.filter(
+      (e) => !deletedEmployeeIds.has(e.id),
+    )
+    return { ...dept, employees, count: employees.length }
+  })
 }
 
 function findEmployeeByEmail(
@@ -284,6 +305,26 @@ export async function updateEmployee(
   }
   employeeOverrides.set(employeeId, updated)
   return updated
+}
+
+export async function deleteEmployee(employeeId: string): Promise<void> {
+  const departments = await getOrganizationData()
+  const context = buildMockContext(departments)
+  const all = getAllEmployeesFromDepartments(
+    departments.map((d) => ({
+      ...d,
+      employees: d.employees.map(applyOverrides),
+    })),
+  )
+  const current = all.find((e) => e.id === employeeId)
+  if (!current) {
+    throw new Error("직원을 찾을 수 없습니다.")
+  }
+  if (!canDeleteEmployee(context, current)) {
+    throw new Error("직원 삭제 권한이 없습니다.")
+  }
+  deletedEmployeeIds.add(employeeId)
+  employeeOverrides.delete(employeeId)
 }
 
 export async function uploadEmployeeProfileImage(

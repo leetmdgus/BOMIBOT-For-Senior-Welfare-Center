@@ -4,18 +4,33 @@ import {
   Calendar,
   Clock,
   FileText,
+  Loader2,
   Mail,
   Pencil,
   Phone,
+  Trash2,
 } from "lucide-react"
 
 import { useAuth } from "@/components/auth/auth-provider"
 import { EmployeeAvatar } from "@/components/organization/employee-avatar"
 import { OrganizationEmployeeEditDialog } from "@/components/organization/organization-employee-edit-dialog"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { canEditEmployee } from "@/lib/organization-permissions"
+import { toast } from "@/hooks/use-toast"
+import { canDeleteEmployee, canEditEmployee } from "@/lib/organization-permissions"
 import { cn } from "@/lib/utils"
+import { ApiError } from "@/lib/api-client"
+import { deleteEmployee as deleteEmployeeRequest } from "@/services/organization.service"
 
 import {
   DetailTabType,
@@ -31,6 +46,7 @@ interface EmployeeDetailPanelProps {
   onAutoOpenEditHandled?: () => void
   onDetailTabChange: (tab: DetailTabType) => void
   onEmployeeUpdated: (employee: Employee) => void
+  onEmployeeDeleted?: (employee: Employee) => void
 }
 
 export function EmployeeDetailPanel({
@@ -41,18 +57,51 @@ export function EmployeeDetailPanel({
   onAutoOpenEditHandled,
   onDetailTabChange,
   onEmployeeUpdated,
+  onEmployeeDeleted,
 }: EmployeeDetailPanelProps) {
   const [editOpen, setEditOpen] = useState(false)
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
   const canEdit =
     employee &&
     organizationContext &&
     canEditEmployee(organizationContext, employee)
+  const canDelete =
+    employee &&
+    organizationContext &&
+    canDeleteEmployee(organizationContext, employee)
 
   useEffect(() => {
     if (!autoOpenEdit || !canEdit) return
     setEditOpen(true)
     onAutoOpenEditHandled?.()
   }, [autoOpenEdit, canEdit, onAutoOpenEditHandled])
+
+  const handleDelete = async () => {
+    if (!employee || isDeleting) return
+    setIsDeleting(true)
+    try {
+      await deleteEmployeeRequest(employee.id)
+      toast({
+        title: "직원이 삭제되었습니다",
+        description: `${employee.name} 직원 정보와 로그인 계정이 제거되었습니다.`,
+      })
+      setDeleteOpen(false)
+      onEmployeeDeleted?.(employee)
+    } catch (error) {
+      const message =
+        error instanceof ApiError || error instanceof Error
+          ? error.message
+          : "직원 삭제에 실패했습니다."
+      toast({
+        title: "직원 삭제 실패",
+        description: message,
+        variant: "destructive",
+      })
+    } finally {
+      setIsDeleting(false)
+    }
+  }
 
   return (
     <div className="rounded-xl border border-border bg-card p-6">
@@ -61,24 +110,75 @@ export function EmployeeDetailPanel({
           <FileText className="size-5" />
           직원정보
         </h2>
-        {canEdit && organizationContext && employee && (
-          <>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setEditOpen(true)}
-            >
-              <Pencil className="mr-1 size-3.5" />
-              수정
-            </Button>
-            <OrganizationEmployeeEditDialog
-              employee={employee}
-              context={organizationContext}
-              open={editOpen}
-              onOpenChange={setEditOpen}
-              onSaved={onEmployeeUpdated}
-            />
-          </>
+        {organizationContext && employee && (canEdit || canDelete) && (
+          <div className="flex items-center gap-2">
+            {canEdit && (
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setEditOpen(true)}
+                >
+                  <Pencil className="mr-1 size-3.5" />
+                  수정
+                </Button>
+                <OrganizationEmployeeEditDialog
+                  employee={employee}
+                  context={organizationContext}
+                  open={editOpen}
+                  onOpenChange={setEditOpen}
+                  onSaved={onEmployeeUpdated}
+                />
+              </>
+            )}
+            {canDelete && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                onClick={() => setDeleteOpen(true)}
+              >
+                <Trash2 className="mr-1 size-3.5" />
+                삭제
+              </Button>
+            )}
+            <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>직원을 삭제하시겠습니까?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    <span className="font-medium text-foreground">
+                      {employee.name}
+                    </span>{" "}
+                    직원의 조직도 정보와 로그인 계정이 영구적으로 삭제됩니다. 이
+                    작업은 되돌릴 수 없습니다.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel disabled={isDeleting}>
+                    취소
+                  </AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={(event) => {
+                      event.preventDefault()
+                      void handleDelete()
+                    }}
+                    disabled={isDeleting}
+                    className="bg-destructive text-white hover:bg-destructive/90"
+                  >
+                    {isDeleting ? (
+                      <>
+                        <Loader2 className="mr-1 size-3.5 animate-spin" />
+                        삭제 중…
+                      </>
+                    ) : (
+                      "삭제"
+                    )}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
         )}
       </div>
 

@@ -182,6 +182,16 @@ class SqlAlchemyOrganizationRepository(OrganizationRepository):
         self._refresh_department_counts(region_id)
         return self._employee_record(row)
 
+    def delete_employee(self, region_id: str, employee_id: str) -> bool:
+        scoped_id = self._scoped_id(region_id, employee_id)
+        row = self._session.get(EmployeeModel, scoped_id)
+        if not row or row.region_id != region_id:
+            return False
+        self._session.delete(row)
+        self._session.flush()
+        self._refresh_department_counts(region_id)
+        return True
+
     def update_department(
         self, region_id: str, department_id: str, patch: DepartmentUpdate
     ) -> DepartmentRecord | None:

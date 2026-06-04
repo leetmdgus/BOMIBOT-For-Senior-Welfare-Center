@@ -58,6 +58,23 @@ export function canEditEmployee(
   return false
 }
 
+/** 직원 삭제 — 본인 계정은 삭제 불가, 관리자/관리직/소속 팀장만 가능 */
+export function canDeleteEmployee(
+  context: OrganizationContext | null,
+  employee: Employee,
+): boolean {
+  if (!context) return false
+  const { permissions, employeeId, department } = context
+
+  if (employeeId && employee.id === employeeId) return false
+  if (permissions.isAdmin) return true
+  if (permissions.isManagement) return true
+  if (permissions.isTeamLeader && employee.department === department) {
+    return true
+  }
+  return false
+}
+
 export function canEditDepartment(permissions: OrganizationPermissions | null) {
   return Boolean(permissions?.canEditDepartment)
 }

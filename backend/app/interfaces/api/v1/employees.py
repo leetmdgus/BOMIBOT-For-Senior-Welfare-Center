@@ -109,6 +109,21 @@ def update_employee(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
 
 
+@router.delete("/employees/{employee_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_employee(
+    employee_id: str,
+    region_id: str = Depends(require_region_id),
+    user: UserRecord = Depends(get_current_user),
+    organization_service: OrganizationService = Depends(get_organization_service),
+):
+    try:
+        organization_service.delete_employee(region_id, user, employee_id)
+    except PermissionError as exc:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(exc)) from exc
+    except LookupError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+
+
 @router.post("/employees/{employee_id}/profile-image", status_code=status.HTTP_201_CREATED)
 async def upload_employee_profile_image(
     employee_id: str,

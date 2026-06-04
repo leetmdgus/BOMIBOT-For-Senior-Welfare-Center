@@ -89,3 +89,6 @@ class AuthRepository(ABC):
 
     @abstractmethod
     def update_password_hash(self, user_id: str, password_hash: str) -> None: ...
+
+    @abstractmethod
+    def delete_user_by_employee_id(self, employee_id: str) -> None: ...

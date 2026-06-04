@@ -8,6 +8,7 @@ from app.application.organization_permissions import (
     can_assign_team_leader,
     can_create_employee,
     can_create_employee_in_department,
+    can_delete_employee,
     can_edit_department,
     can_edit_employee,
     can_full_hr_edit,
@@ -235,6 +236,29 @@ class OrganizationService:
             )
 
         return self._employee_payload(updated)
+
+    def delete_employee(
+        self,
+        region_id: str,
+        user: UserRecord,
+        employee_id: str,
+    ) -> None:
+        actor = self._resolve_actor(region_id, user)
+        target = self._organization_repo.get_employee(region_id, employee_id)
+        if not target:
+            raise LookupError("직원을 찾을 수 없습니다.")
+
+        if not can_delete_employee(actor, target):
+            raise PermissionError("직원 삭제 권한이 없습니다.")
+
+        # users.employee_id → employees.id FK: 로그인 계정을 먼저 제거해야 FK 위반이 없음.
+        if self._auth_repo:
+            scoped_id = f"{region_id}:{employee_id}"
+            self._auth_repo.delete_user_by_employee_id(scoped_id)
+
+        deleted = self._organization_repo.delete_employee(region_id, employee_id)
+        if not deleted:
+            raise LookupError("직원을 찾을 수 없습니다.")
 
     async def upload_profile_image(
         self,

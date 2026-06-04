@@ -75,6 +75,19 @@ def filter_self_edit_body(body: dict) -> dict:
     return {key: value for key, value in body.items() if key in SELF_EDIT_BODY_KEYS}
 
 
+def can_delete_employee(actor: OrgActor, target: EmployeeRecord) -> bool:
+    """직원 삭제 — 본인 계정은 삭제 불가, 관리자/관리직/소속 팀장만 가능."""
+    if is_self_target(actor, target):
+        return False
+    if actor.is_admin:
+        return True
+    if actor.employee and is_management(actor.employee):
+        return True
+    if actor.employee and actor.employee.is_team_leader:
+        return actor.employee.department == target.department
+    return False
+
+
 def can_edit_department(actor: OrgActor) -> bool:
     return actor.is_admin or (
         actor.employee is not None and is_management(actor.employee)
