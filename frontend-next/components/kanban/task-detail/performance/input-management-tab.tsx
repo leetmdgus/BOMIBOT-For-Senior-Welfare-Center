@@ -831,12 +831,11 @@ export function InputManagementTab() {
 
         <select
           value={String(selectedMonth)}
-          disabled={viewAllMonths}
           onChange={(event) => {
             leaveAllMonthsView()
             setSelectedMonth(Number(event.target.value))
           }}
-          className="h-9 rounded-md border border-slate-300 bg-white px-3 text-sm disabled:opacity-50"
+          className="h-9 rounded-md border border-slate-300 bg-white px-3 text-sm"
         >
           {months.map((month, index) => (
             <option key={month} value={index + 1}>
@@ -867,22 +866,6 @@ export function InputManagementTab() {
         <Button type="button" variant="outline" size="icon" onClick={goNextMonth}>
           <ChevronRight className="size-4" />
         </Button>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => setShowTaskModal(true)}
-        >
-          세목 추가
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => setShowDetailModal(true)}
-        >
-          세세목 추가
-        </Button>
       </div>
 
       <div className="mx-5 mb-5 flex flex-col rounded-lg border border-slate-300">
@@ -890,9 +873,6 @@ export function InputManagementTab() {
           <div className="flex flex-wrap items-center gap-2">
           <span className="mr-auto text-xs text-muted-foreground">
             적용 추경: {planVersion}
-            <span className="ml-2 hidden sm:inline">
-              · 세세목은 「상세분류」 열 · Tab/Enter · Ctrl+C/V/Z/Y · 셀 모서리 채우기
-            </span>
           </span>
 
           <DropdownMenu>
@@ -1403,11 +1383,6 @@ export function InputManagementTab() {
         </div>
       )}
 
-      <div className="print-hide flex justify-center border-t border-slate-200 bg-white px-5 py-4">
-        <Button type="button" size="sm" onClick={exportExcel}>
-          저장
-        </Button>
-      </div>
     </div>
   )
 }

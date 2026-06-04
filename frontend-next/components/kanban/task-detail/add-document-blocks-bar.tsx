@@ -54,7 +54,7 @@ export function AddDocumentBlocksBar({
           onClick={onAddBody}
         >
           <Type className="size-3 shrink-0" />
-          목차·본문
+          제목·본문
         </Button>
         {sectionCount > 0 ? (
           <span className="text-[10px] text-muted-foreground">
@@ -83,7 +83,7 @@ export function AddDocumentBlocksBar({
         </Button>
         <Button type="button" variant="secondary" size="sm" onClick={onAddBody}>
           <Type className="mr-2 size-4" />
-          목차·본문 (고급 서식)
+          제목·본문
         </Button>
       </div>
       {sectionCount > 0 ? (

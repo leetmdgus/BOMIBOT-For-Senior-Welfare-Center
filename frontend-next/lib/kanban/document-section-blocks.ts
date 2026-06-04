@@ -10,7 +10,7 @@ export type DocumentSectionRowKind = "heading" | "toc" | "body"
 /** HWPX 표1 한 행 — section 타입에 따라 대목차/목차/본문 행이 가변 생성 */
 export type DocumentSectionRow = {
   kind: DocumentSectionRowKind
-  label: "대목차" | "목차" | "본문"
+  label: "대목차" | "제목" | "본문"
   headingSectionId?: string
   bodySectionId?: string
   value: string
@@ -39,7 +39,7 @@ export function rowsFromDocumentSections(
 
     rows.push({
       kind: "toc",
-      label: "목차",
+      label: "제목",
       bodySectionId: String(section.id),
       value: section.title?.trim() || "",
     })

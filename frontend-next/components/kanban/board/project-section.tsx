@@ -457,6 +457,11 @@ export function ProjectSection({
       }
     }
 
+    // 낙관적 업데이트 — 드롭 즉시 화면에 반영하고 저장은 백그라운드로 진행.
+    // (서버 응답을 기다린 뒤 반영하면 카드가 원위치에 머물다 뒤늦게 이동해 "즉시 저장 안 됨"처럼 보임)
+    setCategories(nextCategories)
+    onProjectCategoriesChange?.(project.id, nextCategories)
+
     try {
       await moveTask(project.id, {
         taskId: activeId,
@@ -464,8 +469,6 @@ export function ProjectSection({
         toCategoryId: overCategory.id,
         overTaskId,
       })
-      setCategories(nextCategories)
-      onProjectCategoriesChange?.(project.id, nextCategories)
       await onRefreshSilent?.()
     } catch (error) {
       console.error("카드 이동 저장 실패:", error)

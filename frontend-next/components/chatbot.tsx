@@ -535,8 +535,7 @@ export function Chatbot() {
             }}
             className="h-11 gap-2 rounded-full px-4 shadow-lg"
           >
-            <Bot className="size-5" />
-            데이터 챗봇
+            <Bot className="size-5" /> 
           </Button>
         ) : null}
         <Button
