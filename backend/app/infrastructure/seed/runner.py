@@ -338,6 +338,18 @@ def _clear_region_scoped_tables(session: Session) -> None:
 
 def _seed_organization(session: Session, region_id: str, departments: list) -> None:
     sort_order = 0
+    # 회원가입에서 소속부서를 선택하지 않거나 매칭 부서가 없을 때 담길 "기타" 부서 보장.
+    # (조직현황 소속부서 목록·회원가입 드롭다운에 항상 노출)
+    session.merge(
+        DepartmentModel(
+            id=_scoped_id(region_id, "기타"),
+            region_id=region_id,
+            name="기타",
+            employee_count=0,
+            sort_order=900,
+            is_aggregate=False,
+        )
+    )
     for dept in departments:
         dept_id = _scoped_id(region_id, dept["id"])
         session.merge(

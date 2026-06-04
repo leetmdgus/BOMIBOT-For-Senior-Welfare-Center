@@ -91,6 +91,11 @@ class OrganizationRepository(ABC):
     def list_departments(self, region_id: str) -> list[DepartmentRecord]: ...
 
     @abstractmethod
+    def ensure_department(self, region_id: str, name: str) -> DepartmentRecord:
+        """이름으로 부서를 찾고, 없으면 생성해 반환(회원가입 '기타' 보장)."""
+        ...
+
+    @abstractmethod
     def create_employee(
         self, region_id: str, employee_id: str, payload: EmployeeCreate
     ) -> EmployeeRecord: ...

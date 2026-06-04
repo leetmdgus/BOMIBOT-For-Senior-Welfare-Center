@@ -73,8 +73,9 @@ def build_container(db: Session, settings: Settings | None = None) -> ServiceCon
     dashboard_repo = SqlAlchemyDashboardRepository(db)
     json_repo = SqlAlchemyJsonStoreRepository(db)
 
-    auth = AuthService(auth_repo)
     organization = OrganizationService(org_repo, auth_repo, file_storage)
+    # 회원가입 시 직원(조직현황) 등록을 위해 organization 을 주입.
+    auth = AuthService(auth_repo, organization=organization)
     survey = SurveyService(SqlAlchemySurveyRepository(db), json_repo)
     region_store = RegionStoreService(json_repo, file_storage, survey_service=survey)
     kanban = KanbanBoardService(kanban_repo, region_store)

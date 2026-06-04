@@ -1,12 +1,19 @@
 import uuid
 
+from app.application.services.organization_service import OrganizationService
 from app.core.security import create_access_token, hash_password, verify_password
 from app.domain.repositories.auth_repository import AuthRepository, LoginEventRecord, UserRecord
 
 
 class AuthService:
-    def __init__(self, auth_repo: AuthRepository) -> None:
+    def __init__(
+        self,
+        auth_repo: AuthRepository,
+        organization: OrganizationService | None = None,
+    ) -> None:
         self._auth_repo = auth_repo
+        # 회원가입 시 조직현황(직원)으로도 등록하기 위한 선택적 의존성.
+        self._organization = organization
 
     def _record_login(
         self,
@@ -100,6 +107,17 @@ class AuthService:
             raise ValueError("이미 사용 중인 이메일입니다.")
 
         user_id = f"user-{region_id}-{uuid.uuid4().hex[:8]}"
+
+        # 회원가입과 동시에 조직현황 직원으로 등록하고 user.employee_id 로 연결한다.
+        employee_id: str | None = None
+        if self._organization is not None:
+            employee_id = self._organization.register_self_employee(
+                region_id,
+                name=name,
+                email=email,
+                department_name=department,
+            )
+
         record = UserRecord(
             id=user_id,
             region_id=region_id,
@@ -109,6 +127,7 @@ class AuthService:
             role_display="사용자",
             role_type="user",
             department=department.strip(),
+            employee_id=employee_id,
         )
         created = self._auth_repo.create_user(record)
         self._record_login(

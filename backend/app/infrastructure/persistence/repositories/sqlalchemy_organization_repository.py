@@ -111,6 +111,39 @@ class SqlAlchemyOrganizationRepository(OrganizationRepository):
             for row in rows
         ]
 
+    def ensure_department(self, region_id: str, name: str) -> DepartmentRecord:
+        clean = (name or "").strip() or "기타"
+        existing = self._session.scalars(
+            select(DepartmentModel).where(
+                DepartmentModel.region_id == region_id,
+                DepartmentModel.name == clean,
+                DepartmentModel.is_aggregate.is_(False),
+            )
+        ).first()
+        if existing:
+            return DepartmentRecord(
+                id=existing.id,
+                name=existing.name,
+                count=existing.employee_count,
+                employees=[],
+            )
+        max_order = self._session.scalar(
+            select(func.max(DepartmentModel.sort_order)).where(
+                DepartmentModel.region_id == region_id
+            )
+        )
+        row = DepartmentModel(
+            id=self._scoped_id(region_id, clean),
+            region_id=region_id,
+            name=clean,
+            employee_count=0,
+            sort_order=(max_order or 0) + 1,
+            is_aggregate=False,
+        )
+        self._session.add(row)
+        self._session.flush()
+        return DepartmentRecord(id=row.id, name=row.name, count=0, employees=[])
+
     def create_employee(
         self, region_id: str, employee_id: str, payload: EmployeeCreate
     ) -> EmployeeRecord:

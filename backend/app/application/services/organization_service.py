@@ -1,4 +1,5 @@
 import uuid
+from datetime import date
 from pathlib import Path
 
 from fastapi import UploadFile
@@ -349,6 +350,43 @@ class OrganizationService:
             }
             for dept in departments
         ]
+
+    def register_self_employee(
+        self,
+        region_id: str,
+        *,
+        name: str,
+        email: str,
+        department_name: str,
+    ) -> str:
+        """회원가입 사용자를 조직현황 직원으로 등록하고 employee_id(scoped)를 반환.
+
+        부서명이 실제 부서와 매칭되면 그 부서, 아니면 "기타" 부서에 배치한다.
+        """
+        department_id = self._resolve_signup_department_id(region_id, department_name)
+        employee_id = f"emp-{uuid.uuid4().hex[:8]}"
+        record = self._organization_repo.create_employee(
+            region_id,
+            employee_id,
+            EmployeeCreate(
+                name=name.strip() or email.strip(),
+                department_id=department_id,
+                email=email.strip().lower(),
+                role="사용자",
+                position="사용자",
+                join_date=date.today().isoformat(),
+            ),
+        )
+        return record.id
+
+    def _resolve_signup_department_id(self, region_id: str, department_name: str) -> str:
+        name = (department_name or "").strip() or "기타"
+        for dept in self._organization_repo.list_departments(region_id):
+            if dept.name == name:
+                return _strip_scoped_id(dept.id)
+        # 매칭 부서가 없으면 "기타"로 배치(없으면 생성).
+        etc = self._organization_repo.ensure_department(region_id, "기타")
+        return _strip_scoped_id(etc.id)
 
     def resolve_actor(self, region_id: str, user: UserRecord) -> OrgActor:
         return self._resolve_actor(region_id, user)
