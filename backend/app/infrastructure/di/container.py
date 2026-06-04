@@ -9,6 +9,7 @@ Composition root — FastAPI Depends는 interfaces 레이어에서 이 팩토리
 from __future__ import annotations
 
 from dataclasses import dataclass
+from functools import lru_cache
 
 from sqlalchemy.orm import Session
 
@@ -53,9 +54,18 @@ class ServiceContainer:
     file_storage: FileStorageService
 
 
+@lru_cache(maxsize=1)
+def _shared_file_storage() -> FileStorageService:
+    """FileStorageService 는 stateless(저장 루트 경로만 보유) — 한 번만 생성해 재사용.
+
+    생성자가 resolve()+mkdir() 디스크 I/O 를 하므로 요청마다 새로 만들면 느리다.
+    """
+    return FileStorageService()
+
+
 def build_container(db: Session, settings: Settings | None = None) -> ServiceContainer:
     settings = settings or get_settings()
-    file_storage = FileStorageService()
+    file_storage = _shared_file_storage()
 
     auth_repo = SqlAlchemyAuthRepository(db)
     org_repo = SqlAlchemyOrganizationRepository(db)
