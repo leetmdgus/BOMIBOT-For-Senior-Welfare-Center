@@ -93,6 +93,7 @@ import {
   insertRichTextImageFromFile,
   triggerRichTextImageInsert,
 } from "@/lib/rich-text-image-insert"
+import { enhanceAllRichTextImages } from "@/lib/rich-text-image-resize"
 import { focusActiveRichTextContainer } from "@/lib/rich-text-edit-target"
 import {
   applyRichTextListCommand,
@@ -252,6 +253,7 @@ export const BusinessPlanRichText = forwardRef<
     }
     lastEmitted.current = html
     enhanceAllTablesInEditor(el)
+    enhanceAllRichTextImages(el)
     editorHistory.current.clear()
   }, [value])
 
@@ -280,6 +282,7 @@ export const BusinessPlanRichText = forwardRef<
       el.innerHTML = html
       lastEmitted.current = html
       enhanceAllTablesInEditor(el, undefined, snapshotBeforeChange)
+      enhanceAllRichTextImages(el, snapshotBeforeChange)
       onChange(html)
       isUndoRedo.current = false
     },
@@ -295,6 +298,7 @@ export const BusinessPlanRichText = forwardRef<
       onChange(html)
     }
     enhanceAllTablesInEditor(el, persist, snapshotBeforeChange)
+    enhanceAllRichTextImages(el, snapshotBeforeChange)
     persist()
   }, [onChange, snapshotBeforeChange])
 
@@ -669,6 +673,7 @@ export const BusinessPlanRichText = forwardRef<
       },
       snapshotBeforeChange,
     )
+    enhanceAllRichTextImages(el, snapshotBeforeChange)
   }, [value, readOnly, sourceMode, snapshotBeforeChange])
 
   useEffect(() => {

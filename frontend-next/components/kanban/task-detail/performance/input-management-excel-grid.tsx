@@ -76,6 +76,13 @@ export function InputManagementExcelGrid({
     setActiveCell(range.end)
   }, [])
 
+  /** 셀 입력칸이 포커스되면 활성 셀로 지정 — 어떤 셀을 선택했는지 보이게 한다. */
+  const activateCell = useCallback((position: CellPosition) => {
+    setActiveCell(position)
+    setSelection({ start: position, end: position })
+    setFillPreview(null)
+  }, [])
+
   /** 엑셀처럼 이동한 셀의 입력칸으로 포커스를 옮겨 바로 타이핑할 수 있게 한다. */
   const focusCellInput = useCallback((rowIndex: number, colIndex: number) => {
     const cell = tableRef.current?.querySelector<HTMLElement>(
@@ -350,6 +357,7 @@ export function InputManagementExcelGrid({
           updateCell={updateCell}
           handleCellMouseDown={handleCellMouseDown}
           handleFillMouseDown={handleFillMouseDown}
+          onActivateCell={activateCell}
           subProjectSuggestions={subProjectSuggestions}
           detailCategorySuggestions={detailCategorySuggestions}
         />

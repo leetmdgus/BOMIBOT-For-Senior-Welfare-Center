@@ -46,6 +46,7 @@ export type InputManagementGridRowProps = {
     position: CellPosition,
   ) => void
   handleFillMouseDown: (event: React.MouseEvent, source: CellPosition) => void
+  onActivateCell: (position: CellPosition) => void
   subProjectSuggestions: string[]
   detailCategorySuggestions: string[]
 }
@@ -65,6 +66,7 @@ export function InputManagementGridRow({
   updateCell,
   handleCellMouseDown,
   handleFillMouseDown,
+  onActivateCell,
   subProjectSuggestions,
   detailCategorySuggestions,
 }: InputManagementGridRowProps) {
@@ -153,7 +155,8 @@ export function InputManagementGridRow({
             className={cn(
               "relative border border-slate-200 p-0",
               selected && "bg-sky-100/80",
-              isActive && "ring-2 ring-sky-500 ring-inset",
+              // 활성(선택) 셀: 인접 테두리 위에 또렷한 파란 링
+              isActive && "z-10 ring-2 ring-inset ring-sky-600",
             )}
             onMouseDown={(event) => handleCellMouseDown(event, position)}
             onDoubleClick={() => {
@@ -200,6 +203,7 @@ export function InputManagementGridRow({
                       : undefined
                 }
                 onChange={(value) => updateCell(rowIndex, column.key, value)}
+                onActivate={() => onActivateCell(position)}
               />
             )}
 

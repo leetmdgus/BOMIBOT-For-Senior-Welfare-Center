@@ -48,7 +48,7 @@ export function preparePrintAreaHtml(printArea: HTMLElement): string {
     .forEach((node) => node.remove())
 
   clone
-    .querySelectorAll(".bp-rt-col-resize, .bp-rt-row-resize")
+    .querySelectorAll(".bp-rt-col-resize, .bp-rt-row-resize, .bp-rt-image-resize")
     .forEach((node) => node.remove())
 
   clone.querySelectorAll("[contenteditable]").forEach((node) => {

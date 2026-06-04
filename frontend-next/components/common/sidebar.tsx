@@ -41,15 +41,17 @@ export function Sidebar() {
       }
     : null
 
+  const isAdmin = session?.roleType === "admin"
+
   const visibleMenuItems = useMemo(
     () =>
-      APP_MENU_ITEMS.filter(
-        (item) =>
-          item.href === "#" ||
-          item.href === MENU_MANAGEMENT_HREF ||
-          !hiddenHrefs.includes(item.href),
-      ),
-    [hiddenHrefs],
+      APP_MENU_ITEMS.filter((item) => {
+        if (item.href === "#") return true
+        // 메뉴 관리는 관리자만 사이드바에 노출
+        if (item.href === MENU_MANAGEMENT_HREF) return isAdmin
+        return !hiddenHrefs.includes(item.href)
+      }),
+    [hiddenHrefs, isAdmin],
   )
 
   useEffect(() => {

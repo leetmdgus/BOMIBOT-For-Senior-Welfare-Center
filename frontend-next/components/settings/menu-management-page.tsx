@@ -120,6 +120,7 @@ export function MenuManagementPage() {
               </CardContent>
             </Card>
 
+            {isAdmin && (
             <Card>
               <CardHeader className="flex flex-row items-start justify-between gap-4 space-y-0">
                 <div>
@@ -177,10 +178,13 @@ export function MenuManagementPage() {
                 })}
               </CardContent>
             </Card>
+            )}
 
+            {isAdmin && (
             <p className="text-center text-xs text-muted-foreground">
-              전자결재는 /approvals 에서 관리합니다. 메뉴 관리는 항상 사이드바에 표시됩니다.
+              전자결재는 /approvals 에서 관리합니다. 메뉴 관리는 관리자에게만 표시됩니다.
             </p>
+            )}
           </div>
         </div>
       </main>

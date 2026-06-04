@@ -123,6 +123,13 @@ body.bp-rt-table-selecting .bp-rich-editor table.bp-rt-table th {
   text-align: center;
 }
 
+.bp-rich-editor .bp-rt-image-frame {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+  line-height: 0;
+}
+
 .bp-rich-editor .bp-rt-image {
   display: inline-block;
   max-width: 100%;
@@ -131,13 +138,51 @@ body.bp-rt-table-selecting .bp-rich-editor table.bp-rt-table th {
   cursor: default;
 }
 
+/* 편집 중에는 이미지 본문을 끌어 이동(브라우저 기본 DnD)할 수 있음을 커서로 안내 */
+.bp-rich-editor[contenteditable="true"] .bp-rt-image {
+  cursor: move;
+}
+
+.bp-rich-editor[contenteditable="true"] .bp-rt-image-frame:hover .bp-rt-image,
+.bp-rich-editor[contenteditable="true"] .bp-rt-image-frame:focus-within .bp-rt-image {
+  outline: 2px solid rgba(37, 99, 235, 0.5);
+  outline-offset: 1px;
+}
+
+/* 코너 리사이즈 핸들 — 편집 중에만 노출 */
+.bp-rt-image-resize {
+  display: none;
+}
+
+.bp-rich-editor[contenteditable="true"] .bp-rt-image-frame .bp-rt-image-resize {
+  display: block;
+  position: absolute;
+  right: -5px;
+  bottom: -5px;
+  width: 14px;
+  height: 14px;
+  border: 2px solid #2563eb;
+  border-radius: 3px;
+  background: #fff;
+  cursor: nwse-resize;
+  opacity: 0;
+  transition: opacity 0.12s ease;
+  z-index: 5;
+}
+
+.bp-rich-editor[contenteditable="true"] .bp-rt-image-frame:hover .bp-rt-image-resize,
+.bp-rt-image-resize.bp-rt-resize-active {
+  opacity: 1;
+}
+
 .bp-rich-editor table.bp-rt-table col {
   min-width: 48px;
 }
 
 @media print {
   .bp-rt-col-resize,
-  .bp-rt-row-resize {
+  .bp-rt-row-resize,
+  .bp-rt-image-resize {
     display: none !important;
   }
 }

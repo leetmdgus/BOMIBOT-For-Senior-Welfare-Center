@@ -44,7 +44,7 @@ export function buildRichTextImageHtml(
   alt = "이미지",
 ): string {
   const safeAlt = escapeHtmlAttr(alt)
-  return `<p class="bp-rt-image-wrap"><img src="${src}" alt="${safeAlt}" class="bp-rt-image max-w-full h-auto rounded border border-black/10" /></p>`
+  return `<p class="bp-rt-image-wrap"><span class="bp-rt-image-frame"><img src="${src}" alt="${safeAlt}" class="bp-rt-image max-w-full h-auto rounded border border-black/10" /></span></p>`
 }
 
 /** 파일 선택 대화상자 → 본문에 이미지 HTML 삽입 */

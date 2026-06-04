@@ -15,6 +15,7 @@ export function GridCellEditor({
   readOnly = false,
   suggestions,
   onChange,
+  onActivate,
 }: {
   row: PerformanceRow
   columnKey: InputGridColumnKey
@@ -23,6 +24,8 @@ export function GridCellEditor({
   readOnly?: boolean
   suggestions?: string[]
   onChange: (value: string | number) => void
+  /** 셀(입력칸)이 포커스되면 호출 — 활성 셀 강조를 위해 */
+  onActivate?: () => void
 }) {
   const value = row[columnKey]
   const listId =
@@ -71,6 +74,7 @@ export function GridCellEditor({
         tabIndex={readOnly ? -1 : undefined}
         value={type === "number" ? String(value ?? 0) : String(value ?? "")}
         onMouseDown={(event) => event.stopPropagation()}
+        onFocus={readOnly ? undefined : onActivate}
         onKeyDown={readOnly ? undefined : handleEnterKeyDown}
         onChange={(event) => {
           if (readOnly) return
