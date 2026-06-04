@@ -6,10 +6,14 @@ import {
   bootstrapEvaluation,
   bootstrapTaskSurveys,
 } from "@/lib/kanban/task-detail-bootstrap"
-import { syncPlanSubProjectsFromPerformance } from "@/lib/kanban/load-performance-sub-project-names"
+import {
+  syncPlanFormFromPerformance,
+  syncPlanSubProjectsFromPerformance,
+} from "@/lib/kanban/load-performance-sub-project-names"
 import {
   normalizeTaskId,
   resolveKanbanCardTitle,
+  resolveTaskManagerLabel,
 } from "@/lib/kanban/resolve-card-title"
 import type { KanbanProject } from "./kanban.board.types"
 import type {
@@ -292,17 +296,20 @@ export async function getBusinessPlan(
   taskId: string,
   regionId?: RegionId,
 ): Promise<BusinessPlanDocument> {
+  const { store } = await getTaskDetailRuntime(regionId)
   const doc = cloneBusinessPlan(await getOrCreateBusinessPlan(taskId, regionId))
-  const syncedSubProjects = await syncPlanSubProjectsFromPerformance(
+  const managerLabel = resolveTaskManagerLabel(
     taskId,
-    doc.formData.subProjects,
+    store.kanban.projectsMock as KanbanProject[],
+  )
+  const mergedForm = await syncPlanFormFromPerformance(
+    taskId,
+    doc.formData,
+    managerLabel,
   )
   return {
     ...doc,
-    formData: {
-      ...doc.formData,
-      subProjects: syncedSubProjects,
-    },
+    formData: mergedForm,
   }
 }
 

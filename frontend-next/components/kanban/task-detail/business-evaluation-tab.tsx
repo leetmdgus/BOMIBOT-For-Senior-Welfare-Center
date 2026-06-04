@@ -15,6 +15,7 @@ import {
   PrintDocumentButton,
 } from "@/components/common/print-document"
 import { BusinessPlanEvaluationWorkspace } from "@/components/kanban/task-detail/business-plan-evaluation-workspace"
+import { loadEvaluationPerformanceTotals } from "@/components/kanban/task-detail/performance/evaluation-performance-totals"
 import { mergeFlushedDocumentSections } from "@/lib/hwpx/document-sections-for-export"
 import { downloadBusinessEvaluationHwpx } from "@/lib/hwpx/export-business-evaluation"
 import {
@@ -53,8 +54,19 @@ export function BusinessEvaluationTab() {
   const load = useCallback(async () => {
     setIsLoading(true)
     try {
-      const evaluation = await getBusinessEvaluation(taskId)
-      setEvaluationData({ ...evaluation, detailRows: [] })
+      const [evaluation, performanceTotals] = await Promise.all([
+        getBusinessEvaluation(taskId),
+        // 계획/실행 인원·예산·지출은 실적관리(계획·실적 입력관리) 합계에서 가져온다
+        loadEvaluationPerformanceTotals(taskId).catch((error) => {
+          console.error("실적관리 합계 로드 실패:", error)
+          return null
+        }),
+      ])
+      setEvaluationData({
+        ...evaluation,
+        ...(performanceTotals ?? {}),
+        detailRows: [],
+      })
       setIsEditMode(!evaluation.isCompleted)
     } catch (error) {
       console.error("사업평가 데이터 로드 실패:", error)

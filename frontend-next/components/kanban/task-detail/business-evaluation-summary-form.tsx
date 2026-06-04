@@ -35,10 +35,6 @@ const SUMMARY_FIELD_BLOCKS: [string, string][] = [
   ["eval-period", "사업기간"],
   ["eval-program", "프로그램명"],
   ["eval-target", "대상"],
-  ["eval-plan-count", "계획 인원"],
-  ["eval-plan-budget", "예산"],
-  ["eval-actual-count", "실행 인원"],
-  ["eval-actual-expense", "지출"],
   ["eval-purpose", "목적"],
   ["eval-goals", "목표"],
   ["eval-performance", "성과지표"],
@@ -257,28 +253,18 @@ export function BusinessEvaluationSummaryForm({
               </span>
             </HwpxLabel>
             <HwpxValue>
-              {canEdit ? (
-                <HwpxInlineInput
-                  value={evaluation.planCount}
-                  onChange={(planCount) => update({ planCount })}
-                  onFocus={activateBlock("eval-plan-count")}
-                />
-              ) : (
-                displayOrDash(evaluation.planCount)
-              )}
+              <PerformanceLinkedValue
+                value={evaluation.planCount}
+                showHint={canEdit}
+              />
             </HwpxValue>
             <HwpxLabel>예산(원)</HwpxLabel>
             <HwpxValue align="right">
-              {canEdit ? (
-                <HwpxInlineInput
-                  value={evaluation.planBudget}
-                  onChange={(planBudget) => update({ planBudget })}
-                  onFocus={activateBlock("eval-plan-budget")}
-                  className="text-right"
-                />
-              ) : (
-                displayOrDash(evaluation.planBudget)
-              )}
+              <PerformanceLinkedValue
+                value={evaluation.planBudget}
+                showHint={canEdit}
+                align="right"
+              />
             </HwpxValue>
           </tr>
 
@@ -290,28 +276,18 @@ export function BusinessEvaluationSummaryForm({
               </span>
             </HwpxLabel>
             <HwpxValue>
-              {canEdit ? (
-                <HwpxInlineInput
-                  value={evaluation.actualCount}
-                  onChange={(actualCount) => update({ actualCount })}
-                  onFocus={activateBlock("eval-actual-count")}
-                />
-              ) : (
-                displayOrDash(evaluation.actualCount)
-              )}
+              <PerformanceLinkedValue
+                value={evaluation.actualCount}
+                showHint={canEdit}
+              />
             </HwpxValue>
             <HwpxLabel>지출(원)</HwpxLabel>
             <HwpxValue align="right">
-              {canEdit ? (
-                <HwpxInlineInput
-                  value={evaluation.actualExpense}
-                  onChange={(actualExpense) => update({ actualExpense })}
-                  onFocus={activateBlock("eval-actual-expense")}
-                  className="text-right"
-                />
-              ) : (
-                displayOrDash(evaluation.actualExpense)
-              )}
+              <PerformanceLinkedValue
+                value={evaluation.actualExpense}
+                showHint={canEdit}
+                align="right"
+              />
             </HwpxValue>
           </tr>
 
@@ -426,6 +402,34 @@ export function BusinessEvaluationSummaryForm({
         </tbody>
       </HwpxTable>
     </HwpxDocument>
+  )
+}
+
+/** 실적관리에서 자동 반영되는 읽기전용 값 (계획/실행 인원·예산·지출) */
+function PerformanceLinkedValue({
+  value,
+  showHint,
+  align,
+}: {
+  value: string
+  /** 편집 모드에서 "실적관리 자동 반영" 안내 노출 */
+  showHint: boolean
+  align?: "right"
+}) {
+  return (
+    <div
+      className={cn(
+        "flex flex-col gap-0.5",
+        align === "right" ? "items-end" : "items-start",
+      )}
+    >
+      <span>{displayOrDash(value)}</span>
+      {showHint ? (
+        <span className="print-hide text-[10px] font-normal text-neutral-500">
+          실적관리 자동 반영
+        </span>
+      ) : null}
+    </div>
   )
 }
 

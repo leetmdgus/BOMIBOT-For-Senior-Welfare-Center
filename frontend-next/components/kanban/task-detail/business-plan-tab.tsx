@@ -46,7 +46,10 @@ import {
 import { isCollaborationAvailable } from "@/lib/collaboration/ws-url"
 
 import { BusinessPlanEditor } from "./business-plan-editor"
-import { syncPlanSubProjectsFromPerformance } from "@/lib/kanban/load-performance-sub-project-names"
+import { syncPlanFormFromPerformance } from "@/lib/kanban/load-performance-sub-project-names"
+import { resolveTaskManagerLabel } from "@/lib/kanban/resolve-card-title"
+import { getProjects } from "@/services/kanban.board.service"
+import { getCurrentYearString } from "@/lib/current-year"
 
 function emptyBusinessPlanFormData(): BusinessPlanFormData {
   return {
@@ -236,22 +239,22 @@ export function BusinessPlanTab() {
 
     setIsLoading(true)
     try {
-      const [document, files, togetherFiles] = await Promise.all([
+      const [document, files, togetherFiles, projects] = await Promise.all([
         getBusinessPlan(taskId),
         getEvaluationFiles(taskId),
         getViewTogetherFixedFiles(),
+        getProjects(getCurrentYearString()),
       ])
-      const syncedSubProjects = await syncPlanSubProjectsFromPerformance(
+      const managerLabel = resolveTaskManagerLabel(taskId, projects)
+      const mergedForm = await syncPlanFormFromPerformance(
         taskId,
-        document.formData.subProjects,
+        document.formData,
+        managerLabel,
       )
       applyDocument(
         {
           ...document,
-          formData: {
-            ...document.formData,
-            subProjects: syncedSubProjects,
-          },
+          formData: mergedForm,
         },
         { syncEditMode: true },
       )

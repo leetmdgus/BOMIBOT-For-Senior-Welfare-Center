@@ -360,6 +360,7 @@ export function BusinessPlanEvaluationWorkspace({
 
   const handleImportFromPlan = () => {
     if (!planDocument) return
+    // 계획/실행 인원·예산·지출은 실적관리에서 자동 반영하므로 여기서 덮어쓰지 않는다
     handleEvaluationChange((prev) => ({
       ...prev,
       programName: planDocument.formData.projectName,
@@ -367,8 +368,6 @@ export function BusinessPlanEvaluationWorkspace({
       goals: [...planDocument.formData.goals],
       period: planDocument.formData.period,
       target: planDocument.formData.target,
-      planCount: planDocument.formData.totalCount,
-      planBudget: planDocument.formData.budget,
     }))
   }
 

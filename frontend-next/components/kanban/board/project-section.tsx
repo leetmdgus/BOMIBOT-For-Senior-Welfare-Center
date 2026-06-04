@@ -403,24 +403,34 @@ export function ProjectSection({
     const activeId = active.id as string
     const overId = over.id as string
 
-    if (activeId === overId) {
-      setDragFromCategoryId(null)
-      return
-    }
+    // dragOver 단계에서 카드가 이미 다른 컬럼으로 옮겨졌을 수 있다.
+    // 드롭 지점(over)이 드래그 중인 카드 자신이면(빈/희소 컬럼으로 옮길 때 흔함)
+    // over 로는 목적지를 알 수 없으므로, 카드가 현재 실제로 들어가 있는 컬럼을 목적지로 사용한다.
+    // (예전처럼 activeId === overId 일 때 그냥 return 하면 컬럼 이동이 백엔드에 저장되지 않았다.)
+    const currentCategory = findCategoryByTaskId(activeId)
 
     const overCategory =
-      findCategoryByTaskId(overId) ||
-      categories.find((category) => category.id === overId)
+      (overId !== activeId
+        ? findCategoryByTaskId(overId) ||
+          categories.find((category) => category.id === overId)
+        : undefined) ?? currentCategory
 
-    const fromCategoryId = dragFromCategoryId ?? findCategoryByTaskId(activeId)?.id
+    const fromCategoryId = dragFromCategoryId ?? currentCategory?.id
 
     setDragFromCategoryId(null)
 
     if (!overCategory || !fromCategoryId) return
 
-    const overTaskId = overCategory.tasks.some((task) => task.id === overId)
-      ? overId
-      : undefined
+    // over 가 카드 자신이면 dragOver 가 이미 배치해 둔 현재 위치의 바로 다음 카드를
+    // 기준으로 삽입 위치를 보존한다(없으면 맨 끝에 추가).
+    const overTaskId =
+      overId !== activeId
+        ? overCategory.tasks.some((task) => task.id === overId)
+          ? overId
+          : undefined
+        : overCategory.tasks[
+            overCategory.tasks.findIndex((task) => task.id === activeId) + 1
+          ]?.id
 
     let nextCategories = categories
 
