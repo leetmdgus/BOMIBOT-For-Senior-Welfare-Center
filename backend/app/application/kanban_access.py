@@ -315,14 +315,18 @@ def gather_accessible_task_ids(
     kanban: object,
     region_id: str,
     access: KanbanAccessContext,
+    *,
+    projects: list[dict] | None = None,
 ) -> set[str] | None:
-    """All task ids the user may access (None = admin, no filter)."""
+    """All task ids the user may access (None = admin, no filter).
+
+    projects 를 넘기면 연도별 list_projects 재조회 없이 그 목록만 사용한다.
+    """
     if access.bypass:
         return None
-    from app.application.kanban_task_options import _kanban_lookup_years
 
-    projects: list[dict] = []
-    list_projects = getattr(kanban, "list_projects")
-    for year in _kanban_lookup_years():
-        projects.extend(list_projects(region_id, year, access=access))
+    if projects is None:
+        from app.application.kanban_task_options import load_kanban_projects
+
+        projects = load_kanban_projects(kanban, region_id, access=access)
     return collect_accessible_task_ids(projects, access)

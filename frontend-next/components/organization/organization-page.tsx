@@ -98,7 +98,6 @@ export function OrganizationPage() {
       const result = await searchEmployees({ search: searchQuery })
       setDepartments(result.departments)
       setPositionGroups(result.positionGroups)
-      setHasLoadedOnce(true)
       setSelectedEmployee((current) => {
         if (!current) {
           return (
@@ -116,6 +115,9 @@ export function OrganizationPage() {
         )
       })
     } finally {
+      // 성공·실패 무관하게 로딩 상태를 종료한다. (실패 시에도 무한 스피너 대신
+      // 빈 상태/에러 안내가 보이도록 hasLoadedOnce 를 반드시 true 로 만든다.)
+      setHasLoadedOnce(true)
       setIsRefreshing(false)
     }
   }, [searchQuery])
@@ -126,6 +128,14 @@ export function OrganizationPage() {
     reload()
       .catch((error) => {
         console.error("조직 데이터 로드 실패:", error)
+        if (!cancelled) {
+          toast({
+            title: "조직 데이터를 불러오지 못했습니다",
+            description:
+              "잠시 후 다시 시도해 주세요. 문제가 계속되면 관리자에게 문의해 주세요.",
+            variant: "destructive",
+          })
+        }
       })
 
     getOrganizationContext()
@@ -221,6 +231,16 @@ export function OrganizationPage() {
         title: "직원이 추가되었습니다",
         description: `로그인 이메일: ${created.email} · 초기 비밀번호: ${initialPassword}`,
       })
+    },
+    [reload],
+  )
+
+  const handleEmployeeDeleted = useCallback(
+    async (deleted: Employee) => {
+      setSelectedEmployee((current) =>
+        current?.id === deleted.id ? null : current,
+      )
+      await reload()
     },
     [reload],
   )
@@ -324,6 +344,7 @@ export function OrganizationPage() {
             onAutoOpenEditHandled={() => setOpenSelfEdit(false)}
             onDetailTabChange={setDetailTab}
             onEmployeeUpdated={handleEmployeeUpdated}
+            onEmployeeDeleted={handleEmployeeDeleted}
           />
         </div>
 

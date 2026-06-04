@@ -17,6 +17,7 @@ from app.application.kanban_access import (
 )
 from app.application.kanban_task_options import (
     apply_kanban_tasks_to_file_manager_state,
+    load_kanban_projects,
     resolve_kanban_card_title,
     resolve_kanban_task_name,
 )
@@ -96,10 +97,14 @@ def files_manager(
     kanban: KanbanBoardService = Depends(get_kanban_service),
     access: KanbanAccessContext = Depends(get_kanban_access_context),
 ):
-    allowed = gather_accessible_task_ids(kanban, region_id, access)
+    # 칸반 프로젝트 트리를 한 번만 로드해 권한 필터·업무명 동기화가 공유한다.
+    projects = load_kanban_projects(kanban, region_id, access=access)
+    allowed = gather_accessible_task_ids(
+        kanban, region_id, access, projects=projects
+    )
     state = service.get_file_manager_state(region_id, allowed_task_ids=allowed)
     return apply_kanban_tasks_to_file_manager_state(
-        state, kanban, region_id, access=access
+        state, kanban, region_id, access=access, projects=projects
     )
 
 
@@ -111,13 +116,16 @@ def save_files_manager(
     kanban: KanbanBoardService = Depends(get_kanban_service),
     access: KanbanAccessContext = Depends(get_kanban_access_context),
 ):
-    allowed = gather_accessible_task_ids(kanban, region_id, access)
+    projects = load_kanban_projects(kanban, region_id, access=access)
+    allowed = gather_accessible_task_ids(
+        kanban, region_id, access, projects=projects
+    )
     incoming = body.get("files")
     if allowed is not None and isinstance(incoming, list):
         assert_files_payload_allowed(incoming, allowed)
     state = service.save_files_manager_state(region_id, body)
     return apply_kanban_tasks_to_file_manager_state(
-        state, kanban, region_id, access=access
+        state, kanban, region_id, access=access, projects=projects
     )
 
 
