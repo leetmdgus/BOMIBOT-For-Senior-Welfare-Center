@@ -5,7 +5,6 @@ from app.interfaces.api.v1 import (
     auth,
     automation,
     chat,
-    collaboration_ws,
     dashboard,
     employees,
     google_auth,
@@ -17,7 +16,6 @@ from app.interfaces.api.v1 import (
 )
 
 api_router = APIRouter()
-api_router.include_router(collaboration_ws.router)
 api_router.include_router(auth.router)
 api_router.include_router(google_auth.router)
 api_router.include_router(dashboard.router)
