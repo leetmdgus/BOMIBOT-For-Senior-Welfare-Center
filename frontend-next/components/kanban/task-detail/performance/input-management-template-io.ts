@@ -17,13 +17,15 @@ import { getPlanFundingEntries } from "./performance-funding.utils"
 export const TEMPLATE_FUNDING_COLUMNS: {
   header: string
   source: PerformanceFundingSource
+  /** 업로드 시 허용하는 구(舊) 헤더 별칭 */
+  aliases?: string[]
 }[] = [
   { header: "경상보조금", source: "경" },
   { header: "기타보조금", source: "기" },
   { header: "지정후원금", source: "지" },
   { header: "비지정후원금", source: "비" },
-  { header: "자부담", source: "법" },
-  { header: "사업수입", source: "사" },
+  { header: "자부담", source: "법", aliases: ["법인전입금"] },
+  { header: "사업수익", source: "사", aliases: ["사업수입"] },
   { header: "잡수입", source: "잡" },
 ]
 
@@ -33,7 +35,7 @@ export const TEMPLATE_HEADERS: string[] = [
   "월",
   "계획인원(명)",
   "계획횟수(회)",
-  "단비",
+  "회당",
   ...TEMPLATE_FUNDING_COLUMNS.map((column) => column.header),
   "내용",
   "메모",
@@ -99,7 +101,7 @@ export function rowsToTemplateRecords(rows: PerformanceRow[]): Json[] {
       월: monthToNumber(row.month),
       "계획인원(명)": row.planPeople,
       "계획횟수(회)": row.planCount,
-      단비: "",
+      회당: "",
     }
 
     for (const column of TEMPLATE_FUNDING_COLUMNS) {
@@ -133,7 +135,9 @@ export function templateRecordsToRows(
 
       const planFunding: PerformanceFundingEntry[] = []
       for (const column of TEMPLATE_FUNDING_COLUMNS) {
-        const amount = toNumber(pick(item, column.header))
+        const amount = toNumber(
+          pick(item, column.header, ...(column.aliases ?? [])),
+        )
         if (amount > 0) planFunding.push({ source: column.source, amount })
       }
       const planBudget =
