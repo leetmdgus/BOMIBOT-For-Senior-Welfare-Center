@@ -64,6 +64,11 @@ import { formatKstDateTime } from "@/lib/datetime-kst"
 import { usePerformance } from "./performance-provider"
 import { InputManagementExcelGrid } from "./input-management-excel-grid"
 import {
+  TEMPLATE_HEADERS,
+  rowsToTemplateRecords,
+  templateRecordsToRows,
+} from "./input-management-template-io"
+import {
   cloneRowForClipboard,
   isEditableTarget,
   rowFromClipboardEntry,
@@ -213,10 +218,21 @@ export function InputManagementTab() {
       })
   }, [])
 
-  const subProjects = useMemo(
-    () => ["선택", ...projectItems.map((item) => item.label)],
-    [projectItems],
-  )
+  // 세목(세부사업명) 자동완성 — 세세목과 동일하게 등록분 + 표에 입력된 값을 합친다.
+  const subProjectSuggestions = useMemo(() => {
+    const fromRows = rows
+      .map((row) => row.subProject.trim())
+      .filter(
+        (value) => value && value !== "선택" && value !== "—" && value !== "--",
+      )
+
+    return [
+      ...new Set([
+        ...projectItems.map((item) => item.label).filter(Boolean),
+        ...fromRows,
+      ]),
+    ]
+  }, [rows, projectItems])
 
   const detailCategorySuggestions = useMemo(() => {
     const fromRows = rows
@@ -548,24 +564,21 @@ export function InputManagementTab() {
   ])
 
   const exportExcel = () => {
-    const sheet = XLSX.utils.json_to_sheet(
-      sourceRows.map((row) => ({
-        세부사업명: row.subProject,
-        상세분류: row.detailCategory,
-        월: row.month,
-        계획인원: row.planPeople,
-        계획횟수: row.planCount,
-        계획예산: row.planBudget,
-        실적인원: row.actualPeople,
-        실적횟수: row.actualCount,
-        실적지출: row.actualExpense,
-        내용: row.content,
-      })),
-    )
-
-    const book = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(book, sheet, "계획실적")
-    XLSX.writeFile(book, "계획실적_입력관리.xlsx")
+    // 업로드 템플릿과 동일한 컬럼 형식(재원 항목 분리)으로 CSV 다운로드.
+    // 한글이 엑셀에서 깨지지 않도록 UTF-8 BOM 을 붙인다.
+    const sheet = XLSX.utils.json_to_sheet(rowsToTemplateRecords(sourceRows), {
+      header: TEMPLATE_HEADERS,
+    })
+    const csv = XLSX.utils.sheet_to_csv(sheet)
+    const blob = new Blob(["﻿" + csv], {
+      type: "text/csv;charset=utf-8;",
+    })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement("a")
+    link.href = url
+    link.download = "계획실적_입력관리.csv"
+    link.click()
+    URL.revokeObjectURL(url)
   }
 
   const importExcel = async (
@@ -579,20 +592,8 @@ export function InputManagementTab() {
     const sheet = workbook.Sheets[workbook.SheetNames[0]]
     const json = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet)
 
-    const importedRows: RowData[] = json.map((item) => ({
-      id: createId(),
-      selected: false,
-      subProject: String(item["세부사업명"] ?? "선택"),
-      detailCategory: String(item["상세분류"] ?? "—"),
-      month: String(item["월"] ?? "1월"),
-      planPeople: Number(item["계획인원"] ?? 0),
-      planCount: Number(item["계획횟수"] ?? 0),
-      planBudget: Number(item["계획예산"] ?? 0),
-      actualPeople: Number(item["실적인원"] ?? 0),
-      actualCount: Number(item["실적횟수"] ?? 0),
-      actualExpense: Number(item["실적지출"] ?? 0),
-      content: String(item["내용"] ?? ""),
-    }))
+    // 템플릿(신 양식: 재원 컬럼 분리) 및 구 양식(계획예산 단일) 모두 허용.
+    const importedRows = templateRecordsToRows(json, createId)
 
     setRows((prev) => [...prev, ...importedRows])
     event.target.value = ""
@@ -1134,9 +1135,7 @@ export function InputManagementTab() {
             hasRowSelection={selectedDisplayedCount > 0}
             readOnly={isViewingSnapshot}
             enableRowReorder={!isRowOrderLocked && !isViewingSnapshot}
-            subProjectSuggestions={subProjects.filter(
-              (item) => item !== "선택",
-            )}
+            subProjectSuggestions={subProjectSuggestions}
             detailCategorySuggestions={detailCategorySuggestions}
           />
         </table>

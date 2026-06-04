@@ -57,6 +57,8 @@ interface TaskModalProps {
   defaultProjectName?: string
   lockProjectSelect?: boolean
   year?: string
+  /** 업무 추가 후 모달을 닫지 않고 폼만 초기화해 연속 입력 (사업관리 업무 추가) */
+  keepOpenOnSubmit?: boolean
   onSubmit?: (task: TaskFormData) => void | Promise<void>
   onDelete?: () => void | Promise<void>
 }
@@ -96,10 +98,12 @@ export function TaskModal({
   defaultProjectName,
   lockProjectSelect = false,
   year = getCurrentYearString(),
+  keepOpenOnSubmit = false,
   onSubmit,
   onDelete,
 }: TaskModalProps) {
   const [formData, setFormData] = useState<TaskFormData>(initialFormData)
+  const titleInputRef = useRef<HTMLInputElement>(null)
   const [showAssigneeList, setShowAssigneeList] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -327,6 +331,27 @@ export function TaskModal({
     try {
       setIsSubmitting(true)
       await onSubmit?.(payload)
+
+      // 연속 입력 모드: 모달을 닫지 않고 폼만 비워 다음 업무를 바로 추가
+      if (keepOpenOnSubmit && !isNewProjectForm && mode === "create") {
+        toast({
+          title: "업무가 추가되었습니다",
+          description: "계속 입력할 수 있습니다. 끝나면 닫기를 누르세요.",
+        })
+        setFormData((prev) => ({
+          ...initialFormData,
+          projectId: prev.projectId,
+          categoryId: prev.categoryId,
+          projectName: prev.projectName,
+          projectImage: prev.projectImage,
+          assignees: currentUserStaff ? [currentUserStaff] : [],
+        }))
+        setSearchQuery("")
+        setIsSubmitting(false)
+        requestAnimationFrame(() => titleInputRef.current?.focus())
+        return
+      }
+
       handleClose()
     } catch (error) {
       console.error("저장 실패:", error)
@@ -532,6 +557,7 @@ export function TaskModal({
             </label>
 
             <Input
+              ref={titleInputRef}
               placeholder="세부사업명을 입력하세요"
               value={formData.title}
               disabled={isSubmitting}
@@ -723,8 +749,22 @@ export function TaskModal({
                   ? "수정 완료"
                   : isNewProjectForm
                     ? "사업 등록"
-                    : "업무 추가"}
+                    : keepOpenOnSubmit
+                      ? "추가하고 계속"
+                      : "업무 추가"}
             </Button>
+
+            {mode === "create" && keepOpenOnSubmit && !isNewProjectForm && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleClose}
+                disabled={isSubmitting}
+                className="h-12 w-32"
+              >
+                닫기
+              </Button>
+            )}
           </div>
         </div>
       </DialogContent>

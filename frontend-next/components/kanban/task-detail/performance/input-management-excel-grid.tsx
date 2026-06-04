@@ -76,6 +76,20 @@ export function InputManagementExcelGrid({
     setActiveCell(range.end)
   }, [])
 
+  /** 엑셀처럼 이동한 셀의 입력칸으로 포커스를 옮겨 바로 타이핑할 수 있게 한다. */
+  const focusCellInput = useCallback((rowIndex: number, colIndex: number) => {
+    const cell = tableRef.current?.querySelector<HTMLElement>(
+      `[data-grid-row="${rowIndex}"][data-grid-col="${colIndex}"]`,
+    )
+    const field = cell?.querySelector<HTMLInputElement | HTMLTextAreaElement>(
+      "input, textarea",
+    )
+    if (field) {
+      field.focus()
+      field.select?.()
+    }
+  }, [])
+
   const handleCellMouseDown = (
     event: React.MouseEvent,
     position: CellPosition
@@ -222,7 +236,7 @@ export function InputManagementExcelGrid({
 
     handleCopy(event)
 
-    const moveActive = (next: CellPosition) => {
+    const moveActive = (next: CellPosition, focus = false) => {
       const clamped = {
         rowIndex: Math.max(0, Math.min(rows.length - 1, next.rowIndex)),
         colIndex: Math.max(
@@ -241,6 +255,11 @@ export function InputManagementExcelGrid({
 
       setActiveCell(clamped)
       setSelection({ start: clamped, end: clamped })
+
+      // 엔터/탭 이동 시 다음 셀 입력칸으로 포커스 이동 (엑셀 동작)
+      if (focus) {
+        focusCellInput(clamped.rowIndex, clamped.colIndex)
+      }
     }
 
     switch (event.key) {
@@ -266,19 +285,31 @@ export function InputManagementExcelGrid({
         })
         break
       case "ArrowRight":
-      case "Tab":
         event.preventDefault()
         moveActive({
           rowIndex: activeCell.rowIndex,
           colIndex: activeCell.colIndex + 1,
         })
         break
+      case "Tab":
+        event.preventDefault()
+        moveActive(
+          {
+            rowIndex: activeCell.rowIndex,
+            colIndex: activeCell.colIndex + 1,
+          },
+          true,
+        )
+        break
       case "Enter":
         event.preventDefault()
-        moveActive({
-          rowIndex: activeCell.rowIndex + 1,
-          colIndex: activeCell.colIndex,
-        })
+        moveActive(
+          {
+            rowIndex: activeCell.rowIndex + 1,
+            colIndex: activeCell.colIndex,
+          },
+          true,
+        )
         break
       default:
         break

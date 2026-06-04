@@ -651,20 +651,15 @@ export function ProjectSection({
         defaultCategoryId={selectedCategoryId ?? defaultCategoryId}
         defaultProjectName={projectTitle}
         lockProjectSelect
+        keepOpenOnSubmit
         onSubmit={async (data) => {
           const targetCategoryId = selectedCategoryId ?? defaultCategoryId
 
           if (!targetCategoryId) return
 
-          try {
-            await onCreateTask(project.id, targetCategoryId, data)
-
-            setTaskModalOpen(false)
-            setSelectedCategoryId(null)
-            setSelectedColumnType("실적관리")
-          } catch (error) {
-            console.error("업무 추가 실패:", error)
-          }
+          // 모달이 연속 입력(keepOpenOnSubmit)을 관리하므로 여기서 닫지 않는다.
+          // 실패 시 에러를 모달로 전파해 폼이 초기화되지 않도록 한다.
+          await onCreateTask(project.id, targetCategoryId, data)
         }}
       />
     </>

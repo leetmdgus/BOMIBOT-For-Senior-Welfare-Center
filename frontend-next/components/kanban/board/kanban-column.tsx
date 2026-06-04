@@ -89,6 +89,18 @@ export function KanbanColumn({
           <h3 className="font-medium text-foreground">{title}</h3>
           <span className="text-sm text-muted-foreground">+{count}</span>
         </div>
+
+        {onAddTask && (
+          <button
+            type="button"
+            onClick={() => onAddTask(id, resolvedColumnType)}
+            className="flex size-7 cursor-pointer items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-primary"
+            aria-label="업무 추가"
+            title="업무 추가"
+          >
+            <Plus className="size-4" />
+          </button>
+        )}
       </div>
 
       <div
@@ -138,15 +150,6 @@ export function KanbanColumn({
           </div>
         )}
       </div>
-
-      <button
-        type="button"
-        onClick={() => onAddTask?.(id, resolvedColumnType)}
-        className="mt-3 flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border py-3 text-sm text-muted-foreground transition-colors hover:border-primary hover:text-primary"
-      >
-        <Plus className="size-4" />
-        <span>업무 추가</span>
-      </button>
     </div>
   )
 }
