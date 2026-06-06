@@ -586,6 +586,57 @@ def _require_known_region(region_id: str) -> str:
     return region_id
 
 
+def _find_survey_region(service: RegionStoreService, survey_id: str) -> str:
+    """region 없이 survey_id만으로 설문이 속한 지역을 탐색(알려진 지역만)."""
+    for region_id in REGION_IDS:
+        try:
+            service.get_survey_detail(region_id, survey_id)
+            return region_id
+        except HTTPException:
+            continue
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND, detail="설문을 찾을 수 없습니다."
+    )
+
+
+def _public_survey_detail_or_404(
+    service: RegionStoreService, region_id: str, survey_id: str
+) -> dict:
+    """게시(active)·응답 허용 상태만 노출(초안 보호)."""
+    detail = service.get_survey_detail(region_id, survey_id)
+    basic = detail.get("basicInfo") or {}
+    settings = detail.get("settings") or {}
+    if basic.get("status") != "active" or settings.get("acceptResponses") is False:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="현재 응답할 수 없는 설문입니다.",
+        )
+    return detail
+
+
+# region 없는 링크(예: 주소창 URL 공유)도 응답 가능하도록 survey_id만으로 해석.
+# 주의: 더 구체적인 by-id 라우트를 {region_id} 라우트보다 먼저 선언해야 한다(선매칭).
+@router.get("/public/surveys/by-id/{survey_id}")
+def public_survey_detail_by_id(
+    survey_id: str,
+    service: RegionStoreService = Depends(get_region_store_service),
+):
+    """region 없이 survey_id만으로 공개 응답용 설문 상세를 조회."""
+    region_id = _find_survey_region(service, survey_id)
+    return _public_survey_detail_or_404(service, region_id, survey_id)
+
+
+@router.post("/public/surveys/by-id/{survey_id}/responses")
+def public_survey_responses_by_id(
+    survey_id: str,
+    body: dict,
+    service: RegionStoreService = Depends(get_region_store_service),
+):
+    """region 없이 survey_id만으로 공개 응답 제출."""
+    region_id = _find_survey_region(service, survey_id)
+    return service.submit_survey_response(region_id, survey_id, body)
+
+
 @router.get("/public/surveys/{region_id}")
 def public_survey_list(
     region_id: str,
@@ -607,15 +658,7 @@ def public_survey_detail(
 ):
     """공개 응답용 설문 상세 — 게시(active)·응답 허용 상태만 노출(초안 보호)."""
     _require_known_region(region_id)
-    detail = service.get_survey_detail(region_id, survey_id)
-    basic = detail.get("basicInfo") or {}
-    settings = detail.get("settings") or {}
-    if basic.get("status") != "active" or settings.get("acceptResponses") is False:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="현재 응답할 수 없는 설문입니다.",
-        )
-    return detail
+    return _public_survey_detail_or_404(service, region_id, survey_id)
 
 
 @router.post("/public/surveys/{region_id}/{survey_id}/responses")

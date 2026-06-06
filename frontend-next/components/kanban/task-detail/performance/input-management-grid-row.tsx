@@ -155,8 +155,8 @@ export function InputManagementGridRow({
             className={cn(
               "relative border border-slate-200 p-0",
               selected && "bg-sky-100/80",
-              // 활성(선택) 셀: 인접 테두리 위에 또렷한 파란 링
-              isActive && "z-10 ring-2 ring-inset ring-sky-600",
+              // 활성(선택) 셀: 셀 박스를 파란색으로 하이라이트 — 파란 배경 + 또렷한 파란 링
+              isActive && "z-10 bg-sky-100 ring-2 ring-inset ring-sky-600",
             )}
             onMouseDown={(event) => handleCellMouseDown(event, position)}
             onDoubleClick={() => {
@@ -168,7 +168,6 @@ export function InputManagementGridRow({
             {isFundingColumn ? (
               <FundingBudgetCell
                 variant={column.key === "planBudget" ? "plan" : "actual"}
-                isActive={isActive}
                 readOnly={readOnly}
                 entries={
                   column.key === "planBudget"
@@ -193,7 +192,6 @@ export function InputManagementGridRow({
                 row={row}
                 columnKey={column.key}
                 type={column.type}
-                isActive={isActive}
                 readOnly={readOnly}
                 suggestions={
                   column.key === "subProject"

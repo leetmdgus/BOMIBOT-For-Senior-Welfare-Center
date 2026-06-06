@@ -2529,13 +2529,7 @@
         ]
       }
     ],
-    "defaultDetailCategories": [
-      "홍보",
-      "프로그램진행",
-      "설문조사",
-      "사후관리상담",
-      "기타"
-    ],
+    "defaultDetailCategories": [],
     "performanceSubProjectChips": []
   },
   "performanceSummary": {

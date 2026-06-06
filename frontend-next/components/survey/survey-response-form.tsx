@@ -8,7 +8,10 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { resolveSurveyTheme } from "@/lib/survey-theme"
 import { cn } from "@/lib/utils"
-import { submitPublicSurveyResponse } from "@/services/survey.service"
+import {
+  submitPublicSurveyResponse,
+  submitPublicSurveyResponseById,
+} from "@/services/survey.service"
 import type {
   SurveyAnswerValue,
   SurveyDetail,
@@ -145,11 +148,10 @@ export function SurveyResponseForm({ detail, regionId }: SurveyResponseFormProps
       }
       // 비로그인(QR) 응답 — 항상 공개 제출 엔드포인트 사용
       // (인증 엔드포인트는 비로그인 시 401 → 로그인 리다이렉트를 유발)
-      const result = await submitPublicSurveyResponse(
-        regionId ?? "",
-        detail.id,
-        payload,
-      )
+      // region이 없는 링크는 survey_id만으로 제출(백엔드가 지역 자동 탐색).
+      const result = regionId
+        ? await submitPublicSurveyResponse(regionId, detail.id, payload)
+        : await submitPublicSurveyResponseById(detail.id, payload)
 
       if (!detail.settings.allowDuplicate && typeof window !== "undefined") {
         localStorage.setItem(`survey-responded-${detail.id}`, result.responseId)

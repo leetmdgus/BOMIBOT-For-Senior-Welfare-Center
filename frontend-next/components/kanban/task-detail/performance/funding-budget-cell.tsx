@@ -31,7 +31,6 @@ import {
 type FundingBudgetCellProps = {
   entries: PerformanceFundingEntry[]
   variant: "plan" | "actual"
-  isActive?: boolean
   readOnly?: boolean
   onChange: (entries: PerformanceFundingEntry[]) => void
 }
@@ -39,7 +38,6 @@ type FundingBudgetCellProps = {
 export function FundingBudgetCell({
   entries,
   variant,
-  isActive,
   readOnly = false,
   onChange,
 }: FundingBudgetCellProps) {
@@ -74,12 +72,7 @@ export function FundingBudgetCell({
 
   if (readOnly) {
     return (
-      <div
-        className={cn(
-          "flex min-h-8 w-full flex-col items-stretch justify-center gap-0.5 px-2 py-1 text-sm text-slate-600",
-          isActive && "bg-white",
-        )}
-      >
+      <div className="flex min-h-8 w-full flex-col items-stretch justify-center gap-0.5 px-2 py-1 text-sm text-slate-600">
         {entries.length === 0 ? (
           <span className="text-center text-xs text-muted-foreground">—</span>
         ) : (
@@ -112,7 +105,6 @@ export function FundingBudgetCell({
           onMouseDown={(event) => event.stopPropagation()}
           className={cn(
             "flex min-h-8 w-full flex-col items-stretch justify-center gap-0.5 px-2 py-1 text-left text-sm outline-none",
-            isActive && "bg-white",
             entries.length === 0 && "text-primary hover:underline",
           )}
         >

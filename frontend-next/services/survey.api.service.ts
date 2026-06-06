@@ -118,3 +118,27 @@ export async function submitPublicSurveyResponse(
     payload,
   )
 }
+
+// ── region 없는 링크(주소창 URL 공유 등) — survey_id만으로 공개 응답 ──
+
+const publicSurveyByIdPath = (id: string, suffix = "") =>
+  resolveApiPath(
+    `/api/public/surveys/by-id/${encodeURIComponent(id)}${suffix}`,
+    `/api/v1/public/surveys/by-id/${encodeURIComponent(id)}${suffix}`,
+  )
+
+export async function getPublicSurveyDetailById(
+  id: string,
+): Promise<SurveyDetail> {
+  return apiClient.get<SurveyDetail>(publicSurveyByIdPath(id))
+}
+
+export async function submitPublicSurveyResponseById(
+  id: string,
+  payload: SubmitSurveyResponsePayload,
+): Promise<SubmitSurveyResponseResult> {
+  return apiClient.post<SubmitSurveyResponseResult>(
+    publicSurveyByIdPath(id, "/responses"),
+    payload,
+  )
+}

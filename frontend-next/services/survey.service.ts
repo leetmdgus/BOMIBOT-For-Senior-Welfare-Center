@@ -34,3 +34,16 @@ export const submitPublicSurveyResponse: typeof apiService.submitPublicSurveyRes
     shouldUseMockApi()
       ? mockService.submitSurveyResponse(id, payload)
       : apiService.submitPublicSurveyResponse(regionId, id, payload)
+
+// ── region 없는 링크 — survey_id만으로 공개 응답(백엔드가 지역 자동 탐색) ──
+export const getPublicSurveyDetailById: typeof apiService.getPublicSurveyDetailById =
+  (id) =>
+    shouldUseMockApi()
+      ? mockService.getSurveyDetail(id)
+      : apiService.getPublicSurveyDetailById(id)
+
+export const submitPublicSurveyResponseById: typeof apiService.submitPublicSurveyResponseById =
+  (id, payload) =>
+    shouldUseMockApi()
+      ? mockService.submitSurveyResponse(id, payload)
+      : apiService.submitPublicSurveyResponseById(id, payload)

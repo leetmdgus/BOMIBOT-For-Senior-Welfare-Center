@@ -5,7 +5,10 @@ import Link from "next/link"
 import { useParams, useSearchParams } from "next/navigation"
 import { ArrowLeft, Loader2 } from "lucide-react"
 
-import { getPublicSurveyDetail } from "@/services/survey.service"
+import {
+  getPublicSurveyDetail,
+  getPublicSurveyDetailById,
+} from "@/services/survey.service"
 import type { SurveyDetail } from "@/services/survey.types"
 import { getClientSession } from "@/lib/auth/session"
 import { BrandLogo } from "@/components/common/brand-logo"
@@ -38,7 +41,10 @@ export function SurveyRespondPage({ id: idFromProps }: { id?: string }) {
       try {
         // 인증 엔드포인트(getSurveyDetail)는 비로그인 시 401 → 로그인 리다이렉트를
         // 유발하므로, 공개 응답 페이지에서는 항상 공개 엔드포인트를 사용한다.
-        const data = await getPublicSurveyDetail(region ?? "", id)
+        // region이 없는 링크(주소창 URL 공유 등)는 survey_id만으로 조회한다.
+        const data = region
+          ? await getPublicSurveyDetail(region, id)
+          : await getPublicSurveyDetailById(id)
         if (!cancelled) setDetail(data)
       } catch (error) {
         console.error("설문 로드 실패:", error)

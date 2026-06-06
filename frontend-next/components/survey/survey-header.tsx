@@ -6,6 +6,7 @@ import { ArrowLeft, Copy, QrCode } from "lucide-react"
 import QRCode from "react-qr-code"
 
 import { Button } from "@/components/ui/button"
+import { getClientSession } from "@/lib/auth/session"
 
 export function SurveyHeader({
   id,
@@ -16,14 +17,15 @@ export function SurveyHeader({
 }) {
   const qrRef = useRef<HTMLDivElement>(null)
 
+  // 응답자에게 공유하는 링크 — 로그인 없이 들어갈 수 있는 공개 응답 페이지로.
+  // region이 있으면 포함하고, 없어도 by-id 공개 조회로 응답 가능.
   const surveyUrl = useMemo(() => {
     if (typeof window === "undefined") return ""
 
-    const returnTo = encodeURIComponent(
-      `${window.location.origin}/kanban/${id}/survey?view=results`,
-    )
+    const regionId = getClientSession()?.regionId
+    const suffix = regionId ? `?region=${encodeURIComponent(regionId)}` : ""
 
-    return `${window.location.origin}/survey/${id}?returnTo=${returnTo}`
+    return `${window.location.origin}/survey/${id}/respond${suffix}`
   }, [id])
 
   const handleCopy = async () => {

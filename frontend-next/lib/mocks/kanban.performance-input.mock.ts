@@ -51,13 +51,8 @@ export const inputManagementRows: PerformanceRow[] = [
   ...summaryRowsToInputRows(performanceSummarySeedRows),
 ]
 
-export const defaultDetailCategories = [
-  "홍보",
-  "프로그램진행",
-  "설문조사",
-  "사후관리상담",
-  "기타",
-]
+// 세세목(상세분류) 기본 등록분 없음 — 필요 시 표에서 직접 입력/추가한다.
+export const defaultDetailCategories: string[] = []
 
 export interface PerformanceSubProjectChip {
   id: number

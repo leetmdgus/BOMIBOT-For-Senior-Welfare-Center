@@ -60,6 +60,15 @@ export function middleware(request: NextRequest) {
   }
 
   if (!session && !pathname.startsWith("/api/")) {
+    // 비로그인 사용자가 설문 관리 URL(/survey/{id})로 들어오면 로그인 대신
+    // 공개 응답 페이지(/survey/{id}/respond)로 보낸다. region 등 쿼리는 보존.
+    const surveyDetailMatch = pathname.match(/^\/survey\/([^/]+)$/)
+    if (surveyDetailMatch && surveyDetailMatch[1] !== "new") {
+      const respondUrl = request.nextUrl.clone()
+      respondUrl.pathname = `/survey/${surveyDetailMatch[1]}/respond`
+      return NextResponse.redirect(respondUrl)
+    }
+
     const loginUrl = request.nextUrl.clone()
     loginUrl.pathname = "/login"
     loginUrl.searchParams.set("from", pathname)

@@ -469,35 +469,8 @@
       ]
     }
   ],
-  "defaultDetailCategories": [
-    "홍보",
-    "프로그램진행",
-    "설문조사",
-    "사후관리상담",
-    "기타"
-  ],
-  "performanceSubProjectChips": [
-    {
-      "id": 1,
-      "label": "신규회원 이용상담",
-      "color": "#8fd3ff"
-    },
-    {
-      "id": 2,
-      "label": "신규회원 가입",
-      "color": "#ffe58f"
-    },
-    {
-      "id": 3,
-      "label": "신규회원 교육",
-      "color": "#ff9c8f"
-    },
-    {
-      "id": 4,
-      "label": "정보제공상담",
-      "color": "#ff9cdf"
-    }
-  ],
+  "defaultDetailCategories": [],
+  "performanceSubProjectChips": [],
   "performanceSummarySeedRows": [
     {
       "id": "1",

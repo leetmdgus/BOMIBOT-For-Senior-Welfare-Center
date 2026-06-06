@@ -70,6 +70,14 @@ __all__ = [
 ]
 
 
+# 데모용으로 미리 정의된 업무(카드)만 초기 실적 행을 시드한다.
+# 신규로 만든 카드(임의 taskId)는 기본 실적 행 없이 빈 표로 시작한다.
+# (프론트엔드 mock bootstrapInputRowsForTask 와 동일한 정책)
+_DEMO_SEED_TASK_IDS = frozenset(
+    {"task1", "task2", "task3", "task4", "task5", "task6"}
+)
+
+
 class RegionStoreService:
     """JSON region store (TaskDetailRepository·PerformanceRepository 계약 충족)."""
 
@@ -1000,6 +1008,10 @@ class RegionStoreService:
         task_id: str,
         task_title: str | None,
     ) -> list[dict]:
+        # 신규 카드는 기본 실적 행 없이 빈 표로 시작 — 데모 업무만 시드한다.
+        if task_id not in _DEMO_SEED_TASK_IDS:
+            return []
+
         title = (task_title or "").strip() or task_id
 
         if task_id == "task5":

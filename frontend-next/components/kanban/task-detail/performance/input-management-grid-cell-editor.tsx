@@ -11,7 +11,6 @@ export function GridCellEditor({
   row,
   columnKey,
   type,
-  isActive,
   readOnly = false,
   suggestions,
   onChange,
@@ -20,7 +19,6 @@ export function GridCellEditor({
   row: PerformanceRow
   columnKey: InputGridColumnKey
   type: "text" | "number"
-  isActive: boolean
   readOnly?: boolean
   suggestions?: string[]
   onChange: (value: string | number) => void
@@ -91,9 +89,7 @@ export function GridCellEditor({
           // 세목/세세목 자동완성(datalist) 입력에 브라우저가 그리는 드롭다운 화살표 제거
           "appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-list-button]:hidden",
           type === "number" ? "text-right tabular-nums" : "text-left",
-          isActive && "bg-white",
-          // 엑셀 커서가 올라간(활성) 셀: 파란색 볼드 강조
-          isActive && "font-bold text-sky-600",
+          // 활성 셀 강조는 셀 박스(배경+링)로만 표현 — 글자는 일반 색 유지
           readOnly && "cursor-default text-slate-600",
         )}
       />
