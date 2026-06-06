@@ -155,8 +155,8 @@ export function InputManagementGridRow({
             className={cn(
               "relative border border-slate-200 p-0",
               selected && "bg-sky-100/80",
-              // 활성(선택) 셀: 셀 박스를 파란색으로 하이라이트 — 파란 배경 + 또렷한 파란 링
-              isActive && "z-10 bg-sky-100 ring-2 ring-inset ring-sky-600",
+              // 활성(선택) 셀: 셀 박스를 파란색으로 또렷이 하이라이트 — 진한 파란 배경 + 파란 링
+              isActive && "z-10 bg-sky-200 ring-2 ring-inset ring-sky-600",
             )}
             onMouseDown={(event) => handleCellMouseDown(event, position)}
             onDoubleClick={() => {
