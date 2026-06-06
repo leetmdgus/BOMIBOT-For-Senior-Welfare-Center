@@ -22,10 +22,6 @@ const tabs = [
     label: "사업평가",
     href: "evaluation",
   },
-  {
-    label: "양식 자동작성",
-    href: "template",
-  },
 ]
 
 export function TaskDetailTabs({

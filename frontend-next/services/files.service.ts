@@ -22,3 +22,5 @@ export const downloadFileToDisk =
   "downloadFileToDisk" in filesService ? filesService.downloadFileToDisk : undefined
 export const exportFilesArchive =
   "exportFilesArchive" in filesService ? filesService.exportFilesArchive : undefined
+export const renderFileSvg = filesService.renderFileSvg
+export type { FileSvgRenderResult } from "./files.api.service"

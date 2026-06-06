@@ -10,6 +10,11 @@ from app.application.files.document_preview import (
 )
 from app.application.http.content_disposition import attachment_content_disposition
 from app.application.hwpx.hwpx_package import is_hwpx_filename
+from app.application.hwpx.rhwp_render import (
+    RhwpNotAvailableError,
+    RhwpRenderError,
+    render_to_svg_pages,
+)
 from app.application.kanban_access import (
     KanbanAccessContext,
     assert_files_payload_allowed,
@@ -291,6 +296,57 @@ def preview_file_content(
     raw = path.read_bytes()
     html_fragment = render_document_preview_fragment(raw, filename)
     return {"html": html_fragment, "filename": filename}
+
+
+@router.get("/files/{file_id}/render-svg")
+def render_file_svg(
+    file_id: str,
+    font_mode: str = Query(default=""),
+    region_id: str = Depends(require_region_id),
+    service: RegionStoreService = Depends(get_region_store_service),
+    kanban: KanbanBoardService = Depends(get_kanban_service),
+    access: KanbanAccessContext = Depends(get_kanban_access_context),
+) -> dict[str, Any]:
+    """HWP/HWPX 파일을 rhwp로 페이지별 SVG로 정확 렌더링한다.
+
+    기존 `/preview`(HTML 근사) 대비 한글 원본과 거의 동일한 레이아웃/표/폰트를 제공한다.
+    """
+    allowed = gather_accessible_task_ids(kanban, region_id, access)
+    path, filename, _ = service.get_download_file(
+        region_id,
+        file_id,
+        allowed_task_ids=allowed,
+    )
+
+    lower = filename.lower()
+    if lower.endswith(".hwpx"):
+        suffix = ".hwpx"
+    elif lower.endswith(".hwp"):
+        suffix = ".hwp"
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="HWP/HWPX 파일만 정확 렌더링을 지원합니다.",
+        )
+
+    raw = path.read_bytes()
+    try:
+        pages = render_to_svg_pages(raw, suffix=suffix, font_mode=font_mode)
+    except RhwpNotAvailableError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(exc)
+        ) from exc
+    except RhwpRenderError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)
+        ) from exc
+
+    return {
+        "format": suffix.lstrip("."),
+        "sourceFilename": filename,
+        "pageCount": len(pages),
+        "pages": pages,
+    }
 
 
 @router.get("/files/{file_id}/export")

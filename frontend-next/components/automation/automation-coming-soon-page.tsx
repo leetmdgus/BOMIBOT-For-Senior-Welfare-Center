@@ -1,46 +1,44 @@
 "use client"
 
-import Link from "next/link"
-import { ArrowLeft, Zap } from "lucide-react"
+import { Sparkles, Zap } from "lucide-react"
 
 import { Sidebar } from "@/components/common/sidebar"
 import { Header } from "@/components/common/header"
-import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { TemplateWorkspace } from "@/components/kanban/task-detail/template-doc/template-workspace"
 
 export function AutomationComingSoonPage() {
   return (
     <div className="flex min-h-screen bg-background">
       <Sidebar />
 
-      <main className="flex-1 overflow-auto">
+      <main className="flex min-h-screen flex-1 flex-col overflow-hidden">
         <Header />
 
-        <div className="flex min-h-[calc(100vh-60px)] flex-1 flex-col items-center justify-center p-6">
-          <div className="flex max-w-md flex-col items-center text-center">
-            <div className="mb-6 flex size-24 items-center justify-center rounded-full bg-primary/10">
-              <Zap className="size-12 text-primary" />
+        <div className="flex flex-1 flex-col gap-4 overflow-auto p-4 lg:p-6">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <div className="mb-1 flex items-center gap-2 text-primary">
+                <Zap className="size-5" />
+                <span className="text-sm font-medium">문서자동화</span>
+              </div>
+              <h1 className="text-2xl font-bold text-foreground">
+                양식 업로드 · 빈칸 채우기
+              </h1>
+              <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+                한글 양식(.hwpx)을 업로드해 빈 칸을 채우고 다시 내려받을 수 있습니다.
+                증빙문서 자동분석 등 나머지 자동화 기능은 준비 중입니다.
+              </p>
             </div>
 
-            <h1 className="mb-3 text-3xl font-bold text-foreground">
-              Coming Soon
-            </h1>
-
-            <p className="mb-2 text-lg text-muted-foreground">
-              문서자동화 기능이 곧 출시됩니다
-            </p>
-
-            <p className="mb-8 text-sm text-muted-foreground">
-              자동화된 문서 생성, 알림 발송, 템플릿 관리 등 다양한 기능을
-              준비하고 있습니다. 조금만 기다려 주세요!
-            </p>
-
-            <Link href="/dashboard">
-              <Button variant="outline" className="gap-2">
-                <ArrowLeft className="size-4" />
-                대시보드로 돌아가기
-              </Button>
-            </Link>
+            <Badge variant="secondary" className="gap-1.5 whitespace-nowrap">
+              <Sparkles className="size-3.5" />
+              자동분석 Coming Soon
+            </Badge>
           </div>
+
+          {/* 툴바(양식 업로드 · 이전 양식 불러오기 · HWPX 내려받기) + 편집기 — 유지 */}
+          <TemplateWorkspace />
         </div>
       </main>
     </div>

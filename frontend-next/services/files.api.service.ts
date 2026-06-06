@@ -131,6 +131,28 @@ export async function downloadFileBlob(fileId: string): Promise<Blob> {
   return blob
 }
 
+export type FileSvgRenderResult = {
+  format: string
+  sourceFilename: string
+  pageCount: number
+  /** 페이지 순서대로 정렬된 SVG 문자열 (rhwp 정확 렌더) */
+  pages: string[]
+}
+
+/** HWP/HWPX 파일(id)을 rhwp로 페이지별 SVG로 정확 렌더링한다. */
+export async function renderFileSvg(
+  fileId: string,
+  fontMode = "",
+): Promise<FileSvgRenderResult> {
+  const query = fontMode ? `?font_mode=${encodeURIComponent(fontMode)}` : ""
+  return apiClient.get<FileSvgRenderResult>(
+    resolveApiPath(
+      `/api/files/${encodeURIComponent(fileId)}/render-svg${query}`,
+      `/api/v1/files/${encodeURIComponent(fileId)}/render-svg${query}`,
+    ),
+  )
+}
+
 export async function downloadFileToDisk(
   fileId: string,
   fallbackName: string,

@@ -16,6 +16,11 @@ import type { FileManagerState, FilesListResponse } from "./files.types"
 
 const mockBlobByFileId = new Map<string, Blob>()
 
+export async function renderFileSvg(): Promise<never> {
+  // mock 모드(백엔드 rhwp 없음) → 실패시키면 미리보기가 office HTML 경로로 폴백
+  throw new Error("rhwp 정확 렌더는 백엔드 연결이 필요합니다.")
+}
+
 export async function getFileManagerState(
   regionId?: RegionId,
 ): Promise<FileManagerState> {

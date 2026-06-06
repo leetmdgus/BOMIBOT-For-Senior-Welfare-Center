@@ -34,6 +34,7 @@ export function shouldPreviewInDialog(
 export type FilePreviewKind =
   | "seed"
   | "missing"
+  | "hwp"
   | "office"
   | "image"
   | "pdf"
@@ -47,6 +48,12 @@ export function getFilePreviewKind(
   >,
 ): FilePreviewKind {
   if (item.contentMissing) return "missing"
+
+  // HWP/HWPX는 rhwp 정확 렌더(SVG) 우선 (.hwpx는 실패 시 office HTML로 폴백)
+  if (/\.(hwp|hwpx)$/i.test(item.name)) {
+    if (item.hasContent === false && !shouldUseMockApi()) return "seed"
+    return "hwp"
+  }
 
   if (isOfficePreviewableFile(item.name, item.type, item.mimeType)) {
     if (item.hasContent === false && !shouldUseMockApi()) return "seed"

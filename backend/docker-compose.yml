@@ -1,5 +1,5 @@
 # 로컬 / 서버 공통 — API + PostgreSQL
-# 사용: docker compose up -d --build --remove-orphans
+# 사용: docker compose up -d --build // --remove-orphans
 # API: http://127.0.0.1:9001  |  DB 호스트 포트 기본 5433 (5432 충돌 방지)
 
 services:

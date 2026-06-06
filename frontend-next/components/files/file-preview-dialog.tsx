@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { OfficePreviewContent } from "@/components/files/office-preview-content"
+import { HwpxSvgPages } from "@/components/hwpx/HwpxSvgPages"
 import type { FileItem } from "@/components/files/file-types"
 import {
   getFilePreviewKind,
@@ -23,7 +24,11 @@ import {
   loadOfficePreviewHtml,
   wrapOfficePreviewDocument,
 } from "@/lib/files/office-preview"
-import { downloadFileBlob, downloadFileToDisk } from "@/services/files.service"
+import {
+  downloadFileBlob,
+  downloadFileToDisk,
+  renderFileSvg,
+} from "@/services/files.service"
 
 type FilePreviewDialogProps = {
   item: FileItem | null
@@ -47,6 +52,8 @@ type PreviewState = {
   html: string | null
   blobUrl: string | null
   text: string | null
+  /** rhwp 정확 렌더 페이지 SVG (kind === "hwp") */
+  svgPages: string[] | null
   error: string | null
 }
 
@@ -55,6 +62,7 @@ const EMPTY_PREVIEW: PreviewState = {
   html: null,
   blobUrl: null,
   text: null,
+  svgPages: null,
   error: null,
 }
 
@@ -101,6 +109,56 @@ export function FilePreviewDialog({
 
     void (async () => {
       try {
+        if (kind === "hwp") {
+          // rhwp 정확 렌더(SVG). 실패 시 .hwpx는 office HTML로 폴백.
+          try {
+            const result = await renderFileSvg(item.id)
+            if (cancelled) return
+            setPreview({
+              kind,
+              html: null,
+              blobUrl: null,
+              text: null,
+              svgPages: result.pages,
+              error: null,
+            })
+            return
+          } catch (rhwpErr) {
+            if (cancelled) return
+            if (/\.hwpx$/i.test(item.name)) {
+              const html = await loadOfficePreviewHtml(item.id, {
+                name: item.name,
+                hasContent: item.hasContent,
+                contentMissing: item.contentMissing,
+              })
+              if (cancelled) return
+              setPreview({
+                kind: "office",
+                html,
+                blobUrl: null,
+                text: null,
+                svgPages: null,
+                error: null,
+              })
+              return
+            }
+            // .hwp는 office 폴백이 없음 → rhwp 필요 안내
+            const message =
+              rhwpErr instanceof Error
+                ? rhwpErr.message
+                : "미리보기를 불러오지 못했습니다."
+            setPreview({
+              kind,
+              html: null,
+              blobUrl: null,
+              text: null,
+              svgPages: null,
+              error: `${message} (.hwp 미리보기에는 rhwp 백엔드가 필요합니다)`,
+            })
+            return
+          }
+        }
+
         if (kind === "office") {
           const html = await loadOfficePreviewHtml(item.id, {
             name: item.name,
@@ -108,7 +166,14 @@ export function FilePreviewDialog({
             contentMissing: item.contentMissing,
           })
           if (cancelled) return
-          setPreview({ kind, html, blobUrl: null, text: null, error: null })
+          setPreview({
+            kind,
+            html,
+            blobUrl: null,
+            text: null,
+            svgPages: null,
+            error: null,
+          })
           return
         }
 
@@ -121,7 +186,14 @@ export function FilePreviewDialog({
         if (kind === "text") {
           const text = await blob.text()
           if (cancelled) return
-          setPreview({ kind, html: null, blobUrl: null, text, error: null })
+          setPreview({
+            kind,
+            html: null,
+            blobUrl: null,
+            text,
+            svgPages: null,
+            error: null,
+          })
           return
         }
 
@@ -136,6 +208,7 @@ export function FilePreviewDialog({
           html: null,
           blobUrl: blobUrlRef.current,
           text: null,
+          svgPages: null,
           error: null,
         })
       } catch (err) {
@@ -145,6 +218,7 @@ export function FilePreviewDialog({
           html: null,
           blobUrl: null,
           text: null,
+          svgPages: null,
           error:
             err instanceof Error ? err.message : "미리보기를 불러오지 못했습니다.",
         })
@@ -271,6 +345,9 @@ export function FilePreviewDialog({
                 </Button>
               ) : null}
             </div>
+          ) : preview.svgPages ? (
+            // rhwp 정확 렌더 (HWP/HWPX) — 한글 원본과 거의 동일한 페이지 SVG
+            <HwpxSvgPages pages={preview.svgPages} />
           ) : preview.html ? (
             <A4Page>
               <OfficePreviewContent

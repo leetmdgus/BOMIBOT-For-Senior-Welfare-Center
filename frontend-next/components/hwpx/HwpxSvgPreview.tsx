@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from "react"
 import { Loader2 } from "lucide-react"
 
 import { HwpxRenderer } from "@/components/hwpx/HwpxRenderer"
+import { HwpxSvgPages } from "@/components/hwpx/HwpxSvgPages"
 import { ApiError } from "@/lib/api-client"
 import type { HwpxFrontendDocument } from "@/lib/hwpx/frontend-render-types"
 import { renderHwpxSvg } from "@/services/automation.service"
@@ -88,27 +89,17 @@ export function HwpxSvgPreview({ file, doc, debounceMs = 500 }: HwpxSvgPreviewPr
     )
   }
 
-  return (
-    <div className="hwpx-svg-root">
-      {loading ? (
-        <div className="hwpx-svg-overlay">
-          <Loader2 className="size-4 animate-spin" />
-          갱신 중…
-        </div>
-      ) : error ? (
-        // 재렌더 실패(직전 페이지는 유지) — 최신 편집이 반영되지 않았음을 알림
-        <div className="hwpx-svg-overlay hwpx-svg-overlay-error">
-          최신 편집 반영 실패 · 이전 미리보기 표시 중
-        </div>
-      ) : null}
-      {pages.map((svg, index) => (
-        <div
-          key={index}
-          className="hwpx-svg-page"
-          // rhwp가 생성한 신뢰된 SVG(<text>/<rect>/<path>만, <script> 없음)
-          dangerouslySetInnerHTML={{ __html: svg }}
-        />
-      ))}
+  const overlay = loading ? (
+    <div className="hwpx-svg-overlay">
+      <Loader2 className="size-4 animate-spin" />
+      갱신 중…
     </div>
-  )
+  ) : error ? (
+    // 재렌더 실패(직전 페이지는 유지) — 최신 편집이 반영되지 않았음을 알림
+    <div className="hwpx-svg-overlay hwpx-svg-overlay-error">
+      최신 편집 반영 실패 · 이전 미리보기 표시 중
+    </div>
+  ) : null
+
+  return <HwpxSvgPages pages={pages} overlay={overlay} />
 }
