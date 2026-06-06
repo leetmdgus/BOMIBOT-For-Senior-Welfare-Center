@@ -75,6 +75,7 @@ export async function downloadBusinessPlanHwpx(
   taskId: string,
   formData: BusinessPlanFormData,
   sections: BusinessPlanSection[],
+  templateId?: string | null,
 ): Promise<void> {
   const exportSections = documentSectionsForHwpx(
     mergeFlushedDocumentSections(sections),
@@ -84,6 +85,7 @@ export async function downloadBusinessPlanHwpx(
     await downloadFromApi(taskId, {
       formData,
       sections: exportSections,
+      templateId,
     })
     return
   }

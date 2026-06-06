@@ -19,6 +19,7 @@ export async function fetchBusinessPlanHwpxPreviewHtml(
   payload: {
     formData: BusinessPlanFormData
     sections: BusinessPlanSection[]
+    templateId?: string | null
   },
 ): Promise<string> {
   const sections = documentSectionsForHwpxExport(
@@ -39,13 +40,17 @@ export async function fetchBusinessPlanHwpxPreviewHtml(
       taskId,
       formData: payload.formData,
       sections,
+      ...(payload.templateId ? { templateId: payload.templateId } : {}),
     }),
   })
 }
 
 export async function fetchBusinessEvaluationHwpxPreviewHtml(
   taskId: string,
-  payload: { evaluation: SaveBusinessEvaluationPayload | BusinessEvaluationData },
+  payload: {
+    evaluation: SaveBusinessEvaluationPayload | BusinessEvaluationData
+    templateId?: string | null
+  },
 ): Promise<string> {
   const evaluation = {
     ...payload.evaluation,
@@ -67,6 +72,7 @@ export async function fetchBusinessEvaluationHwpxPreviewHtml(
     body: JSON.stringify({
       taskId,
       evaluation,
+      ...(payload.templateId ? { templateId: payload.templateId } : {}),
     }),
   })
 }

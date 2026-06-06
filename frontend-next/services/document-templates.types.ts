@@ -103,11 +103,15 @@ export interface DocumentTemplateStats {
   emptyCellCount: number
 }
 
+export type DocumentTemplateKind = "plan" | "evaluation"
+
 export interface DocumentTemplateMeta {
   id: string
   name: string
   sourceFilename: string
   format: "hwpx" | "hwp"
+  /** 양식 종류 — 계획/평가. 미지정(null)이면 범용(모든 곳에 노출) */
+  kind?: DocumentTemplateKind | null
   storageKey?: string
   stats: DocumentTemplateStats
   createdAt: string

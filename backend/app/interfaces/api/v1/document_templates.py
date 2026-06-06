@@ -42,6 +42,7 @@ async def upload_template(
     created_by: str = Depends(optional_user_display_name),
     file: UploadFile = File(...),
     name: Annotated[str | None, Form()] = None,
+    kind: Annotated[str | None, Form()] = None,
 ) -> dict[str, Any]:
     content = await file.read()
     filename = file.filename or "template.hwpx"
@@ -51,6 +52,7 @@ async def upload_template(
         content=content,
         created_by=created_by,
         name=name,
+        kind=kind,
     )
 
 

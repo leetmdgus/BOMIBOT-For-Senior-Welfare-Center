@@ -23,7 +23,18 @@ export async function downloadHwpxDocument(): Promise<void> {
   )
 }
 
+export async function exportHwpxDocument(): Promise<{
+  blob: Blob
+  filename: string
+}> {
+  throw new Error("HWPX 내보내기는 FastAPI 백엔드 연결이 필요합니다.")
+}
+
 export async function renderHwpxSvg(): Promise<HwpxSvgRenderResult> {
   // 백엔드(rhwp) 없는 mock 모드 → 빈 결과 반환 시 호출부가 근사 렌더러로 폴백
   return { format: "hwpx", sourceFilename: "", pageCount: 0, pages: [] }
+}
+
+export async function aiFillForm(): Promise<never> {
+  throw new Error("AI 자동 채움은 FastAPI 백엔드(Gemini) 연결이 필요합니다.")
 }

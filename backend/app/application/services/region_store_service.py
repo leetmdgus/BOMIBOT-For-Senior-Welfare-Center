@@ -2190,6 +2190,7 @@ class RegionStoreService:
         content: bytes,
         created_by: str = "시스템",
         name: str | None = None,
+        kind: str | None = None,
     ) -> dict:
         return self._document_templates.create_template(
             region_id,
@@ -2197,6 +2198,7 @@ class RegionStoreService:
             content=content,
             created_by=created_by,
             name=name,
+            kind=kind,
         )
 
     def get_document_template(self, region_id: str, template_id: str) -> dict:
@@ -2204,6 +2206,10 @@ class RegionStoreService:
 
     def delete_document_template(self, region_id: str, template_id: str) -> dict:
         return self._document_templates.delete_template(region_id, template_id)
+
+    def read_document_template_bytes(self, region_id: str, template_id: str) -> bytes:
+        """업로드한 양식의 원본 HWPX bytes — 계획/평가 렌더 베이스로 사용."""
+        return self._document_templates.read_template_bytes(region_id, template_id)
 
     def export_document_template(
         self,

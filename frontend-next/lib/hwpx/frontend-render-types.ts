@@ -290,6 +290,58 @@ export function updateCellRunStyle(
   return next
 }
 
+/**
+ * AI 자동 채움 적용 — fills의 키는 "{paragraphIndex}.{runIndex}.{row}.{col}" (백엔드 collect_fillable_cells와 동일).
+ * 각 빈 셀의 첫 문단 첫 text_run에 값을 넣는다(없으면 생성). 적용된 칸 수를 함께 반환.
+ */
+export function fillCellsByIds(
+  doc: HwpxFrontendDocument,
+  fills: Record<string, string>,
+): { doc: HwpxFrontendDocument; appliedCount: number } {
+  const next = structuredClone(doc)
+  let appliedCount = 0
+
+  for (const [id, rawValue] of Object.entries(fills)) {
+    const value = String(rawValue ?? "")
+    if (!value.trim()) continue
+
+    const parts = id.split(".").map((part) => Number(part))
+    if (parts.length !== 4 || parts.some((n) => !Number.isInteger(n))) continue
+    const [paragraphIndex, runIndex, row, col] = parts
+
+    const run = next.document.paragraphs[paragraphIndex]?.runs?.[runIndex]
+    if (!run || !isTable(run)) continue
+
+    let target: HwpxFrontendTableCell | null = null
+    for (const tableRow of run.rows ?? []) {
+      for (const cell of tableRow.cells ?? []) {
+        if ((cell.row ?? -1) === row && (cell.col ?? -1) === col) {
+          target = cell
+          break
+        }
+      }
+      if (target) break
+    }
+    if (!target) continue
+
+    if (!target.paragraphs || target.paragraphs.length === 0) {
+      target.paragraphs = [{ type: "paragraph", runs: [], text: "" }]
+    }
+    const paragraph = target.paragraphs[0]
+    paragraph.runs = paragraph.runs ?? []
+    const textRun = paragraph.runs.find(isTextRun)
+    if (textRun) {
+      textRun.text = value
+    } else {
+      paragraph.runs.unshift({ type: "text_run", text: value })
+    }
+    recomputeParagraphText(paragraph)
+    appliedCount += 1
+  }
+
+  return { doc: next, appliedCount }
+}
+
 /** rows×cols 빈 표 생성 (백엔드가 isNew 표를 새 tbl로 생성) */
 export function createEmptyTable(rows: number, cols: number): HwpxFrontendTable {
   const tableRows: HwpxFrontendTableRow[] = []

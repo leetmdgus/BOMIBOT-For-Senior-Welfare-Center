@@ -76,6 +76,8 @@ type BusinessPlanEvaluationWorkspaceProps = {
   onCompleteOrEdit: () => void
   /** 사업평가 탭 상단에 인쇄·한글·완료가 있으면 중복 숨김 */
   hideTopActionChrome?: boolean
+  /** 선택한 HWPX 양식 id (null = 기본 양식) */
+  templateId?: string | null
 }
 
 export function BusinessPlanEvaluationWorkspace({
@@ -89,6 +91,7 @@ export function BusinessPlanEvaluationWorkspace({
   isCompleted,
   onCompleteOrEdit,
   hideTopActionChrome = false,
+  templateId = null,
 }: BusinessPlanEvaluationWorkspaceProps) {
   const router = useRouter()
   const { session } = useAuth()
@@ -175,8 +178,9 @@ export function BusinessPlanEvaluationWorkspace({
     await downloadBusinessEvaluationHwpx(taskId, {
       evaluation: buildEvaluationDownloadPayload(),
       planForm: planDocument?.formData ?? null,
+      templateId,
     })
-  }, [buildEvaluationDownloadPayload, planDocument?.formData, taskId])
+  }, [buildEvaluationDownloadPayload, planDocument?.formData, taskId, templateId])
 
   const persistEvaluation = useCallback(async () => {
     const current = evaluationDataRef.current

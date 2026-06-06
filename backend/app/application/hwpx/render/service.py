@@ -8,6 +8,10 @@ from typing import Any
 from app.application.hwpx.filename import build_hwpx_download_filename
 from app.application.hwpx.render.apply_form import apply_evaluation_form, apply_plan_form
 from app.application.hwpx.render.byte_pack import pack_render_hwpx_bytes
+from app.application.hwpx.render.custom_template_fill import (
+    fill_custom_evaluation_hwpx,
+    fill_custom_plan_hwpx,
+)
 from app.application.hwpx.render.file_json_render import (
     make_file_json_from_bytes,
     preview_from_file_json,
@@ -236,7 +240,19 @@ class HwpxRenderService:
         *,
         form_data: dict[str, Any],
         sections: list[dict[str, Any]] | None = None,
+        template_bytes: bytes | None = None,
     ) -> tuple[bytes, str]:
+        filename = build_hwpx_download_filename(
+            str(form_data.get("projectName") or ""),
+            doc_kind="plan",
+            period=str(form_data.get("period") or ""),
+        )
+        if template_bytes is not None:
+            # 업로드한 임의 양식 — 라벨 매칭 best-effort 채움(요약 표만), 원본 절대 보존
+            payload = fill_custom_plan_hwpx(
+                template_bytes, form_data, sections=sections
+            )
+            return payload, filename
         payload = pack_render_hwpx_bytes(
             "plan",
             form_data=form_data,
@@ -244,11 +260,6 @@ class HwpxRenderService:
         )
         payload = _graft_and_fill_reference_sections(payload, sections)
         payload = _unify_document_fonts(payload)
-        filename = build_hwpx_download_filename(
-            str(form_data.get("projectName") or ""),
-            doc_kind="plan",
-            period=str(form_data.get("period") or ""),
-        )
         return payload, filename
 
     def build_evaluation_hwpx(
@@ -256,17 +267,22 @@ class HwpxRenderService:
         *,
         evaluation: dict[str, Any],
         plan_form: dict[str, Any] | None = None,
+        template_bytes: bytes | None = None,
     ) -> tuple[bytes, str]:
         del plan_form
-        payload = pack_render_hwpx_bytes("evaluation", evaluation=evaluation)
-        payload = _graft_and_fill_reference_sections(
-            payload,
-            evaluation.get("sections") if isinstance(evaluation.get("sections"), list) else [],
-        )
         filename = build_hwpx_download_filename(
             str(evaluation.get("programName") or ""),
             doc_kind="evaluation",
             period=str(evaluation.get("period") or ""),
+        )
+        if template_bytes is not None:
+            # 업로드한 임의 양식 — 라벨 매칭 best-effort 채움, 원본 절대 보존
+            payload = fill_custom_evaluation_hwpx(template_bytes, evaluation)
+            return payload, filename
+        payload = pack_render_hwpx_bytes("evaluation", evaluation=evaluation)
+        payload = _graft_and_fill_reference_sections(
+            payload,
+            evaluation.get("sections") if isinstance(evaluation.get("sections"), list) else [],
         )
         return payload, filename
 
@@ -276,9 +292,12 @@ class HwpxRenderService:
         *,
         sections: list[dict[str, Any]] | None = None,
         page_canvas: bool = True,
+        template_bytes: bytes | None = None,
     ) -> str:
         # 다운로드 결과(추가 본문 그래프트 포함)와 동일하게 — 최종 HWPX 바이트에서 렌더
-        payload, _ = self.build_plan_hwpx(form_data=form, sections=sections)
+        payload, _ = self.build_plan_hwpx(
+            form_data=form, sections=sections, template_bytes=template_bytes
+        )
         render_json = preview_from_file_json(
             make_file_json_from_bytes(payload, template_kind="plan")
         )
@@ -297,9 +316,12 @@ class HwpxRenderService:
         evaluation: dict[str, Any],
         *,
         page_canvas: bool = True,
+        template_bytes: bytes | None = None,
     ) -> str:
         # 다운로드 결과(추가 본문 그래프트 포함)와 동일하게 — 최종 HWPX 바이트에서 렌더
-        payload, _ = self.build_evaluation_hwpx(evaluation=evaluation)
+        payload, _ = self.build_evaluation_hwpx(
+            evaluation=evaluation, template_bytes=template_bytes
+        )
         render_json = preview_from_file_json(
             make_file_json_from_bytes(payload, template_kind="evaluation")
         )

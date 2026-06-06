@@ -1,16 +1,20 @@
 "use client"
 
-import { useCallback, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import {
   Download,
   FolderUp,
   Loader2,
+  Save,
   ScanSearch,
+  Sparkles,
   Zap,
 } from "lucide-react"
 
 import { Sidebar } from "@/components/common/sidebar"
 import { Header } from "@/components/common/header"
+import { AutomationFillDialog } from "@/components/automation/automation-fill-dialog"
+import { SaveToFilesDialog } from "@/components/automation/save-to-files-dialog"
 import { DocumentPreviewPanel } from "@/components/automation/document-preview-panel"
 import { EvidenceDocumentTree } from "@/components/automation/evidence-document-tree"
 import { Button } from "@/components/ui/button"
@@ -23,12 +27,23 @@ import {
   type EvidenceTreeNode,
 } from "@/lib/automation/document-tree"
 import type { HwpxFrontendDocument } from "@/lib/hwpx/frontend-render-types"
+import {
+  clearAutomationDraft,
+  loadAutomationDraft,
+  saveAutomationDraft,
+} from "@/lib/automation/automation-draft"
 import { HwpxEditorPanel } from "@/components/automation/hwpx-editor-panel"
+import type { TaskOption } from "@/components/files/file-types"
 import { cn } from "@/lib/utils"
 import {
   analyzeEvidenceDocument,
   downloadHwpxDocument,
+  exportHwpxDocument,
 } from "@/services/automation.service"
+import {
+  getFileManagerState,
+  uploadFilesToServer,
+} from "@/services/files.service"
 
 export function HwpxAutomationPage() {
   const [treeRoot, setTreeRoot] = useState<EvidenceTreeNode | null>(null)
@@ -40,6 +55,12 @@ export function HwpxAutomationPage() {
   const [batchProgress, setBatchProgress] = useState<string | null>(null)
   const [exporting, setExporting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [fillOpen, setFillOpen] = useState(false)
+  const [saveOpen, setSaveOpen] = useState(false)
+  const [taskOptions, setTaskOptions] = useState<TaskOption[]>([])
+  const [notice, setNotice] = useState<string | null>(null)
+  // 임시저장 복원 완료 전 자동저장이 빈 상태를 덮어쓰지 않도록 가드
+  const draftReady = useRef(false)
 
   const treeStats = useMemo(
     () => (treeRoot ? countEvidenceTree(treeRoot) : null),
@@ -47,6 +68,64 @@ export function HwpxAutomationPage() {
   )
 
   const previewData = editedDoc
+
+  // 업무 카테고리(칸반 업무) 목록 로드 — 저장 다이얼로그에서 사용
+  useEffect(() => {
+    let cancelled = false
+    void (async () => {
+      try {
+        const state = await getFileManagerState()
+        if (!cancelled) setTaskOptions(state.taskOptions ?? [])
+      } catch {
+        /* 업무 목록 실패는 저장 시 안내 */
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  // 임시저장 복원 — F5/탭 이동 후에도 작업 중 문서 유지
+  useEffect(() => {
+    let cancelled = false
+    void (async () => {
+      const draft = await loadAutomationDraft()
+      if (cancelled) {
+        return
+      }
+      if (draft?.editedDoc) {
+        setEditedDoc(draft.editedDoc as HwpxFrontendDocument)
+        setAnalysis((draft.analysis as DocumentAnalysisResult) ?? null)
+        if (draft.fileBlob) {
+          setSelectedFile(
+            new File([draft.fileBlob], draft.fileName || "document.hwpx"),
+          )
+        }
+        setSelectedPath(`${draft.fileName || "임시저장 문서"} (임시저장 복원)`)
+        setNotice("임시저장된 작업 문서를 복원했습니다.")
+      }
+      draftReady.current = true
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  // 작업 중 문서 자동 임시저장 (디바운스)
+  useEffect(() => {
+    if (!draftReady.current) return
+    if (!editedDoc) return
+    const timer = window.setTimeout(() => {
+      void saveAutomationDraft({
+        fileName: selectedFile?.name ?? "document.hwpx",
+        fileBlob: selectedFile ?? null,
+        editedDoc,
+        analysis,
+        savedAt: Date.now(),
+      })
+    }, 800)
+    return () => window.clearTimeout(timer)
+  }, [editedDoc, selectedFile, analysis])
 
   const analyzeFile = useCallback(async (node: EvidenceTreeNode) => {
     if (node.type !== "file" || !node.file) return
@@ -127,6 +206,34 @@ export function HwpxAutomationPage() {
     }
   }, [analysis?.kind, previewData, selectedFile])
 
+  const handleApplyFill = useCallback(
+    (next: HwpxFrontendDocument, appliedCount: number) => {
+      setEditedDoc(next)
+      setNotice(`AI 자동 채움으로 ${appliedCount}개 칸을 채웠습니다. 편집기에서 검토하세요.`)
+    },
+    [],
+  )
+
+  const handleSaveToFiles = useCallback(
+    async ({ taskId, fileName }: { taskId: string; fileName: string }) => {
+      if (!selectedFile || !previewData) {
+        throw new Error("저장할 문서가 없습니다.")
+      }
+      if (!uploadFilesToServer) {
+        throw new Error("파일 업로드 API를 사용할 수 없습니다.")
+      }
+      const name = fileName.toLowerCase().endsWith(".hwpx")
+        ? fileName
+        : `${fileName}.hwpx`
+      const { blob } = await exportHwpxDocument(selectedFile, previewData, name)
+      const file = new File([blob], name, { type: "application/hwp+zip" })
+      await uploadFilesToServer({ files: [file], taskId })
+      await clearAutomationDraft()
+      setNotice(`완성 문서를 파일관리(/files)에 저장했습니다: ${name}`)
+    },
+    [previewData, selectedFile],
+  )
+
   return (
     <div className="flex min-h-screen bg-background">
       <Sidebar />
@@ -179,6 +286,24 @@ export function HwpxAutomationPage() {
                 전체 순차 분석
               </Button>
 
+              {previewData ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setFillOpen(true)}
+                >
+                  <Sparkles className="size-4" />
+                  자동화
+                </Button>
+              ) : null}
+
+              {previewData && selectedFile && analysis?.kind === "hwpx" ? (
+                <Button type="button" onClick={() => setSaveOpen(true)}>
+                  <Save className="size-4" />
+                  완성 문서 저장
+                </Button>
+              ) : null}
+
               {analysis?.kind === "hwpx" ? (
                 <Button
                   type="button"
@@ -206,6 +331,19 @@ export function HwpxAutomationPage() {
           {error ? (
             <div className="rounded-md border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
               {error}
+            </div>
+          ) : null}
+
+          {notice ? (
+            <div className="flex items-center justify-between gap-3 rounded-md border border-primary/30 bg-primary/5 px-4 py-2 text-sm text-foreground">
+              <span>{notice}</span>
+              <button
+                type="button"
+                className="text-xs text-muted-foreground hover:text-foreground"
+                onClick={() => setNotice(null)}
+              >
+                닫기
+              </button>
             </div>
           ) : null}
 
@@ -292,6 +430,21 @@ export function HwpxAutomationPage() {
           </div>
         </div>
       </main>
+
+      <AutomationFillDialog
+        open={fillOpen}
+        doc={previewData}
+        onOpenChange={setFillOpen}
+        onApply={handleApplyFill}
+      />
+
+      <SaveToFilesDialog
+        open={saveOpen}
+        taskOptions={taskOptions}
+        defaultFileName={(selectedFile?.name ?? "문서").replace(/\.hwpx$/i, "")}
+        onOpenChange={setSaveOpen}
+        onSave={handleSaveToFiles}
+      />
     </div>
   )
 }

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { Loader2 } from "lucide-react"
+import { Eye, Loader2 } from "lucide-react"
 
 import { useAuth } from "@/components/auth/auth-provider"
 import { CollaborationLiveNotice } from "@/components/collaboration/collaboration-live-notice"
@@ -18,6 +18,9 @@ import { EvaluationSplitLayout } from "@/components/kanban/task-detail/evaluatio
 import { EvaluationFormActionBar } from "@/components/kanban/task-detail/evaluation-form-action-bar"
 import { TaskReferenceDocumentSelector } from "@/components/kanban/task-detail/task-reference-document-selector"
 import { TaskReferenceDocumentViewer } from "@/components/kanban/task-detail/task-reference-document-viewer"
+import { HwpxTemplateSelector } from "@/components/kanban/task-detail/hwpx-template-selector"
+import { HwpxPreviewDialog } from "@/components/kanban/task-detail/hwpx-preview-dialog"
+import { fetchBusinessPlanHwpxPreviewHtml } from "@/lib/hwpx/fetch-hwpx-preview"
 import {
   defaultSelectedDocumentId,
   mergeTaskReferenceDocuments,
@@ -102,6 +105,9 @@ export function BusinessPlanTab() {
   const [documentFiles, setDocumentFiles] = useState<EvaluationFile[]>([])
   const [fixedFiles, setFixedFiles] = useState<EvaluationFile[]>([])
   const [selectedFileId, setSelectedFileId] = useState("")
+  /** 선택한 HWPX 양식 id (null = 기본 양식) */
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null)
+  const [templatePreviewOpen, setTemplatePreviewOpen] = useState(false)
 
   /** 저장 중에도 편집 가능 — 자동 저장과 충돌 방지 */
   const canEditPlan = !isCompleted || isEditMode
@@ -389,11 +395,31 @@ export function BusinessPlanTab() {
             "보기 모드 · 「수정」을 누르면 다시 편집할 수 있습니다."
           )}
         </p>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <HwpxTemplateSelector
+            kind="plan"
+            selectedTemplateId={selectedTemplateId}
+            onSelect={setSelectedTemplateId}
+            defaultLabel="기본 사업계획서 양식"
+          />
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setTemplatePreviewOpen(true)}
+          >
+            <Eye className="mr-1.5 size-4" />
+            양식 미리보기
+          </Button>
           <PrintDocumentButton />
           <HwpxDownloadButton
             onDownload={async () => {
-              await downloadBusinessPlanHwpx(taskId, formData, sections)
+              await downloadBusinessPlanHwpx(
+                taskId,
+                formData,
+                sections,
+                selectedTemplateId,
+              )
             }}
           />
           <Button
@@ -458,7 +484,12 @@ export function BusinessPlanTab() {
               isSaving={isSaving}
               showLoadPrevious={false}
               onHwpxDownload={async () => {
-                await downloadBusinessPlanHwpx(taskId, formData, sections)
+                await downloadBusinessPlanHwpx(
+                  taskId,
+                  formData,
+                  sections,
+                  selectedTemplateId,
+                )
               }}
               hint={
                 canEditPlan
@@ -474,6 +505,24 @@ export function BusinessPlanTab() {
               className="sticky bottom-4 z-20"
             />
           </div>
+        }
+      />
+
+      <HwpxPreviewDialog
+        open={templatePreviewOpen}
+        onOpenChange={setTemplatePreviewOpen}
+        title="사업계획서 양식 미리보기"
+        description={
+          selectedTemplateId
+            ? "선택한 업로드 양식에 현재 내용을 채운 결과입니다."
+            : "기본 양식에 현재 내용을 채운 결과입니다."
+        }
+        fetchHtml={() =>
+          fetchBusinessPlanHwpxPreviewHtml(taskId, {
+            formData,
+            sections,
+            templateId: selectedTemplateId,
+          })
         }
       />
     </div>

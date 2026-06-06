@@ -132,6 +132,7 @@ export async function downloadBusinessPlanHwpx(
   payload?: {
     formData?: SaveBusinessPlanPayload["formData"]
     sections?: SaveBusinessPlanPayload["sections"]
+    templateId?: string | null
   },
 ): Promise<void> {
   const { blob, filename } = await apiFetchBlobWithMeta(
@@ -147,6 +148,7 @@ export async function downloadBusinessPlanHwpx(
           : payload?.sections
             ? { sections: payload.sections }
             : {}),
+        ...(payload?.templateId ? { templateId: payload.templateId } : {}),
       }),
     },
   )
@@ -158,6 +160,7 @@ export async function downloadBusinessEvaluationHwpx(
   payload?: {
     evaluation?: SaveBusinessEvaluationPayload
     planForm?: SaveBusinessPlanPayload["formData"] | null
+    templateId?: string | null
   },
 ): Promise<void> {
   const body: Record<string, unknown> = { taskId }
@@ -166,6 +169,9 @@ export async function downloadBusinessEvaluationHwpx(
   }
   if (payload && "planForm" in payload) {
     body.planForm = payload.planForm ?? null
+  }
+  if (payload?.templateId) {
+    body.templateId = payload.templateId
   }
 
   const { blob, filename } = await apiFetchBlobWithMeta(

@@ -22,6 +22,11 @@ const renderSvgPath = resolveApiPath(
   "/api/v1/automation/hwpx/render-svg",
 )
 
+const aiFillPath = resolveApiPath(
+  "/api/automation/hwpx/ai-fill",
+  "/api/v1/automation/hwpx/ai-fill",
+)
+
 const exportPath = resolveApiPath(
   "/api/automation/hwpx/export",
   "/api/v1/automation/hwpx/export",
@@ -53,6 +58,30 @@ export type HwpxSvgRenderResult = {
   pageCount: number
   /** 페이지 순서대로 정렬된 SVG 문자열 (rhwp 정확 렌더) */
   pages: string[]
+}
+
+export type AiFillResult = {
+  /** 빈칸ID("p.r.row.col") → 채울 값 */
+  fills: Record<string, string>
+  warnings: string[]
+  /** 양식에서 발견한 빈 칸 총 개수 */
+  fieldCount?: number
+}
+
+/**
+ * 참고 문서(들)로 현재 HWPX 양식의 빈 칸을 AI(Gemini)가 채운 제안을 받는다.
+ * 제안만 반환하며 저장하지 않는다(프론트에서 검토 후 적용).
+ */
+export async function aiFillForm(
+  frontendJson: HwpxFrontendDocument,
+  references: File[],
+): Promise<AiFillResult> {
+  const formData = new FormData()
+  formData.append("frontendJson", JSON.stringify(frontendJson))
+  for (const file of references) {
+    formData.append("references", file)
+  }
+  return apiUploadFormData<AiFillResult>(aiFillPath, formData)
 }
 
 /**

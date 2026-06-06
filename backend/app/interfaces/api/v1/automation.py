@@ -3,7 +3,9 @@ from typing import Annotated, Any
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from fastapi.responses import Response
 
+from app.application.chat.assistant_llm import is_assistant_llm_configured
 from app.application.http.content_disposition import attachment_content_disposition
+from app.application.hwpx.ai_fill import ai_fill_form
 from app.application.hwpx.automation.service import HwpxAutomationService
 from app.application.hwpx.hwpx_package import is_hwpx_filename
 from app.application.hwpx.rhwp_render import (
@@ -11,6 +13,7 @@ from app.application.hwpx.rhwp_render import (
     RhwpRenderError,
     render_to_svg_pages,
 )
+from app.core.config import get_settings
 from app.interfaces.api.deps import require_region_id
 
 router = APIRouter(prefix="/automation", tags=["automation"])
@@ -151,6 +154,63 @@ async def render_hwpx_svg(
         "pageCount": len(pages),
         "pages": pages,
     }
+
+
+@router.post("/hwpx/ai-fill")
+async def ai_fill_hwpx(
+    region_id: str = Depends(require_region_id),
+    # 채울 대상 양식(편집 중인 frontend JSON)
+    frontend_json: Annotated[str, Form(alias="frontendJson")] = "",
+    # 참고 문서들 (hwpx/docx/pdf/xlsx/이미지 등 analyze 지원 포맷)
+    references: list[UploadFile] = File(default=[]),
+) -> dict[str, Any]:
+    """참고 문서 내용으로 현재 HWPX 양식의 빈 칸을 AI가 채운 제안을 반환한다(저장 안 함)."""
+    del region_id
+
+    if not frontend_json.strip():
+        raise HTTPException(status_code=400, detail="frontendJson 필드가 필요합니다.")
+    if not references:
+        raise HTTPException(status_code=400, detail="참고 문서를 1개 이상 첨부해 주세요.")
+
+    parsed_json = _service.parse_frontend_json_field(frontend_json)
+
+    reference_texts: list[str] = []
+    for ref in references:
+        data = await ref.read()
+        if not data:
+            continue
+        name = ref.filename or "reference"
+        try:
+            result = _service.analyze_document_bytes(
+                data, source_filename=name, relative_path=name
+            )
+        except Exception:
+            continue
+        text = str(result.get("plainText") or "").strip()
+        if text:
+            reference_texts.append(f"[{name}]\n{text}")
+
+    if not reference_texts:
+        raise HTTPException(
+            status_code=422,
+            detail="참고 문서에서 텍스트를 추출하지 못했습니다(스캔본/빈 문서일 수 있음).",
+        )
+
+    settings = get_settings()
+    if not is_assistant_llm_configured(settings):
+        raise HTTPException(
+            status_code=503,
+            detail="AI(Gemini)가 설정되지 않았습니다. GEMINI_API_KEY를 확인해 주세요.",
+        )
+
+    try:
+        return await ai_fill_form(settings, parsed_json, reference_texts)
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(
+            status_code=502, detail=f"AI 자동 채움에 실패했습니다: {exc}"
+        ) from exc
 
 
 @router.post("/documents/analyze")

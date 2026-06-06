@@ -142,6 +142,7 @@ export async function downloadBusinessEvaluationHwpx(
   payload?: {
     evaluation?: BusinessEvaluationData
     planForm?: BusinessPlanFormData | null
+    templateId?: string | null
   },
 ): Promise<void> {
   const evaluation = payload?.evaluation
@@ -159,6 +160,7 @@ export async function downloadBusinessEvaluationHwpx(
     await downloadFromApi(taskId, {
       evaluation: exportEvaluation,
       planForm,
+      templateId: payload?.templateId,
     })
     return
   }

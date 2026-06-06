@@ -107,6 +107,7 @@ class DocumentTemplateService:
         content: bytes,
         created_by: str = "시스템",
         name: str | None = None,
+        kind: str | None = None,
     ) -> dict:
         """양식 업로드 — .hwpx 파싱 검증 → 원본 보관 → 메타 등록."""
         if not content:
@@ -138,6 +139,7 @@ class DocumentTemplateService:
             "name": (name or parsed.get("documentTitle") or filename).strip(),
             "sourceFilename": filename,
             "format": "hwpx",
+            "kind": (kind or "").strip() or None,  # plan | evaluation | None(범용)
             "storageKey": storage_key,
             "stats": stats,
             "createdAt": datetime.now(UTC).isoformat(),
@@ -176,6 +178,14 @@ class DocumentTemplateService:
         ]
         self._save(region_id, data)
         return {"id": template_id, "deleted": True}
+
+    def read_template_bytes(self, region_id: str, template_id: str) -> bytes:
+        """양식 원본 HWPX bytes — 계획/평가 렌더의 베이스 양식으로 사용."""
+        data = self._load(region_id)
+        meta = self._find(data, template_id)
+        if meta is None:
+            raise HTTPException(status_code=404, detail="템플릿을 찾을 수 없습니다.")
+        return self._read_bytes(region_id, meta)
 
     def export_filled(
         self,

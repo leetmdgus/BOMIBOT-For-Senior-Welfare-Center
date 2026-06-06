@@ -10,6 +10,7 @@ import { triggerBlobDownload } from "@/lib/files/download-blob"
 
 import type {
   DocumentTemplateDetail,
+  DocumentTemplateKind,
   DocumentTemplateMeta,
   HwpxFrontendJson,
 } from "./document-templates.types"
@@ -23,14 +24,16 @@ export async function listDocumentTemplates(): Promise<DocumentTemplateMeta[]> {
   return result.templates ?? []
 }
 
-/** 양식 업로드(.hwpx) → 파싱·보관 → 메타. */
+/** 양식 업로드(.hwpx) → 파싱·보관 → 메타. kind 로 계획/평가 태그. */
 export async function uploadDocumentTemplate(
   file: File,
   name?: string,
+  kind?: DocumentTemplateKind,
 ): Promise<DocumentTemplateMeta> {
   const form = new FormData()
   form.append("file", file)
   if (name) form.append("name", name)
+  if (kind) form.append("kind", kind)
   return apiUploadFormData<DocumentTemplateMeta>(base(), form)
 }
 

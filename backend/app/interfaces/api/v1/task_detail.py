@@ -176,6 +176,16 @@ def get_business_plan(
     )
 
 
+def _resolve_template_bytes(
+    service: RegionStoreService, region_id: str, body: dict
+) -> bytes | None:
+    """body.templateId 가 있으면 업로드한 양식 원본 bytes, 없으면 None(기본 양식)."""
+    template_id = body.get("templateId")
+    if not isinstance(template_id, str) or not template_id.strip():
+        return None
+    return service.read_document_template_bytes(region_id, template_id.strip())
+
+
 @router.post("/business-plan/hwpx")
 def export_business_plan_hwpx(
     body: dict,
@@ -204,6 +214,7 @@ def export_business_plan_hwpx(
     payload, filename = _hwpx_export.build_business_plan_hwpx(
         form_data=form_data,
         sections=sections,
+        template_bytes=_resolve_template_bytes(service, region_id, body),
     )
     return Response(
         content=payload,
@@ -253,6 +264,7 @@ def export_business_evaluation_hwpx(
     payload, filename = _hwpx_export.build_business_evaluation_hwpx(
         evaluation=evaluation,
         plan_form=plan_form,
+        template_bytes=_resolve_template_bytes(service, region_id, body),
     )
     return Response(
         content=payload,
@@ -292,6 +304,7 @@ def preview_business_plan_hwpx(
     html = _hwpx_export.build_business_plan_preview_html(
         form_data=form_data,
         sections=sections,
+        template_bytes=_resolve_template_bytes(service, region_id, body),
     )
     return Response(content=html, media_type="text/html; charset=utf-8")
 
@@ -330,6 +343,7 @@ def preview_business_evaluation_hwpx(
 
     html = _hwpx_export.build_business_evaluation_preview_html(
         evaluation=evaluation,
+        template_bytes=_resolve_template_bytes(service, region_id, body),
     )
     return Response(content=html, media_type="text/html; charset=utf-8")
 
