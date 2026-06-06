@@ -268,6 +268,37 @@ def seed_missing_json_stores(session: Session) -> None:
     session.commit()
 
 
+def clear_performance_input_meta(session: Session) -> int:
+    """기존 데이터 보존 — performance 페이로드의 세목/세세목 기본값만 비운다.
+
+    performanceSubProjectChips(세목 칩)·defaultDetailCategories(세세목)만 []로
+    덮어쓰고, 실적 행(inputManagementRows·runtime 버킷)과 기타 키는 그대로 둔다.
+    이미 시드된 DB에 --force(전체 삭제) 없이 적용하기 위한 비파괴 마이그레이션.
+    """
+    rows = session.scalars(
+        select(RegionJsonStoreModel).where(
+            RegionJsonStoreModel.domain == DOMAIN_PERFORMANCE
+        )
+    ).all()
+
+    updated = 0
+    for row in rows:
+        payload = dict(row.payload or {})
+        had_values = bool(
+            payload.get("performanceSubProjectChips")
+            or payload.get("defaultDetailCategories")
+        )
+        payload["performanceSubProjectChips"] = []
+        payload["defaultDetailCategories"] = []
+        # JSON 컬럼은 in-place 변경을 추적하지 않으므로 속성을 재할당해 dirty 처리.
+        row.payload = payload
+        if had_values:
+            updated += 1
+
+    session.commit()
+    return updated
+
+
 JSON_STORE_SEEDS: list[tuple[str, str]] = [
     (DOMAIN_APPROVALS, "approvals"),
     (DOMAIN_EBOOKS, "ebooks"),

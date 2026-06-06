@@ -10,7 +10,12 @@ if str(ROOT) not in sys.path:
 
 from app.core.database import Base, SessionLocal, engine
 from app.infrastructure.persistence import models  # noqa: F401
-from app.infrastructure.seed import seed_all, seed_missing_json_stores, sync_organizations
+from app.infrastructure.seed import (
+    clear_performance_input_meta,
+    seed_all,
+    seed_missing_json_stores,
+    sync_organizations,
+)
 
 
 def main() -> None:
@@ -26,6 +31,14 @@ def main() -> None:
         action="store_true",
         help="Re-load organization employees from seed JSON (both regions)",
     )
+    parser.add_argument(
+        "--clear-performance-meta",
+        action="store_true",
+        help=(
+            "기존 데이터 보존 — 세목/세세목 기본값"
+            "(performanceSubProjectChips·defaultDetailCategories)만 비운다"
+        ),
+    )
     args = parser.parse_args()
 
     Base.metadata.create_all(bind=engine)
@@ -35,6 +48,10 @@ def main() -> None:
             sync_organizations(session)
         elif args.missing_json:
             seed_missing_json_stores(session)
+        elif args.clear_performance_meta:
+            count = clear_performance_input_meta(session)
+            print(f"Cleared 세목/세세목 defaults on {count} performance store(s).")
+            return
         else:
             seed_all(session, force=args.force)
         print("Seed completed.")
