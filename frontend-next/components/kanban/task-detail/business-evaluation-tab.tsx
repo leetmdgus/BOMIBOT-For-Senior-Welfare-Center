@@ -3,6 +3,7 @@
 import {
   useCallback,
   useEffect,
+  useRef,
   useState,
   type Dispatch,
   type SetStateAction,
@@ -17,8 +18,17 @@ import {
 import { BusinessPlanEvaluationWorkspace } from "@/components/kanban/task-detail/business-plan-evaluation-workspace"
 import { HwpxTemplateSelector } from "@/components/kanban/task-detail/hwpx-template-selector"
 import { loadEvaluationPerformanceTotals } from "@/components/kanban/task-detail/performance/evaluation-performance-totals"
-import { mergeFlushedDocumentSections } from "@/lib/hwpx/document-sections-for-export"
+import {
+  documentSectionsForHwpxExport,
+  mergeFlushedDocumentSections,
+} from "@/lib/hwpx/document-sections-for-export"
+import { buildHwpxDownloadFilename } from "@/lib/hwpx/hwpx-filename"
 import { downloadBusinessEvaluationHwpx } from "@/lib/hwpx/export-business-evaluation"
+import {
+  exportFilledTemplate,
+  prefillDocumentTemplate,
+} from "@/services/document-templates.api.service"
+import type { HwpxFrontendJson } from "@/services/document-templates.types"
 import {
   completeBusinessEvaluation,
   getBusinessEvaluation,
@@ -26,10 +36,12 @@ import {
 } from "@/services/kanban.task-detail.service"
 import type { BusinessEvaluationData } from "@/services/kanban.task-detail.types"
 import { Button } from "@/components/ui/button"
+import { useToast } from "@/hooks/use-toast"
 
 export function BusinessEvaluationTab() {
   const params = useParams<{ id: string }>()
   const taskId = params.id
+  const { toast } = useToast()
 
   const [evaluationData, setEvaluationData] =
     useState<BusinessEvaluationData | null>(null)
@@ -39,6 +51,10 @@ export function BusinessEvaluationTab() {
   const [isEditMode, setIsEditMode] = useState(false)
   /** 선택한 HWPX 양식 id (null = 기본 양식) */
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null)
+  /** 선택 양식 WYSIWYG 편집 상태 (요약 값 프리필 후 직접 편집) */
+  const [templateJson, setTemplateJson] = useState<HwpxFrontendJson | null>(null)
+  const evaluationDataRef = useRef<BusinessEvaluationData | null>(null)
+  evaluationDataRef.current = evaluationData
 
   /** evaluationData가 로드된 뒤에만 갱신 — null 상태에서는 무시 */
   const updateEvaluation = useCallback<
@@ -88,6 +104,75 @@ export function BusinessEvaluationTab() {
   useEffect(() => {
     void load()
   }, [load])
+
+  // 선택 양식이 바뀌면 현재 평가값으로 프리필한 frontendJson 로드(이후 양식 위에서 직접 편집)
+  useEffect(() => {
+    if (!selectedTemplateId) {
+      setTemplateJson(null)
+      return
+    }
+    const current = evaluationDataRef.current
+    if (!current) return
+    let cancelled = false
+    prefillDocumentTemplate(
+      selectedTemplateId,
+      "evaluation",
+      current as unknown as Record<string, unknown>,
+    )
+      .then((fj) => {
+        if (!cancelled) setTemplateJson(fj)
+      })
+      .catch((error) => {
+        if (cancelled) return
+        setTemplateJson(null)
+        toast({
+          title: "선택한 양식을 불러오지 못했습니다.",
+          description: error instanceof Error ? error.message : String(error),
+          variant: "destructive",
+        })
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [selectedTemplateId, toast])
+
+  // 한글 다운로드 — 선택 양식이면 양식 위 편집본 + 추가본문 합쳐 내보내기, 아니면 기본 경로
+  const downloadEvaluationFromChrome = useCallback(async () => {
+    const current = evaluationDataRef.current
+    if (!current) return
+    if (selectedTemplateId && templateJson) {
+      const exportSections = documentSectionsForHwpxExport(
+        mergeFlushedDocumentSections(current.sections ?? []),
+      )
+      const filename = buildHwpxDownloadFilename(
+        current.programName,
+        "evaluation",
+        current.period,
+      )
+      await exportFilledTemplate(
+        selectedTemplateId,
+        templateJson,
+        filename,
+        exportSections,
+      )
+      return
+    }
+    let planForm = null
+    try {
+      const plan = await getBusinessPlan(taskId)
+      planForm = plan.formData
+    } catch {
+      /* 계획서 없으면 평가서만 보냄 */
+    }
+    await downloadBusinessEvaluationHwpx(taskId, {
+      evaluation: {
+        ...current,
+        sections: mergeFlushedDocumentSections(current.sections ?? []),
+      },
+      planForm,
+      templateId: selectedTemplateId,
+    })
+  }, [selectedTemplateId, templateJson, taskId])
 
   const handleCompleteOrEdit = async () => {
     if (!evaluationData) return
@@ -167,25 +252,7 @@ export function BusinessEvaluationTab() {
           <PrintDocumentButton disabled={isSaving} />
           <HwpxDownloadButton
             disabled={isSaving}
-            onDownload={async () => {
-              let planForm = null
-              try {
-                const plan = await getBusinessPlan(taskId)
-                planForm = plan.formData
-              } catch {
-                /* 계획서 없으면 평가서만 보냄 */
-              }
-              await downloadBusinessEvaluationHwpx(taskId, {
-                evaluation: {
-                  ...evaluationData,
-                  sections: mergeFlushedDocumentSections(
-                    evaluationData.sections ?? [],
-                  ),
-                },
-                planForm,
-                templateId: selectedTemplateId,
-              })
-            }}
+            onDownload={downloadEvaluationFromChrome}
           />
           <Button
             type="button"
@@ -211,6 +278,8 @@ export function BusinessEvaluationTab() {
         onCompleteOrEdit={() => void handleCompleteOrEdit()}
         hideTopActionChrome
         templateId={selectedTemplateId}
+        templateJson={templateJson}
+        onTemplateJsonChange={setTemplateJson}
       />
     </div>
   )

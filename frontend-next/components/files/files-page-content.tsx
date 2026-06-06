@@ -16,6 +16,7 @@ import {
 } from "@dnd-kit/core"
 import { SortableContext, arrayMove, rectSortingStrategy, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import {
+  CornerLeftUp,
   FolderOpen,
   FolderPlus,
   Grid3X3,
@@ -310,7 +311,28 @@ export function FilesPageContent() {
       <Header />
       <div className="border-b border-border bg-white px-6 py-4">
         <div className="flex items-center justify-between gap-3">
-          <FilesBreadcrumb trail={breadcrumbs} onNavigate={navigateToFolder} />
+          <div className="flex min-w-0 items-center gap-1.5">
+            {breadcrumbs.length > 0 ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-8 shrink-0 gap-1.5 px-2 text-muted-foreground"
+                onClick={() =>
+                  navigateToFolder(
+                    breadcrumbs.length >= 2
+                      ? breadcrumbs[breadcrumbs.length - 2].id
+                      : null,
+                  )
+                }
+                title="상위 폴더로"
+              >
+                <CornerLeftUp className="size-4" />
+                상위 폴더
+              </Button>
+            ) : null}
+            <FilesBreadcrumb trail={breadcrumbs} onNavigate={navigateToFolder} />
+          </div>
 
           <div className="flex shrink-0 items-center gap-3">
             <Button className="gap-2" onClick={() => manager.setUploadOpen(true)}>

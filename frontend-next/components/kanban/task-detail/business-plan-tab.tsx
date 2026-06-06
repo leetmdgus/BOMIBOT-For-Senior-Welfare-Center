@@ -13,7 +13,16 @@ import {
 } from "@/components/common/print-document"
 import { HwpxDownloadButton } from "@/components/common/hwpx-download-button"
 import { downloadBusinessPlanHwpx } from "@/lib/hwpx/export-business-plan"
-import { mergeFlushedDocumentSections } from "@/lib/hwpx/document-sections-for-export"
+import {
+  documentSectionsForHwpxExport,
+  mergeFlushedDocumentSections,
+} from "@/lib/hwpx/document-sections-for-export"
+import { buildHwpxDownloadFilename } from "@/lib/hwpx/hwpx-filename"
+import {
+  exportFilledTemplate,
+  prefillDocumentTemplate,
+} from "@/services/document-templates.api.service"
+import type { HwpxFrontendJson } from "@/services/document-templates.types"
 import { EvaluationSplitLayout } from "@/components/kanban/task-detail/evaluation-split-layout"
 import { EvaluationFormActionBar } from "@/components/kanban/task-detail/evaluation-form-action-bar"
 import { TaskReferenceDocumentSelector } from "@/components/kanban/task-detail/task-reference-document-selector"
@@ -105,6 +114,11 @@ export function BusinessPlanTab() {
   const [selectedFileId, setSelectedFileId] = useState("")
   /** 선택한 HWPX 양식 id (null = 기본 양식) */
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null)
+  /** 선택 양식 WYSIWYG 편집 상태 (요약 값 프리필 후 직접 편집) */
+  const [templateJson, setTemplateJson] = useState<HwpxFrontendJson | null>(null)
+  const [templateLoading, setTemplateLoading] = useState(false)
+  const formDataRef = useRef(formData)
+  formDataRef.current = formData
 
   /** 저장 중에도 편집 가능 — 자동 저장과 충돌 방지 */
   const canEditPlan = !isCompleted || isEditMode
@@ -292,6 +306,61 @@ export function BusinessPlanTab() {
     void load()
   }, [load])
 
+  // 선택 양식이 바뀌면 현재 작성값으로 프리필한 frontendJson 로드(이후 양식 위에서 직접 편집)
+  useEffect(() => {
+    if (!selectedTemplateId) {
+      setTemplateJson(null)
+      return
+    }
+    let cancelled = false
+    setTemplateLoading(true)
+    prefillDocumentTemplate(
+      selectedTemplateId,
+      "plan",
+      formDataRef.current as unknown as Record<string, unknown>,
+    )
+      .then((fj) => {
+        if (!cancelled) setTemplateJson(fj)
+      })
+      .catch((error) => {
+        if (cancelled) return
+        setTemplateJson(null)
+        toast({
+          title: "선택한 양식을 불러오지 못했습니다.",
+          description: error instanceof Error ? error.message : String(error),
+          variant: "destructive",
+        })
+      })
+      .finally(() => {
+        if (!cancelled) setTemplateLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [selectedTemplateId, toast])
+
+  // 한글 다운로드 — 선택 양식이면 양식 위 편집본 + 추가본문 합쳐 내보내기, 아니면 기본 경로
+  const downloadHwpx = useCallback(async () => {
+    if (selectedTemplateId && templateJson) {
+      const exportSections = documentSectionsForHwpxExport(
+        mergeFlushedDocumentSections(sections),
+      )
+      const filename = buildHwpxDownloadFilename(
+        formData.projectName,
+        "plan",
+        formData.period,
+      )
+      await exportFilledTemplate(
+        selectedTemplateId,
+        templateJson,
+        filename,
+        exportSections,
+      )
+      return
+    }
+    await downloadBusinessPlanHwpx(taskId, formData, sections, selectedTemplateId)
+  }, [selectedTemplateId, templateJson, sections, formData, taskId])
+
   const sectionsStructureSignature = sections
     .map((section) => `${section.id}:${section.type}`)
     .join("\u0000")
@@ -400,16 +469,7 @@ export function BusinessPlanTab() {
             defaultLabel="기본 사업계획서 양식"
           />
           <PrintDocumentButton />
-          <HwpxDownloadButton
-            onDownload={async () => {
-              await downloadBusinessPlanHwpx(
-                taskId,
-                formData,
-                sections,
-                selectedTemplateId,
-              )
-            }}
-          />
+          <HwpxDownloadButton onDownload={downloadHwpx} />
           <Button
             type="button"
             size="sm"
@@ -448,16 +508,25 @@ export function BusinessPlanTab() {
             }}
             planLoading={isLoading}
             templateId={selectedTemplateId}
+            templateJson={templateJson}
           />
         }
         editor={
           <div className="flex w-full min-w-0 flex-col space-y-4 pb-6">
             <PrintDocumentShell className="mx-auto w-full max-w-none">
+              {selectedTemplateId && templateLoading && !templateJson ? (
+                <p className="flex items-center justify-center gap-2 py-16 text-sm text-muted-foreground">
+                  <Loader2 className="size-4 animate-spin" />
+                  선택한 양식을 불러오는 중…
+                </p>
+              ) : null}
               <BusinessPlanEditor
                 formData={formData}
                 sections={sections}
                 taskId={taskId}
                 readOnly={!canEditPlan}
+                templateJson={templateJson}
+                onTemplateJsonChange={setTemplateJson}
                 onFormDataChange={(next) => {
                   lastLocalEditRef.current = Date.now()
                   setFormData(next)
@@ -472,14 +541,7 @@ export function BusinessPlanTab() {
               canEdit={canEditPlan}
               isSaving={isSaving}
               showLoadPrevious={false}
-              onHwpxDownload={async () => {
-                await downloadBusinessPlanHwpx(
-                  taskId,
-                  formData,
-                  sections,
-                  selectedTemplateId,
-                )
-              }}
+              onHwpxDownload={downloadHwpx}
               hint={
                 canEditPlan
                   ? isSaving

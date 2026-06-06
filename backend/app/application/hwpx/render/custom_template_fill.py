@@ -141,6 +141,43 @@ def _fill_tables(
     return filled
 
 
+def prefill_plan_frontend_json(
+    template_bytes: bytes,
+    form_data: dict[str, Any],
+    *,
+    source_filename: str = "template.hwpx",
+) -> dict[str, Any]:
+    """업로드 양식을 파싱해 사업계획 요약 값을 라벨 매칭으로 채운 frontendJson 반환.
+
+    WYSIWYG 편집기 초기값 — 사용자가 이 위에서 직접 수정한다.
+    """
+    parsed = _hwpx.parse_hwpx_bytes(template_bytes, source_filename=source_filename)
+    frontend_json = parsed["frontendJson"]
+    _fill_tables(
+        frontend_json,
+        PLAN_LABEL_FIELDS,
+        lambda key: resolve_plan_field(form_data, key),
+    )
+    return frontend_json
+
+
+def prefill_evaluation_frontend_json(
+    template_bytes: bytes,
+    evaluation: dict[str, Any],
+    *,
+    source_filename: str = "template.hwpx",
+) -> dict[str, Any]:
+    """업로드 양식을 파싱해 사업평가 값을 라벨 매칭으로 채운 frontendJson 반환."""
+    parsed = _hwpx.parse_hwpx_bytes(template_bytes, source_filename=source_filename)
+    frontend_json = parsed["frontendJson"]
+    _fill_tables(
+        frontend_json,
+        EVALUATION_LABEL_FIELDS,
+        lambda key: resolve_evaluation_field(evaluation, key),
+    )
+    return frontend_json
+
+
 def fill_custom_plan_hwpx(
     template_bytes: bytes,
     form_data: dict[str, Any],
@@ -150,12 +187,8 @@ def fill_custom_plan_hwpx(
 ) -> bytes:
     """업로드 양식에 사업계획 요약 값을 라벨 매칭으로 채워 HWPX bytes 반환."""
     del sections  # 임의 양식엔 대목차·본문 참고 표 구조가 없으므로 요약 값만 채움
-    parsed = _hwpx.parse_hwpx_bytes(template_bytes, source_filename=source_filename)
-    frontend_json = parsed["frontendJson"]
-    _fill_tables(
-        frontend_json,
-        PLAN_LABEL_FIELDS,
-        lambda key: resolve_plan_field(form_data, key),
+    frontend_json = prefill_plan_frontend_json(
+        template_bytes, form_data, source_filename=source_filename
     )
     return export_hwpx_preserving(template_bytes, frontend_json)
 
@@ -167,11 +200,7 @@ def fill_custom_evaluation_hwpx(
     source_filename: str = "template.hwpx",
 ) -> bytes:
     """업로드 양식에 사업평가 값을 라벨 매칭으로 채워 HWPX bytes 반환."""
-    parsed = _hwpx.parse_hwpx_bytes(template_bytes, source_filename=source_filename)
-    frontend_json = parsed["frontendJson"]
-    _fill_tables(
-        frontend_json,
-        EVALUATION_LABEL_FIELDS,
-        lambda key: resolve_evaluation_field(evaluation, key),
+    frontend_json = prefill_evaluation_frontend_json(
+        template_bytes, evaluation, source_filename=source_filename
     )
     return export_hwpx_preserving(template_bytes, frontend_json)

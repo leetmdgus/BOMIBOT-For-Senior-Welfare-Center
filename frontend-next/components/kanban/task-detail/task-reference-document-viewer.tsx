@@ -11,6 +11,8 @@ import { OfficePreviewContent } from "@/components/files/office-preview-content"
 import { BusinessEvaluationEditor } from "@/components/kanban/task-detail/business-evaluation-editor"
 import { BusinessPlanEditor } from "@/components/kanban/task-detail/business-plan-editor"
 import { LiveHwpxRenderPanel } from "@/components/kanban/task-detail/live-hwpx-render-panel"
+import { TemplateDocumentEditor } from "@/components/kanban/task-detail/template-doc/template-document-editor"
+import type { HwpxFrontendJson } from "@/services/document-templates.types"
 import {
   fetchBusinessEvaluationHwpxPreviewHtml,
   fetchBusinessPlanHwpxPreviewHtml,
@@ -46,6 +48,8 @@ type TaskReferenceDocumentViewerProps = {
   evaluation?: BusinessEvaluationData | null
   /** 선택한 HWPX 양식 id (null = 기본 양식) — 좌측 렌더에 반영 */
   templateId?: string | null
+  /** 우측 WYSIWYG 편집본 — 있으면 좌측을 이 읽기 전용 렌더로 실시간 미러 */
+  templateJson?: HwpxFrontendJson | null
   className?: string
 }
 
@@ -58,6 +62,7 @@ export function TaskReferenceDocumentViewer({
   planLoading = false,
   evaluation,
   templateId = null,
+  templateJson = null,
   className,
 }: TaskReferenceDocumentViewerProps) {
   const allFiles = useMemo(
@@ -200,7 +205,15 @@ export function TaskReferenceDocumentViewer({
             사업 문서를 선택하세요.
           </p>
         ) : showEvaluationMirror && evaluation ? (
-          taskId ? (
+          templateJson ? (
+            <PrintDocumentShell className="mx-auto w-full max-w-none">
+              <TemplateDocumentEditor
+                frontendJson={templateJson}
+                readOnly
+                onChange={() => {}}
+              />
+            </PrintDocumentShell>
+          ) : taskId ? (
             <LiveHwpxRenderPanel
               fetchHtml={() =>
                 fetchBusinessEvaluationHwpxPreviewHtml(taskId, {
@@ -229,6 +242,14 @@ export function TaskReferenceDocumentViewer({
               <Loader2 className="size-4 animate-spin" />
               사업계획서를 불러오는 중…
             </div>
+          ) : templateJson ? (
+            <PrintDocumentShell className="mx-auto w-full max-w-none">
+              <TemplateDocumentEditor
+                frontendJson={templateJson}
+                readOnly
+                onChange={() => {}}
+              />
+            </PrintDocumentShell>
           ) : taskId ? (
             <LiveHwpxRenderPanel
               fetchHtml={() =>

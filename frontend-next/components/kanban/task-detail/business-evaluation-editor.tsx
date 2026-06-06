@@ -7,6 +7,8 @@ import {
 import { BusinessEvaluationSummaryForm } from "@/components/kanban/task-detail/business-evaluation-summary-form"
 import { DocumentMediaSections } from "@/components/kanban/task-detail/document-media-sections"
 import { DocumentSectionsTable } from "@/components/kanban/task-detail/document-sections-table"
+import { TemplateDocumentEditor } from "@/components/kanban/task-detail/template-doc/template-document-editor"
+import type { HwpxFrontendJson } from "@/services/document-templates.types"
 import {
   isDocumentSectionType,
   mergeDocumentSectionsInOrder,
@@ -36,6 +38,9 @@ type BusinessEvaluationEditorProps = {
   referenceMode?: boolean
   /** 사업계획서 사업명 (제목 `{사업이름} 최종사업평가서` 연동) */
   planProjectName?: string
+  /** 선택 양식 WYSIWYG — 있으면 요약표 대신 양식 위에서 직접 편집(첨부·추가본문은 유지) */
+  templateJson?: HwpxFrontendJson | null
+  onTemplateJsonChange?: (next: HwpxFrontendJson) => void
 }
 
 export function BusinessEvaluationEditor({
@@ -49,6 +54,8 @@ export function BusinessEvaluationEditor({
   taskId,
   referenceMode = false,
   planProjectName,
+  templateJson = null,
+  onTemplateJsonChange,
 }: BusinessEvaluationEditorProps) {
   const effectiveReadOnly = !canEdit || referenceMode
   const docSections = evaluation.sections.filter(isDocumentSectionType)
@@ -67,21 +74,37 @@ export function BusinessEvaluationEditor({
   return (
     <RichTextToolbarProvider enabled={canEdit}>
       <div className="business-evaluation-editor min-w-0 space-y-4">
-      <section aria-label="평가서 요약">
-        <A4DocumentViewport
-          fitToViewport={false}
-          pageWidthMm={DOCUMENT_VIEWPORT_WIDTH_SINGLE_MM}
-        >
-        <BusinessEvaluationSummaryForm
-          evaluation={evaluation}
-          canEdit={canEdit && !referenceMode}
-          datePickerOpen={datePickerOpen}
-          onDatePickerOpenChange={onDatePickerOpenChange}
-          onEvaluationChange={onEvaluationChange}
-          businessName={planProjectName}
-        />
-        </A4DocumentViewport>
-      </section>
+      {templateJson ? (
+        <section aria-label="평가서 요약 (선택 양식)" className="space-y-2">
+          {!effectiveReadOnly ? (
+            <p className="print-hide border border-black/15 bg-[#fafafa] px-4 py-2 text-center text-[11px] text-neutral-600">
+              선택한 양식 위에서 칸을 직접 클릭해 입력합니다. 대목차·본문은 아래
+              「추가 본문」에서 유지됩니다.
+            </p>
+          ) : null}
+          <TemplateDocumentEditor
+            frontendJson={templateJson}
+            readOnly={effectiveReadOnly}
+            onChange={(next) => onTemplateJsonChange?.(next)}
+          />
+        </section>
+      ) : (
+        <section aria-label="평가서 요약">
+          <A4DocumentViewport
+            fitToViewport={false}
+            pageWidthMm={DOCUMENT_VIEWPORT_WIDTH_SINGLE_MM}
+          >
+            <BusinessEvaluationSummaryForm
+              evaluation={evaluation}
+              canEdit={canEdit && !referenceMode}
+              datePickerOpen={datePickerOpen}
+              onDatePickerOpenChange={onDatePickerOpenChange}
+              onEvaluationChange={onEvaluationChange}
+              businessName={planProjectName}
+            />
+          </A4DocumentViewport>
+        </section>
+      )}
 
       <section aria-label="평가 본문" className="space-y-2">
         <div className="print-hide flex items-center justify-between gap-2 border border-b-0 border-black bg-[#f5f5f5] px-3 py-2">

@@ -74,12 +74,31 @@ def delete_template(
     return store.delete_document_template(region_id, template_id)
 
 
+@router.post("/{template_id}/prefill")
+def prefill_template(
+    template_id: str,
+    body: dict[str, Any],
+    region_id: str = Depends(require_region_id),
+    store: RegionStoreService = Depends(get_region_store_service),
+) -> dict[str, Any]:
+    """업로드 양식에 계획/평가 값을 라벨 매칭으로 채운 frontendJson 반환(WYSIWYG 초기값)."""
+    kind = str(body.get("kind") or "plan")
+    data = body.get("data")
+    if not isinstance(data, dict):
+        raise HTTPException(status_code=400, detail="data(계획/평가 값) 객체가 필요합니다.")
+    frontend_json = store.prefill_document_template(
+        region_id, template_id, kind=kind, data=data
+    )
+    return {"frontendJson": frontend_json}
+
+
 @router.post("/{template_id}/export")
 async def export_template(
     template_id: str,
     region_id: str = Depends(require_region_id),
     store: RegionStoreService = Depends(get_region_store_service),
     frontend_json: Annotated[str, Form(alias="frontendJson")] = "",
+    sections_json: Annotated[str | None, Form(alias="sections")] = None,
     download_filename: Annotated[str | None, Form(alias="downloadFilename")] = None,
 ) -> Response:
     if not frontend_json.strip():
@@ -93,7 +112,20 @@ async def export_template(
     if not isinstance(parsed, dict):
         raise HTTPException(status_code=400, detail="frontendJson 은 객체여야 합니다.")
 
-    payload, out_name = store.export_document_template(region_id, template_id, parsed)
+    sections: list[dict[str, Any]] | None = None
+    if sections_json and sections_json.strip():
+        try:
+            raw_sections = json.loads(sections_json)
+        except json.JSONDecodeError as exc:
+            raise HTTPException(
+                status_code=400, detail="sections 형식이 올바르지 않습니다."
+            ) from exc
+        if isinstance(raw_sections, list):
+            sections = [s for s in raw_sections if isinstance(s, dict)]
+
+    payload, out_name = store.export_document_template(
+        region_id, template_id, parsed, sections=sections
+    )
     if download_filename:
         out_name = download_filename
         if not out_name.lower().endswith(".hwpx"):

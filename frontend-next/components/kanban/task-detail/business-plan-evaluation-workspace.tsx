@@ -31,7 +31,13 @@ import {
 } from "@/lib/kanban/task-reference-documents"
 import { Button } from "@/components/ui/button"
 import { downloadBusinessEvaluationHwpx } from "@/lib/hwpx/export-business-evaluation"
-import { mergeFlushedDocumentSections } from "@/lib/hwpx/document-sections-for-export"
+import {
+  documentSectionsForHwpxExport,
+  mergeFlushedDocumentSections,
+} from "@/lib/hwpx/document-sections-for-export"
+import { buildHwpxDownloadFilename } from "@/lib/hwpx/hwpx-filename"
+import { exportFilledTemplate } from "@/services/document-templates.api.service"
+import type { HwpxFrontendJson } from "@/services/document-templates.types"
 import { toSaveBusinessEvaluationPayload } from "@/lib/kanban/evaluation-save-payload"
 import {
   getBusinessEvaluationTemplate,
@@ -78,6 +84,9 @@ type BusinessPlanEvaluationWorkspaceProps = {
   hideTopActionChrome?: boolean
   /** 선택한 HWPX 양식 id (null = 기본 양식) */
   templateId?: string | null
+  /** 선택 양식 WYSIWYG 편집 상태 (요약을 양식 위에서 직접 편집) */
+  templateJson?: HwpxFrontendJson | null
+  onTemplateJsonChange?: (next: HwpxFrontendJson) => void
 }
 
 export function BusinessPlanEvaluationWorkspace({
@@ -92,6 +101,8 @@ export function BusinessPlanEvaluationWorkspace({
   onCompleteOrEdit,
   hideTopActionChrome = false,
   templateId = null,
+  templateJson = null,
+  onTemplateJsonChange,
 }: BusinessPlanEvaluationWorkspaceProps) {
   const router = useRouter()
   const { session } = useAuth()
@@ -175,12 +186,32 @@ export function BusinessPlanEvaluationWorkspace({
   }, [])
 
   const downloadEvaluationHwpx = useCallback(async () => {
+    if (templateId && templateJson) {
+      // 선택 양식 위 편집본 + 추가본문 합쳐 내보내기
+      const current = evaluationDataRef.current
+      const exportSections = documentSectionsForHwpxExport(
+        mergeFlushedDocumentSections(current.sections ?? []),
+      )
+      const filename = buildHwpxDownloadFilename(
+        current.programName || planDocument?.formData.projectName,
+        "evaluation",
+        current.period || planDocument?.formData.period,
+      )
+      await exportFilledTemplate(templateId, templateJson, filename, exportSections)
+      return
+    }
     await downloadBusinessEvaluationHwpx(taskId, {
       evaluation: buildEvaluationDownloadPayload(),
       planForm: planDocument?.formData ?? null,
       templateId,
     })
-  }, [buildEvaluationDownloadPayload, planDocument?.formData, taskId, templateId])
+  }, [
+    buildEvaluationDownloadPayload,
+    planDocument?.formData,
+    taskId,
+    templateId,
+    templateJson,
+  ])
 
   const persistEvaluation = useCallback(async () => {
     const current = evaluationDataRef.current
@@ -560,6 +591,7 @@ export function BusinessPlanEvaluationWorkspace({
             planLoading={planLoading}
             evaluation={evaluationData}
             templateId={templateId}
+            templateJson={templateJson}
           />
         }
         editor={
@@ -576,6 +608,8 @@ export function BusinessPlanEvaluationWorkspace({
                 onAddHeading={() => addSection("heading")}
                 onAddBody={() => addSection("body")}
                 planProjectName={planDocument?.formData.projectName}
+                templateJson={templateJson}
+                onTemplateJsonChange={onTemplateJsonChange}
               />
             </PrintDocumentShell>
 

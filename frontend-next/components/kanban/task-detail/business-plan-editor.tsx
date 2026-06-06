@@ -8,6 +8,8 @@ import {
 } from "@/components/common/a4-document-viewport"
 import { DocumentMediaSections } from "@/components/kanban/task-detail/document-media-sections"
 import { DocumentSectionsTable } from "@/components/kanban/task-detail/document-sections-table"
+import { TemplateDocumentEditor } from "@/components/kanban/task-detail/template-doc/template-document-editor"
+import type { HwpxFrontendJson } from "@/services/document-templates.types"
 import {
   formalEmptyDocumentHtml,
   nextFormalHeadingTitle,
@@ -50,6 +52,9 @@ type BusinessPlanEditorProps = {
   onSectionsChange: (next: BusinessPlanSection[]) => void
   /** 사업평가 우측 참고 패널 — 읽기 전용 전체 계획서 */
   referenceMode?: boolean
+  /** 선택 양식 WYSIWYG — 있으면 요약표 대신 양식 위에서 직접 편집(첨부·추가본문은 유지) */
+  templateJson?: HwpxFrontendJson | null
+  onTemplateJsonChange?: (next: HwpxFrontendJson) => void
 }
 
 const createSectionId = () => Date.now() + Math.floor(Math.random() * 1000)
@@ -95,6 +100,8 @@ export function BusinessPlanEditor({
   onFormDataChange,
   onSectionsChange,
   referenceMode = false,
+  templateJson = null,
+  onTemplateJsonChange,
 }: BusinessPlanEditorProps) {
   const isReference = referenceMode
   const effectiveReadOnly = readOnly || isReference
@@ -150,7 +157,22 @@ export function BusinessPlanEditor({
           isReference && "reference-plan-editor",
         )}
       >
-        <section aria-label="사업계획 요약">
+        {templateJson ? (
+          <section aria-label="사업계획 요약 (선택 양식)" className="space-y-2">
+            {!effectiveReadOnly ? (
+              <p className="print-hide border border-black/15 bg-[#fafafa] px-4 py-2 text-center text-[11px] text-neutral-600">
+                선택한 양식 위에서 칸을 직접 클릭해 입력합니다. 대목차·본문은 아래
+                「추가 본문」에서 유지됩니다.
+              </p>
+            ) : null}
+            <TemplateDocumentEditor
+              frontendJson={templateJson}
+              readOnly={effectiveReadOnly}
+              onChange={(next) => onTemplateJsonChange?.(next)}
+            />
+          </section>
+        ) : (
+          <section aria-label="사업계획 요약">
           <A4DocumentViewport
             fitToViewport={false}
             pageWidthMm={DOCUMENT_VIEWPORT_WIDTH_SINGLE_MM}
@@ -293,7 +315,8 @@ export function BusinessPlanEditor({
               </HwpxTable>
             </HwpxDocument>
           </A4DocumentViewport>
-        </section>
+          </section>
+        )}
 
         <section aria-label="첨부 자료" className="print-hide space-y-2">
           <A4DocumentViewport

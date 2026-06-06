@@ -171,17 +171,30 @@ function formatApiErrorMessage(
   return `API 요청 실패 (${status}): ${path}`
 }
 
+/**
+ * 로그인 없이 접근 가능한 공개 페이지(설문 응답·목록, 로그인·회원가입).
+ * middleware.ts 의 공개 경로와 일치시킨다. 비로그인 방문자가 공개 페이지에
+ * 머무는 동안 발생하는 배경 401(세션 조회·챗봇 설정 등)은 정상이므로,
+ * 로그인 화면으로 튕기거나 세션을 지우지 않는다.
+ */
+function isPublicPagePath(pathname: string): boolean {
+  if (pathname.startsWith("/login") || pathname.startsWith("/signup")) return true
+  if (pathname === "/survey/list" || pathname.startsWith("/survey/list")) return true
+  if (/^\/survey\/[^/]+\/respond/.test(pathname)) return true
+  return false
+}
+
 function handleUnauthorized(path: string, skipSessionAuth?: boolean): void {
   if (skipSessionAuth || typeof window === "undefined") return
 
-  clearClientSession()
-  const loginPath = "/login"
-  if (window.location.pathname.startsWith(loginPath)) return
+  // 공개 페이지에서는 비로그인 401이 정상 — 튕기지 않고 호출자가 처리하도록 둔다.
+  if (isPublicPagePath(window.location.pathname)) return
 
+  clearClientSession()
   const from = encodeURIComponent(
     `${window.location.pathname}${window.location.search}`,
   )
-  window.location.replace(`${loginPath}?from=${from}&reason=session`)
+  window.location.replace(`/login?from=${from}&reason=session`)
 }
 
 export async function apiFetch<T>(

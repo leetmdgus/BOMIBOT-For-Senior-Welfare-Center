@@ -187,15 +187,52 @@ class DocumentTemplateService:
             raise HTTPException(status_code=404, detail="템플릿을 찾을 수 없습니다.")
         return self._read_bytes(region_id, meta)
 
+    def prefill(
+        self,
+        region_id: str,
+        template_id: str,
+        *,
+        kind: str,
+        data: dict[str, Any],
+    ) -> dict[str, Any]:
+        """업로드 양식에 계획/평가 값을 라벨 매칭으로 채운 frontendJson 반환.
+
+        우측 WYSIWYG 편집기 초기값 — 사용자가 이 위에서 직접 수정한다.
+        """
+        from app.application.hwpx.render.custom_template_fill import (
+            prefill_evaluation_frontend_json,
+            prefill_plan_frontend_json,
+        )
+
+        store = self._load(region_id)
+        meta = self._find(store, template_id)
+        if meta is None:
+            raise HTTPException(status_code=404, detail="템플릿을 찾을 수 없습니다.")
+        original = self._read_bytes(region_id, meta)
+        source_filename = meta.get("sourceFilename") or "template.hwpx"
+
+        if kind == "evaluation":
+            return prefill_evaluation_frontend_json(
+                original, data, source_filename=source_filename
+            )
+        return prefill_plan_frontend_json(
+            original, data, source_filename=source_filename
+        )
+
     def export_filled(
         self,
         region_id: str,
         template_id: str,
         frontend_json: dict[str, Any],
+        *,
+        sections: list[dict[str, Any]] | None = None,
     ) -> tuple[bytes, str]:
-        """채운 frontendJson 을 원본 양식에 절대 보존으로 반영 → (bytes, filename)."""
-        data = self._load(region_id)
-        meta = self._find(data, template_id)
+        """채운 frontendJson 을 원본 양식에 절대 보존으로 반영 → (bytes, filename).
+
+        sections(추가본문·대목차·본문)가 있으면 문서 끝에 그래프트해 함께 내보낸다.
+        """
+        store = self._load(region_id)
+        meta = self._find(store, template_id)
         if meta is None:
             raise HTTPException(status_code=404, detail="템플릿을 찾을 수 없습니다.")
         if not frontend_json:
@@ -203,6 +240,14 @@ class DocumentTemplateService:
 
         original = self._read_bytes(region_id, meta)
         payload = export_hwpx_preserving(original, frontend_json)
+
+        if sections:
+            # 추가본문/본문 유지 — 기본 양식과 동일한 그래프트 로직 재사용
+            from app.application.hwpx.render.service import (
+                _graft_and_fill_reference_sections,
+            )
+
+            payload = _graft_and_fill_reference_sections(payload, sections)
 
         out_name = meta.get("sourceFilename") or f"{meta.get('name', 'template')}.hwpx"
         if not out_name.lower().endswith(".hwpx"):

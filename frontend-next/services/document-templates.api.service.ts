@@ -48,14 +48,29 @@ export async function deleteDocumentTemplate(templateId: string): Promise<void> 
   await apiClient.delete<{ deleted: boolean }>(base(`/${encodeURIComponent(templateId)}`))
 }
 
-/** 채운 frontendJson 을 원본 양식에 반영한 HWPX 다운로드. */
+/** 업로드 양식에 계획/평가 값을 라벨 매칭으로 채운 frontendJson(WYSIWYG 초기값). */
+export async function prefillDocumentTemplate(
+  templateId: string,
+  kind: DocumentTemplateKind,
+  data: Record<string, unknown>,
+): Promise<HwpxFrontendJson> {
+  const result = await apiClient.post<{ frontendJson: HwpxFrontendJson }>(
+    base(`/${encodeURIComponent(templateId)}/prefill`),
+    { kind, data },
+  )
+  return result.frontendJson
+}
+
+/** 채운 frontendJson 을 원본 양식에 반영한 HWPX 다운로드. sections(추가본문)는 끝에 합침. */
 export async function exportFilledTemplate(
   templateId: string,
   frontendJson: HwpxFrontendJson,
   downloadFilename?: string,
+  sections?: unknown[],
 ): Promise<void> {
   const form = new FormData()
   form.append("frontendJson", JSON.stringify(frontendJson))
+  if (sections && sections.length) form.append("sections", JSON.stringify(sections))
   if (downloadFilename) form.append("downloadFilename", downloadFilename)
 
   const { blob, filename } = await apiFetchBlobWithMeta(

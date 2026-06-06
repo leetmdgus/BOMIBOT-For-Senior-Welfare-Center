@@ -2211,14 +2211,28 @@ class RegionStoreService:
         """업로드한 양식의 원본 HWPX bytes — 계획/평가 렌더 베이스로 사용."""
         return self._document_templates.read_template_bytes(region_id, template_id)
 
+    def prefill_document_template(
+        self,
+        region_id: str,
+        template_id: str,
+        *,
+        kind: str,
+        data: dict,
+    ) -> dict:
+        return self._document_templates.prefill(
+            region_id, template_id, kind=kind, data=data
+        )
+
     def export_document_template(
         self,
         region_id: str,
         template_id: str,
         frontend_json: dict,
+        *,
+        sections: list[dict] | None = None,
     ) -> tuple[bytes, str]:
         return self._document_templates.export_filled(
-            region_id, template_id, frontend_json
+            region_id, template_id, frontend_json, sections=sections
         )
 
     # --- chat ---
