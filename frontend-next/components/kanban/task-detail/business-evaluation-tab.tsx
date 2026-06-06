@@ -8,7 +8,7 @@ import {
   type SetStateAction,
 } from "react"
 import { useParams } from "next/navigation"
-import { Eye, Loader2 } from "lucide-react"
+import { Loader2 } from "lucide-react"
 
 import { HwpxDownloadButton } from "@/components/common/hwpx-download-button"
 import {
@@ -16,8 +16,6 @@ import {
 } from "@/components/common/print-document"
 import { BusinessPlanEvaluationWorkspace } from "@/components/kanban/task-detail/business-plan-evaluation-workspace"
 import { HwpxTemplateSelector } from "@/components/kanban/task-detail/hwpx-template-selector"
-import { HwpxPreviewDialog } from "@/components/kanban/task-detail/hwpx-preview-dialog"
-import { fetchBusinessEvaluationHwpxPreviewHtml } from "@/lib/hwpx/fetch-hwpx-preview"
 import { loadEvaluationPerformanceTotals } from "@/components/kanban/task-detail/performance/evaluation-performance-totals"
 import { mergeFlushedDocumentSections } from "@/lib/hwpx/document-sections-for-export"
 import { downloadBusinessEvaluationHwpx } from "@/lib/hwpx/export-business-evaluation"
@@ -41,7 +39,6 @@ export function BusinessEvaluationTab() {
   const [isEditMode, setIsEditMode] = useState(false)
   /** 선택한 HWPX 양식 id (null = 기본 양식) */
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null)
-  const [templatePreviewOpen, setTemplatePreviewOpen] = useState(false)
 
   /** evaluationData가 로드된 뒤에만 갱신 — null 상태에서는 무시 */
   const updateEvaluation = useCallback<
@@ -167,16 +164,6 @@ export function BusinessEvaluationTab() {
             defaultLabel="기본 사업평가서 양식"
             disabled={isSaving}
           />
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={isSaving}
-            onClick={() => setTemplatePreviewOpen(true)}
-          >
-            <Eye className="mr-1.5 size-4" />
-            양식 미리보기
-          </Button>
           <PrintDocumentButton disabled={isSaving} />
           <HwpxDownloadButton
             disabled={isSaving}
@@ -224,28 +211,6 @@ export function BusinessEvaluationTab() {
         onCompleteOrEdit={() => void handleCompleteOrEdit()}
         hideTopActionChrome
         templateId={selectedTemplateId}
-      />
-
-      <HwpxPreviewDialog
-        open={templatePreviewOpen}
-        onOpenChange={setTemplatePreviewOpen}
-        title="최종사업평가서 양식 미리보기"
-        description={
-          selectedTemplateId
-            ? "선택한 업로드 양식에 현재 내용을 채운 결과입니다."
-            : "기본 양식에 현재 내용을 채운 결과입니다."
-        }
-        fetchHtml={() =>
-          fetchBusinessEvaluationHwpxPreviewHtml(taskId, {
-            evaluation: {
-              ...evaluationData,
-              sections: mergeFlushedDocumentSections(
-                evaluationData.sections ?? [],
-              ),
-            },
-            templateId: selectedTemplateId,
-          })
-        }
       />
     </div>
   )

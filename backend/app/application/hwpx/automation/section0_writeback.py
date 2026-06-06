@@ -351,22 +351,42 @@ def _apply_run_style(
     return False
 
 
+def _first_or_new_run(p_el: etree._Element) -> etree._Element:
+    """문단의 첫 hp:run을 반환. 없으면 새 hp:run(charPrIDRef=0)을 만들어 맨 앞에 삽입."""
+    for child in p_el:
+        if _localname(child) == "run":
+            return child
+    run_el = etree.Element(f"{_HP}run", {"charPrIDRef": "0"})
+    p_el.insert(0, run_el)
+    return run_el
+
+
 def _apply_runs_to_paragraph(
     p_el: etree._Element,
     runs_data: list[dict[str, Any]],
     hed: HeaderEditor | None,
 ) -> bool:
-    """문단 한 개의 text_run 텍스트·서식을 hp:p에 반영 (run_index 기준). 변경 여부 반환."""
+    """문단 한 개의 text_run 텍스트·서식을 hp:p에 반영. 변경 여부 반환.
+
+    run_index가 있으면 그 위치의 hp:run을 갱신하고, run_index가 없는 text_run(=빈 셀/문단에
+    프론트가 새로 넣은 텍스트, 예: AI 자동 채움)은 첫 hp:run에 기록한다(없으면 생성).
+    """
     xml_children = list(p_el)
     changed = False
     for run in runs_data or []:
         if run.get("type") != "text_run":
             continue
         run_index = run.get("run_index")
-        if not isinstance(run_index, int) or run_index < 0 or run_index >= len(xml_children):
-            continue
-        run_el = xml_children[run_index]
-        if _localname(run_el) != "run":
+        run_el: etree._Element | None = None
+        if isinstance(run_index, int) and 0 <= run_index < len(xml_children):
+            candidate = xml_children[run_index]
+            if _localname(candidate) == "run":
+                run_el = candidate
+        elif run_index is None:
+            # 무인덱스 text_run = 신규 입력(빈 셀 채움 등). 비어 있으면 건드리지 않음.
+            if str(run.get("text", "")):
+                run_el = _first_or_new_run(p_el)
+        if run_el is None:
             continue
         new_text = run.get("text", "")
         if _run_text(run_el) != new_text:

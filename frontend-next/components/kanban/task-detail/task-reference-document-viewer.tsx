@@ -10,6 +10,11 @@ import { openUploadedFileById } from "@/lib/files/open-file-item"
 import { OfficePreviewContent } from "@/components/files/office-preview-content"
 import { BusinessEvaluationEditor } from "@/components/kanban/task-detail/business-evaluation-editor"
 import { BusinessPlanEditor } from "@/components/kanban/task-detail/business-plan-editor"
+import { LiveHwpxRenderPanel } from "@/components/kanban/task-detail/live-hwpx-render-panel"
+import {
+  fetchBusinessEvaluationHwpxPreviewHtml,
+  fetchBusinessPlanHwpxPreviewHtml,
+} from "@/lib/hwpx/fetch-hwpx-preview"
 import { isOfficePreviewableFile } from "@/lib/files/office-preview"
 import { getEvaluationDocumentPreviewHtml } from "@/lib/evaluation-document-preview"
 import {
@@ -39,6 +44,8 @@ type TaskReferenceDocumentViewerProps = {
   planDocument: BusinessPlanDocument | null
   planLoading?: boolean
   evaluation?: BusinessEvaluationData | null
+  /** 선택한 HWPX 양식 id (null = 기본 양식) — 좌측 렌더에 반영 */
+  templateId?: string | null
   className?: string
 }
 
@@ -50,6 +57,7 @@ export function TaskReferenceDocumentViewer({
   planDocument,
   planLoading = false,
   evaluation,
+  templateId = null,
   className,
 }: TaskReferenceDocumentViewerProps) {
   const allFiles = useMemo(
@@ -192,7 +200,18 @@ export function TaskReferenceDocumentViewer({
             사업 문서를 선택하세요.
           </p>
         ) : showEvaluationMirror && evaluation ? (
-          <BusinessEvaluationEditor
+          taskId ? (
+            <LiveHwpxRenderPanel
+              fetchHtml={() =>
+                fetchBusinessEvaluationHwpxPreviewHtml(taskId, {
+                  evaluation,
+                  templateId,
+                })
+              }
+              refreshKey={JSON.stringify({ e: evaluation, t: templateId })}
+            />
+          ) : (
+            <BusinessEvaluationEditor
             key={evaluation.sections.map((section) => section.id).join("\u0000")}
             evaluation={evaluation}
             canEdit={false}
@@ -201,14 +220,30 @@ export function TaskReferenceDocumentViewer({
             datePickerOpen={false}
             onDatePickerOpenChange={() => {}}
             onEvaluationChange={() => {}}
-            planProjectName={planDocument?.formData.projectName}
-          />
+              planProjectName={planDocument?.formData.projectName}
+            />
+          )
         ) : showPlanMirror && planDocument ? (
           planLoading ? (
             <div className="flex items-center justify-center gap-2 py-16 text-sm text-muted-foreground">
               <Loader2 className="size-4 animate-spin" />
               사업계획서를 불러오는 중…
             </div>
+          ) : taskId ? (
+            <LiveHwpxRenderPanel
+              fetchHtml={() =>
+                fetchBusinessPlanHwpxPreviewHtml(taskId, {
+                  formData: planDocument.formData,
+                  sections: planDocument.sections,
+                  templateId,
+                })
+              }
+              refreshKey={JSON.stringify({
+                f: planDocument.formData,
+                s: planDocument.sections,
+                t: templateId,
+              })}
+            />
           ) : (
             <PrintDocumentShell className="mx-auto w-full max-w-none">
               <BusinessPlanEditor

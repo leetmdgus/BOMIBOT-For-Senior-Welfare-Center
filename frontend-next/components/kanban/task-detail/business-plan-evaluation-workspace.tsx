@@ -559,6 +559,7 @@ export function BusinessPlanEvaluationWorkspace({
             planDocument={planDocument}
             planLoading={planLoading}
             evaluation={evaluationData}
+            templateId={templateId}
           />
         }
         editor={
