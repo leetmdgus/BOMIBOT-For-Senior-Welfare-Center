@@ -1,0 +1,74 @@
+/* HwpxSvgPreview — rhwp SVG 페이지 미리보기 */
+
+.hwpx-svg-root {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  background: #f3f4f6;
+}
+
+/* 한 페이지(A4 SVG). viewBox로 가로폭에 맞춰 비율 유지 스케일 */
+.hwpx-svg-page {
+  width: 100%;
+  max-width: 820px;
+  background: #fff;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.15);
+}
+
+.hwpx-svg-page svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* 편집 후 재렌더 중 표시(직전 페이지는 그대로 두고 위에 오버레이) */
+.hwpx-svg-overlay {
+  position: sticky;
+  top: 8px;
+  z-index: 2;
+  align-self: flex-end;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  background: rgba(17, 24, 39, 0.82);
+  color: #fff;
+  font-size: 12px;
+}
+
+.hwpx-svg-overlay-error {
+  background: rgba(194, 65, 12, 0.92);
+}
+
+.hwpx-svg-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 96px 0;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.hwpx-svg-fallback {
+  display: flex;
+  flex-direction: column;
+}
+
+.hwpx-svg-note {
+  margin: 0;
+  padding: 8px 12px;
+  background: #fff7ed;
+  border-bottom: 1px solid #fed7aa;
+  color: #9a3412;
+  font-size: 12px;
+}
+
+.hwpx-svg-note-detail {
+  color: #c2680c;
+  opacity: 0.85;
+}

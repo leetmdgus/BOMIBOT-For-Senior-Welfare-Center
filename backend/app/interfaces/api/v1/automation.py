@@ -6,6 +6,11 @@ from fastapi.responses import Response
 from app.application.http.content_disposition import attachment_content_disposition
 from app.application.hwpx.automation.service import HwpxAutomationService
 from app.application.hwpx.hwpx_package import is_hwpx_filename
+from app.application.hwpx.rhwp_render import (
+    RhwpNotAvailableError,
+    RhwpRenderError,
+    render_to_svg_pages,
+)
 from app.interfaces.api.deps import require_region_id
 
 router = APIRouter(prefix="/automation", tags=["automation"])
@@ -93,6 +98,59 @@ async def export_hwpx_document(
             "Content-Disposition": attachment_content_disposition(out_name),
         },
     )
+
+
+@router.post("/hwpx/render-svg")
+async def render_hwpx_svg(
+    region_id: str = Depends(require_region_id),
+    file: UploadFile = File(...),
+    # 편집 반영: 있으면 원본에 writeback한 바이트를 렌더(없으면 원본 그대로)
+    frontend_json: Annotated[str, Form(alias="frontendJson")] = "",
+    # "", "style", "subset", "full"
+    font_mode: Annotated[str, Form()] = "",
+) -> dict[str, Any]:
+    """업로드 HWPX(+편집 JSON)를 rhwp로 페이지별 SVG로 정확 렌더링한다."""
+    del region_id
+
+    hwpx_bytes, source_filename = await _read_hwpx_upload(file)
+
+    render_bytes = hwpx_bytes
+    if frontend_json.strip():
+        try:
+            parsed_json = _service.parse_frontend_json_field(frontend_json)
+            render_bytes = _service.export_hwpx_bytes(
+                hwpx_bytes,
+                parsed_json,
+                download_filename=source_filename,
+            )
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+        except Exception:
+            # writeback 실패 시에도 미리보기는 끊기지 않도록 원본으로 폴백
+            render_bytes = hwpx_bytes
+
+    try:
+        pages = render_to_svg_pages(
+            render_bytes,
+            suffix=".hwpx",
+            font_mode=font_mode,
+        )
+    except RhwpNotAvailableError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except RhwpRenderError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(
+            status_code=500,
+            detail=f"SVG 렌더링 중 오류가 발생했습니다: {exc}",
+        ) from exc
+
+    return {
+        "format": "hwpx",
+        "sourceFilename": source_filename,
+        "pageCount": len(pages),
+        "pages": pages,
+    }
 
 
 @router.post("/documents/analyze")

@@ -7,3 +7,9 @@ const automationService = shouldUseMockApi() ? mockService : apiService
 export const analyzeEvidenceDocument = automationService.analyzeEvidenceDocument
 export const parseHwpxDocument = automationService.parseHwpxDocument
 export const downloadHwpxDocument = automationService.downloadHwpxDocument
+export const renderHwpxSvg = automationService.renderHwpxSvg
+
+export type {
+  HwpxSvgRenderResult,
+  HwpxSvgFontMode,
+} from "./automation.api.service"

@@ -35,6 +35,7 @@ from app.application.task_detail_bootstrap import (
 )
 from app.application.region_store.approvals import ApprovalApplicationService
 from app.application.region_store.chat_config import ChatConfigApplicationService
+from app.application.region_store.document_templates import DocumentTemplateService
 from app.application.region_store.gateway import RegionStoreGateway
 from app.domain.region_store.constants import (
     DOMAIN_EBOOKS,
@@ -98,6 +99,9 @@ class RegionStoreService:
         self._surveys = survey_service
         self._approvals = ApprovalApplicationService(self._gateway)
         self._chat_config = ChatConfigApplicationService(self._gateway)
+        self._document_templates = DocumentTemplateService(
+            self._gateway, self._file_storage
+        )
 
     def get_domain_payload(self, region_id: str, domain: str) -> dict:
         return self._load(region_id, domain)
@@ -2172,6 +2176,44 @@ class RegionStoreService:
 
     def delete_approval(self, region_id: str, approval_id: str) -> dict:
         return self._approvals.delete(region_id, approval_id)
+
+    # --- document templates (사용자 업로드 양식) ---
+
+    def list_document_templates(self, region_id: str) -> list:
+        return self._document_templates.list_templates(region_id)
+
+    def create_document_template(
+        self,
+        region_id: str,
+        *,
+        filename: str,
+        content: bytes,
+        created_by: str = "시스템",
+        name: str | None = None,
+    ) -> dict:
+        return self._document_templates.create_template(
+            region_id,
+            filename=filename,
+            content=content,
+            created_by=created_by,
+            name=name,
+        )
+
+    def get_document_template(self, region_id: str, template_id: str) -> dict:
+        return self._document_templates.get_template(region_id, template_id)
+
+    def delete_document_template(self, region_id: str, template_id: str) -> dict:
+        return self._document_templates.delete_template(region_id, template_id)
+
+    def export_document_template(
+        self,
+        region_id: str,
+        template_id: str,
+        frontend_json: dict,
+    ) -> tuple[bytes, str]:
+        return self._document_templates.export_filled(
+            region_id, template_id, frontend_json
+        )
 
     # --- chat ---
 

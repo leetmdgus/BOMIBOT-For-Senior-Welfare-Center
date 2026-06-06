@@ -17,6 +17,11 @@ const parsePath = resolveApiPath(
   "/api/v1/automation/hwpx/parse",
 )
 
+const renderSvgPath = resolveApiPath(
+  "/api/automation/hwpx/render-svg",
+  "/api/v1/automation/hwpx/render-svg",
+)
+
 const exportPath = resolveApiPath(
   "/api/automation/hwpx/export",
   "/api/v1/automation/hwpx/export",
@@ -38,6 +43,37 @@ export async function parseHwpxDocument(file: File): Promise<HwpxParseResponse> 
   formData.append("file", file)
 
   return apiUploadFormData<HwpxParseResponse>(parsePath, formData)
+}
+
+export type HwpxSvgFontMode = "" | "style" | "subset" | "full"
+
+export type HwpxSvgRenderResult = {
+  format: string
+  sourceFilename: string
+  pageCount: number
+  /** 페이지 순서대로 정렬된 SVG 문자열 (rhwp 정확 렌더) */
+  pages: string[]
+}
+
+/**
+ * rhwp(Rust 렌더러)로 HWPX를 페이지별 SVG로 정확 렌더링한다.
+ * frontendJson을 주면 원본에 writeback한 결과(=편집 반영)를 렌더한다.
+ */
+export async function renderHwpxSvg(
+  file: File,
+  frontendJson?: HwpxFrontendDocument | null,
+  fontMode: HwpxSvgFontMode = "",
+): Promise<HwpxSvgRenderResult> {
+  const formData = new FormData()
+  formData.append("file", file)
+  if (frontendJson) {
+    formData.append("frontendJson", JSON.stringify(frontendJson))
+  }
+  if (fontMode) {
+    formData.append("font_mode", fontMode)
+  }
+
+  return apiUploadFormData<HwpxSvgRenderResult>(renderSvgPath, formData)
 }
 
 export async function exportHwpxDocument(

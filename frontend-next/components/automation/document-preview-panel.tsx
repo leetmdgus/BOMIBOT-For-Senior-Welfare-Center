@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react"
 import { Loader2 } from "lucide-react"
 
 import { HwpxRenderer } from "@/components/hwpx/HwpxRenderer"
+import { HwpxSvgPreview } from "@/components/hwpx/HwpxSvgPreview"
 import type { DocumentAnalysisResult } from "@/lib/automation/document-analysis-types"
 import type { HwpxFrontendDocument } from "@/lib/hwpx/frontend-render-types"
 import { cn } from "@/lib/utils"
@@ -11,6 +12,8 @@ import { cn } from "@/lib/utils"
 type DocumentPreviewPanelProps = {
   analysis: DocumentAnalysisResult | null
   hwpxPreview: HwpxFrontendDocument | null
+  /** rhwp 정확 렌더에 쓸 원본 파일. 없으면 근사(DOM) 렌더러로 표시 */
+  sourceFile?: File | null
   loading?: boolean
   className?: string
 }
@@ -18,6 +21,7 @@ type DocumentPreviewPanelProps = {
 export function DocumentPreviewPanel({
   analysis,
   hwpxPreview,
+  sourceFile = null,
   loading = false,
   className,
 }: DocumentPreviewPanelProps) {
@@ -79,7 +83,12 @@ export function DocumentPreviewPanel({
   if (analysis.kind === "hwpx" && hwpxPreview) {
     return (
       <div className={cn("overflow-auto", className)}>
-        <HwpxRenderer data={hwpxPreview} />
+        {sourceFile ? (
+          // rhwp 정확 렌더(편집 반영) — 실패 시 컴포넌트 내부에서 근사 렌더러로 폴백
+          <HwpxSvgPreview file={sourceFile} doc={hwpxPreview} />
+        ) : (
+          <HwpxRenderer data={hwpxPreview} />
+        )}
       </div>
     )
   }

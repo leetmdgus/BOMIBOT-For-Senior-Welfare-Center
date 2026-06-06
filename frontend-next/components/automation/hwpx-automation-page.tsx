@@ -237,6 +237,7 @@ export function HwpxAutomationPage() {
                 <DocumentPreviewPanel
                   analysis={analysis}
                   hwpxPreview={previewData}
+                  sourceFile={selectedFile}
                   loading={loading}
                 />
               </div>

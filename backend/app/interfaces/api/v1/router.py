@@ -6,6 +6,7 @@ from app.interfaces.api.v1 import (
     automation,
     chat,
     dashboard,
+    document_templates,
     employees,
     google_auth,
     kanban,
@@ -24,6 +25,7 @@ api_router.include_router(kanban.router)
 api_router.include_router(stores.router)
 api_router.include_router(approvals.router)
 api_router.include_router(automation.router)
+api_router.include_router(document_templates.router)
 api_router.include_router(version_history.router)
 api_router.include_router(task_detail.router)
 api_router.include_router(tasks.router)

@@ -1,0 +1,8 @@
+[1 업로드] id=tpl-27f8c1889f7c name='form-002' stats={'tableCount': 5, 'cellCount': 430, 'emptyCellCount': 238}
+[2 목록] 1개, frontendJson 미포함=True
+[3 조회] frontendJson 포함=True 첫 텍스트셀='품목번호'
+[5 내보내기] bytes=125,956 filename='form-002.hwpx' 원본대비변경=True
+[6 왕복검증] 토큰반영=PASS
+[7 삭제] 남은 템플릿=0
+
+=== ALL PASS ===

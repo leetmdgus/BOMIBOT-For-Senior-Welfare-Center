@@ -49,6 +49,10 @@ class Settings(BaseSettings):
     # 업로드 파일 저장 경로 (region_id 하위 디렉터리)
     files_storage_dir: str = "storage/uploads"
 
+    # rhwp HWP/HWPX 렌더러 CLI 경로 (SVG 미리보기용). 비우면 자동 탐색
+    # (PATH → repo의 rhwp/target/{release,debug}/rhwp[.exe]).
+    rhwp_bin: str = ""
+
     # Google OAuth (로그인 + Calendar 읽기)
     google_client_id: str = ""
     google_client_secret: str = ""
