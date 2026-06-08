@@ -1,5 +1,7 @@
 # BOMIBOT 로컬 Quickstart
 
+> **최종 갱신:** 2026-06-08
+
 ## 1. 한 번에 (권장)
 
 ```powershell
@@ -54,6 +56,7 @@ http://localhost:9000 — 로그인:
 - **9001 포트 하나만** — Docker API와 로컬 `uvicorn` 동시 실행 금지 (`.\scripts\dev.ps1`가 uvicorn 정리)
 - **`POSTGRES_PASSWORD` 변경** — `backend\scripts\reset-docker-stack.ps1`
 - mock만 쓰려면 `NEXT_PUBLIC_USE_MOCK_API=true` (API 불필요)
+- **HWP/HWPX 미리보기(문서자동화·양식)** 를 정확 렌더로 보려면 rhwp 바이너리 필요: `cd rhwp && cargo build --release --bin rhwp` (rustc 1.88+). 없으면 근사 렌더러로 폴백. AI 자동 채움은 백엔드 `.env`의 `GEMINI_API_KEY`/`GEMINI_MODEL` 필요
 
 ## 4. 프로덕션 배포
 

@@ -1,11 +1,13 @@
 # BOMIBOT 데이터베이스 ERD · 스키마
 
-> **최종 갱신:** 2026-05-24  
+> **최종 갱신:** 2026-06-08  
 > **근거:** `services/*.types.ts`, `lib/mocks/*`, [API_SPEC.md](./API_SPEC.md)  
 > **대상 DB:** PostgreSQL 권장 (JSONB·ENUM·UUID)  
 > **멀티 테넌트:** `region_id` = `chuncheon-north` | `chuncheon-east`
 
 프론트엔드 mock은 지역별 `region-store`로 데이터를 분리합니다. 백엔드 DB도 **모든 비즈니스 테이블에 `region_id` FK**를 두는 것을 기준으로 설계했습니다.
+
+> **JSON 도메인(`region_json_stores`):** 설문·파일·전자책·실적·task-detail·버전이력·리포트·챗·전자결재에 더해 **`document_templates`(양식 자동작성)** 도메인이 추가되었습니다. `(region_id, domain)` 키, payload는 JSONB. 양식 원본 바이트는 파일스토리지에 보관하고 메타·`frontendJson`만 JSON 도메인에 저장합니다.
 
 ---
 

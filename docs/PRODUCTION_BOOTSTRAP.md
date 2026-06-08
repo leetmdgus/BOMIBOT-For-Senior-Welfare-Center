@@ -1,5 +1,7 @@
 # 프로덕션 서버 최초 배포 (api-workspace.bomi.ai.kr)
 
+> **최종 갱신:** 2026-06-08
+
 Linux 서버 + Docker + Nginx + Vercel 프론트 기준입니다.
 
 **단계별 체크리스트:** [PRODUCTION_SSH_CHECKLIST.md](./PRODUCTION_SSH_CHECKLIST.md)

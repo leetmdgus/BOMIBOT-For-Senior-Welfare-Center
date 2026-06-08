@@ -1,5 +1,7 @@
 # Vercel 환경 변수 체크리스트
 
+> **최종 갱신:** 2026-06-08
+
 프론트 Root Directory: **`frontend-next`**  
 Production 도메인: **`https://workspace.bomi.ai.kr`** → API **`https://api-workspace.bomi.ai.kr`**
 
@@ -21,15 +23,20 @@ Vercel 프로젝트에 `frontend-next/vercel.json`이 빌드 명령을 지정합
 | API 연동 | Production과 동일 URL |
 | UI만 | `NEXT_PUBLIC_USE_MOCK_API=true` (API_BASE 비움) |
 
-## 챗봇 LLM (프론트 불필요)
+## 챗봇 LLM · 문서자동화 AI (프론트 불필요)
 
-Gemini/SMTP/RAG는 **백엔드 API 서버** `.env`에 설정합니다.
+Gemini/SMTP/RAG/rhwp는 **백엔드 API 서버** `.env`에 설정합니다. `GEMINI_*`는 챗봇 어시스턴트와 문서자동화 **AI 자동 채움**(`/automation/hwpx/ai-fill`)이 공용으로 씁니다.
 
 ```env
 GEMINI_API_KEY=...
 GEMINI_BASE_URL=https://factchat-cloud.mindlogic.ai/v1/gateway
-GEMINI_MODEL=gemini-2.0-flash
+GEMINI_MODEL=gemini-2.5-flash   # ⚠️ 기본값 gemini-2.0-flash는 현재 키에서 403(권한없음). 접근 가능한 모델로 설정
+
+# HWP/HWPX 미리보기 렌더러 (선택) — 비우면 자동 탐색, 미설치 시 근사 렌더러 폴백
+# RHWP_BIN=/usr/local/bin/rhwp
 ```
+
+> rhwp 바이너리는 현재 프로덕션 Docker 이미지에 **포함되지 않습니다**(근사 렌더러 폴백). 상세: [DEPLOYMENT.md](./DEPLOYMENT.md) §5.
 
 ## 프로덕션 API 서버 (최초 1회)
 

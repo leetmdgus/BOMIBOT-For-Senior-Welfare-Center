@@ -1,5 +1,7 @@
 # 프론트 `services/` ↔ FastAPI `/api/v1` 매핑
 
+> **최종 갱신:** 2026-06-08
+
 `NEXT_PUBLIC_API_BASE_URL` 설정 시 `*.api.service.ts` → FastAPI → PostgreSQL.
 
 ## 저장 방식
@@ -7,7 +9,7 @@
 | 구분 | 테이블 | 도메인 |
 |------|--------|--------|
 | 관계형 | `kanban_*`, `employees`, `dashboard_*`, `users` | 칸반, 조직, 대시보드, 인증 |
-| JSON 도메인 | `region_json_stores` | 설문, 파일, 전자책, 실적, task-detail, 버전이력, 리포트, 챗, **전자결재** |
+| JSON 도메인 | `region_json_stores` | 설문, 파일, 전자책, 실적, task-detail, 버전이력, 리포트, 챗, 전자결재, **양식(document_templates)** |
 
 ## 신규·보완 API (DB 저장)
 
@@ -80,6 +82,22 @@
 | `askAssistantQuestion` | POST | `/chat/assistant` |
 | `submitCsTicket` | POST | `/chat/cs-ticket` |
 | `getOntologyGraph` | GET | `/chat/ontology` |
+
+## Automation · Document templates (문서자동화 / 양식 자동작성)
+
+multipart/form-data. `NEXT_PUBLIC_API_BASE_URL` 미설정 시 `/api/document-templates` catch-all 프록시로 자동 라우팅.
+
+| 프론트 | Method | FastAPI | 비고 |
+|--------|--------|---------|------|
+| `parseHwpx` | POST | `/automation/hwpx/parse` | HWPX → `frontendJson` |
+| `exportHwpxDocument` | POST | `/automation/hwpx/export` | 편집 → HWPX (원본 보존) |
+| `renderHwpxSvg` | POST | `/automation/hwpx/render-svg` | rhwp 페이지 SVG (503 → 근사 폴백) |
+| `aiFillForm` | POST | `/automation/hwpx/ai-fill` | Gemini 자동 채움 (503 = 키 없음) |
+| `analyzeDocuments` | POST | `/automation/documents/analyze` | 참고문서 평문 추출 |
+| `renderFileSvg` | GET | `/files/{id}/render-svg` | /files 탭 `.hwp`/`.hwpx` 미리보기 |
+| `listDocumentTemplates` 등 | CRUD | `/document-templates*` | `document-templates.api.service.ts` · region 라이브러리 |
+
+> 렌더러(rhwp) 의존성·배포 주의: [DEPLOYMENT.md](./DEPLOYMENT.md). LLM 키·모델: `GEMINI_API_KEY` / `GEMINI_MODEL`.
 
 ## Legacy tasks
 

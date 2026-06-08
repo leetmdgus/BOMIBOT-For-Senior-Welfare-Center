@@ -1,5 +1,7 @@
 # Backend DDD 구조
 
+> **최종 갱신:** 2026-06-08
+
 ## 레이어
 
 | 레이어 | 경로 | 역할 |
@@ -23,6 +25,8 @@
 | Region store (JSON) | `region_store/repository.py`, `constants.py` | `region_store/gateway.py`, `services/region_store_service.py` | `stores.py`, `task_detail.py`, … |
 | Approvals | `DOMAIN_APPROVALS` | `region_store/approvals.py` | `v1/approvals.py` |
 | Chat | `DOMAIN_CHAT` | `services/chat_service.py`, `chat/*` | `v1/chat.py` |
+| Automation (HWPX) | — | `application/hwpx/*` (파서, `rhwp_render.py`, `ai_fill.py`) | `v1/automation.py`, `stores.py` (render-svg) |
+| Document templates | `DOMAIN_DOCUMENT_TEMPLATES` | `region_store/document_templates.py` | `v1/document_templates.py` |
 
 ### JSON region store
 

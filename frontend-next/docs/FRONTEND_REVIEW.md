@@ -1,9 +1,11 @@
 # BOMIBOT Frontend 코드 리뷰 (FastAPI 연동 직전)
 
-> **최종 갱신:** 2026-05-19  
+> **최종 갱신:** 2026-06-08 (본문은 2026-05-19 *연동 직전 시점 스냅샷* — 현황은 [SERVICES_API_MAP.md](../../docs/SERVICES_API_MAP.md)·[BACKEND_TODO.md](../../docs/BACKEND_TODO.md) 참고)  
 > **기준 문서:** [API_SPEC.md](./API_SPEC.md)  
 > 목표 백엔드: **FastAPI**  
-> 범위: 프론트엔드·목업·Service·Next.js interim API. **실제 FastAPI 서버 연결은 범위 외.**
+> 범위: 프론트엔드·목업·Service·Next.js interim API.
+>
+> ⚠️ **이후 진행:** 이 리뷰가 가리키던 P0/P1 항목 다수가 완료되었습니다 — 공통 `api-client.ts` 구현, FastAPI `/api/v1` 전 도메인 연동, **문서자동화(HWPX/rhwp)·양식 자동작성·AI 자동 채움** 신규 추가. 아래 "❌ 미구현"의 `automation = Coming Soon`은 더 이상 유효하지 않습니다(현재 구현됨).
 
 ---
 

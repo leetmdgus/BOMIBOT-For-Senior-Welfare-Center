@@ -1,5 +1,6 @@
 # FastAPI 백엔드 연동 TODO
 
+> **최종 갱신:** 2026-06-08  
 > **구조:** `backend/app` — DDD (domain → application → infrastructure → interfaces)  
 > **시드:** `python scripts/seed.py` (프론트 `lib/mocks/*` → `backend/seed/data/*.json`)  
 > **프로덕션 API:** `https://api-workspace.bomi.ai.kr` · **프론트:** Vercel  
@@ -44,6 +45,8 @@
 | Reports | x (JSON store) | x `/api/v1/reports` | x | [x] |
 | Chat / CS | x (RAG + Gemini LLM + SMTP) | x `/api/v1/chat/*` | x | [x] |
 | Version history | x (JSON store) | x `/api/v1/kanban/version-history/*` | x | [x] |
+| Automation (HWPX) | x (HWPX 파서 + rhwp 렌더 + Gemini) | x `/api/v1/automation/*` | x | [x] catch-all 프록시 |
+| Document templates | x (JSON store + 파일스토리지) | x `/api/v1/document-templates/*` | x | [x] |
 
 ### Kanban FastAPI 엔드포인트 (완료)
 
@@ -52,6 +55,18 @@
 - `POST/PATCH/DELETE .../categories/{id}/tasks/...`
 - `GET /api/v1/kanban/staff`, `column-types`, `task-path-map`, `project-image-options`
 - `GET /api/v1/kanban/categories/column-type?title=`
+
+### 문서자동화 · 양식 자동작성 (HWPX) — 신규
+
+- [x] `POST /automation/hwpx/parse` · `export` — HWPX ↔ `frontendJson` (원본 보존 writeback)
+- [x] `POST /automation/hwpx/render-svg` — rhwp 페이지 SVG 미리보기 (편집 반영, 디바운스)
+- [x] `GET /files/{id}/render-svg` — /files 탭 `.hwp`/`.hwpx` 미리보기 (rhwp)
+- [x] `POST /automation/hwpx/ai-fill` — Gemini 양식 빈칸 자동 채움 (`GEMINI_API_KEY` 필요)
+- [x] `/document-templates*` — 양식 라이브러리(업로드·이전 양식 불러오기·prefill·export)
+- [ ] **rhwp 바이너리 프로덕션 배포** — 현재 Docker 이미지에 rhwp **빌드 스테이지 없음** → 프로덕션은 근사 렌더러로 폴백. 정확 렌더 배포하려면 멀티스테이지 Docker로 `rhwp` 빌드/복사 + `RHWP_BIN` 설정 ([HWP_IMPORT_AI_EXTRACT_PLAN.md](./HWP_IMPORT_AI_EXTRACT_PLAN.md) Phase 3)
+- [ ] `GEMINI_MODEL` 운영 검증 — 기본값 `gemini-2.0-flash`는 현재 게이트웨이 키에서 403. 접근 가능한 모델(예: `gemini-2.5-flash`)로 설정 필요
+
+> rhwp 바이너리 탐색 순서: `RHWP_BIN` 설정 → `PATH` → `rhwp/target/release/rhwp[.exe]`. 로컬 빌드: `cargo build --release --bin rhwp` (rustc 1.88+).
 
 ---
 

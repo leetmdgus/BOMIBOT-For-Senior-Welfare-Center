@@ -1,7 +1,7 @@
 # BOMIBOT API 명세서
 
-> **최종 갱신:** 2026-05-24  
-> **대상:** 프론트엔드 `frontend-next` · Next.js interim API · (예정) FastAPI 백엔드  
+> **최종 갱신:** 2026-06-08  
+> **대상:** 프론트엔드 `frontend-next` · Next.js interim API · FastAPI 백엔드(`/api/v1`)  
 > **관련 문서:** [FRONTEND_REVIEW.md](./FRONTEND_REVIEW.md) · [DATABASE_SCHEMA.md](./DATABASE_SCHEMA.md) · [services/README.md](../services/README.md)
 
 ---
@@ -1271,6 +1271,42 @@ CS 문의 접수 · SMTP 메일 발송.
 ### `POST` · `PUT` · `DELETE /api/tasks`
 
 업무 생성·수정·삭제 (목업).
+
+---
+
+## 12. 문서자동화 · 양식 자동작성 (HWPX / rhwp)
+
+> FastAPI 전용(`/api/v1/automation/*`, `/api/v1/document-templates/*`). multipart/form-data + `Authorization` + `X-Region-Id`. 자세한 라우트 요약은 [docs/API_ROUTES.md](../../docs/API_ROUTES.md).
+
+HWP/HWPX 양식을 편집 가능한 `frontendJson`(문단·표 구조)으로 파싱하고, **rhwp(Rust) 렌더러**가 만든 페이지 SVG로 미리보기하며, Gemini로 빈칸을 자동 채웁니다.
+
+### 문서자동화 (`/automation`)
+
+| Method | Path | 설명 | 프론트 |
+|--------|------|------|--------|
+| POST | `/automation/hwpx/parse` | HWPX → `frontendJson` | `parseHwpx` |
+| POST | `/automation/hwpx/export` | 편집 `frontendJson` → HWPX (원본 보존) | `exportHwpxDocument` |
+| POST | `/automation/hwpx/render-svg` | HWPX(+편집) → 페이지 SVG. rhwp 없으면 **503** → 근사 렌더러 폴백 | `renderHwpxSvg` |
+| POST | `/automation/hwpx/ai-fill` | 빈칸 + 참고문서 → Gemini `{fills}`. 키 없으면 **503** | `aiFillForm` |
+| POST | `/automation/documents/analyze` | 참고문서(hwpx/docx/pdf/xlsx/이미지) 평문 추출 | `analyzeDocuments` |
+| GET | `/automation/documents/supported-extensions` | 지원 확장자 | — |
+| GET | `/files/{id}/render-svg` | /files 탭 `.hwp`/`.hwpx` 미리보기 (rhwp) | `renderFileSvg` |
+
+### 양식 라이브러리 (`/document-templates`)
+
+region별 업로드 양식 보관 → "이전 양식 불러오기".
+
+| Method | Path | 설명 |
+|--------|------|------|
+| GET | `/document-templates` | 양식 목록 |
+| POST | `/document-templates` | 업로드 (multipart `file`, `name?`, `kind?`) |
+| GET | `/document-templates/{id}` | `frontendJson` |
+| DELETE | `/document-templates/{id}` | 삭제 |
+| POST | `/document-templates/{id}/prefill` | 계획/평가 값 라벨 매칭 채움 → `frontendJson` |
+| POST | `/document-templates/{id}/export` | 채운 값 → HWPX 다운로드 |
+
+> **cell-id 규약** `"{paragraphIndex}.{runIndex}.{row}.{col}"` — 백엔드 `collect_fillable_cells`와 프론트 `fillCellsByIds`가 공유.
+> **렌더러 의존성·배포 주의(rhwp 바이너리, GEMINI_MODEL):** [docs/DEPLOYMENT.md](../../docs/DEPLOYMENT.md) §5 · 기획: [docs/HWP_IMPORT_AI_EXTRACT_PLAN.md](../../docs/HWP_IMPORT_AI_EXTRACT_PLAN.md).
 
 ---
 

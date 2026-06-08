@@ -1,5 +1,7 @@
 # BOMIBOT FastAPI Backend
 
+> **최종 갱신:** 2026-06-08
+
 DDD 레이어 구조로 **Vercel(프론트)** + **`https://api-workspace.bomi.ai.kr` (API)** 연동을 위한 백엔드입니다.
 
 - 아키텍처 상세: [docs/DDD_ARCHITECTURE.md](../docs/DDD_ARCHITECTURE.md)
@@ -169,7 +171,12 @@ py -3 -m alembic revision --autogenerate -m "describe change"
 | Reports | `GET /reports` |
 | Version history | `GET /kanban/version-history`, `POST .../restore` |
 | Chat | `GET /chat/config`, `POST /chat/assistant` (RAG+Gemini), `cs-ticket`, `GET /chat/ontology` |
+| Automation (HWPX) | `POST /automation/hwpx/parse`·`export`·`render-svg`(rhwp SVG)·`ai-fill`(Gemini), `POST /automation/documents/analyze` |
+| Document templates | `GET/POST /document-templates`, `GET/DELETE /document-templates/{id}`, `POST .../prefill`·`/export` |
+| Files render | `GET /files/{id}/render-svg` (rhwp 미리보기) |
 | Legacy tasks | `GET /tasks` |
+
+> **rhwp 렌더러:** `automation/hwpx/render-svg`·`files/{id}/render-svg`는 rhwp 바이너리(`RHWP_BIN` → `PATH` → `rhwp/target/release/rhwp` 자동 탐색)를 호출합니다. 미설치 시 503 → 프론트 근사 렌더러 폴백. 빌드: `cd rhwp && cargo build --release --bin rhwp` (rustc 1.88+). 현재 Docker 이미지엔 rhwp 빌드 스테이지가 **없음** → [docs/DEPLOYMENT.md](../docs/DEPLOYMENT.md) §5 참고.
 
 Swagger: http://127.0.0.1:9001/docs
 
