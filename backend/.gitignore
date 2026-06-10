@@ -7,5 +7,6 @@ __pycache__/
 *.db
 .pytest_cache/
 storage/uploads/
-# rhwp 리눅스 빌드 산출물 (backend/scripts/build-rhwp-linux.ps1 로 재생성)
-bin/rhwp
+# rhwp 리눅스 바이너리(backend/bin/rhwp)는 배포(.hwp 미리보기)용으로 git 커밋한다.
+# linux/amd64 ELF — 컨테이너에서 실행되므로 호스트 OS 무관. rhwp 소스 변경 시
+# backend/scripts/build-rhwp-linux.sh|.ps1 로 재생성 후 다시 커밋.
