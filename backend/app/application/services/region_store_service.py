@@ -265,13 +265,24 @@ class RegionStoreService:
         return build_annual_report_pdf(self, region_id, book, org_data=org_data)
 
     def build_annual_report_html(
-        self, region_id: str, ebook_id: str, *, org_data: dict | None = None
+        self,
+        region_id: str,
+        ebook_id: str,
+        *,
+        org_data: dict | None = None,
+        major_category_map: dict | None = None,
     ) -> str:
         """연간 보고서 책자 한 권을 디자인된 HTML 로 렌더(뷰어 열람용)."""
         from app.application.annual_report_html import build_annual_report_html
 
         book = self.get_ebook(region_id, ebook_id)
-        return build_annual_report_html(self, region_id, book, org_data=org_data)
+        return build_annual_report_html(
+            self,
+            region_id,
+            book,
+            org_data=org_data,
+            major_category_map=major_category_map,
+        )
 
     def record_annual_report_document(
         self,

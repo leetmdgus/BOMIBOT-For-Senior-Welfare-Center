@@ -29,4 +29,6 @@ export interface TaskOption {
   name: string
   /** 업무가 속한 사업의 연도 (연도별 필터링용) */
   year?: string
+  /** 업무가 속한 대분류(사업명=칸반 프로젝트명) */
+  majorCategory?: string
 }

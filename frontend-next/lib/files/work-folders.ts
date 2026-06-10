@@ -6,9 +6,15 @@ export const TASK_UNASSIGNED = "__unassigned__"
 export const WORK_FOLDER_PREFIX = "workfolder:"
 export const UNASSIGNED_FOLDER_NAME = "업무 미지정"
 
+/** 대분류(사업명) 가상 폴더 키 접두사 */
+export const MAJOR_FOLDER_PREFIX = "majorfolder:"
+/** 대분류가 없는(업무 미지정 등) 업무를 모으는 키 */
+export const MAJOR_UNASSIGNED = "__major_unassigned__"
+export const MAJOR_UNASSIGNED_NAME = "기타 사업"
+
 /** 업무(=업무 폴더) 단위로 묶인 파일 그룹 */
 export interface WorkFolder {
-  /** taskId 또는 TASK_UNASSIGNED */
+  /** taskId 또는 TASK_UNASSIGNED (대분류 폴더는 대분류명/MAJOR_UNASSIGNED) */
   key: string
   /** 가상 폴더 아이템 id: `${WORK_FOLDER_PREFIX}${key}` */
   id: string
@@ -16,10 +22,25 @@ export interface WorkFolder {
   name: string
   /** 업무가 속한 사업 연도 (미지정 폴더는 없음) */
   year?: string
+  /** 업무가 속한 대분류(사업명) */
+  majorCategory?: string
   /** 폴더 안 파일 수 */
   fileCount: number
   /** 폴더 안 파일 중 가장 최근 수정일 (표시·정렬용) */
   latestModifiedAt: string
+}
+
+export function isMajorFolderId(id: string): boolean {
+  return id.startsWith(MAJOR_FOLDER_PREFIX)
+}
+
+export function majorFolderKeyFromId(id: string): string {
+  return id.slice(MAJOR_FOLDER_PREFIX.length)
+}
+
+/** 업무 폴더가 속한 대분류 키 (대분류 없으면 MAJOR_UNASSIGNED) */
+export function majorKeyOf(folder: WorkFolder): string {
+  return folder.majorCategory?.trim() ? folder.majorCategory : MAJOR_UNASSIGNED
 }
 
 /** 파일이 속한 업무 폴더 키 (taskId 없으면 미지정) */
@@ -85,6 +106,7 @@ export function buildWorkFolders(
       id: `${WORK_FOLDER_PREFIX}${key}`,
       name: task?.name ?? taskName ?? key,
       year: task?.year,
+      majorCategory: task?.majorCategory,
       fileCount: count,
       latestModifiedAt: latest,
     })
@@ -94,6 +116,56 @@ export function buildWorkFolders(
   return folders.sort((a, b) => {
     const aUnassigned = a.key === TASK_UNASSIGNED
     const bUnassigned = b.key === TASK_UNASSIGNED
+    if (aUnassigned !== bUnassigned) return aUnassigned ? 1 : -1
+    return a.name.localeCompare(b.name, "ko")
+  })
+}
+
+/**
+ * 업무 폴더들을 대분류(사업명)별로 묶어 대분류 폴더 목록을 만든다.
+ * 파일들 첫 페이지에서 보여줄 최상위(대분류) 폴더. 대분류 없는 업무는 "기타 사업".
+ */
+export function buildMajorFolders(workFolders: WorkFolder[]): WorkFolder[] {
+  const grouped = new Map<
+    string,
+    { name: string; fileCount: number; latest: string; year?: string }
+  >()
+
+  for (const wf of workFolders) {
+    const key = majorKeyOf(wf)
+    const name =
+      key === MAJOR_UNASSIGNED ? MAJOR_UNASSIGNED_NAME : (wf.majorCategory as string)
+    const prev = grouped.get(key)
+    if (!prev) {
+      grouped.set(key, {
+        name,
+        fileCount: wf.fileCount,
+        latest: wf.latestModifiedAt,
+        year: wf.year,
+      })
+    } else {
+      prev.fileCount += wf.fileCount
+      if (wf.latestModifiedAt > prev.latest) prev.latest = wf.latestModifiedAt
+      if (!prev.year && wf.year) prev.year = wf.year
+    }
+  }
+
+  const folders: WorkFolder[] = []
+  for (const [key, value] of grouped) {
+    folders.push({
+      key,
+      id: `${MAJOR_FOLDER_PREFIX}${key}`,
+      name: value.name,
+      year: value.year,
+      majorCategory: key === MAJOR_UNASSIGNED ? undefined : value.name,
+      fileCount: value.fileCount,
+      latestModifiedAt: value.latest,
+    })
+  }
+
+  return folders.sort((a, b) => {
+    const aUnassigned = a.key === MAJOR_UNASSIGNED
+    const bUnassigned = b.key === MAJOR_UNASSIGNED
     if (aUnassigned !== bUnassigned) return aUnassigned ? 1 : -1
     return a.name.localeCompare(b.name, "ko")
   })

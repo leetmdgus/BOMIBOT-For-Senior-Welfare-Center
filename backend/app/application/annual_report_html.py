@@ -434,7 +434,28 @@ def _org_html(org_data: dict | None) -> str:
     return "".join(parts)
 
 
-def _entry_html(service: RegionStoreService, region_id: str, index: int, entry: dict) -> str:
+def _major_of(entry: dict, major_map: dict | None) -> str:
+    """업무(중분류)가 속한 대분류(사업명). 칸반 메타 → entry 저장값 → 팀 순 폴백."""
+    tid = str(entry.get("taskId") or "")
+    if major_map:
+        m = str(major_map.get(tid) or "").strip()
+        if m:
+            return m
+    for key in ("majorCategory", "major", "team"):
+        v = str(entry.get(key) or "").strip()
+        if v:
+            return v
+    return "기타 사업"
+
+
+def _entry_html(
+    service: RegionStoreService,
+    region_id: str,
+    index: int,
+    entry: dict,
+    *,
+    major: str | None = None,
+) -> str:
     program = entry.get("programName") or "이름 없는 사업"
     task_id = str(entry.get("taskId") or "")
     subs: list[tuple[str, str]] = []  # (라벨, 본문) — 순서대로 로마숫자 부여
@@ -495,10 +516,14 @@ def _entry_html(service: RegionStoreService, region_id: str, index: int, entry: 
     )
     team = entry.get("team")
     team_html = f'<span class="entry-team">{_esc(team)}</span>' if team else ""
+    major_html = (
+        f'<div class="entry-major">사업명 · {_esc(major)}</div>' if major else ""
+    )
     return (
         f'<article class="entry">'
         f'<div class="entry-head"><span class="entry-no">{index}</span>'
-        f'<h2 class="entry-title">{_esc(program)}</h2>{team_html}</div>'
+        f'<div class="entry-titles">{major_html}'
+        f'<h2 class="entry-title">{_esc(program)}</h2></div>{team_html}</div>'
         f"{blocks}</article>"
     )
 
@@ -509,11 +534,13 @@ def build_annual_report_html(
     book: dict,
     *,
     org_data: dict | None = None,
+    major_category_map: dict | None = None,
 ) -> str:
     """책자(연간 보고서) 한 권을 디자인된 HTML 문자열로 렌더한다.
 
-    구성: 표지 → 목차 → 사업 개요 → 조직현황 → 사업별 본문
-    (사업계획서 → 실적관리 → 만족도조사 → 사업평가).
+    구성: 표지 → 목차 → 사업 개요 → 조직현황 → 대분류(사업명)별 본문
+    (대분류 > 중분류(프로그램) > 소분류: 실적관리·사업계획서·만족도조사·사업평가).
+    `major_category_map`(task_id → 대분류)으로 프로그램을 사업명별로 묶는다.
     """
     title = book.get("title") or "사업보고서"
     team = book.get("team") or ""
@@ -531,16 +558,37 @@ def build_annual_report_html(
         )
         cover_img = f'<div class="cover-img"><img src="{_esc(src)}" alt=""/></div>'
 
-    toc_items = "".join(
-        f'<li><span class="toc-no">{i}</span>{_esc(e.get("programName") or "이름 없는 사업")}</li>'
-        for i, e in enumerate(entries, start=1)
-    )
-    toc_block = (
-        f'<ol class="toc-ol">{toc_items}</ol>'
-        if entries
-        else '<p class="empty">아직 기입된 사업이 없습니다. 사업관리에서 '
-        "사업계획·만족도조사·사업평가를 「완료」하면 이 보고서에 자동으로 추가됩니다.</p>"
-    )
+    # 대분류(사업명) > 중분류(프로그램) 로 그룹화 — 첫 등장 순서 유지
+    groups: list[tuple[str, list[dict]]] = []
+    group_index: dict[str, int] = {}
+    for e in entries:
+        major = _major_of(e, major_category_map)
+        if major not in group_index:
+            group_index[major] = len(groups)
+            groups.append((major, []))
+        groups[group_index[major]][1].append(e)
+
+    if entries:
+        toc_groups: list[str] = []
+        counter = 0
+        for major, group_entries in groups:
+            items = ""
+            for e in group_entries:
+                counter += 1
+                items += (
+                    f'<li><span class="toc-no">{counter}</span>'
+                    f'{_esc(e.get("programName") or "이름 없는 사업")}</li>'
+                )
+            toc_groups.append(
+                f'<div class="toc-group"><div class="toc-major">{_esc(major)}</div>'
+                f'<ol class="toc-ol">{items}</ol></div>'
+            )
+        toc_block = "".join(toc_groups)
+    else:
+        toc_block = (
+            '<p class="empty">아직 기입된 사업이 없습니다. 사업관리에서 '
+            "사업계획·만족도조사·사업평가를 「완료」하면 이 보고서에 자동으로 추가됩니다.</p>"
+        )
 
     intro = str(book.get("intro") or "").strip() or _DEFAULT_INTRO
     org_block = _org_html(org_data)
@@ -565,9 +613,24 @@ def build_annual_report_html(
         ),
         f'<div class="page section-page"><h3 class="page-title">조직현황</h3>{org_block}</div>',
     ]
-    leaves.extend(
-        _entry_html(service, region_id, i, e) for i, e in enumerate(entries, start=1)
-    )
+    # 대분류 표지(사업명) → 그 아래 중분류(프로그램) 페이지들
+    counter = 0
+    for major, group_entries in groups:
+        program_items = "".join(
+            f'<li>{_esc(e.get("programName") or "이름 없는 사업")}</li>'
+            for e in group_entries
+        )
+        leaves.append(
+            f'<div class="page major-page"><div class="major-kicker">사업명 · 대분류</div>'
+            f'<h2 class="major-title">{_esc(major)}</h2>'
+            f'<div class="major-sub">프로그램(중분류) {len(group_entries)}건</div>'
+            f'<ol class="major-programs">{program_items}</ol></div>'
+        )
+        for e in group_entries:
+            counter += 1
+            leaves.append(
+                _entry_html(service, region_id, counter, e, major=major)
+            )
     sheets = "".join(
         f'<div class="leaf"><div class="leaf-inner">{leaf}</div></div>' for leaf in leaves
     )
@@ -697,6 +760,22 @@ table{ width:100%; border-collapse:collapse; margin:8px 0 14px; font-size:13px; 
 .perf th{ background:var(--navy); color:#fff; border-color:var(--navy2); font-size:11.5px; padding:6px 7px; }
 .perf td{ font-size:12px; padding:5px 7px; }
 .perf .act{ color:#0369a1; font-weight:600; }
+/* 목차 — 대분류(사업명)별 그룹 */
+.toc-group{ margin:0 0 18px; break-inside:avoid; }
+.toc-major{ font-size:14px; font-weight:800; color:var(--navy); margin:0 0 8px;
+  padding:6px 12px; background:var(--soft); border-left:4px solid var(--accent); border-radius:0 8px 8px 0; }
+/* 대분류(사업명) 표지 페이지 */
+.major-page{ padding:48px 48px; }
+.major-kicker{ color:var(--accent); font-weight:700; letter-spacing:.16em; font-size:12px; }
+.major-title{ font-size:28px; font-weight:800; color:var(--navy); margin:10px 0 6px; letter-spacing:-.01em; }
+.major-sub{ color:var(--muted); font-size:13px; margin-bottom:18px; }
+.major-programs{ list-style:none; margin:0; padding:0; }
+.major-programs li{ padding:10px 14px; margin:6px 0; background:var(--soft); border:1px solid var(--line);
+  border-radius:10px; font-size:14px; font-weight:600; color:#334155; }
+.major-programs li::before{ content:"\\25B8  "; color:var(--accent); font-weight:800; }
+/* 사업 항목 헤더의 대분류 라벨 */
+.entry-titles{ flex:1; min-width:0; }
+.entry-major{ font-size:11.5px; font-weight:700; color:var(--accent); letter-spacing:.04em; margin-bottom:2px; }
 /* 책 넘김 뷰 — 한 장(leaf)씩 좌측 모서리를 축으로 넘긴다 */
 .book{ position:relative; width:min(900px,94vw); height:82vh; max-height:1180px;
   margin:8px auto; perspective:2600px; }

@@ -49,6 +49,19 @@ def _safe_org_data(org: OrganizationService, region_id: str) -> dict | None:
     except Exception:
         return None
 
+
+def _safe_major_map(kanban: KanbanBoardService, region_id: str) -> dict | None:
+    """업무(task_id) → 대분류(사업명) 맵 — 연간 보고서 사업명별 그룹화용."""
+    try:
+        index = kanban.build_task_meta_index(region_id)
+        return {
+            tid: meta.get("majorCategory")
+            for tid, meta in index.items()
+            if meta.get("majorCategory")
+        }
+    except Exception:
+        return None
+
 router = APIRouter(tags=["stores"])
 
 
@@ -155,10 +168,14 @@ def get_ebook_html(
     region_id: str = Depends(require_region_id),
     service: RegionStoreService = Depends(get_region_store_service),
     org: OrganizationService = Depends(get_organization_service),
+    kanban: KanbanBoardService = Depends(get_kanban_service),
 ):
     """연간 보고서 책자를 디자인된 HTML로 렌더(전자책자 열람용)."""
     html = service.build_annual_report_html(
-        region_id, ebook_id, org_data=_safe_org_data(org, region_id)
+        region_id,
+        ebook_id,
+        org_data=_safe_org_data(org, region_id),
+        major_category_map=_safe_major_map(kanban, region_id),
     )
     return Response(content=html, media_type="text/html; charset=utf-8")
 

@@ -49,6 +49,9 @@ def list_kanban_task_options(
         projects = load_kanban_projects(kanban, region_id, access=access)
 
     for project in projects:
+        # 프로젝트 title = 대분류(사업명), title 아래 task = 중분류(프로그램)
+        major = str(project.get("title") or "").strip()
+        year = str(project.get("year") or "").strip()
         for category in project.get("categories", []):
             for task in category.get("tasks", []):
                 task_id = strip_scope(str(task.get("id") or ""))
@@ -56,7 +59,12 @@ def list_kanban_task_options(
                     continue
                 seen.add(task_id)
                 task_title = str(task.get("title") or task_id).strip()
-                options.append({"id": task_id, "name": task_title})
+                option: dict[str, str] = {"id": task_id, "name": task_title}
+                if major:
+                    option["majorCategory"] = major
+                if year:
+                    option["year"] = year
+                options.append(option)
 
     options.sort(key=lambda item: item["name"])
     return options

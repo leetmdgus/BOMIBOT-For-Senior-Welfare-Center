@@ -25,12 +25,17 @@ import {
 } from "./file-utils"
 import { syncFileTaskNames } from "@/lib/files/sync-file-task-names"
 import {
+  buildMajorFolders,
   buildWorkFolders,
   collectYearOptions,
+  isMajorFolderId,
   isWorkFolderId,
+  majorFolderKeyFromId,
+  majorKeyOf,
   TASK_UNASSIGNED,
   taskKeyOf,
   workFolderKeyFromId,
+  type WorkFolder,
 } from "@/lib/files/work-folders"
 import type { FileManagerState } from "@/services/files.types"
 
@@ -57,7 +62,9 @@ function mapApiFile(raw: Record<string, unknown>): FileItem {
 
 export function useFileManager() {
   const [files, setFiles] = useState<FileItem[]>([])
-  /** 현재 들어가 있는 업무 폴더 키(taskId 또는 미지정). null이면 루트(업무 폴더 목록) */
+  /** 현재 들어가 있는 대분류(사업명) 키. null이면 루트(대분류 폴더 목록) */
+  const [currentMajorKey, setCurrentMajorKey] = useState<string | null>(null)
+  /** 현재 들어가 있는 업무 폴더 키(taskId 또는 미지정). null이면 대분류/루트 단계 */
   const [currentTaskFolderId, setCurrentTaskFolderId] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<ViewMode>("grid")
   const [sortKey, setSortKey] = useState<SortKey>("name")
@@ -137,21 +144,59 @@ export function useFileManager() {
     [allWorkFolders],
   )
 
-  // 루트에서 보여줄 업무 폴더 목록 (연도 필터 + 이름 검색 적용, 업무명 오름차순은 build 단계에서 보장)
-  const workFolders = useMemo(() => {
+  // 대분류(사업명) 폴더 — 파일들 첫 페이지(루트)에서 보여줄 최상위 폴더
+  const allMajorFolders = useMemo(
+    () => buildMajorFolders(allWorkFolders),
+    [allWorkFolders],
+  )
+
+  const majorFolders = useMemo(() => {
     const keyword = searchQuery.trim().toLowerCase()
-    return allWorkFolders.filter((folder) => {
-      // 미지정 폴더는 연도가 없으므로 특정 연도 선택 시 숨김
+    return allMajorFolders.filter((folder) => {
       if (yearFilter && folder.year !== yearFilter) return false
       if (keyword) return folder.name.toLowerCase().includes(keyword)
       return true
     })
-  }, [allWorkFolders, yearFilter, searchQuery])
+  }, [allMajorFolders, yearFilter, searchQuery])
+
+  // 현재 대분류 안에서 보여줄 업무(중분류) 폴더 목록 (이름 검색 적용)
+  const workFolders = useMemo(() => {
+    if (currentMajorKey === null) return []
+    const keyword = searchQuery.trim().toLowerCase()
+    return allWorkFolders.filter((folder) => {
+      if (majorKeyOf(folder) !== currentMajorKey) return false
+      if (keyword) return folder.name.toLowerCase().includes(keyword)
+      return true
+    })
+  }, [allWorkFolders, currentMajorKey, searchQuery])
+
+  const currentMajor = useMemo(() => {
+    if (currentMajorKey === null) return null
+    return allMajorFolders.find((folder) => folder.key === currentMajorKey) ?? null
+  }, [allMajorFolders, currentMajorKey])
 
   const currentWorkFolder = useMemo(() => {
     if (currentTaskFolderId === null) return null
     return allWorkFolders.find((folder) => folder.key === currentTaskFolderId) ?? null
   }, [allWorkFolders, currentTaskFolderId])
+
+  // 폴더 진입/이탈 네비게이션 (대분류 → 중분류(업무) → 파일)
+  const enterMajor = (key: string) => {
+    setCurrentMajorKey(key)
+    setCurrentTaskFolderId(null)
+    setSelectedIds([])
+  }
+  const enterTaskFolder = (folder: WorkFolder) => {
+    setCurrentMajorKey(majorKeyOf(folder))
+    setCurrentTaskFolderId(folder.key)
+    setSelectedIds([])
+  }
+  const enterTaskFolderByKey = (taskKey: string) => {
+    const folder = allWorkFolders.find((f) => f.key === taskKey)
+    setCurrentMajorKey(folder ? majorKeyOf(folder) : null)
+    setCurrentTaskFolderId(taskKey)
+    setSelectedIds([])
+  }
 
   // 업무 폴더 안에서 보여줄 파일 목록 (폴더형 항목 제외, 수동 정렬 우선)
   const visibleFiles = useMemo(() => {
@@ -226,10 +271,14 @@ export function useFileManager() {
   }
 
   const openItem = async (item: FileItem) => {
-    // 가상 업무 폴더 진입
+    // 대분류(사업명) 폴더 진입
+    if (isMajorFolderId(item.id)) {
+      enterMajor(majorFolderKeyFromId(item.id))
+      return
+    }
+    // 가상 업무(중분류) 폴더 진입
     if (isWorkFolderId(item.id)) {
-      setCurrentTaskFolderId(workFolderKeyFromId(item.id))
-      setSelectedIds([])
+      enterTaskFolderByKey(workFolderKeyFromId(item.id))
       return
     }
 
@@ -237,8 +286,7 @@ export function useFileManager() {
 
     // 평면 모델: 실제 폴더형 항목은 자기 업무 폴더로 진입
     if (item.type === "folder") {
-      setCurrentTaskFolderId(taskKeyOf(item))
-      setSelectedIds([])
+      enterTaskFolderByKey(taskKeyOf(item))
       return
     }
 
@@ -469,6 +517,16 @@ export function useFileManager() {
   }
 
   const goToRoot = () => {
+    setCurrentMajorKey(null)
+    setCurrentTaskFolderId(null)
+    setSelectedIds([])
+  }
+
+  // 업무(파일) 단계 → 대분류 안 업무 목록으로 (대분류 유지)
+  const goToMajor = () => {
+    if (currentMajorKey === null && currentWorkFolder) {
+      setCurrentMajorKey(majorKeyOf(currentWorkFolder))
+    }
     setCurrentTaskFolderId(null)
     setSelectedIds([])
   }
@@ -585,10 +643,18 @@ export function useFileManager() {
   return {
     files,
     taskOptions: managerTaskOptions,
+    currentMajorKey,
+    setCurrentMajorKey,
     currentTaskFolderId,
     setCurrentTaskFolderId,
+    majorFolders,
+    currentMajor,
     workFolders,
     currentWorkFolder,
+    enterMajor,
+    enterTaskFolder,
+    enterTaskFolderByKey,
+    goToMajor,
     yearFilter,
     setYearFilter,
     yearOptions,

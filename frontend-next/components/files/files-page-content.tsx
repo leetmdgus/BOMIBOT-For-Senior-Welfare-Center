@@ -48,7 +48,9 @@ import { useFileManager } from "./use-file-manager"
 import type { FileItem } from "./file-types"
 import { FILE_DRAG_MOVE_THRESHOLD_PX } from "./file-utils"
 import {
+  isMajorFolderId,
   isWorkFolderId,
+  majorFolderKeyFromId,
   TASK_UNASSIGNED,
   UNASSIGNED_FOLDER_NAME,
   workFolderKeyFromId,
@@ -112,7 +114,10 @@ export function FilesPageContent() {
     }),
   )
 
-  const atRoot = manager.currentTaskFolderId === null
+  // 3단계: 루트(대분류 폴더) → 대분류 안(중분류=업무 폴더) → 업무 안(파일)
+  const inTask = manager.currentTaskFolderId !== null
+  const inMajor = !inTask && manager.currentMajorKey !== null
+  const atRoot = !inTask && !inMajor
 
   // OS(바탕화면 등)에서 끌어온 파일 드래그인지 판별
   const isOsFileDrag = (event: React.DragEvent) =>
@@ -149,45 +154,59 @@ export function FilesPageContent() {
   }
 
   const goToRoot = () => {
+    manager.setCurrentMajorKey(null)
     manager.setCurrentTaskFolderId(null)
     manager.setSelectedIds([])
   }
 
-  const openWorkFolder = (folder: WorkFolder) => {
-    manager.setCurrentTaskFolderId(folder.key)
-    manager.setSelectedIds([])
+  const goUp = () => {
+    if (inTask) manager.goToMajor()
+    else goToRoot()
   }
 
-  // 브레드크럼: 루트면 비어 있고, 업무 폴더 안이면 폴더 1개짜리 경로
+  const openMajorFolder = (folder: WorkFolder) => manager.enterMajor(folder.key)
+  const openWorkFolder = (folder: WorkFolder) => manager.enterTaskFolder(folder)
+
+  // 브레드크럼: 대분류(사업명) → 중분류(업무) 2단계
   const currentFolderName =
     manager.currentWorkFolder?.name ??
     manager.taskOptions.find((t) => t.id === manager.currentTaskFolderId)?.name ??
     (manager.currentTaskFolderId === TASK_UNASSIGNED
       ? UNASSIGNED_FOLDER_NAME
       : "업무")
+  const currentMajorName = manager.currentMajor?.name ?? "사업"
 
-  const breadcrumbs: FileItem[] = atRoot
-    ? []
-    : [
-        {
-          id: `workfolder:${manager.currentTaskFolderId}`,
-          name: currentFolderName,
-          type: "folder",
-          parentId: null,
-          createdAt: new Date().toISOString(),
-          modifiedAt: new Date().toISOString(),
-          permission: "private",
-        },
-      ]
+  const nowIso = new Date().toISOString()
+  const crumb = (id: string, name: string): FileItem => ({
+    id,
+    name,
+    type: "folder",
+    parentId: null,
+    createdAt: nowIso,
+    modifiedAt: nowIso,
+    permission: "private",
+  })
+  const breadcrumbs: FileItem[] = []
+  if ((inMajor || inTask) && manager.currentMajor) {
+    breadcrumbs.push(crumb(manager.currentMajor.id, manager.currentMajor.name))
+  }
+  if (inTask) {
+    breadcrumbs.push(
+      crumb(`workfolder:${manager.currentTaskFolderId}`, currentFolderName),
+    )
+  }
 
   const navigateToFolder = (folderId: string | null) => {
     if (folderId === null) {
       goToRoot()
       return
     }
+    if (isMajorFolderId(folderId)) {
+      manager.enterMajor(majorFolderKeyFromId(folderId))
+      return
+    }
     if (isWorkFolderId(folderId)) {
-      manager.setCurrentTaskFolderId(workFolderKeyFromId(folderId))
-      manager.setSelectedIds([])
+      manager.enterTaskFolderByKey(workFolderKeyFromId(folderId))
     }
   }
 
@@ -214,7 +233,7 @@ export function FilesPageContent() {
     shareLinkHandledRef.current = shareId
 
     const taskKey = target.taskId?.trim() ? target.taskId : TASK_UNASSIGNED
-    manager.setCurrentTaskFolderId(taskKey)
+    manager.enterTaskFolderByKey(taskKey)
 
     if (target.type === "folder") {
       manager.setSelectedIds([])
@@ -297,7 +316,7 @@ export function FilesPageContent() {
                 variant="ghost"
                 size="sm"
                 className="h-8 shrink-0 gap-1.5 px-2 text-muted-foreground"
-                onClick={goToRoot}
+                onClick={goUp}
                 title="상위 폴더로"
               >
                 <CornerLeftUp className="size-4" />
@@ -351,7 +370,13 @@ export function FilesPageContent() {
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
-                    placeholder={atRoot ? "업무 폴더 검색..." : "파일 검색..."}
+                    placeholder={
+                      atRoot
+                        ? "사업(대분류) 검색..."
+                        : inMajor
+                          ? "프로그램(업무) 검색..."
+                          : "파일 검색..."
+                    }
                     value={manager.searchQuery}
                     onChange={(event) => manager.setSearchQuery(event.target.value)}
                     className="w-64 pl-9"
@@ -363,9 +388,9 @@ export function FilesPageContent() {
                     yearOptions={manager.yearOptions}
                     onChange={manager.setYearFilter}
                   />
-                ) : (
+                ) : inTask ? (
                   <SortControl value={manager.sortKey} onChange={manager.setSortKey} />
-                )}
+                ) : null}
               </div>
 
               <div className="flex items-center gap-2">
@@ -386,7 +411,12 @@ export function FilesPageContent() {
               </div>
             </div>
 
-            {!atRoot && (
+            {inMajor && (
+              <p className="mb-4 text-sm text-muted-foreground">
+                사업 「{currentMajorName}」 · 프로그램 {manager.workFolders.length}개
+              </p>
+            )}
+            {inTask && (
               <p className="mb-4 text-sm text-muted-foreground">
                 업무 「{currentFolderName}」 · {manager.visibleFiles.length}개 파일
               </p>
@@ -425,7 +455,7 @@ export function FilesPageContent() {
                   </div>
                 </div>
 
-                {manager.workFolders.length === 0 ? (
+                {manager.majorFolders.length === 0 ? (
                   <EmptyState
                     searching={
                       Boolean(manager.searchQuery.trim()) || manager.yearFilter !== null
@@ -434,18 +464,45 @@ export function FilesPageContent() {
                   />
                 ) : manager.viewMode === "grid" ? (
                   <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-                    {manager.workFolders.map((folder) => (
+                    {manager.majorFolders.map((folder) => (
                       <WorkFolderCard
                         key={folder.id}
                         folder={folder}
-                        onOpen={openWorkFolder}
+                        onOpen={openMajorFolder}
                       />
                     ))}
                   </div>
                 ) : (
-                  <WorkFolderList folders={manager.workFolders} onOpen={openWorkFolder} />
+                  <WorkFolderList folders={manager.majorFolders} onOpen={openMajorFolder} />
                 )}
               </>
+            ) : inMajor ? (
+              manager.workFolders.length === 0 ? (
+                <>
+                  {manager.viewMode === "grid" ? (
+                    <div className="mb-4 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                      <ParentUpCard onUp={goToRoot} />
+                    </div>
+                  ) : null}
+                  <EmptyState
+                    searching={Boolean(manager.searchQuery.trim())}
+                    onUpload={() => manager.setUploadOpen(true)}
+                  />
+                </>
+              ) : manager.viewMode === "grid" ? (
+                <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                  <ParentUpCard onUp={goToRoot} />
+                  {manager.workFolders.map((folder) => (
+                    <WorkFolderCard
+                      key={folder.id}
+                      folder={folder}
+                      onOpen={openWorkFolder}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <WorkFolderList folders={manager.workFolders} onOpen={openWorkFolder} />
+              )
             ) : orderedVisibleFiles.length === 0 ? (
               <>
                 {manager.viewMode === "grid" ? (
