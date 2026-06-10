@@ -28,6 +28,7 @@ from reportlab.platypus import (
     TableStyle,
 )
 
+from app.application.annual_report_perf import aggregate_performance
 from app.application.hwpx.document_sections import (
     hwpx_sections_from_document_sections,
 )
@@ -442,39 +443,41 @@ def _num(value: Any) -> int:
 
 
 def _performance_flow(rows: list, styles: dict, font: str) -> list:
-    """실적관리(입력관리) 행 → 계획/실적 인원·횟수 표(합계 포함)."""
+    """실적관리 — 세목·세세목별 집계 표(연인원=인원×횟수, 원천 포함). 실적보고서 형식."""
     flow: list = []
-    data_rows = [r for r in (rows or []) if isinstance(r, dict)]
-    if not data_rows:
+    agg, tot = aggregate_performance(rows)
+    if not agg:
         flow.append(_p("실적관리 데이터가 없습니다.", styles["qsub"]))
         return flow
-    grid_data = [["세부사업", "월", "계획인원", "계획횟수", "실적인원", "실적횟수"]]
-    tot = {"pp": 0, "pc": 0, "ap": 0, "ac": 0}
-    for r in data_rows:
-        pp, pc = _num(r.get("planPeople")), _num(r.get("planCount"))
-        ap, ac = _num(r.get("actualPeople")), _num(r.get("actualCount"))
-        tot["pp"] += pp
-        tot["pc"] += pc
-        tot["ap"] += ap
-        tot["ac"] += ac
+    grid_data = [[
+        "세부사업명", "상세분류", "원천",
+        "계획연인원", "실적연인원", "계획횟수", "실적횟수", "계획예산",
+    ]]
+    for g in agg:
         grid_data.append([
-            str(r.get("subProject") or ""),
-            str(r.get("month") or ""),
-            f"{pp:,}", f"{pc:,}", f"{ap:,}", f"{ac:,}",
+            g["subProject"],
+            g.get("detailCategory") or "-",
+            g["sources"] or "-",
+            f"{g['planYearly']:,}", f"{g['actualYearly']:,}",
+            f"{g['planCount']:,}", f"{g['actualCount']:,}",
+            f"{g['planBudget']:,}",
         ])
     grid_data.append([
-        "합계", "", f"{tot['pp']:,}", f"{tot['pc']:,}", f"{tot['ap']:,}", f"{tot['ac']:,}",
+        "합계", "", tot["sources"] or "-",
+        f"{tot['planYearly']:,}", f"{tot['actualYearly']:,}",
+        f"{tot['planCount']:,}", f"{tot['actualCount']:,}",
+        f"{tot['planBudget']:,}",
     ])
     grid = [[_p(c, styles["cell"]) for c in row] for row in grid_data]
     tbl = Table(
         grid,
-        colWidths=[45 * mm, 15 * mm, 25 * mm, 25 * mm, 25 * mm, 25 * mm],
+        colWidths=[30 * mm, 24 * mm, 16 * mm, 20 * mm, 20 * mm, 16 * mm, 16 * mm, 28 * mm],
         hAlign="LEFT",
     )
     last = len(grid) - 1
     tbl.setStyle(TableStyle([
         ("FONTNAME", (0, 0), (-1, -1), font),
-        ("FONTSIZE", (0, 0), (-1, -1), 8.5),
+        ("FONTSIZE", (0, 0), (-1, -1), 8),
         ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#94a3b8")),
         ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#e2e8f0")),
         ("BACKGROUND", (0, last), (-1, last), colors.HexColor("#f1f5f9")),
@@ -540,16 +543,7 @@ def build_annual_report_pdf(
         flow.append(_p(f"{index}. {program}", styles["h2"]))
         task_id = str(entry.get("taskId") or "")
 
-        if entry.get("plan"):
-            flow.append(_p("사업계획서", styles["h3"]))
-            try:
-                plan = service.get_business_plan(region_id, task_id)
-                flow.extend(_plan_flow(plan, styles, font))
-            except Exception:
-                _log.debug("연간보고서 사업계획 렌더 실패 task=%s", task_id, exc_info=True)
-                flow.append(_p("사업계획 내용을 불러오지 못했습니다.", styles["qsub"]))
-
-        # 실적관리 (사업계획서 → 실적관리 → 만족도조사 → 사업평가 세트)
+        # 네 섹션 항상 노출: 실적관리 → 사업계획서 → 만족도조사 → 사업평가
         flow.append(_p("실적관리", styles["h3"]))
         if task_id:
             try:
@@ -563,20 +557,28 @@ def build_annual_report_pdf(
         else:
             flow.append(_p("실적관리 데이터가 없습니다.", styles["qsub"]))
 
-        if entry.get("survey"):
-            flow.append(_p("만족도조사 결과", styles["h3"]))
+        flow.append(_p("사업계획서", styles["h3"]))
+        if task_id:
+            try:
+                plan = service.get_business_plan(region_id, task_id)
+                flow.extend(_plan_flow(plan, styles, font))
+            except Exception:
+                _log.debug("연간보고서 사업계획 렌더 실패 task=%s", task_id, exc_info=True)
+                flow.append(_p("사업계획 내용을 불러오지 못했습니다.", styles["qsub"]))
+        else:
+            flow.append(_p("작성된 사업계획 내용이 없습니다.", styles["qsub"]))
+
+        flow.append(_p("만족도조사 결과", styles["h3"]))
+        rendered_survey = False
+        if task_id:
             try:
                 metas = service.list_task_surveys(region_id, task_id)
             except Exception:
                 metas = []
-            rendered_any = False
             seen_survey_ids: set[str] = set()
             for meta in metas:
-                survey_id = meta.get("id")
-                if not survey_id:
-                    continue
-                sid = str(survey_id)
-                if sid in seen_survey_ids:  # 같은 설문 중복 기입 방지
+                sid = str(meta.get("id") or "")
+                if not sid or sid in seen_survey_ids:  # 빈/중복 설문 제외
                     continue
                 seen_survey_ids.add(sid)
                 try:
@@ -585,18 +587,20 @@ def build_annual_report_pdf(
                     continue
                 flow.append(_p(meta.get("title") or "만족도조사", styles["q"]))
                 flow.extend(survey_results_flowables(results, styles, font))
-                rendered_any = True
-            if not rendered_any:
-                flow.append(_p("만족도조사 결과 데이터가 없습니다.", styles["qsub"]))
+                rendered_survey = True
+        if not rendered_survey:
+            flow.append(_p("만족도조사 결과 데이터가 없습니다.", styles["qsub"]))
 
-        if entry.get("evaluation"):
-            flow.append(_p("사업평가", styles["h3"]))
+        flow.append(_p("사업평가", styles["h3"]))
+        if task_id:
             try:
                 ev = service.get_business_evaluation(region_id, task_id)
                 flow.extend(_eval_flow(ev, styles, font))
             except Exception:
                 _log.debug("연간보고서 사업평가 렌더 실패 task=%s", task_id, exc_info=True)
-                flow.append(_p("사업평가 내용을 불러오지 못했습니다.", styles["qsub"]))
+                flow.append(_p("작성된 사업평가 내용이 없습니다.", styles["qsub"]))
+        else:
+            flow.append(_p("작성된 사업평가 내용이 없습니다.", styles["qsub"]))
 
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(

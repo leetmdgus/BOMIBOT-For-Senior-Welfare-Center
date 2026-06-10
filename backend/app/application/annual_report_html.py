@@ -11,6 +11,7 @@ import html
 import logging
 from typing import TYPE_CHECKING, Any
 
+from app.application.annual_report_perf import aggregate_performance
 from app.application.hwpx.document_sections import (
     hwpx_sections_from_document_sections,
 )
@@ -360,32 +361,40 @@ def _int(value: Any) -> int:
 
 
 def _performance_html(rows: Any) -> str:
-    """실적관리(입력관리) 행 → 계획/실적 인원·횟수 표(합계 포함)."""
-    data_rows = [r for r in (rows or []) if isinstance(r, dict)]
-    if not data_rows:
+    """실적관리 — 세목·세세목별 집계 표(실적보고서 형식).
+
+    연인원 = 인원 × 횟수(행별 곱의 합), 원천(재원) 표시, 월별 행은 세목-세세목으로 압축.
+    """
+    agg, tot = aggregate_performance(rows)
+    if not agg:
         return '<p class="empty">실적관리 데이터가 없습니다.</p>'
     head = (
-        "<tr><th>세부사업</th><th>월</th><th>계획인원</th><th>계획횟수</th>"
-        "<th>실적인원</th><th>실적횟수</th></tr>"
+        "<tr><th>세부사업명</th><th>상세분류</th><th>원천</th>"
+        "<th>계획연인원</th><th>실적연인원</th><th>계획횟수</th><th>실적횟수</th>"
+        "<th>계획예산</th></tr>"
     )
-    body_rows: list[str] = []
-    tot = {"pp": 0, "pc": 0, "ap": 0, "ac": 0}
-    for r in data_rows:
-        pp, pc = _int(r.get("planPeople")), _int(r.get("planCount"))
-        ap, ac = _int(r.get("actualPeople")), _int(r.get("actualCount"))
-        tot["pp"] += pp
-        tot["pc"] += pc
-        tot["ap"] += ap
-        tot["ac"] += ac
-        body_rows.append(
-            f"<tr><td>{_esc(r.get('subProject'))}</td><td>{_esc(r.get('month'))}</td>"
-            f"<td class='num'>{pp:,}</td><td class='num'>{pc:,}</td>"
-            f"<td class='num'>{ap:,}</td><td class='num'>{ac:,}</td></tr>"
-        )
+    body_rows = [
+        "<tr>"
+        f"<td>{_esc(g['subProject'])}</td>"
+        f"<td>{_esc(g.get('detailCategory')) or '-'}</td>"
+        f"<td>{_esc(g['sources']) or '-'}</td>"
+        f"<td class='num'>{g['planYearly']:,}</td>"
+        f"<td class='num act'>{g['actualYearly']:,}</td>"
+        f"<td class='num'>{g['planCount']:,}</td>"
+        f"<td class='num act'>{g['actualCount']:,}</td>"
+        f"<td class='num'>{g['planBudget']:,}</td>"
+        "</tr>"
+        for g in agg
+    ]
     foot = (
-        f"<tr class='total'><td>합계</td><td></td>"
-        f"<td class='num'>{tot['pp']:,}</td><td class='num'>{tot['pc']:,}</td>"
-        f"<td class='num'>{tot['ap']:,}</td><td class='num'>{tot['ac']:,}</td></tr>"
+        "<tr class='total'>"
+        f"<td colspan='2'>합계</td><td>{_esc(tot['sources']) or '-'}</td>"
+        f"<td class='num'>{tot['planYearly']:,}</td>"
+        f"<td class='num act'>{tot['actualYearly']:,}</td>"
+        f"<td class='num'>{tot['planCount']:,}</td>"
+        f"<td class='num act'>{tot['actualCount']:,}</td>"
+        f"<td class='num'>{tot['planBudget']:,}</td>"
+        "</tr>"
     )
     return f'<table class="doc-table perf">{head}{"".join(body_rows)}{foot}</table>'
 
@@ -430,27 +439,27 @@ def _entry_html(service: RegionStoreService, region_id: str, index: int, entry: 
     task_id = str(entry.get("taskId") or "")
     subs: list[tuple[str, str]] = []  # (라벨, 본문) — 순서대로 로마숫자 부여
 
-    # 순서: 실적관리 → 사업계획서 → 만족도조사 → 사업평가
+    # 네 섹션 항상 노출(데이터 없으면 안내 문구): 실적관리 → 사업계획서 → 만족도조사 → 사업평가
     perf_body = '<p class="empty">실적관리 데이터가 없습니다.</p>'
     if task_id:
         try:
             perf_body = _performance_html(
-                service.get_input_management_rows(
-                    region_id, task_id, task_title=program
-                )
+                service.get_input_management_rows(region_id, task_id, task_title=program)
             )
         except Exception:
             _log.debug("연간보고서 HTML 실적관리 실패 task=%s", task_id, exc_info=True)
     subs.append(("실적관리", perf_body))
 
-    if entry.get("plan"):
+    plan_body = '<p class="empty">작성된 사업계획 내용이 없습니다.</p>'
+    if task_id:
         try:
-            plan = service.get_business_plan(region_id, task_id)
-            subs.append(("사업계획서", _plan_html(plan)))
+            plan_body = _plan_html(service.get_business_plan(region_id, task_id))
         except Exception:
             _log.debug("연간보고서 HTML 사업계획 실패 task=%s", task_id, exc_info=True)
+    subs.append(("사업계획서", plan_body))
 
-    if entry.get("survey"):
+    survey_body = '<p class="empty">만족도조사 결과 데이터가 없습니다.</p>'
+    if task_id:
         try:
             metas = service.list_task_surveys(region_id, task_id)
         except Exception:
@@ -458,11 +467,8 @@ def _entry_html(service: RegionStoreService, region_id: str, index: int, entry: 
         survey_parts: list[str] = []
         seen_survey_ids: set[str] = set()
         for meta in metas:
-            survey_id = meta.get("id")
-            if not survey_id:
-                continue
-            sid = str(survey_id)
-            if sid in seen_survey_ids:  # 같은 설문 중복 방지
+            sid = str(meta.get("id") or "")
+            if not sid or sid in seen_survey_ids:  # 빈/중복 설문 제외
                 continue
             seen_survey_ids.add(sid)
             try:
@@ -470,15 +476,17 @@ def _entry_html(service: RegionStoreService, region_id: str, index: int, entry: 
             except Exception:
                 continue
             survey_parts.append(_survey_html(results, meta.get("title") or "만족도조사"))
-        body = "".join(survey_parts) or '<p class="empty">만족도조사 결과 데이터가 없습니다.</p>'
-        subs.append(("만족도조사 결과", body))
+        if survey_parts:
+            survey_body = "".join(survey_parts)
+    subs.append(("만족도조사 결과", survey_body))
 
-    if entry.get("evaluation"):
+    eval_body = '<p class="empty">작성된 사업평가 내용이 없습니다.</p>'
+    if task_id:
         try:
-            ev = service.get_business_evaluation(region_id, task_id)
-            subs.append(("사업평가", _eval_html(ev)))
+            eval_body = _eval_html(service.get_business_evaluation(region_id, task_id))
         except Exception:
             _log.debug("연간보고서 HTML 사업평가 실패 task=%s", task_id, exc_info=True)
+    subs.append(("사업평가", eval_body))
 
     romans = ("Ⅰ", "Ⅱ", "Ⅲ", "Ⅳ", "Ⅴ", "Ⅵ")
     blocks = "".join(
@@ -685,6 +693,10 @@ table{ width:100%; border-collapse:collapse; margin:8px 0 14px; font-size:13px; 
 .doc-table .num{ text-align:right; font-variant-numeric:tabular-nums; }
 .doc-table tr.total td{ font-weight:800; background:var(--soft); color:var(--navy); }
 .org th, .org td{ font-size:12.5px; padding:6px 10px; }
+/* 실적관리 — 실적보고서 형식(짙은 머리글 + 실적 강조) */
+.perf th{ background:var(--navy); color:#fff; border-color:var(--navy2); font-size:11.5px; padding:6px 7px; }
+.perf td{ font-size:12px; padding:5px 7px; }
+.perf .act{ color:#0369a1; font-weight:600; }
 /* 책 넘김 뷰 — 한 장(leaf)씩 좌측 모서리를 축으로 넘긴다 */
 .book{ position:relative; width:min(900px,94vw); height:82vh; max-height:1180px;
   margin:8px auto; perspective:2600px; }
