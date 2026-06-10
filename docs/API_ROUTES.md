@@ -13,12 +13,12 @@ python scripts/list-routes.py
 
 ## Auth
 
-| Method | Path |
-|--------|------|
-| POST | `/api/v1/auth/login` |
-| POST | `/api/v1/auth/signup` |
-| GET | `/api/v1/auth/session` |
-| POST | `/api/v1/auth/logout` |
+| Method | Path                   |
+| --------| ------------------------|
+| POST   | `/api/v1/auth/login`   |
+| POST   | `/api/v1/auth/signup`  |
+| GET    | `/api/v1/auth/session` |
+| POST   | `/api/v1/auth/logout`  |
 
 ## 실시간 협업 (WebSocket)
 
