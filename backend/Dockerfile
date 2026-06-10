@@ -30,11 +30,19 @@ RUN test -s /app/app/application/hwpx/templates/render/plan.hwpx \
     && test -s /app/app/application/hwpx/templates/render/evaluation.hwpx \
     || (echo "ERROR: HWPX render templates missing. Run: backend/scripts/sync_hwpx_render_templates.sh" >&2 && exit 1)
 
-# rhwp HWP/HWPX → SVG 렌더러 (리눅스 amd64). .hwp 미리보기에 필수.
-# 사전 빌드 산출물: backend/scripts/build-rhwp-linux.ps1 (또는 .sh) → backend/bin/rhwp
-# 기본 native 폰트 모드는 임베디드 메트릭만 사용하므로 ttfs 폰트 파일 불필요.
-COPY bin/rhwp /usr/local/bin/rhwp
-RUN chmod +x /usr/local/bin/rhwp && test -x /usr/local/bin/rhwp
+# rhwp HWP/HWPX → SVG 렌더러 (리눅스 amd64). .hwp 미리보기용(선택).
+# 바이너리(backend/bin/rhwp)는 gitignore — 배포 체크아웃엔 없을 수 있으므로
+# bin/ 디렉터리째 복사 후 rhwp 가 있을 때만 설치한다. 없어도 빌드는 통과하며
+# .hwp 미리보기만 비활성(.hwpx 는 DOM 폴백). 생성: backend/scripts/build-rhwp-linux.sh|.ps1
+COPY bin/ /tmp/rhwp-bin/
+RUN if [ -f /tmp/rhwp-bin/rhwp ]; then \
+        cp /tmp/rhwp-bin/rhwp /usr/local/bin/rhwp \
+        && chmod 0755 /usr/local/bin/rhwp \
+        && echo "rhwp installed"; \
+    else \
+        echo "WARN: backend/bin/rhwp 없음 — .hwp 미리보기 비활성 (.hwpx 폴백 동작)"; \
+    fi \
+    && rm -rf /tmp/rhwp-bin
 
 # Windows CRLF/BOM in .sh breaks ENTRYPOINT (no such file / exec format error)
 RUN sed -i 's/\r$//' /app/scripts/*.sh \
