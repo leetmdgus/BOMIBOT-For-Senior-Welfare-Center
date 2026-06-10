@@ -105,6 +105,9 @@ def aggregate_input_rows(rows: list[dict[str, Any]]) -> dict[tuple[str, str], di
             "planCount": 0,
             "actualCount": 0,
             "planBudget": 0,
+            # 연인원 = Σ(인원 × 횟수). 합계의 곱이 아니라 행별 곱의 합으로 누적.
+            "planYearlyPeople": 0,
+            "actualYearlyPeople": 0,
         }
     )
     for row in rows:
@@ -113,11 +116,17 @@ def aggregate_input_rows(rows: list[dict[str, Any]]) -> dict[tuple[str, str], di
             str(row.get("detailCategory") or "").strip(),
         )
         bucket = grouped[key]
-        bucket["planPeople"] += int(row.get("planPeople") or 0)
-        bucket["actualPeople"] += int(row.get("actualPeople") or 0)
-        bucket["planCount"] += int(row.get("planCount") or 0)
-        bucket["actualCount"] += int(row.get("actualCount") or 0)
+        plan_people = int(row.get("planPeople") or 0)
+        plan_count = int(row.get("planCount") or 0)
+        actual_people = int(row.get("actualPeople") or 0)
+        actual_count = int(row.get("actualCount") or 0)
+        bucket["planPeople"] += plan_people
+        bucket["actualPeople"] += actual_people
+        bucket["planCount"] += plan_count
+        bucket["actualCount"] += actual_count
         bucket["planBudget"] += int(row.get("planBudget") or 0)
+        bucket["planYearlyPeople"] += plan_people * plan_count
+        bucket["actualYearlyPeople"] += actual_people * actual_count
     return dict(grouped)
 
 
@@ -152,6 +161,8 @@ def _zero_input_metrics() -> dict[str, int]:
         "planCount": 0,
         "actualCount": 0,
         "planBudget": 0,
+        "planYearlyPeople": 0,
+        "actualYearlyPeople": 0,
     }
 
 
@@ -229,6 +240,8 @@ def _empty_performance_row() -> dict[str, Any]:
         "planCount": 0,
         "actualCount": 0,
         "planBudget": 0,
+        "planYearlyPeople": 0,
+        "actualYearlyPeople": 0,
         "rowType": "data",
     }
 
@@ -251,6 +264,8 @@ def _build_performance_task_block(
         "planCount": 0,
         "actualCount": 0,
         "planBudget": 0,
+        "planYearlyPeople": 0,
+        "actualYearlyPeople": 0,
     }
 
     for index, (sub_project, detail_category) in enumerate(sorted_keys):

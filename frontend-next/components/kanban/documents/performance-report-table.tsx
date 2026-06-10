@@ -10,7 +10,7 @@ import type { PerformanceReportRow } from "@/services/kanban.documents.types"
 import { useDocuments } from "./documents-provider"
 
 function formatNumber(value: number) {
-  return value.toLocaleString("ko-KR")
+  return (value ?? 0).toLocaleString("ko-KR")
 }
 
 function getPeriodLabel(quarter: number, periodMode: "quarter" | "month") {
@@ -98,8 +98,8 @@ export function PerformanceReportTable() {
               <Th className="w-[220px]">사업명</Th>
               <Th className="w-[180px]">세부사업명</Th>
               <Th className="w-[140px]">상세분류</Th>
-              <Th>{periodLabel} 계획인원</Th>
-              <Th>{periodLabel} 실적인원</Th>
+              <Th>{periodLabel} 계획연인원</Th>
+              <Th>{periodLabel} 실적연인원</Th>
               <Th>{periodLabel} 계획횟수</Th>
               <Th>{periodLabel} 실적횟수</Th>
               <Th>{periodLabel} 계획예산</Th>
@@ -161,9 +161,11 @@ export function PerformanceReportTable() {
                       <Td>{row.detailCategory}</Td>
                     </>
                   ) : null}
-                  <Td right>{formatNumber(row.planPeople)}</Td>
+                  <Td right>
+                    {formatNumber(row.planYearlyPeople ?? row.planPeople)}
+                  </Td>
                   <Td right className="text-sky-700">
-                    {formatNumber(row.actualPeople)}
+                    {formatNumber(row.actualYearlyPeople ?? row.actualPeople)}
                   </Td>
                   <Td right>{formatNumber(row.planCount)}</Td>
                   <Td right className="text-sky-700">

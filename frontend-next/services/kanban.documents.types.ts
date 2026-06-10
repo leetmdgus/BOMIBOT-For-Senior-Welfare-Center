@@ -5,6 +5,9 @@ export interface PerformanceReportRow {
   detailCategory: string
   planPeople: number
   actualPeople: number
+  /** 연인원 = Σ(인원 × 횟수). 월별 행의 곱의 합(합×합 아님). 백엔드가 채움(mock은 생략 가능). */
+  planYearlyPeople?: number
+  actualYearlyPeople?: number
   planCount: number
   actualCount: number
   planBudget: number
