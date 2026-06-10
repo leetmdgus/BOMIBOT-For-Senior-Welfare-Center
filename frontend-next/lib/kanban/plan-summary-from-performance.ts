@@ -1,5 +1,12 @@
 import type { PerformanceRow } from "@/services/kanban.performance.types"
-import type { BusinessPlanFormData } from "@/services/kanban.task-detail.types"
+import type {
+  BusinessPlanFormData,
+  BusinessPlanSubProject,
+} from "@/services/kanban.task-detail.types"
+import {
+  buildSubProjectOutput,
+  splitSubProjectOutput,
+} from "@/lib/sub-project-output-format"
 
 /**
  * 재원(원천) 코드 → 표시 라벨.
@@ -79,6 +86,52 @@ export function derivePlanSummaryFromInputRows(
     budget: budget > 0 ? `금 ${budget.toLocaleString()}원` : "",
     budgetCategory,
   }
+}
+
+/** 세부사업(subProject)별 '계획' 인원/횟수 합계 */
+export function derivePlanTotalsBySubProject(
+  rows: PerformanceRow[],
+): Map<string, { people: number; count: number }> {
+  const totals = new Map<string, { people: number; count: number }>()
+  for (const row of rows) {
+    if (!isCountableRow(row)) continue
+    const key = row.subProject.trim()
+    const prev = totals.get(key) ?? { people: 0, count: 0 }
+    prev.people += row.planPeople
+    prev.count += row.planCount
+    totals.set(key, prev)
+  }
+  return totals
+}
+
+/**
+ * 세부사업 산출목표의 '헤드라인'(첫 줄: 세부사업명 (연인원/횟수))을 실적관리 '계획'
+ * 합계로 채운다. 상/하반기 근거(`-` 불릿)는 사용자가 입력한 그대로 보존한다.
+ */
+/** "(960명 / 960회)" 형태의 자동 생성 헤드라인인지 판별 */
+const AUTO_HEADLINE_RE = /\(\s*[\d,]+\s*명\s*\/\s*[\d,]+\s*회\s*\)/
+
+export function fillSubProjectOutputsFromPerformance(
+  subProjects: BusinessPlanSubProject[],
+  totalsBySubProject: Map<string, { people: number; count: number }>,
+): BusinessPlanSubProject[] {
+  return subProjects.map((sub) => {
+    const total = totalsBySubProject.get(sub.name.trim())
+    if (!total || (total.people === 0 && total.count === 0)) return { ...sub }
+
+    const { headline: existingHeadline, bullets } = splitSubProjectOutput(
+      sub.name,
+      sub.output,
+    )
+    // 사용자가 직접 쓴 헤드라인은 보존 — 빈칸이거나 자동 생성 형태일 때만 갱신
+    const isEmpty = !sub.output.trim()
+    if (!isEmpty && !AUTO_HEADLINE_RE.test(existingHeadline)) return { ...sub }
+
+    const headline =
+      `${sub.name.trim()} ` +
+      `(${total.people.toLocaleString()}명 / ${total.count.toLocaleString()}회)`
+    return { ...sub, output: buildSubProjectOutput(sub.name, headline, bullets) }
+  })
 }
 
 function isBlank(value: string | undefined): boolean {

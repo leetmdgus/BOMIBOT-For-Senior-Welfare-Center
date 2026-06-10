@@ -72,6 +72,8 @@ services:
       RAG_API_KEY: ${RAG_API_KEY:-}
       RAG_TOP_K: ${RAG_TOP_K:-8}
       FILES_STORAGE_DIR: /app/storage/uploads
+      # rhwp 렌더러 경로 (이미지에 /usr/local/bin/rhwp 로 COPY 됨, PATH 상에도 있음)
+      RHWP_BIN: ${RHWP_BIN:-/usr/local/bin/rhwp}
     volumes:
       - bomibot_uploads:/app/storage/uploads
     healthcheck:

@@ -137,3 +137,53 @@ def render_to_svg_pages(
             raise RhwpRenderError(f"SVG 생성에 실패했습니다: {tail}")
 
         return [path.read_text(encoding="utf-8") for path in svg_files]
+
+
+def convert_to_hwpx_bytes(
+    doc_bytes: bytes,
+    *,
+    suffix: str = ".hwp",
+    timeout: float = 60.0,
+) -> bytes:
+    """`.hwp`/`.hwpx` 원본 바이트 → HWPX(ZIP+XML) 바이트.
+
+    rhwp `export-hwpx`로 HWP를 HWPX로 직렬화한다. 편집 파이프라인(파싱·writeback)이
+    HWPX 전용이므로, `.hwp` 업로드를 편집 가능한 HWPX로 변환하는 데 쓴다.
+
+    Args:
+        doc_bytes: 원본 문서 바이트.
+        suffix: 임시 입력 파일 확장자(rhwp는 매직바이트로도 판별하나 명시).
+        timeout: rhwp 호출 제한 시간(초).
+    """
+    if not doc_bytes:
+        raise RhwpRenderError("빈 문서입니다.")
+
+    bin_path = resolve_rhwp_bin()
+
+    with TemporaryDirectory(prefix="rhwp_hwpx_") as tmp:
+        tmp_path = Path(tmp)
+        in_path = tmp_path / f"input{suffix}"
+        in_path.write_bytes(doc_bytes)
+        out_path = tmp_path / "output.hwpx"
+
+        cmd = [bin_path, "export-hwpx", str(in_path), str(out_path)]
+
+        try:
+            proc = subprocess.run(  # noqa: S603 - 신뢰된 내부 바이너리
+                cmd,
+                capture_output=True,
+                timeout=timeout,
+                check=False,
+            )
+        except FileNotFoundError as exc:  # 바이너리가 사라진 경우
+            resolve_rhwp_bin.cache_clear()
+            raise RhwpNotAvailableError(f"rhwp 실행 실패: {exc}") from exc
+        except subprocess.TimeoutExpired as exc:
+            raise RhwpRenderError("rhwp HWPX 변환 시간이 초과되었습니다.") from exc
+
+        if not out_path.exists() or out_path.stat().st_size == 0:
+            stderr = proc.stderr.decode("utf-8", "replace").strip()
+            tail = stderr[-800:] if stderr else "(출력 없음)"
+            raise RhwpRenderError(f"HWPX 변환에 실패했습니다: {tail}")
+
+        return out_path.read_bytes()

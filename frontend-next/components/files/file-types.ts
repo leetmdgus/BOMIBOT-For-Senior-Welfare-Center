@@ -27,4 +27,6 @@ export interface FileItem {
 export interface TaskOption {
   id: string
   name: string
+  /** 업무가 속한 사업의 연도 (연도별 필터링용) */
+  year?: string
 }

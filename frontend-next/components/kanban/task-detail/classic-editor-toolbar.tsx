@@ -342,6 +342,7 @@ export function ClassicEditorToolbar({
         <ClassicSep />
         <RichTextTableStyleToolbar
           disabled={!canStyleTable || sourceMode}
+          onBeforeApply={() => editor?.captureTableStyleTargets()}
           onApplyFill={(color) => editor?.applyTableCellFill(color)}
           onApplyBorder={(border) => editor?.applyTableBorder(border)}
           onApplyBorderToWholeTable={(border) =>

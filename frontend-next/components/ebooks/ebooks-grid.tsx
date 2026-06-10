@@ -1,3 +1,5 @@
+import Link from "next/link"
+
 import { Badge } from "@/components/ui/badge"
 
 import { cn } from "@/lib/utils"
@@ -16,8 +18,9 @@ export function EbooksGrid({
   return (
     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {books.map((book) => (
-        <div
+        <Link
           key={book.id}
+          href={`/ebooks/${book.id}`}
           className="group cursor-pointer overflow-hidden rounded-xl border border-border bg-card transition-all hover:shadow-lg"
         >
           <div className="aspect-[4/3] overflow-hidden bg-muted">
@@ -48,7 +51,7 @@ export function EbooksGrid({
               </Badge>
             </div>
           </div>
-        </div>
+        </Link>
       ))}
     </div>
   )

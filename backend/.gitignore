@@ -7,3 +7,5 @@ __pycache__/
 *.db
 .pytest_cache/
 storage/uploads/
+# rhwp 리눅스 빌드 산출물 (backend/scripts/build-rhwp-linux.ps1 로 재생성)
+bin/rhwp

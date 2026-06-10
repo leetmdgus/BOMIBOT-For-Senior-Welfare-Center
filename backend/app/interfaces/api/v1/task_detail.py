@@ -51,6 +51,38 @@ def task_detail_surveys(
     )
 
 
+@router.get("/surveys/status")
+def task_detail_survey_status(
+    region_id: str = Depends(require_region_id),
+    service: RegionStoreService = Depends(get_region_store_service),
+    kanban: KanbanBoardService = Depends(get_kanban_service),
+    access: KanbanAccessContext = Depends(get_kanban_access_context),
+    task_id: str = Query(..., alias="taskId"),
+):
+    tid = _require_task_id(task_id)
+    kanban.assert_task_access(region_id, tid, access)
+    return service.get_task_survey_status(region_id, tid)
+
+
+@router.post("/surveys/complete")
+def complete_task_surveys(
+    body: dict,
+    region_id: str = Depends(require_region_id),
+    service: RegionStoreService = Depends(get_region_store_service),
+    kanban: KanbanBoardService = Depends(get_kanban_service),
+    access: KanbanAccessContext = Depends(get_kanban_access_context),
+    user: str = Depends(optional_user_display_name),
+):
+    task_id = _require_task_id(body.get("taskId"))
+    kanban.assert_task_access(region_id, task_id, access)
+    return service.complete_task_surveys(
+        region_id,
+        task_id,
+        user=user,
+        card_title=_card_title(kanban, region_id, task_id),
+    )
+
+
 @router.get("/files")
 def task_detail_files(
     region_id: str = Depends(require_region_id),

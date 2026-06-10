@@ -11,17 +11,9 @@ import {
   PrintDocumentButton,
   PrintDocumentShell,
 } from "@/components/common/print-document"
-import { HwpxDownloadButton } from "@/components/common/hwpx-download-button"
-import { downloadBusinessPlanHwpx } from "@/lib/hwpx/export-business-plan"
-import {
-  documentSectionsForHwpxExport,
-  mergeFlushedDocumentSections,
-} from "@/lib/hwpx/document-sections-for-export"
-import { buildHwpxDownloadFilename } from "@/lib/hwpx/hwpx-filename"
-import {
-  exportFilledTemplate,
-  prefillDocumentTemplate,
-} from "@/services/document-templates.api.service"
+import { PdfDownloadButton } from "@/components/common/pdf-download-button"
+import { mergeFlushedDocumentSections } from "@/lib/hwpx/document-sections-for-export"
+import { prefillDocumentTemplate } from "@/services/document-templates.api.service"
 import type { HwpxFrontendJson } from "@/services/document-templates.types"
 import { EvaluationSplitLayout } from "@/components/kanban/task-detail/evaluation-split-layout"
 import { EvaluationFormActionBar } from "@/components/kanban/task-detail/evaluation-form-action-bar"
@@ -339,28 +331,6 @@ export function BusinessPlanTab() {
     }
   }, [selectedTemplateId, toast])
 
-  // 한글 다운로드 — 선택 양식이면 양식 위 편집본 + 추가본문 합쳐 내보내기, 아니면 기본 경로
-  const downloadHwpx = useCallback(async () => {
-    if (selectedTemplateId && templateJson) {
-      const exportSections = documentSectionsForHwpxExport(
-        mergeFlushedDocumentSections(sections),
-      )
-      const filename = buildHwpxDownloadFilename(
-        formData.projectName,
-        "plan",
-        formData.period,
-      )
-      await exportFilledTemplate(
-        selectedTemplateId,
-        templateJson,
-        filename,
-        exportSections,
-      )
-      return
-    }
-    await downloadBusinessPlanHwpx(taskId, formData, sections, selectedTemplateId)
-  }, [selectedTemplateId, templateJson, sections, formData, taskId])
-
   const sectionsStructureSignature = sections
     .map((section) => `${section.id}:${section.type}`)
     .join("\u0000")
@@ -469,7 +439,7 @@ export function BusinessPlanTab() {
             defaultLabel="기본 사업계획서 양식"
           />
           <PrintDocumentButton />
-          <HwpxDownloadButton onDownload={downloadHwpx} />
+          <PdfDownloadButton />
           <Button
             type="button"
             size="sm"
@@ -541,7 +511,7 @@ export function BusinessPlanTab() {
               canEdit={canEditPlan}
               isSaving={isSaving}
               showLoadPrevious={false}
-              onHwpxDownload={downloadHwpx}
+              showDownloadActions
               hint={
                 canEditPlan
                   ? isSaving

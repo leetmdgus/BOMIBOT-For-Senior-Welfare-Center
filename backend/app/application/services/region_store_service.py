@@ -22,6 +22,10 @@ from app.application.documents_reports import (
     build_business_plan_report,
     build_performance_report_rows,
 )
+from app.application.annual_report import (
+    find_or_create_report_book,
+    upsert_report_entry,
+)
 from app.application.services.file_storage_service import FileStorageService
 from app.application.services.survey_service import SurveyService
 from app.application.task_detail_bootstrap import (
@@ -158,6 +162,44 @@ class RegionStoreService:
         self._save(region_id, DOMAIN_EBOOKS, data)
         return deepcopy(created)
 
+    def create_ebook_with_pdf(
+        self,
+        region_id: str,
+        *,
+        title: str,
+        team: str,
+        category: str,
+        filename: str,
+        content: bytes,
+        content_type: str | None = None,
+    ) -> dict:
+        """업로드한 PDF를 한 권의 전자책(도서)으로 등록한다.
+
+        연간 보고서처럼 자동 생성되는 책자와 달리, 저장된 PDF 바이트를
+        그대로 보관하고 `/ebooks/{id}/pdf`에서 그대로 서빙한다.
+        """
+        data = self._load(region_id, DOMAIN_EBOOKS)
+        ebook_id = f"ebook{int(datetime.now(UTC).timestamp() * 1000)}"
+        storage_key, mime_type = self._file_storage.write(
+            region_id, ebook_id, filename, content
+        )
+        created = {
+            "id": ebook_id,
+            "title": title,
+            "team": team,
+            "category": category,
+            "thumbnail": "/placeholder.svg",
+            "createdAt": datetime.now(UTC).date().isoformat(),
+            "storageKey": storage_key,
+            "mimeType": content_type or mime_type,
+            "sourceFilename": filename,
+            "isUploadedPdf": True,
+            "size": FileStorageService.format_size(len(content)),
+        }
+        data.setdefault("booksData", []).append(created)
+        self._save(region_id, DOMAIN_EBOOKS, data)
+        return deepcopy(created)
+
     def update_ebook(self, region_id: str, ebook_id: str, body: dict) -> dict:
         data = self._load(region_id, DOMAIN_EBOOKS)
         books = data.setdefault("booksData", [])
@@ -171,12 +213,119 @@ class RegionStoreService:
     def delete_ebook(self, region_id: str, ebook_id: str) -> dict:
         data = self._load(region_id, DOMAIN_EBOOKS)
         books = data.get("booksData", [])
+        target = next((b for b in books if b.get("id") == ebook_id), None)
         next_books = [b for b in books if b.get("id") != ebook_id]
         if len(next_books) == len(books):
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ebook not found")
+        if target and target.get("storageKey"):
+            self._file_storage.delete(region_id, target.get("storageKey"))
         data["booksData"] = next_books
         self._save(region_id, DOMAIN_EBOOKS, data)
         return {"success": True, "deletedId": ebook_id}
+
+    def get_ebook(self, region_id: str, ebook_id: str) -> dict:
+        data = self._load(region_id, DOMAIN_EBOOKS)
+        for book in data.get("booksData", []):
+            if book.get("id") == ebook_id:
+                return deepcopy(book)
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Ebook not found"
+        )
+
+    def build_annual_report_pdf(
+        self, region_id: str, ebook_id: str, *, org_data: dict | None = None
+    ) -> tuple[bytes, str]:
+        """연간 보고서 책자 한 권을 PDF 로 렌더(전자책자처럼 열람)."""
+        from app.application.annual_report_pdf import build_annual_report_pdf
+
+        book = self.get_ebook(region_id, ebook_id)
+        return build_annual_report_pdf(self, region_id, book, org_data=org_data)
+
+    def get_ebook_pdf_payload(
+        self, region_id: str, ebook_id: str, *, org_data: dict | None = None
+    ) -> tuple[bytes, str]:
+        """전자책 PDF 바이트를 반환.
+
+        업로드된 PDF(`storageKey` 보유)면 저장된 원본을 그대로,
+        그 외(자동 생성 연간 보고서)는 동적으로 렌더해 반환한다.
+        """
+        book = self.get_ebook(region_id, ebook_id)
+        storage_key = book.get("storageKey")
+        if storage_key:
+            path = self._file_storage.resolve_path(region_id, storage_key)
+            filename = str(
+                book.get("sourceFilename") or book.get("title") or "ebook"
+            )
+            if not filename.lower().endswith(".pdf"):
+                filename = f"{filename}.pdf"
+            return path.read_bytes(), filename
+
+        from app.application.annual_report_pdf import build_annual_report_pdf
+
+        return build_annual_report_pdf(self, region_id, book, org_data=org_data)
+
+    def build_annual_report_html(
+        self, region_id: str, ebook_id: str, *, org_data: dict | None = None
+    ) -> str:
+        """연간 보고서 책자 한 권을 디자인된 HTML 로 렌더(뷰어 열람용)."""
+        from app.application.annual_report_html import build_annual_report_html
+
+        book = self.get_ebook(region_id, ebook_id)
+        return build_annual_report_html(self, region_id, book, org_data=org_data)
+
+    def record_annual_report_document(
+        self,
+        region_id: str,
+        *,
+        task_id: str,
+        kind: str,
+        program_name: str,
+        team: str | None = None,
+        file_id: str | None = None,
+        file_name: str | None = None,
+        extra: dict | None = None,
+        year: str | None = None,
+    ) -> dict:
+        """완료된 사업계획·만족도조사·사업평가를 연간 사업보고서 책자에 기입.
+
+        같은 업무·문서종류로 다시 호출하면 덮어쓰므로 멱등하다.
+        실패해도 본래 완료 처리를 막지 않도록 호출부에서 감싸 사용한다.
+        """
+        report_year = year or kst_year()
+        now_iso = now_kst().isoformat()
+        data = self._load(region_id, DOMAIN_EBOOKS)
+        book = find_or_create_report_book(
+            data,
+            report_year,
+            book_id=f"ebook-{uuid.uuid4().hex[:12]}",
+            now_iso=now_iso,
+        )
+        entry = upsert_report_entry(
+            book,
+            task_id=self._normalize_task_id(task_id),
+            kind=kind,
+            program_name=program_name,
+            now_iso=now_iso,
+            team=team,
+            file_id=file_id,
+            file_name=file_name,
+            extra=extra,
+        )
+        self._save(region_id, DOMAIN_EBOOKS, data)
+        return deepcopy(entry)
+
+    def _try_record_annual_report(self, region_id: str, **kwargs: Any) -> None:
+        """연간 보고서 기입 실패는 완료 처리 자체를 막지 않는다."""
+        import logging
+
+        try:
+            self.record_annual_report_document(region_id, **kwargs)
+        except Exception:
+            logging.getLogger(__name__).exception(
+                "연간 보고서 기입 실패 task_id=%s kind=%s",
+                kwargs.get("task_id"),
+                kwargs.get("kind"),
+            )
 
     # --- files (file manager tree: parentId, permission, taskOptions) ---
 
@@ -1599,6 +1748,7 @@ class RegionStoreService:
         runtime.setdefault("evaluationByTaskId", {})
         runtime.setdefault("businessPlanByTaskId", {})
         runtime.setdefault("surveysByTaskId", {})
+        runtime.setdefault("satisfactionByTaskId", {})
         return runtime
 
     @staticmethod
@@ -1681,6 +1831,118 @@ class RegionStoreService:
             }
             for item in items
         ]
+
+    def get_task_survey_status(self, region_id: str, task_id: str) -> dict:
+        """업무 만족도조사 완료 상태 — {isCompleted, completedAt?, pdfFileId?, pdfFileName?}."""
+        data = self._load(region_id, DOMAIN_TASK_DETAIL)
+        tid = self._normalize_task_id(task_id)
+        stored = self._task_runtime(data)["satisfactionByTaskId"].get(tid)
+        if isinstance(stored, dict):
+            return deepcopy(stored)
+        return {"isCompleted": False}
+
+    def complete_task_surveys(
+        self,
+        region_id: str,
+        task_id: str,
+        *,
+        user: str = "시스템",
+        card_title: str | None = None,
+    ) -> dict:
+        """만족도조사 완료 — 결과 PDF 생성·파일관리 첨부 + 연간 보고서 기입."""
+        from app.application.survey_results_pdf import build_survey_results_pdf
+
+        tid = self._normalize_task_id(task_id)
+        program_name = business_name_for_task(tid, card_title=card_title)
+
+        # 업무에 연결된 설문 결과 수집 (개별 실패는 건너뜀)
+        surveys_meta = self.list_task_surveys(
+            region_id, task_id, card_title=card_title
+        )
+        survey_payloads: list[dict] = []
+        for meta in surveys_meta:
+            survey_id = meta.get("id")
+            if not survey_id:
+                continue
+            try:
+                results = self.get_survey_results(region_id, str(survey_id))
+            except Exception:
+                import logging
+
+                logging.getLogger(__name__).debug(
+                    "만족도 결과 조회 실패 survey_id=%s", survey_id, exc_info=True
+                )
+                continue
+            survey_payloads.append(
+                {
+                    "title": meta.get("title") or "만족도조사",
+                    "endDate": meta.get("endDate") or "",
+                    "results": results,
+                }
+            )
+
+        avg_satisfaction = 0.0
+        for payload in survey_payloads:
+            value = (payload.get("results") or {}).get("summary", {}).get(
+                "averageSatisfaction"
+            )
+            try:
+                avg_satisfaction = max(avg_satisfaction, float(value))
+            except (TypeError, ValueError):
+                continue
+
+        pdf_bytes, filename = build_survey_results_pdf(
+            program_name=program_name,
+            surveys=survey_payloads,
+            generated_at=format_kst_datetime(),
+        )
+
+        # 기존 PDF가 있으면 내용만 갱신(멱등)
+        data = self._load(region_id, DOMAIN_TASK_DETAIL)
+        runtime = self._task_runtime(data)
+        prev = runtime["satisfactionByTaskId"].get(tid) or {}
+        file_meta = self.upsert_task_hwpx_file(
+            region_id,
+            task_id=tid,
+            file_id=prev.get("pdfFileId"),
+            filename=filename,
+            content=pdf_bytes,
+            content_type="application/pdf",
+            task_name=card_title,
+        )
+
+        now_iso = now_kst().isoformat()
+        status_doc = {
+            "isCompleted": True,
+            "completedAt": now_iso,
+            "pdfFileId": file_meta.get("id"),
+            "pdfFileName": file_meta.get("name") or filename,
+            "surveyCount": len(survey_payloads),
+            "averageSatisfaction": round(avg_satisfaction, 2),
+        }
+        # satisfactionByTaskId 는 별도 로드본에 기록되었을 수 있어 재로딩 후 저장
+        data = self._load(region_id, DOMAIN_TASK_DETAIL)
+        self._task_runtime(data)["satisfactionByTaskId"][tid] = status_doc
+        self._save(region_id, DOMAIN_TASK_DETAIL, data)
+
+        self.append_version_entry(
+            region_id,
+            action="만족도조사를 완료했습니다.",
+            target=program_name,
+            action_type="update_description",
+            project_name=program_name,
+            user=user,
+        )
+        self._try_record_annual_report(
+            region_id,
+            task_id=tid,
+            kind="survey",
+            program_name=program_name,
+            file_id=file_meta.get("id"),
+            file_name=status_doc["pdfFileName"],
+            extra={"averageSatisfaction": status_doc["averageSatisfaction"]},
+        )
+        return deepcopy(status_doc)
 
     @staticmethod
     def _reference_file_type_label(item: dict) -> str:
@@ -1892,6 +2154,13 @@ class RegionStoreService:
             project_name=program_name,
             user=user,
         )
+        self._try_record_annual_report(
+            region_id,
+            task_id=tid,
+            kind="evaluation",
+            program_name=program_name,
+            file_id=next_eval.get("hwpxFileId"),
+        )
         return self._clone_evaluation(next_eval)
 
     def _collect_performance_sub_project_names(
@@ -2088,6 +2357,14 @@ class RegionStoreService:
                 project_name=project_name,
                 user=user,
             )
+            if result["plan"].get("isCompleted"):
+                self._try_record_annual_report(
+                    region_id,
+                    task_id=tid,
+                    kind="plan",
+                    program_name=project_name,
+                    file_id=result["plan"].get("hwpxFileId"),
+                )
 
         return result
 

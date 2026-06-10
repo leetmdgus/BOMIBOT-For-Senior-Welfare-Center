@@ -1,5 +1,5 @@
-import type { CategoryStyles, EbooksListResponse } from "./ebooks.types"
-import { apiClient, resolveApiPath } from "@/lib/api-client"
+import type { BookDetail, CategoryStyles, EbooksListResponse } from "./ebooks.types"
+import { apiClient, apiUploadFormData, resolveApiPath } from "@/lib/api-client"
 
 export async function getEbooks(params?: {
   category?: string
@@ -20,6 +20,12 @@ export async function getEbooks(params?: {
 export async function getCategories() {
   const response = await getEbooks()
   return response.categories
+}
+
+export async function getEbook(id: string): Promise<BookDetail> {
+  return apiClient.get<BookDetail>(
+    resolveApiPath(`/api/ebooks/${id}`, `/api/v1/ebooks/${id}`),
+  )
 }
 
 export async function getCategoryStyles(): Promise<CategoryStyles> {
@@ -46,6 +52,24 @@ export async function createEbook(
   return apiClient.post<Record<string, unknown>>(
     resolveApiPath("/api/ebooks", "/api/v1/ebooks"),
     body,
+  )
+}
+
+/** PDF 한 권을 신규 도서로 업로드 등록 (multipart) */
+export async function uploadEbookPdf(params: {
+  title: string
+  team: string
+  category: string
+  file: File
+}): Promise<BookDetail> {
+  const form = new FormData()
+  form.append("title", params.title)
+  form.append("team", params.team)
+  form.append("category", params.category)
+  form.append("file", params.file)
+  return apiUploadFormData<BookDetail>(
+    resolveApiPath("/api/ebooks/upload", "/api/v1/ebooks/upload"),
+    form,
   )
 }
 

@@ -24,14 +24,15 @@ import {
   sortFiles,
 } from "./file-utils"
 import { syncFileTaskNames } from "@/lib/files/sync-file-task-names"
-import { TASK_FILTER_NONE } from "./task-filter-control"
+import {
+  buildWorkFolders,
+  collectYearOptions,
+  isWorkFolderId,
+  TASK_UNASSIGNED,
+  taskKeyOf,
+  workFolderKeyFromId,
+} from "@/lib/files/work-folders"
 import type { FileManagerState } from "@/services/files.types"
-
-function matchesTaskFilter(item: FileItem, taskFilterId: string | null): boolean {
-  if (!taskFilterId) return true
-  if (taskFilterId === TASK_FILTER_NONE) return !item.taskId
-  return item.taskId === taskFilterId
-}
 
 function mapApiFile(raw: Record<string, unknown>): FileItem {
   return {
@@ -56,11 +57,13 @@ function mapApiFile(raw: Record<string, unknown>): FileItem {
 
 export function useFileManager() {
   const [files, setFiles] = useState<FileItem[]>([])
-  const [currentFolderId, setCurrentFolderId] = useState<string | null>(null)
+  /** 현재 들어가 있는 업무 폴더 키(taskId 또는 미지정). null이면 루트(업무 폴더 목록) */
+  const [currentTaskFolderId, setCurrentTaskFolderId] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<ViewMode>("grid")
   const [sortKey, setSortKey] = useState<SortKey>("name")
   const [searchQuery, setSearchQuery] = useState("")
-  const [taskFilterId, setTaskFilterId] = useState<string | null>(null)
+  /** 연도별 필터 (null이면 전체 연도) */
+  const [yearFilter, setYearFilter] = useState<string | null>(null)
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [recentIds, setRecentIds] = useState<string[]>([])
   const [folderOrderByParentId, setFolderOrderByParentId] = useState<
@@ -119,33 +122,53 @@ export function useFileManager() {
   const [previewTarget, setPreviewTarget] = useState<FileItem | null>(null)
 
   const setCurrentFolderOrder = (orderedIds: string[]) => {
-    const key = currentFolderId ?? "root"
-    setFolderOrderByParentId((prev) => ({ ...prev, [key]: orderedIds }))
+    if (currentTaskFolderId === null) return
+    setFolderOrderByParentId((prev) => ({ ...prev, [currentTaskFolderId]: orderedIds }))
   }
 
-  const parentFolderId = useMemo(() => {
-    return files.find((item) => item.id === currentFolderId)?.parentId ?? null
-  }, [files, currentFolderId])
+  // 평면 모델: 실제 폴더 계층 대신 taskId로 묶은 가상 "업무 폴더" 목록
+  const allWorkFolders = useMemo(
+    () => buildWorkFolders(files, managerTaskOptions),
+    [files, managerTaskOptions],
+  )
 
-  const useFlatView = Boolean(searchQuery.trim()) || taskFilterId !== null
+  const yearOptions = useMemo(
+    () => collectYearOptions(allWorkFolders),
+    [allWorkFolders],
+  )
 
+  // 루트에서 보여줄 업무 폴더 목록 (연도 필터 + 이름 검색 적용, 업무명 오름차순은 build 단계에서 보장)
+  const workFolders = useMemo(() => {
+    const keyword = searchQuery.trim().toLowerCase()
+    return allWorkFolders.filter((folder) => {
+      // 미지정 폴더는 연도가 없으므로 특정 연도 선택 시 숨김
+      if (yearFilter && folder.year !== yearFilter) return false
+      if (keyword) return folder.name.toLowerCase().includes(keyword)
+      return true
+    })
+  }, [allWorkFolders, yearFilter, searchQuery])
+
+  const currentWorkFolder = useMemo(() => {
+    if (currentTaskFolderId === null) return null
+    return allWorkFolders.find((folder) => folder.key === currentTaskFolderId) ?? null
+  }, [allWorkFolders, currentTaskFolderId])
+
+  // 업무 폴더 안에서 보여줄 파일 목록 (폴더형 항목 제외, 수동 정렬 우선)
   const visibleFiles = useMemo(() => {
+    if (currentTaskFolderId === null) return []
     const keyword = searchQuery.trim().toLowerCase()
 
     const scopedFiles = files.filter((item) => {
-      if (!matchesTaskFilter(item, taskFilterId)) return false
-      if (useFlatView) {
-        if (keyword) return item.name.toLowerCase().includes(keyword)
-        return true
-      }
-      return item.parentId === currentFolderId
+      if (item.type === "folder") return false
+      if (taskKeyOf(item) !== currentTaskFolderId) return false
+      if (keyword) return item.name.toLowerCase().includes(keyword)
+      return true
     })
 
     const sorted = sortFiles(scopedFiles, sortKey)
-    if (useFlatView || sortKey !== "name") return sorted
+    if (sortKey !== "name") return sorted
 
-    const key = currentFolderId ?? "root"
-    const order = folderOrderByParentId[key]
+    const order = folderOrderByParentId[currentTaskFolderId]
     if (!order || order.length === 0) return sorted
     const indexById = new Map(order.map((id, index) => [id, index]))
     return [...sorted].sort((a, b) => {
@@ -156,13 +179,7 @@ export function useFileManager() {
       if (ib === undefined) return -1
       return ia - ib
     })
-  }, [files, currentFolderId, searchQuery, sortKey, taskFilterId, useFlatView])
-
-  const taskFilterLabel = useMemo(() => {
-    if (!taskFilterId) return null
-    if (taskFilterId === TASK_FILTER_NONE) return "업무 미지정"
-    return managerTaskOptions.find((t) => t.id === taskFilterId)?.name ?? null
-  }, [taskFilterId, managerTaskOptions])
+  }, [files, currentTaskFolderId, searchQuery, sortKey, folderOrderByParentId])
 
   const recentFiles = useMemo(() => {
     return recentIds
@@ -209,10 +226,18 @@ export function useFileManager() {
   }
 
   const openItem = async (item: FileItem) => {
+    // 가상 업무 폴더 진입
+    if (isWorkFolderId(item.id)) {
+      setCurrentTaskFolderId(workFolderKeyFromId(item.id))
+      setSelectedIds([])
+      return
+    }
+
     addRecent(item.id)
 
+    // 평면 모델: 실제 폴더형 항목은 자기 업무 폴더로 진입
     if (item.type === "folder") {
-      setCurrentFolderId(item.id)
+      setCurrentTaskFolderId(taskKeyOf(item))
       setSelectedIds([])
       return
     }
@@ -232,7 +257,7 @@ export function useFileManager() {
   const copyItem = async (item: FileItem) => {
     if (isFastApiMode() && copyFile) {
       try {
-        const created = await copyFile(item.id, { parentId: currentFolderId })
+        const created = await copyFile(item.id, { parentId: null })
         setFiles((prev) => [...prev, mapApiFile(created as unknown as Record<string, unknown>)])
         return
       } catch (error) {
@@ -251,7 +276,7 @@ export function useFileManager() {
         name: `${item.name} 사본`,
         createdAt: now,
         modifiedAt: now,
-        parentId: currentFolderId,
+        parentId: null,
       },
     ])
   }
@@ -443,8 +468,8 @@ export function useFileManager() {
     }
   }
 
-  const goToParentFolder = () => {
-    setCurrentFolderId(parentFolderId)
+  const goToRoot = () => {
+    setCurrentTaskFolderId(null)
     setSelectedIds([])
   }
 
@@ -452,13 +477,10 @@ export function useFileManager() {
     const nextName = name.trim()
     if (!nextName) return
 
-    const parentFolder = currentFolderId
-      ? files.find((item) => item.id === currentFolderId)
-      : null
     const taskId =
-      taskFilterId && taskFilterId !== TASK_FILTER_NONE
-        ? taskFilterId
-        : parentFolder?.taskId
+      currentTaskFolderId && currentTaskFolderId !== TASK_UNASSIGNED
+        ? currentTaskFolderId
+        : undefined
     const task = taskId
       ? managerTaskOptions.find((item) => item.id === taskId)
       : undefined
@@ -467,7 +489,7 @@ export function useFileManager() {
       const created = await createFile({
         name: nextName,
         type: "folder",
-        parentId: currentFolderId,
+        parentId: null,
         permission: "private",
         ...(taskId ? { taskId, taskName: task?.name } : {}),
       })
@@ -490,7 +512,7 @@ export function useFileManager() {
     if (isFastApiMode() && uploadFilesToServer) {
       const created = await uploadFilesToServer({
         files: uploadedFiles,
-        parentId: currentFolderId,
+        parentId: null,
         taskId: taskId || undefined,
       })
       const mapped = syncFileTaskNames(
@@ -512,7 +534,7 @@ export function useFileManager() {
         id: crypto.randomUUID(),
         name: file.name,
         type: getTypeByFileName(file.name),
-        parentId: currentFolderId,
+        parentId: null,
         size: `${Math.max(file.size / 1024 / 1024, 0.01).toFixed(2)} MB`,
         createdAt: now,
         modifiedAt: now,
@@ -563,8 +585,13 @@ export function useFileManager() {
   return {
     files,
     taskOptions: managerTaskOptions,
-    currentFolderId,
-    parentFolderId,
+    currentTaskFolderId,
+    setCurrentTaskFolderId,
+    workFolders,
+    currentWorkFolder,
+    yearFilter,
+    setYearFilter,
+    yearOptions,
     visibleFiles,
     recentFiles,
     selectedIds,
@@ -573,17 +600,12 @@ export function useFileManager() {
     viewMode,
     sortKey,
     searchQuery,
-    taskFilterId,
-    taskFilterLabel,
-    useFlatView,
-    setTaskFilterId,
     renameTarget,
     shareTarget,
     previewTarget,
     setPreviewTarget,
     uploadOpen,
     newFolderOpen,
-    setCurrentFolderId,
     setViewMode,
     setSortKey,
     setSearchQuery,
@@ -606,7 +628,7 @@ export function useFileManager() {
     deleteSelected,
     moveItem,
     moveSelected,
-    goToParentFolder,
+    goToRoot,
     createFolder,
     uploadFiles,
     exportItem,

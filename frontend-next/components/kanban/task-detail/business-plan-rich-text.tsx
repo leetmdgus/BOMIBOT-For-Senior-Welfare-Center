@@ -109,9 +109,11 @@ import {
   type SavedRichTextSelection,
 } from "@/lib/rich-text-selection"
 import {
-  applyTableStyleFromEditor,
+  applyTableStyleToTargets,
   applyWholeTableBorderStyle,
+  getTableStyleTargets,
   type TableBorderStyle,
+  type TableStyleTargets,
 } from "@/lib/rich-text-table-style"
 import { cn } from "@/lib/utils"
 
@@ -142,6 +144,8 @@ export type RichTextEditorHandle = {
   splitTableCellVertical: () => boolean
   hasCellSelection: () => boolean
   canMergeCellSelection: () => boolean
+  /** 표 서식 적용 전(툴바 누름) 선택 셀 스냅샷 — 포커스 풀려도 적용 보장 */
+  captureTableStyleTargets: () => void
   applyTableCellFill: (color: string | null) => boolean
   applyTableBorder: (border: TableBorderStyle) => boolean
   applyTableBorderWhole: (border: TableBorderStyle) => boolean
@@ -216,6 +220,11 @@ export const BusinessPlanRichText = forwardRef<
   const isComposing = useRef(false)
   const editorHistory = useRef(createRichTextEditorHistory())
   const savedSelectionRef = useRef<SavedRichTextSelection | null>(null)
+  /**
+   * 표 서식 툴바를 누르는 순간(포커스가 풀리기 전) 선택 셀을 스냅샷.
+   * 팝오버에서 색을 고르는 사이 본문 선택이 사라져도 이 대상에 적용한다.
+   */
+  const capturedTableTargetsRef = useRef<TableStyleTargets | null>(null)
   const editorId = useId()
 
   const saveEditorSelection = useCallback(() => {
@@ -548,6 +557,7 @@ export const BusinessPlanRichText = forwardRef<
       splitTableCellVertical: () => false,
       hasCellSelection: () => false,
       canMergeCellSelection: () => false,
+      captureTableStyleTargets: () => {},
       applyTableCellFill: () => false,
       applyTableBorder: () => false,
       applyTableBorderWhole: () => false,
@@ -605,13 +615,25 @@ export const BusinessPlanRichText = forwardRef<
     emitChange()
     return true
   }
+  api.captureTableStyleTargets = () => {
+    capturedTableTargetsRef.current = getTableStyleTargets(
+      editorRef.current,
+      getTableCtx(),
+    )
+  }
+  const resolveTableTargets = (): TableStyleTargets | null => {
+    const live = getTableStyleTargets(editorRef.current, getTableCtx())
+    if (live && live.cells.length > 0) return live
+    return capturedTableTargetsRef.current
+  }
   api.applyTableCellFill = (color) => {
     const el = editorRef.current
     snapshotBeforeChange()
-    const ok = applyTableStyleFromEditor(el, getTableCtx(), {
+    const ok = applyTableStyleToTargets(resolveTableTargets(), {
       type: "fill",
       color,
     })
+    capturedTableTargetsRef.current = null
     if (ok) {
       emitChange()
       if (el) refreshAllTableCellSelectionVisuals(el)
@@ -620,10 +642,11 @@ export const BusinessPlanRichText = forwardRef<
   }
   api.applyTableBorder = (border) => {
     snapshotBeforeChange()
-    const ok = applyTableStyleFromEditor(editorRef.current, getTableCtx(), {
+    const ok = applyTableStyleToTargets(resolveTableTargets(), {
       type: "border",
       border,
     })
+    capturedTableTargetsRef.current = null
     if (ok) emitChange()
     return ok
   }
@@ -1513,6 +1536,7 @@ export function HangulToolbar({
               </ToolbarIconGrid>
               <RichTextTableStyleToolbar
                 disabled={!canStyleTable || sourceMode}
+                onBeforeApply={() => editor?.captureTableStyleTargets()}
                 onApplyFill={(color) => editor?.applyTableCellFill(color)}
                 onApplyBorder={(border) => editor?.applyTableBorder(border)}
                 onApplyBorderToWholeTable={(border) =>
@@ -1528,6 +1552,7 @@ export function HangulToolbar({
               </p>
               <RichTextTableStyleToolbar
                 disabled={!canStyleTable || sourceMode}
+                onBeforeApply={() => editor?.captureTableStyleTargets()}
                 onApplyFill={(color) => editor?.applyTableCellFill(color)}
                 onApplyBorder={(border) => editor?.applyTableBorder(border)}
                 onApplyBorderToWholeTable={(border) =>

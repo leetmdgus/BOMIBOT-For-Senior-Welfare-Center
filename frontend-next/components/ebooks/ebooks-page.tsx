@@ -20,6 +20,7 @@ export function EbooksPage() {
   const [viewMode, setViewMode] = useState<ViewMode>("grid")
   const [sortBy, setSortBy] = useState("최신순")
   const [searchQuery, setSearchQuery] = useState("")
+  const [reloadToken, setReloadToken] = useState(0)
 
   useEffect(() => {
     getCategoryStyles()
@@ -41,7 +42,7 @@ export function EbooksPage() {
       .catch((error) => {
         console.error("전자책 데이터 로드 실패:", error)
       })
-  }, [selectedCategory, searchQuery])
+  }, [selectedCategory, searchQuery, reloadToken])
 
   const filteredBooks = useMemo(() => books, [books])
 
@@ -63,6 +64,7 @@ export function EbooksPage() {
             onViewModeChange={setViewMode}
             onSortChange={setSortBy}
             onSearchChange={setSearchQuery}
+            onRegistered={() => setReloadToken((token) => token + 1)}
           />
 
           {categoryStyles &&

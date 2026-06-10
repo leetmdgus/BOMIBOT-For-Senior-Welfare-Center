@@ -1,14 +1,16 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { Briefcase, Loader2, Search } from "lucide-react"
+import { AlertTriangle, Briefcase, Loader2, RefreshCw, Search } from "lucide-react"
 
 import { useAuth } from "@/components/auth/auth-provider"
 import { CollaborationLiveNotice } from "@/components/collaboration/collaboration-live-notice"
 import { CollaborationPresenceBar } from "@/components/collaboration/collaboration-presence-bar"
 import { Sidebar } from "@/components/common/sidebar"
+import { Button } from "@/components/ui/button"
 import {
   Empty,
+  EmptyContent,
   EmptyDescription,
   EmptyHeader,
   EmptyMedia,
@@ -53,6 +55,30 @@ import { getCurrentYearString } from "@/lib/current-year"
 /** 사업관리 보드 필터(연도·검색어)를 세션 동안 유지 — 페이지 이동 후 복원 */
 const KANBAN_FILTER_KEY = "bomibot:kanban-board-filter"
 
+/** 보드 데이터 로딩 최대 대기(ms) — 초과 시 무한 스피너 대신 에러로 전환. */
+const BOARD_LOAD_TIMEOUT_MS = 20_000
+
+/**
+ * fetch가 영영 돌아오지 않는 경우(예: 예전 Service Worker가 API 요청을 가로채는 콜드 진입)
+ * 스피너가 무한히 도는 것을 막기 위해, 일정 시간 후 거부하는 타임아웃을 건다.
+ * 원본 fetch는 그대로 진행되어 캐시를 채울 수 있다(무해).
+ */
+function withTimeout<T>(promise: Promise<T>, ms: number, message: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(message)), ms)
+    promise.then(
+      (value) => {
+        clearTimeout(timer)
+        resolve(value)
+      },
+      (error) => {
+        clearTimeout(timer)
+        reject(error)
+      },
+    )
+  })
+}
+
 
 export function KanbanBoardPage() {
   const { session } = useAuth()
@@ -64,6 +90,7 @@ export function KanbanBoardPage() {
   const [projectImages, setProjectImages] = useState<ProjectImageOption[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false)
+  const [loadError, setLoadError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
   // 저장 effect의 첫 실행(마운트)은 건너뛴다 — 복원 전 기본값으로 덮어쓰지 않도록.
   const filterSaveReadyRef = useRef(false)
@@ -111,6 +138,7 @@ export function KanbanBoardPage() {
     async (options?: { projectsOnly?: boolean; silent?: boolean }) => {
       if (!options?.silent) {
         setIsLoading(true)
+        setLoadError(null)
       }
       try {
         if (options?.projectsOnly) {
@@ -118,18 +146,32 @@ export function KanbanBoardPage() {
           setProjects(newProjects)
           return
         }
-        const [newProjects, staff, images] = await Promise.all([
+        // 조직 컨텍스트(권한 필터용)를 boards와 동시에 선발사 → getProjects 내부 필터가 캐시로 소비.
+        // admin은 내부에서 bypass라 네트워크 호출 없음.
+        void resolveKanbanProjectAccessScope().catch(() => {})
+        // 스피너는 "사업 카드(boards+권한필터)"에만 묶는다. 직원·이미지 옵션은 보드 표시를
+        // 막지 않도록 비차단 백그라운드 로드 — 콜드 진입 시 "가장 느린 호출"에 전체가 멈추던 문제 해소.
+        const newProjects = await withTimeout(
           getProjects(year),
-          loadAssignableStaff(),
-          getProjectImageOptions(),
-          // boards 응답 뒤 직렬로 붙던 조직 컨텍스트 조회를 boards와 동시에 선발사(캐시 워밍).
-          // admin은 내부에서 bypass라 네트워크 호출 없음. 결과는 getProjects 내부 필터가 캐시로 소비.
-          resolveKanbanProjectAccessScope(),
-        ])
+          BOARD_LOAD_TIMEOUT_MS,
+          "보드 데이터를 시간 내에 불러오지 못했습니다. 네트워크 상태를 확인하고 다시 시도해 주세요.",
+        )
         setProjects(newProjects)
-        setStaffList(staff)
-        setProjectImages(images)
         setHasLoadedOnce(true)
+        void loadAssignableStaff()
+          .then(setStaffList)
+          .catch(() => {})
+        void getProjectImageOptions()
+          .then(setProjectImages)
+          .catch(() => {})
+      } catch (error) {
+        if (!options?.silent) {
+          setLoadError(
+            error instanceof Error
+              ? error.message
+              : "보드 데이터를 불러오지 못했습니다.",
+          )
+        }
       } finally {
         if (!options?.silent) {
           setIsLoading(false)
@@ -304,6 +346,27 @@ export function KanbanBoardPage() {
                 <Loader2 className="size-4 animate-spin" />
                 데이터를 불러오는 중입니다.
               </div>
+            ) : loadError && projects.length === 0 ? (
+              <Empty className="min-h-[min(480px,60vh)] border border-dashed border-destructive/40 bg-card/50">
+                <EmptyHeader>
+                  <EmptyMedia variant="icon">
+                    <AlertTriangle className="size-6 text-destructive" />
+                  </EmptyMedia>
+                  <EmptyTitle>보드를 불러오지 못했습니다</EmptyTitle>
+                  <EmptyDescription>{loadError}</EmptyDescription>
+                </EmptyHeader>
+                <EmptyContent>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => void loadBoardData()}
+                    disabled={isLoading}
+                  >
+                    <RefreshCw className="size-4" />
+                    다시 시도
+                  </Button>
+                </EmptyContent>
+              </Empty>
             ) : projects.length === 0 ? (
               <Empty className="min-h-[min(480px,60vh)] border border-dashed border-border bg-card/50">
                 <EmptyHeader>

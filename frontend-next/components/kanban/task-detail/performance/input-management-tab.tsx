@@ -307,6 +307,9 @@ export function InputManagementTab() {
         actualPeople: acc.actualPeople + row.actualPeople,
         actualCount: acc.actualCount + row.actualCount,
         actualExpense: acc.actualExpense + row.actualExpense,
+        // 연인원 = 인원 × 횟수. 합계는 행별 곱의 합(합×합 아님)으로 집계한다.
+        planAnnual: acc.planAnnual + row.planPeople * row.planCount,
+        actualAnnual: acc.actualAnnual + row.actualPeople * row.actualCount,
       }),
       {
         planPeople: 0,
@@ -315,6 +318,8 @@ export function InputManagementTab() {
         actualPeople: 0,
         actualCount: 0,
         actualExpense: 0,
+        planAnnual: 0,
+        actualAnnual: 0,
       },
     )
   }, [displayedRows])
@@ -365,7 +370,7 @@ export function InputManagementTab() {
     const nextRows: RowData[] = Array.from({ length: count }).map(() => ({
       id: createId(),
       selected: false,
-      subProject: "선택",
+      subProject: "",
       detailCategory: "",
       month: monthLabel,
       planPeople: 0,
@@ -1100,10 +1105,24 @@ export function InputManagementTab() {
               <Td colSpan={3} center>
                 총계
               </Td>
-              <Td right>{totals.planPeople.toLocaleString()}</Td>
+              <Td right>
+                {totals.planPeople.toLocaleString()}
+                {totals.planAnnual > 0 ? (
+                  <span className="block text-[10px] font-normal text-slate-400">
+                    연 {totals.planAnnual.toLocaleString()}명
+                  </span>
+                ) : null}
+              </Td>
               <Td right>{totals.planCount.toLocaleString()}</Td>
               <Td right>{totals.planBudget.toLocaleString()}원</Td>
-              <Td right>{totals.actualPeople.toLocaleString()}</Td>
+              <Td right>
+                {totals.actualPeople.toLocaleString()}
+                {totals.actualAnnual > 0 ? (
+                  <span className="block text-[10px] font-normal text-slate-400">
+                    연 {totals.actualAnnual.toLocaleString()}명
+                  </span>
+                ) : null}
+              </Td>
               <Td right>{totals.actualCount.toLocaleString()}</Td>
               <Td right>{totals.actualExpense.toLocaleString()}원</Td>
               <Td />
@@ -1136,28 +1155,6 @@ export function InputManagementTab() {
           }}
           onClick={(event) => event.stopPropagation()}
         >
-          <button
-            className="flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-slate-100"
-            onClick={() => {
-              setShowTaskModal(true)
-              setContextMenu(null)
-            }}
-          >
-            <Plus size={15} />
-            세부사업명(세목) 추가
-          </button>
-
-          <button
-            className="flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-slate-100"
-            onClick={() => {
-              setShowDetailModal(true)
-              setContextMenu(null)
-            }}
-          >
-            <Plus size={15} />
-            상세분류(세세목) 추가
-          </button>
-
           <button
             className="flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-slate-100"
             onClick={() => addRows(1)}
@@ -1222,6 +1219,16 @@ export function InputManagementTab() {
                     }
                   />
                 </label>
+              </div>
+
+              <div className="flex items-center justify-between rounded bg-slate-50 px-3 py-2 text-sm">
+                <span className="text-muted-foreground">연인원 (인원 × 횟수)</span>
+                <span className="font-semibold tabular-nums">
+                  {(
+                    actualModalRow.actualPeople * actualModalRow.actualCount
+                  ).toLocaleString()}
+                  명
+                </span>
               </div>
 
               <label className="block text-sm">

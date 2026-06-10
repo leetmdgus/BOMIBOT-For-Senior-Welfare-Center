@@ -79,3 +79,38 @@
   box-sizing: border-box;
   vertical-align: middle;
 }
+
+/* ── 직접수정(WYSIWYG) 편집기 전용 ─────────────────────── */
+
+/* 편집 가능한 페이지: 입력 가능함을 알리는 커서 */
+.hwpx-page-editable {
+  cursor: text;
+}
+
+/* 클릭해 수정하는 텍스트 run — 빈 칸도 클릭할 수 있게 최소 폭 확보 */
+.hwpx-edit-run {
+  display: inline;
+  outline: none;
+  border-radius: 2px;
+  min-width: 1ch;
+  cursor: text;
+}
+
+.hwpx-edit-run:hover {
+  background: rgba(59, 130, 246, 0.08);
+}
+
+.hwpx-edit-run:focus {
+  background: rgba(59, 130, 246, 0.14);
+  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.5);
+}
+
+/* 빈 셀/문단도 클릭 영역이 생기도록 */
+.hwpx-page-editable .hwpx-table-cell {
+  min-height: 1.6em;
+}
+
+/* 현재 선택된 표 셀 강조 */
+.hwpx-cell-active {
+  box-shadow: inset 0 0 0 2px rgba(59, 130, 246, 0.6);
+}

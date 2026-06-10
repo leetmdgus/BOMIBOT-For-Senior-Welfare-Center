@@ -3,8 +3,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import {
   Download,
+  Eye,
   FolderUp,
   Loader2,
+  Pencil,
   Save,
   ScanSearch,
   Sparkles,
@@ -33,6 +35,7 @@ import {
   saveAutomationDraft,
 } from "@/lib/automation/automation-draft"
 import { HwpxEditorPanel } from "@/components/automation/hwpx-editor-panel"
+import { HwpxWysiwygEditor } from "@/components/hwpx/HwpxWysiwygEditor"
 import type { TaskOption } from "@/components/files/file-types"
 import { cn } from "@/lib/utils"
 import {
@@ -44,6 +47,14 @@ import {
   getFileManagerState,
   uploadFilesToServer,
 } from "@/services/files.service"
+
+/** base64 → File (analyze가 돌려준 변환 HWPX를 작업 파일로 복원) */
+function base64ToFile(base64: string, filename: string, type: string): File {
+  const binary = atob(base64)
+  const bytes = new Uint8Array(binary.length)
+  for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i)
+  return new File([bytes], filename, { type })
+}
 
 export function HwpxAutomationPage() {
   const [treeRoot, setTreeRoot] = useState<EvidenceTreeNode | null>(null)
@@ -59,6 +70,8 @@ export function HwpxAutomationPage() {
   const [saveOpen, setSaveOpen] = useState(false)
   const [taskOptions, setTaskOptions] = useState<TaskOption[]>([])
   const [notice, setNotice] = useState<string | null>(null)
+  // 중앙 패널 모드: 문서 위 직접수정(edit) ↔ rhwp 정확 미리보기(preview)
+  const [centerMode, setCenterMode] = useState<"edit" | "preview">("edit")
   // 임시저장 복원 완료 전 자동저장이 빈 상태를 덮어쓰지 않도록 가드
   const draftReady = useRef(false)
 
@@ -68,6 +81,8 @@ export function HwpxAutomationPage() {
   )
 
   const previewData = editedDoc
+  // 문서 위 직접수정(WYSIWYG) 가능 여부 — HWPX 파싱 결과(frontend JSON)가 있을 때만
+  const wysiwygAvailable = analysis?.kind === "hwpx" && Boolean(editedDoc)
 
   // 업무 카테고리(칸반 업무) 목록 로드 — 저장 다이얼로그에서 사용
   useEffect(() => {
@@ -139,6 +154,16 @@ export function HwpxAutomationPage() {
       const result = await analyzeEvidenceDocument(node.file, node.path)
       setAnalysis(result)
       setEditedDoc(result.frontendJson ?? null)
+      // .hwp는 rhwp가 HWPX로 변환 → 이후 렌더/내보내기/저장은 변환본(HWPX)을 사용
+      if (result.workingFile) {
+        setSelectedFile(
+          base64ToFile(
+            result.workingFile.contentBase64,
+            result.workingFile.filename,
+            "application/hwp+zip",
+          ),
+        )
+      }
     } catch (err) {
       setAnalysis(null)
       setEditedDoc(null)
@@ -365,19 +390,61 @@ export function HwpxAutomationPage() {
             </section>
 
             <section className="flex min-h-0 flex-col overflow-hidden rounded-lg border bg-card">
-              <div className="border-b px-4 py-3">
-                <h2 className="font-semibold">미리보기</h2>
-                <p className="mt-1 truncate text-xs text-muted-foreground">
-                  {selectedPath ?? "파일을 선택하세요"}
-                </p>
+              <div className="flex items-center justify-between gap-3 border-b px-4 py-3">
+                <div className="min-w-0">
+                  <h2 className="font-semibold">
+                    {wysiwygAvailable && centerMode === "edit"
+                      ? "문서 직접 수정"
+                      : "미리보기"}
+                  </h2>
+                  <p className="mt-1 truncate text-xs text-muted-foreground">
+                    {selectedPath ?? "파일을 선택하세요"}
+                  </p>
+                </div>
+                {wysiwygAvailable ? (
+                  <div className="flex shrink-0 items-center gap-1 rounded-md border p-0.5">
+                    <button
+                      type="button"
+                      onClick={() => setCenterMode("edit")}
+                      className={cn(
+                        "flex items-center gap-1 rounded px-2 py-1 text-xs font-medium transition-colors",
+                        centerMode === "edit"
+                          ? "bg-primary text-primary-foreground"
+                          : "text-muted-foreground hover:bg-muted",
+                      )}
+                    >
+                      <Pencil className="size-3.5" />
+                      직접 수정
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setCenterMode("preview")}
+                      className={cn(
+                        "flex items-center gap-1 rounded px-2 py-1 text-xs font-medium transition-colors",
+                        centerMode === "preview"
+                          ? "bg-primary text-primary-foreground"
+                          : "text-muted-foreground hover:bg-muted",
+                      )}
+                    >
+                      <Eye className="size-3.5" />
+                      정확 미리보기
+                    </button>
+                  </div>
+                ) : null}
               </div>
               <div className="min-h-0 flex-1 overflow-auto">
-                <DocumentPreviewPanel
-                  analysis={analysis}
-                  hwpxPreview={previewData}
-                  sourceFile={selectedFile}
-                  loading={loading}
-                />
+                {wysiwygAvailable && centerMode === "edit" && editedDoc ? (
+                  <div className="p-3">
+                    <HwpxWysiwygEditor doc={editedDoc} onChange={setEditedDoc} />
+                  </div>
+                ) : (
+                  <DocumentPreviewPanel
+                    analysis={analysis}
+                    hwpxPreview={previewData}
+                    sourceFile={selectedFile}
+                    loading={loading}
+                  />
+                )}
               </div>
             </section>
 

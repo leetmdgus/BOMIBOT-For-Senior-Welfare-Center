@@ -196,3 +196,35 @@ export async function saveTaskDocuments(
   invalidateTaskDetailCache(taskId)
   return result
 }
+
+/** 업무 만족도조사 완료 상태 (결과 PDF·연간 보고서 기입 여부) */
+export type SatisfactionSurveyStatus = {
+  isCompleted: boolean
+  completedAt?: string
+  pdfFileId?: string
+  pdfFileName?: string
+  surveyCount?: number
+  averageSatisfaction?: number
+}
+
+export async function getSatisfactionStatus(
+  taskId: string,
+): Promise<SatisfactionSurveyStatus> {
+  const path = `${base("/surveys/status")}?taskId=${encodeURIComponent(taskId)}`
+  return cachedApiGet(path, () => apiClient.get<SatisfactionSurveyStatus>(path), {
+    key: taskDetailCacheKey(taskId, "survey-status"),
+    ttlMs: TASK_DETAIL_GET_TTL_MS,
+  })
+}
+
+/** 만족도조사 완료 — 결과 PDF를 만들어 업무 파일에 첨부하고 연간 보고서에 기입 */
+export async function completeSatisfactionSurvey(
+  taskId: string,
+): Promise<SatisfactionSurveyStatus> {
+  const result = await apiClient.post<SatisfactionSurveyStatus>(
+    base("/surveys/complete"),
+    { taskId },
+  )
+  invalidateTaskDetailCache(taskId)
+  return result
+}

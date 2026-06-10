@@ -101,6 +101,8 @@ export function RichTextTableSelectionLayer({
     if (!root) return
 
     let drag: DragState | null = null
+    /** 드래그 선택 직후 따라오는 click이 선택을 지우지 못하도록 한 번 무시 */
+    let suppressClickClear = false
 
     const applyRange = (table: HTMLTableElement, range: CellRange) => {
       setTableCellSelection(table, range)
@@ -108,6 +110,7 @@ export function RichTextTableSelectionLayer({
 
     const onMouseDown = (e: MouseEvent) => {
       if (e.button !== 0) return
+      suppressClickClear = false
       if (isTableChromeTarget(e.target)) return
 
       const hit = getTableCellFromTarget(root, e.target)
@@ -199,6 +202,8 @@ export function RichTextTableSelectionLayer({
 
       if (drag.active) {
         e.preventDefault()
+        /* 드래그로 만든 선택이 직후 click 으로 지워지지 않게 보존 */
+        suppressClickClear = true
         onChange?.()
       } else {
         const map = buildTableGridMap(drag.table)
@@ -236,9 +241,21 @@ export function RichTextTableSelectionLayer({
     }
 
     const onClickOutside = (e: MouseEvent) => {
+      if (suppressClickClear) {
+        suppressClickClear = false
+        return
+      }
       if (isTableChromeTarget(e.target)) return
       const hit = getTableCellFromTarget(root, e.target)
       if (hit) return
+      /* 드래그 끝이 표 안(td 가 아닌 table/tbody)인 click 도 선택 유지 */
+      if (
+        e.target instanceof Element &&
+        e.target.closest("table") &&
+        root.contains(e.target)
+      ) {
+        return
+      }
       clearRichTextTableCellEditing(root)
       root.querySelectorAll("table").forEach((table) => {
         if (table instanceof HTMLTableElement) {

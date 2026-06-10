@@ -18,7 +18,7 @@ import {
   PrintDocumentButton,
   PrintDocumentShell,
 } from "@/components/common/print-document"
-import { HwpxDownloadButton } from "@/components/common/hwpx-download-button"
+import { PdfDownloadButton } from "@/components/common/pdf-download-button"
 import { BusinessEvaluationEditor } from "@/components/kanban/task-detail/business-evaluation-editor"
 import { EvaluationFormActionBar } from "@/components/kanban/task-detail/evaluation-form-action-bar"
 import { EvaluationSplitLayout } from "@/components/kanban/task-detail/evaluation-split-layout"
@@ -30,13 +30,7 @@ import {
   mergeTaskReferenceDocuments,
 } from "@/lib/kanban/task-reference-documents"
 import { Button } from "@/components/ui/button"
-import { downloadBusinessEvaluationHwpx } from "@/lib/hwpx/export-business-evaluation"
-import {
-  documentSectionsForHwpxExport,
-  mergeFlushedDocumentSections,
-} from "@/lib/hwpx/document-sections-for-export"
-import { buildHwpxDownloadFilename } from "@/lib/hwpx/hwpx-filename"
-import { exportFilledTemplate } from "@/services/document-templates.api.service"
+import { mergeFlushedDocumentSections } from "@/lib/hwpx/document-sections-for-export"
 import type { HwpxFrontendJson } from "@/services/document-templates.types"
 import { toSaveBusinessEvaluationPayload } from "@/lib/kanban/evaluation-save-payload"
 import {
@@ -176,42 +170,6 @@ export function BusinessPlanEvaluationWorkspace({
       .join("\u0000")
     hasInitializedSnapshotRef.current = true
   }, [evaluationData, taskId])
-
-  const buildEvaluationDownloadPayload = useCallback((): BusinessEvaluationData => {
-    const current = evaluationDataRef.current
-    return {
-      ...current,
-      sections: mergeFlushedDocumentSections(current.sections ?? []),
-    }
-  }, [])
-
-  const downloadEvaluationHwpx = useCallback(async () => {
-    if (templateId && templateJson) {
-      // 선택 양식 위 편집본 + 추가본문 합쳐 내보내기
-      const current = evaluationDataRef.current
-      const exportSections = documentSectionsForHwpxExport(
-        mergeFlushedDocumentSections(current.sections ?? []),
-      )
-      const filename = buildHwpxDownloadFilename(
-        current.programName || planDocument?.formData.projectName,
-        "evaluation",
-        current.period || planDocument?.formData.period,
-      )
-      await exportFilledTemplate(templateId, templateJson, filename, exportSections)
-      return
-    }
-    await downloadBusinessEvaluationHwpx(taskId, {
-      evaluation: buildEvaluationDownloadPayload(),
-      planForm: planDocument?.formData ?? null,
-      templateId,
-    })
-  }, [
-    buildEvaluationDownloadPayload,
-    planDocument?.formData,
-    taskId,
-    templateId,
-    templateJson,
-  ])
 
   const persistEvaluation = useCallback(async () => {
     const current = evaluationDataRef.current
@@ -534,7 +492,7 @@ export function BusinessPlanEvaluationWorkspace({
         </p>
         <div className="flex flex-wrap gap-2">
           <PrintDocumentButton />
-          <HwpxDownloadButton onDownload={downloadEvaluationHwpx} />
+          <PdfDownloadButton />
           <Button
             type="button"
             variant="outline"
@@ -618,7 +576,7 @@ export function BusinessPlanEvaluationWorkspace({
               isSaving={isSaving}
               onLoadPrevious={() => void handleLoadPreviousEvaluation()}
               onSave={() => void handleSaveAll()}
-              onHwpxDownload={downloadEvaluationHwpx}
+              showDownloadActions
               hint={
                 canEditEvaluation
                   ? isSaving

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import base64
 import re
 from pathlib import Path
 from typing import Any
@@ -9,9 +10,15 @@ from typing import Any
 from app.application.files.document_preview import render_document_preview_fragment
 from app.application.hwpx.automation.service import HwpxAutomationService
 from app.application.hwpx.hwpx_package import is_hwpx_filename
+from app.application.hwpx.rhwp_render import (
+    RhwpNotAvailableError,
+    RhwpRenderError,
+    convert_to_hwpx_bytes,
+)
 
 _SUPPORTED = {
     ".hwpx",
+    ".hwp",
     ".docx",
     ".doc",
     ".xlsx",
@@ -88,18 +95,53 @@ def analyze_document_bytes(
             "stats": {"sizeBytes": len(data)},
         }
 
-    if is_hwpx_filename(filename):
-        parsed = _hwpx_service.parse_hwpx_bytes(data, source_filename=filename)
+    is_hwp_binary = suffix == ".hwp" and not is_hwpx_filename(filename)
+
+    if is_hwpx_filename(filename) or is_hwp_binary:
+        working_filename = filename
+        working_bytes = data
+        working_file_payload: dict[str, Any] | None = None
+
+        # .hwp(바이너리)는 편집 파이프라인(HWPX 전용)에 태우기 위해 rhwp로 HWPX 변환.
+        # 변환본을 프론트가 작업 파일로 채택하도록 base64로 함께 반환한다.
+        if is_hwp_binary:
+            try:
+                working_bytes = convert_to_hwpx_bytes(data, suffix=".hwp")
+            except (RhwpNotAvailableError, RhwpRenderError) as exc:
+                return {
+                    "path": path,
+                    "filename": filename,
+                    "kind": "hwp",
+                    "supported": False,
+                    "summary": (
+                        "HWP(.hwp) 편집은 rhwp 변환이 필요합니다. "
+                        f"변환에 실패했습니다: {exc}"
+                    ),
+                    "previewHtml": None,
+                    "frontendJson": None,
+                    "plainText": "",
+                    "stats": {"sizeBytes": len(data)},
+                }
+            working_filename = f"{Path(filename).stem or 'document'}.hwpx"
+            working_file_payload = {
+                "filename": working_filename,
+                "contentBase64": base64.b64encode(working_bytes).decode("ascii"),
+            }
+
+        parsed = _hwpx_service.parse_hwpx_bytes(
+            working_bytes, source_filename=working_filename
+        )
         frontend_json = parsed["frontendJson"]
         plain_text = _extract_plain_text_from_frontend_json(frontend_json)
         paragraphs = (frontend_json.get("document") or {}).get("paragraphs") or []
+        source_label = "HWP→HWPX" if is_hwp_binary else "HWPX"
         return {
             "path": path,
             "filename": filename,
             "kind": "hwpx",
             "supported": True,
             "summary": (
-                f"HWPX 문서 · 문단 {len(paragraphs)}개 · "
+                f"{source_label} 문서 · 문단 {len(paragraphs)}개 · "
                 f"텍스트 {len(plain_text):,}자"
             ),
             "previewHtml": None,
@@ -111,6 +153,8 @@ def analyze_document_bytes(
                 "textLength": len(plain_text),
             },
             "documentTitle": parsed.get("documentTitle"),
+            # .hwp 변환 시에만: 프론트가 이후 렌더/내보내기에 쓸 HWPX 작업 파일
+            "workingFile": working_file_payload,
         }
 
     preview_html = render_document_preview_fragment(data, filename)

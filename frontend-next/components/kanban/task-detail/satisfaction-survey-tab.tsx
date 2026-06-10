@@ -6,6 +6,7 @@ import { useParams, usePathname } from "next/navigation"
 import QRCode from "react-qr-code"
 import {
   Calendar,
+  CheckCircle2,
   ChevronDown,
   Copy,
   Download,
@@ -13,6 +14,7 @@ import {
   Eye,
   FileText,
   Filter,
+  Loader2,
   MoreHorizontal,
   Plus,
   QrCode,
@@ -40,6 +42,11 @@ import { getClientSession } from "@/lib/auth/session"
 import { cn } from "@/lib/utils"
 import { statusStyles } from "./data"
 import { getSurveyList } from "@/services/survey.service"
+import {
+  completeSatisfactionSurvey,
+  getSatisfactionStatus,
+  type SatisfactionSurveyStatus,
+} from "@/services/kanban.task-detail.api.service"
 import type { Survey } from "@/services/kanban.task-detail.types"
 import type { SurveyListItem } from "@/services/survey.types"
 
@@ -66,6 +73,8 @@ export function SatisfactionSurveyTab() {
     responses: 0,
     satisfaction: 0,
   })
+  const [status, setStatus] = useState<SatisfactionSurveyStatus | null>(null)
+  const [isCompleting, setIsCompleting] = useState(false)
 
   const loadSurveys = useCallback(async () => {
     if (!taskId) {
@@ -109,9 +118,47 @@ export function SatisfactionSurveyTab() {
     }
   }, [taskId])
 
+  const loadStatus = useCallback(async () => {
+    if (!taskId) {
+      setStatus(null)
+      return
+    }
+    try {
+      setStatus(await getSatisfactionStatus(taskId))
+    } catch (error) {
+      console.error("만족도 완료 상태 로드 실패:", error)
+      setStatus(null)
+    }
+  }, [taskId])
+
+  const handleComplete = useCallback(async () => {
+    if (!taskId || isCompleting) return
+    const completed = status?.isCompleted
+    const message = completed
+      ? "만족도조사 결과 PDF를 다시 생성하고 연간 보고서에 반영할까요?"
+      : "만족도조사를 완료할까요?\n결과를 PDF로 만들어 업무 파일에 첨부하고, 연간 보고서(사업보고서)에 자동 기입됩니다."
+    if (!window.confirm(message)) return
+
+    setIsCompleting(true)
+    try {
+      const next = await completeSatisfactionSurvey(taskId)
+      setStatus(next)
+      await loadSurveys()
+      alert(
+        `만족도조사가 완료되었습니다.\n결과 PDF(${next.pdfFileName ?? "만족도조사 결과"})가 업무 파일에 첨부되고 연간 보고서에 기입되었습니다.`,
+      )
+    } catch (error) {
+      console.error("만족도조사 완료 실패:", error)
+      alert("만족도조사 완료 처리에 실패했습니다. 잠시 후 다시 시도해 주세요.")
+    } finally {
+      setIsCompleting(false)
+    }
+  }, [taskId, isCompleting, status, loadSurveys])
+
   useEffect(() => {
     void loadSurveys()
-  }, [loadSurveys, pathname])
+    void loadStatus()
+  }, [loadSurveys, loadStatus, pathname])
 
   useEffect(() => {
     const onFocus = () => {
@@ -215,21 +262,59 @@ export function SatisfactionSurveyTab() {
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-xl font-semibold">만족도조사</h1>
+        <div className="flex items-center gap-3">
+          <h1 className="text-xl font-semibold">만족도조사</h1>
+          {status?.isCompleted ? (
+            <Badge className="gap-1 bg-emerald-100 text-emerald-700">
+              <CheckCircle2 className="size-3.5" />
+              완료
+              {status.completedAt ? ` · ${status.completedAt.slice(0, 10)}` : ""}
+            </Badge>
+          ) : null}
+        </div>
 
-        <Link
-          href={
-            taskId
-              ? `/survey/new?view=edit&taskId=${encodeURIComponent(taskId)}`
-              : "/survey/new?view=edit"
-          }
-        >
-          <Button className="gap-2">
-            <Plus className="size-4" />
-            설문 만들기
+        <div className="flex items-center gap-2">
+          <Link
+            href={
+              taskId
+                ? `/survey/new?view=edit&taskId=${encodeURIComponent(taskId)}`
+                : "/survey/new?view=edit"
+            }
+          >
+            <Button variant="outline" className="gap-2">
+              <Plus className="size-4" />
+              설문 만들기
+            </Button>
+          </Link>
+
+          <Button
+            className="gap-2"
+            variant={status?.isCompleted ? "outline" : "default"}
+            disabled={!taskId || isCompleting}
+            onClick={() => void handleComplete()}
+          >
+            {isCompleting ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <CheckCircle2 className="size-4" />
+            )}
+            {isCompleting
+              ? "처리 중…"
+              : status?.isCompleted
+                ? "결과 다시 생성"
+                : "완료"}
           </Button>
-        </Link>
+        </div>
       </div>
+
+      {status?.isCompleted && status.pdfFileName ? (
+        <div className="mb-4 flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm text-emerald-800">
+          <FileText className="size-4" />
+          결과 PDF&nbsp;
+          <span className="font-medium">{status.pdfFileName}</span>
+          &nbsp;가 업무 파일과 연간 보고서에 기입되었습니다.
+        </div>
+      ) : null}
 
       <div className="mb-6 grid grid-cols-3 gap-4">
         <StatCard

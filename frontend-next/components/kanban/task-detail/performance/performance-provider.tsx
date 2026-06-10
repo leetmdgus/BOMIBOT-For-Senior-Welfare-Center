@@ -180,7 +180,6 @@ export function PerformanceProvider({
   taskId: string
 }) {
   const [rows, setRowsState] = useState<RowData[]>([])
-  const [defaultSubProject, setDefaultSubProject] = useState("신규 세목")
   const taskIdRef = useRef(taskId)
   const rowsRef = useRef<RowData[]>([])
   const pastRef = useRef<RowData[][]>([])
@@ -290,7 +289,6 @@ export function PerformanceProvider({
     pastRef.current = []
     futureRef.current = []
     setHistoryTick((n) => n + 1)
-    setDefaultSubProject("신규 세목")
     setActiveView("input")
     setPlanVersion("기본계획")
     setSupplementVersions(["기본계획"])
@@ -311,7 +309,6 @@ export function PerformanceProvider({
     getInputManagementRows(loadFor)
       .then((loaded) => {
         if (taskIdRef.current !== loadFor) return
-        setDefaultSubProject(loaded[0]?.subProject ?? "신규 세목")
         setRowsWithoutHistory(loaded)
       })
       .catch((error) => {
@@ -524,7 +521,7 @@ export function PerformanceProvider({
       {
         id: `new-${Date.now()}`,
         selected: false,
-        subProject: defaultSubProject,
+        subProject: "",
         detailCategory: "",
         month: "1월",
         planPeople: 0,
@@ -537,7 +534,7 @@ export function PerformanceProvider({
         taskId: ownerTaskId,
       },
     ])
-  }, [defaultSubProject, setRows])
+  }, [setRows])
 
   const getProgressRate = useCallback((plan: number, actual: number) => {
     if (plan === 0) return "-"

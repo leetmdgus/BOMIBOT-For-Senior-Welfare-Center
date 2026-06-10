@@ -26,7 +26,7 @@ const pageLinks: PageLink[] = [
   { title: "사업관리", path: "/kanban" },
   { title: "문서자동화", path: "/automation" },
   { title: "파일들", path: "/files" },
-  { title: "전자책자", path: "/ebooks" },
+  { title: "연간 보고서", path: "/ebooks" },
   { title: "메뉴 관리", path: "/settings/menu" },
   { title: "전자결재", path: "/approvals" },
 

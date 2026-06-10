@@ -24,7 +24,7 @@ export const APP_MENU_ITEMS: AppMenuItem[] = [
   { icon: Briefcase, label: "사업관리", href: "/kanban", configurable: true },
   { icon: FileText, label: "문서자동화", href: "/automation", configurable: true },
   { icon: FolderOpen, label: "파일들", href: "/files", configurable: true },
-  { icon: BookOpen, label: "전자책자", href: "/ebooks", configurable: true },
+  { icon: BookOpen, label: "연간 보고서", href: "/ebooks", configurable: true },
   {
     icon: FileSignature,
     label: "전자결재",

@@ -25,7 +25,7 @@ export function buildTaskOptionsFromKanbanProjects(
         seen.add(id)
 
         const name = task.title?.trim() || id
-        options.push({ id, name })
+        options.push({ id, name, year: project.year?.trim() || undefined })
       }
     }
   }

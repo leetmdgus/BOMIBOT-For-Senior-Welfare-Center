@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import {
   ChevronDown,
   Grid3X3,
@@ -26,6 +27,7 @@ import {
   Category,
   ViewMode,
 } from "@/services/ebooks.types"
+import { EbookUploadDialog } from "./ebook-upload-dialog"
 
 interface EbooksToolbarProps {
   categories: Category[]
@@ -37,6 +39,8 @@ interface EbooksToolbarProps {
   onViewModeChange: (mode: ViewMode) => void
   onSortChange: (value: string) => void
   onSearchChange: (value: string) => void
+  /** 신규 도서 등록 성공 시 — 목록 새로고침 */
+  onRegistered: () => void
 }
 
 export function EbooksToolbar({
@@ -49,30 +53,41 @@ export function EbooksToolbar({
   onViewModeChange,
   onSortChange,
   onSearchChange,
+  onRegistered,
 }: EbooksToolbarProps) {
   const { session } = useAuth()
   const orgName = session?.orgName ?? "복지관"
+  const [registerOpen, setRegisterOpen] = useState(false)
 
   return (
     <>
       <header className="mb-6 flex items-center justify-between border-b border-border bg-card px-6 py-4">
         <div>
           <h1 className="text-xl font-semibold">
-            전자책자
+            연간 보고서
           </h1>
 
           <p className="text-sm text-muted-foreground">
             산하기관 &gt; {orgName}
-            &gt; 전자책자
+            &gt; 연간 보고서
           </p>
         </div>
       </header>
 
       <div className="mb-6 flex flex-wrap items-center gap-4">
-        <Button className="bg-[#1a2744] text-white hover:bg-[#1a2744]/90">
+        <Button
+          className="bg-[#1a2744] text-white hover:bg-[#1a2744]/90"
+          onClick={() => setRegisterOpen(true)}
+        >
           <Plus className="mr-2 size-4" />
           신규 도서 등록
         </Button>
+
+        <EbookUploadDialog
+          open={registerOpen}
+          onOpenChange={setRegisterOpen}
+          onRegistered={onRegistered}
+        />
 
         <div className="flex items-center gap-1 rounded-lg bg-muted p-1">
           {categories.map((category) => (

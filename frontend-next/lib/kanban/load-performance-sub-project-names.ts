@@ -5,7 +5,9 @@ import {
 } from "@/lib/kanban/sync-plan-sub-projects"
 import {
   derivePlanSummaryFromInputRows,
+  derivePlanTotalsBySubProject,
   fillEmptyPlanSummary,
+  fillSubProjectOutputsFromPerformance,
 } from "@/lib/kanban/plan-summary-from-performance"
 import {
   getInputManagementRows,
@@ -53,7 +55,12 @@ export async function syncPlanFormFromPerformance(
   ])
 
   const names = collectPerformanceSubProjectNames(meta.subProjectChips, rows)
-  const subProjects = mergePlanSubProjectsFromPerformance(form.subProjects, names)
+  const merged = mergePlanSubProjectsFromPerformance(form.subProjects, names)
+  // 산출목표 헤드라인(세부사업명·연인원/횟수)을 실적관리 '계획' 합계로 채움(불릿은 보존)
+  const subProjects = fillSubProjectOutputsFromPerformance(
+    merged,
+    derivePlanTotalsBySubProject(rows),
+  )
   const derived = derivePlanSummaryFromInputRows(rows)
 
   return fillEmptyPlanSummary({ ...form, subProjects }, derived, managerLabel)

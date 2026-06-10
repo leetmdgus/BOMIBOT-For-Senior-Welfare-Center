@@ -1,3 +1,5 @@
+import Link from "next/link"
+
 import { Badge } from "@/components/ui/badge"
 
 import { cn } from "@/lib/utils"
@@ -16,8 +18,9 @@ export function EbooksList({
   return (
     <div className="space-y-3">
       {books.map((book) => (
-        <div
+        <Link
           key={book.id}
+          href={`/ebooks/${book.id}`}
           className="flex cursor-pointer items-center gap-4 rounded-xl border border-border bg-card p-4 transition-all hover:shadow-md"
         >
           <div className="size-16 overflow-hidden rounded-lg bg-muted">
@@ -46,7 +49,7 @@ export function EbooksList({
           >
             {book.category}
           </Badge>
-        </div>
+        </Link>
       ))}
     </div>
   )

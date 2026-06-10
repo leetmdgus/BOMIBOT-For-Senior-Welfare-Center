@@ -46,6 +46,8 @@ type RichTextTableStyleToolbarProps = {
   onApplyFill: (color: string | null) => void
   onApplyBorder: (border: TableBorderStyle) => void
   onApplyBorderToWholeTable?: (border: TableBorderStyle) => void
+  /** 툴바를 누르는 순간(포커스 풀리기 전) 선택 셀 스냅샷 트리거 */
+  onBeforeApply?: () => void
 }
 
 export function RichTextTableStyleToolbar({
@@ -53,6 +55,7 @@ export function RichTextTableStyleToolbar({
   onApplyFill,
   onApplyBorder,
   onApplyBorderToWholeTable,
+  onBeforeApply,
 }: RichTextTableStyleToolbarProps) {
   const [fillOpen, setFillOpen] = useState(false)
   const [borderOpen, setBorderOpen] = useState(false)
@@ -80,7 +83,10 @@ export function RichTextTableStyleToolbar({
     <div
       className="flex flex-wrap items-center gap-0.5"
       data-rte-table-chrome
-      onMouseDown={(e) => e.preventDefault()}
+      onMouseDown={(e) => {
+        e.preventDefault()
+        onBeforeApply?.()
+      }}
     >
       <Popover open={fillOpen} onOpenChange={setFillOpen}>
         <PopoverTrigger asChild>

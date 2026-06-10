@@ -30,6 +30,12 @@ RUN test -s /app/app/application/hwpx/templates/render/plan.hwpx \
     && test -s /app/app/application/hwpx/templates/render/evaluation.hwpx \
     || (echo "ERROR: HWPX render templates missing. Run: backend/scripts/sync_hwpx_render_templates.sh" >&2 && exit 1)
 
+# rhwp HWP/HWPX → SVG 렌더러 (리눅스 amd64). .hwp 미리보기에 필수.
+# 사전 빌드 산출물: backend/scripts/build-rhwp-linux.ps1 (또는 .sh) → backend/bin/rhwp
+# 기본 native 폰트 모드는 임베디드 메트릭만 사용하므로 ttfs 폰트 파일 불필요.
+COPY bin/rhwp /usr/local/bin/rhwp
+RUN chmod +x /usr/local/bin/rhwp && test -x /usr/local/bin/rhwp
+
 # Windows CRLF/BOM in .sh breaks ENTRYPOINT (no such file / exec format error)
 RUN sed -i 's/\r$//' /app/scripts/*.sh \
     && sed -i '1s/^\xEF\xBB\xBF//' /app/scripts/*.sh \

@@ -2,7 +2,7 @@
 
 import { Download, Save, X } from "lucide-react"
 
-import { HwpxDownloadButton } from "@/components/common/hwpx-download-button"
+import { PdfDownloadButton } from "@/components/common/pdf-download-button"
 import { PrintDocumentButton } from "@/components/common/print-document"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -17,8 +17,8 @@ type EvaluationFormActionBarProps = {
   /** false면 「이전 양식 불러오기」 숨김 (사업계획서 등) */
   showLoadPrevious?: boolean
   hint?: string
-  /** 한글(.hwpx) 다운로드 — 제공 시 인쇄 버튼과 함께 표시 */
-  onHwpxDownload?: () => Promise<void>
+  /** true면 인쇄·PDF 다운로드 버튼을 함께 표시 */
+  showDownloadActions?: boolean
 }
 
 /** 평가서 하단 저장·불러오기 (고정) */
@@ -31,7 +31,7 @@ export function EvaluationFormActionBar({
   className,
   showLoadPrevious = true,
   hint,
-  onHwpxDownload,
+  showDownloadActions = false,
 }: EvaluationFormActionBarProps) {
   return (
     <div
@@ -48,13 +48,10 @@ export function EvaluationFormActionBar({
               : "보기 모드 · 슈퍼비전 항목만 수정 가능합니다.")}
         </p>
         <div className="flex flex-wrap gap-2">
-          {onHwpxDownload ? (
+          {showDownloadActions ? (
             <>
               <PrintDocumentButton disabled={isSaving} />
-              <HwpxDownloadButton
-                onDownload={onHwpxDownload}
-                disabled={isSaving}
-              />
+              <PdfDownloadButton disabled={isSaving} />
             </>
           ) : null}
           {showLoadPrevious && onLoadPrevious ? (

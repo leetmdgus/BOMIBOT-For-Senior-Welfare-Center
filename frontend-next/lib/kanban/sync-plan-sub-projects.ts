@@ -7,7 +7,7 @@ import type {
   PerformanceSubProjectChip,
 } from "@/services/kanban.performance.types"
 
-const SKIP_SUB_PROJECT_NAMES = new Set(["", "선택", "--", "—"])
+const SKIP_SUB_PROJECT_NAMES = new Set(["", "선택", "신규 세목", "--", "—"])
 
 export function collectPerformanceSubProjectNames(
   chips: PerformanceSubProjectChip[],

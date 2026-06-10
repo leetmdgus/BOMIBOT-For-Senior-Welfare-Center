@@ -147,6 +147,14 @@ export function InputManagementGridRow({
         const isFundingColumn =
           column.key === "planBudget" || column.key === "actualExpense"
 
+        // 인원 셀에 연인원(= 인원 × 횟수)을 작은 보조표시로 노출한다. (계획/실적 각각)
+        const annualPeople =
+          column.key === "planPeople"
+            ? row.planPeople * row.planCount
+            : column.key === "actualPeople"
+              ? row.actualPeople * row.actualCount
+              : 0
+
         return (
           <td
             key={column.key}
@@ -212,6 +220,15 @@ export function InputManagementGridRow({
                 className="absolute -bottom-1 -right-1 z-10 size-2.5 cursor-crosshair border border-slate-600 bg-sky-600"
                 onMouseDown={(event) => handleFillMouseDown(event, position)}
               />
+            ) : null}
+
+            {annualPeople > 0 ? (
+              <span
+                className="pointer-events-none absolute bottom-0 left-1 text-[10px] leading-none text-slate-400 tabular-nums"
+                title={`연인원 ${annualPeople.toLocaleString()}명 (인원 × 횟수)`}
+              >
+                연 {annualPeople.toLocaleString()}명
+              </span>
             ) : null}
           </td>
         )
