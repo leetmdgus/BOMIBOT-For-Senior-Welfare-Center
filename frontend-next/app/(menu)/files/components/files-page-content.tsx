@@ -353,19 +353,6 @@ export function FilesPageContent() {
       <div className="border-b border-border bg-white px-6 py-4">
         <div className="flex items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-1.5">
-            {!atRoot ? (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-8 shrink-0 gap-1.5 px-2 text-muted-foreground"
-                onClick={goUp}
-                title="뒤로가기"
-              >
-                <CornerLeftUp className="size-4" />
-                상위 폴더
-              </Button>
-            ) : null}
             <FilesBreadcrumb trail={breadcrumbs} onNavigate={navigateToFolder} />
           </div>
 
