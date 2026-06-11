@@ -574,10 +574,6 @@ export function ProjectSection({
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <span className="text-xs text-muted-foreground">
-              {categories.length} CATEGORIES
-            </span>
-
             <button
               type="button"
               onClick={() => setExpanded((prev) => !prev)}

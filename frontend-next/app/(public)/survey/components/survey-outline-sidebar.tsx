@@ -46,10 +46,22 @@ export function SurveyOutlineSidebar({
   useEffect(() => {
     if (!activeSectionId || selectedTab !== "outline") return
 
-    activeItemRef.current?.scrollIntoView({
-      block: "nearest",
-      behavior: "smooth",
-    })
+    const list = listRef.current
+    const item = activeItemRef.current
+    if (!list || !item) return
+
+    // 활성 항목을 목차 리스트 안에서만 보이게 한다.
+    // item.scrollIntoView()는 조상(문서)까지 스크롤시켜 본문 스크롤과 충돌하므로
+    // (스크롤이 자꾸 되돌아가는 증상) listRef.scrollTop만 직접 조정한다.
+    const listRect = list.getBoundingClientRect()
+    const itemRect = item.getBoundingClientRect()
+    const margin = 8
+
+    if (itemRect.top < listRect.top + margin) {
+      list.scrollTop -= listRect.top + margin - itemRect.top
+    } else if (itemRect.bottom > listRect.bottom - margin) {
+      list.scrollTop += itemRect.bottom - (listRect.bottom - margin)
+    }
   }, [activeSectionId, selectedTab])
 
   return (

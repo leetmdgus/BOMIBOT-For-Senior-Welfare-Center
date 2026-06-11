@@ -88,15 +88,32 @@ export function EbookReader() {
     win.print()
   }
 
+  // A4 한 장이 크게 보이도록, 화면 거의 전체를 차지하는 큰 새 창으로 띄운다.
+  const openLargePreview = (target: string, revokeBlob: boolean) => {
+    const availW = window.screen?.availWidth || window.innerWidth || 1280
+    const availH = window.screen?.availHeight || window.innerHeight || 900
+    const w = Math.min(1400, Math.round(availW * 0.92))
+    const h = Math.min(1900, Math.round(availH * 0.94))
+    const left = Math.max(0, Math.round((availW - w) / 2))
+    const top = Math.max(0, Math.round((availH - h) / 2))
+    // noopener 를 빼야 width/height 가 적용된다(자체 blob/pdf 라 안전).
+    const win = window.open(
+      target,
+      "bomibot-report-preview",
+      `popup=yes,width=${w},height=${h},left=${left},top=${top}`,
+    )
+    win?.focus()
+    if (revokeBlob) setTimeout(() => URL.revokeObjectURL(target), 60_000)
+  }
+
   const handleOpenNewTab = () => {
     if (mode === "pdf") {
-      if (pdfUrl) window.open(pdfUrl, "_blank", "noopener,noreferrer")
+      if (pdfUrl) openLargePreview(pdfUrl, false)
       return
     }
     if (!html) return
     const url = URL.createObjectURL(new Blob([html], { type: "text/html" }))
-    window.open(url, "_blank", "noopener,noreferrer")
-    setTimeout(() => URL.revokeObjectURL(url), 60_000)
+    openLargePreview(url, true)
   }
 
   return (
@@ -133,7 +150,7 @@ export function EbookReader() {
                 onClick={handleOpenNewTab}
               >
                 <ExternalLink className="size-4" />
-                새 창에서 열기
+                새 창에서 크게 보기
               </Button>
               <Button
                 size="sm"

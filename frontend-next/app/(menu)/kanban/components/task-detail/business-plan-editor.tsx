@@ -6,7 +6,6 @@ import {
   A4DocumentViewport,
   DOCUMENT_VIEWPORT_WIDTH_SINGLE_MM,
 } from "@common/components/a4-document-viewport"
-import { DocumentMediaSections } from "@menu/kanban/components/task-detail/document-media-sections"
 import { DocumentSectionsTable } from "@menu/kanban/components/task-detail/document-sections-table"
 import { TemplateDocumentEditor } from "@menu/kanban/components/task-detail/template-doc/template-document-editor"
 import type { HwpxFrontendJson } from "@/services/document-templates.types"
@@ -96,7 +95,6 @@ export function BusinessPlanEditor({
   formData,
   sections,
   readOnly,
-  taskId,
   onFormDataChange,
   onSectionsChange,
   referenceMode = false,
@@ -318,35 +316,7 @@ export function BusinessPlanEditor({
           </section>
         )}
 
-        <section aria-label="첨부 자료" className="print-hide space-y-2">
-          <A4DocumentViewport
-            fitToViewport={false}
-            pageWidthMm={DOCUMENT_VIEWPORT_WIDTH_SINGLE_MM}
-          >
-            <HwpxDocument className="shadow-none">
-              <DocumentMediaSections
-                sections={sections}
-                readOnly={effectiveReadOnly}
-                taskId={taskId}
-                createSectionId={createSectionId}
-                onSectionsChange={onSectionsChange}
-              />
-            </HwpxDocument>
-          </A4DocumentViewport>
-        </section>
-
         <section aria-label="추가 본문" className="space-y-2">
-          <div className="print-hide flex items-center justify-between gap-2 border border-b-0 border-black bg-[#f5f5f5] px-3 py-2">
-            <h3 className="text-sm font-medium text-neutral-700">추가 본문</h3>
-            {!effectiveReadOnly ? (
-              <p className="text-[11px] text-muted-foreground">
-                「대목차」 또는 「목차·본문」으로 섹션을 추가합니다.
-              </p>
-            ) : (
-              <p className="text-[11px] text-muted-foreground">읽기 전용</p>
-            )}
-          </div>
-
           <A4DocumentViewport
             fitToViewport={false}
             pageWidthMm={DOCUMENT_VIEWPORT_WIDTH_SINGLE_MM}

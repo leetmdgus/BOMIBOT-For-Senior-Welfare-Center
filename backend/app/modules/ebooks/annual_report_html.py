@@ -520,7 +520,7 @@ def _entry_html(
         f'<div class="entry-major">사업명 · {_esc(major)}</div>' if major else ""
     )
     return (
-        f'<article class="entry">'
+        f'<article class="entry" data-kind="entry">'
         f'<div class="entry-head"><span class="entry-no">{index}</span>'
         f'<div class="entry-titles">{major_html}'
         f'<h2 class="entry-title">{_esc(program)}</h2></div>{team_html}</div>'
@@ -596,22 +596,23 @@ def build_annual_report_html(
         p for p in [team, f"{year}년" if year else "", f"사업 {len(entries)}건"] if p
     )
 
-    # 책장(leaf) 단위로 구성 — 화면에선 한 장씩 넘기고, 인쇄 시 전체 펼침.
+    # 원본 시트(분할 전) — 화면에선 JS가 A4 한 장씩(.leaf)으로 자동 분할, 인쇄 시 전체 펼침.
+    # data-kind: cover(한 장 고정) / section·major·entry(내용에 따라 자동 분할).
     leaves: list[str] = [
         (
-            f'<div class="page cover"><div class="cover-band"></div>{cover_img}'
+            f'<div class="page cover" data-kind="cover"><div class="cover-band"></div>{cover_img}'
             f'<div class="cover-body"><div class="cover-kicker">연간 보고서</div>'
             f'<h1 class="cover-title">{_esc(title)}</h1>'
             f'<div class="cover-meta">{_esc(meta_line)}</div>'
             f'<div class="cover-date">생성일 {_esc(format_kst_datetime())}</div>'
             f"</div></div>"
         ),
-        f'<div class="page section-page"><h3 class="page-title">목차</h3>{toc_block}</div>',
+        f'<div class="page section-page" data-kind="section"><h3 class="page-title">목차</h3>{toc_block}</div>',
         (
-            f'<div class="page section-page"><h3 class="page-title">사업 개요</h3>'
+            f'<div class="page section-page" data-kind="section"><h3 class="page-title">사업 개요</h3>'
             f'<p class="intro">{_esc_br(intro)}</p></div>'
         ),
-        f'<div class="page section-page"><h3 class="page-title">조직현황</h3>{org_block}</div>',
+        f'<div class="page section-page" data-kind="section"><h3 class="page-title">조직현황</h3>{org_block}</div>',
     ]
     # 대분류 표지(사업명) → 그 아래 중분류(프로그램) 페이지들
     counter = 0
@@ -621,7 +622,7 @@ def build_annual_report_html(
             for e in group_entries
         )
         leaves.append(
-            f'<div class="page major-page"><div class="major-kicker">사업명 · 대분류</div>'
+            f'<div class="page major-page" data-kind="major"><div class="major-kicker">사업명 · 대분류</div>'
             f'<h2 class="major-title">{_esc(major)}</h2>'
             f'<div class="major-sub">프로그램(중분류) {len(group_entries)}건</div>'
             f'<ol class="major-programs">{program_items}</ol></div>'
@@ -631,9 +632,8 @@ def build_annual_report_html(
             leaves.append(
                 _entry_html(service, region_id, counter, e, major=major)
             )
-    sheets = "".join(
-        f'<div class="leaf"><div class="leaf-inner">{leaf}</div></div>' for leaf in leaves
-    )
+    # JS 가 #src 의 원본을 측정해 .stage 에 A4 페이지로 흘려 담는다(분할 실패 시 폴백).
+    src_sheets = "".join(leaves)
 
     return f"""<!DOCTYPE html>
 <html lang="ko">
@@ -644,10 +644,15 @@ def build_annual_report_html(
 <style>{_CSS}</style>
 </head>
 <body>
-<div class="book" id="book">{sheets}</div>
-<button class="flip-arrow flip-prev" id="pg-prev" aria-label="이전 장">‹</button>
-<button class="flip-arrow flip-next" id="pg-next" aria-label="다음 장">›</button>
-<div class="book-ind" id="pg-ind"></div>
+<div id="src">{src_sheets}</div>
+<div class="viewer" id="viewer"><div class="stage" id="stage"></div></div>
+<div class="toolbar">
+<div class="seg"><button class="seg-btn on" id="pg-m1">한 쪽</button><button class="seg-btn" id="pg-m2">두 쪽</button></div>
+<span class="sep"></span>
+<button class="nav" id="pg-prev" aria-label="이전 페이지">‹</button>
+<span class="ind" id="pg-ind"></span>
+<button class="nav" id="pg-next" aria-label="다음 페이지">›</button>
+</div>
 <script>{_BOOK_JS}</script>
 </body>
 </html>"""
@@ -660,7 +665,7 @@ _CSS = """
 }
 *{box-sizing:border-box;}
 body{
-  margin:0; padding:28px 16px; background:var(--bg); color:var(--ink);
+  margin:0; padding:0; background:var(--bg); color:var(--ink);
   font-family:'Pretendard','Noto Sans KR','Malgun Gothic','맑은 고딕',-apple-system,BlinkMacSystemFont,sans-serif;
   font-size:14px; line-height:1.6; -webkit-print-color-adjust:exact; print-color-adjust:exact;
 }
@@ -776,71 +781,161 @@ table{ width:100%; border-collapse:collapse; margin:8px 0 14px; font-size:13px; 
 /* 사업 항목 헤더의 대분류 라벨 */
 .entry-titles{ flex:1; min-width:0; }
 .entry-major{ font-size:11.5px; font-weight:700; color:var(--accent); letter-spacing:.04em; margin-bottom:2px; }
-/* 책 넘김 뷰 — 한 장(leaf)씩 좌측 모서리를 축으로 넘긴다 */
-.book{ position:relative; width:min(900px,94vw); height:82vh; max-height:1180px;
-  margin:8px auto; perspective:2600px; }
-.leaf{ position:absolute; inset:0; background:#fff; border-radius:10px;
-  box-shadow:0 16px 50px rgba(15,23,42,.22); overflow:hidden;
-  transform-origin:left center; transform:rotateY(0deg);
-  transition:transform .7s cubic-bezier(.2,.05,.15,1);
-  backface-visibility:hidden; -webkit-backface-visibility:hidden; }
-.leaf.flipped{ transform:rotateY(-179deg); }
-.leaf::after{ content:''; position:absolute; top:0; bottom:0; left:0; width:26px;
-  background:linear-gradient(90deg,rgba(15,23,42,.10),transparent); pointer-events:none; }
-.leaf-inner{ position:absolute; inset:0; overflow:auto; }
-.book .page, .book .entry{ max-width:none; margin:0; border:none; box-shadow:none;
+/* ===== A4 페이지 뷰어 — 한 쪽 / 두 쪽(펼침) + 자동 분할 ===== */
+:root{ --pw:794px; --ph:1123px; }            /* A4 210×297mm @96dpi */
+#src{ display:none; }                          /* 원본(분할 전) — JS가 측정용으로만 사용 */
+.viewer{ position:fixed; inset:0; overflow:auto; background:var(--bg);
+  display:flex; align-items:flex-start; justify-content:center; padding:24px 24px 92px; }
+.stage{ display:flex; gap:28px; align-items:flex-start; transform-origin:top center; }
+.leaf{ width:var(--pw); height:var(--ph); flex:none; background:#fff; border-radius:3px;
+  box-shadow:0 12px 40px rgba(15,23,42,.20); overflow:hidden; }
+.leaf.grow{ height:auto; }                      /* 한 덩어리가 A4보다 큰 드문 경우만 늘림(잘림 방지) */
+.leaf-inner{ width:100%; height:100%; overflow:hidden; }
+.leaf-inner.grow{ height:auto; overflow:visible; }
+.leaf-inner.scroll{ overflow:auto; }            /* 폴백(분할 실패 시) */
+.leaf .page, .leaf .entry{ max-width:none; margin:0; border:none; box-shadow:none;
   border-radius:0; min-height:100%; }
-.flip-arrow{ position:fixed; top:50%; transform:translateY(-50%); z-index:60;
-  width:46px; height:46px; border-radius:50%; border:1px solid var(--line);
-  background:#fff; color:var(--navy); font-size:26px; line-height:1; cursor:pointer;
-  box-shadow:0 6px 18px rgba(15,23,42,.18); display:flex; align-items:center; justify-content:center; }
-.flip-arrow:disabled{ opacity:.3; cursor:default; }
-.flip-prev{ left:max(16px,calc(50vw - 480px)); }
-.flip-next{ right:max(16px,calc(50vw - 480px)); }
-.book-ind{ position:fixed; left:50%; transform:translateX(-50%); bottom:16px; z-index:60;
-  background:var(--navy); color:#fff; font-size:12.5px; font-weight:700;
-  padding:6px 16px; border-radius:999px; box-shadow:0 6px 18px rgba(15,23,42,.2); }
+/* 하단 컨트롤 바 */
+.toolbar{ position:fixed; left:50%; bottom:16px; transform:translateX(-50%); z-index:60;
+  display:flex; align-items:center; gap:6px; background:rgba(255,255,255,.96);
+  border:1px solid var(--line); border-radius:999px; padding:6px 8px;
+  box-shadow:0 8px 24px rgba(15,23,42,.18); }
+.toolbar .nav{ border:none; background:transparent; color:var(--navy); cursor:pointer;
+  font-size:22px; line-height:1; padding:4px 12px; border-radius:999px; font-weight:700; }
+.toolbar .nav:disabled{ opacity:.35; cursor:default; }
+.seg{ display:flex; background:var(--soft); border-radius:999px; padding:2px; }
+.seg-btn{ border:none; background:transparent; cursor:pointer; color:var(--muted);
+  font-size:13px; font-weight:700; padding:6px 14px; border-radius:999px; }
+.seg-btn.on{ background:var(--navy); color:#fff; }
+.ind{ font-size:12.5px; font-weight:700; color:#334155; min-width:72px; text-align:center; }
+.sep{ width:1px; height:20px; background:var(--line); margin:0 4px; }
 @media print{
+  @page{ size:A4; margin:12mm; }
   body{ background:#fff; padding:0; }
-  .book{ position:static; width:auto; height:auto; max-height:none; margin:0; perspective:none; }
-  .leaf{ position:static; inset:auto; transform:none!important; box-shadow:none;
-    border-radius:0; overflow:visible; page-break-after:always; }
-  .leaf::after{ display:none; }
-  .leaf-inner{ position:static; inset:auto; overflow:visible; }
-  .page, .entry{ box-shadow:none; border:none; border-radius:0; margin:0 auto; max-width:100%; }
+  #src{ display:none!important; }
+  .viewer{ position:static; inset:auto; overflow:visible; display:block; padding:0; background:#fff; }
+  .stage{ display:block; zoom:1!important; gap:0; }
+  .leaf{ width:auto; height:auto; box-shadow:none; border-radius:0; overflow:visible;
+    page-break-after:always; break-after:page; }
+  .leaf[hidden]{ display:block!important; }   /* 화면서 숨긴 페이지도 인쇄엔 모두 포함 */
+  .leaf-inner{ height:auto!important; overflow:visible!important; }
+  .leaf .page, .leaf .entry{ min-height:0; box-shadow:none; border:none; border-radius:0; }
   .subsection{ break-inside:avoid; }
-  .flip-arrow, .book-ind{ display:none; }
+  .toolbar{ display:none; }
 }
 """
 
 
-# iframe 안에서 도는 책 넘김 컨트롤러 (CSP 없음 — 인라인 스크립트 허용)
+# iframe/새 창 안에서 도는 A4 페이지 뷰어 컨트롤러 (CSP 없음 — 인라인 스크립트 허용)
+# (1) 자동 분할: #src 원본 블록을 렌더 높이로 측정해 A4 한 장씩(.leaf)으로 흘려 담는다.
+#     - cover 는 한 장 고정, 나머지는 블록(소단원 단위까지) 단위로 분할.
+#     - 한 덩어리(표 등)가 A4보다 크면 잘리지 않게 그 페이지만 늘린다(grow).
+# (2) 한 쪽/두 쪽 토글 + 화면에 맞춰 배율 축소(zoom) + 이전/다음 이동.
+# 분할 중 예외가 나면 원본을 스크롤 페이지로 그대로 보여주는 폴백을 둔다.
 _BOOK_JS = """
 (function(){
-  var book=document.getElementById('book');
-  if(!book)return;
-  var leaves=Array.prototype.slice.call(book.getElementsByClassName('leaf'));
-  var n=leaves.length, cur=0;
+  var stage=document.getElementById('stage');
+  var src=document.getElementById('src');
+  if(!stage||!src)return;
+  function toArr(x){return Array.prototype.slice.call(x);}
   var ind=document.getElementById('pg-ind');
   var prev=document.getElementById('pg-prev');
   var next=document.getElementById('pg-next');
-  function render(){
-    for(var i=0;i<n;i++){
-      var lf=leaves[i];
-      if(i<cur){lf.className='leaf flipped';lf.style.zIndex=i;}
-      else{lf.className='leaf';lf.style.zIndex=n-i;}
-    }
-    if(ind)ind.textContent=(cur+1)+' / '+n;
-    if(prev)prev.disabled=(cur===0);
-    if(next)next.disabled=(cur>=n-1);
+  var m1=document.getElementById('pg-m1');
+  var m2=document.getElementById('pg-m2');
+  var leaves=[], mode=1, cur=0;
+
+  function newLeaf(cls){
+    var l=document.createElement('div'); l.className='leaf';
+    var inner=document.createElement('div'); inner.className='leaf-inner'+(cls?(' '+cls):'');
+    l.appendChild(inner); stage.appendChild(l); return inner;
   }
-  function go(d){var t=cur+d; if(t<0)t=0; if(t>n-1)t=n-1; cur=t; render();}
+  function over(inner){ return inner.scrollHeight > inner.clientHeight + 2; }
+  function grow(inner){ inner.classList.add('grow'); inner.parentNode.className+=' grow'; }
+  function splitKids(b){                          // 소단원(.subsection)만 한 단계 더 분할
+    if(b.classList && b.classList.contains('subsection')){
+      var ch=toArr(b.children); return ch.length>1?ch:null;
+    }
+    return null;
+  }
+  function build(){
+    stage.style.zoom='1'; stage.innerHTML='';
+    toArr(src.children).forEach(function(sheet){
+      var kind=sheet.getAttribute('data-kind')||'section';
+      if(kind==='cover'){ newLeaf('solid').appendChild(sheet.cloneNode(true)); return; }
+      var blocks=toArr(sheet.children);
+      var inner=newLeaf(); var shell=sheet.cloneNode(false); inner.appendChild(shell);
+      for(var i=0;i<blocks.length;i++){
+        var b=blocks[i].cloneNode(true);
+        shell.appendChild(b);
+        if(!over(inner)) continue;
+        shell.removeChild(b);
+        var subs=splitKids(b);
+        if(!subs){                                // 통짜 블록 → 다음 장으로
+          if(shell.children.length>0){ inner=newLeaf(); shell=sheet.cloneNode(false); inner.appendChild(shell); }
+          shell.appendChild(b);
+          if(over(inner)){ grow(inner); inner=newLeaf(); shell=sheet.cloneNode(false); inner.appendChild(shell); }
+          continue;
+        }
+        var sub=b.cloneNode(false); shell.appendChild(sub);   // 소단원을 자식 단위로 흘림
+        if(over(inner)){ shell.removeChild(sub); inner=newLeaf(); shell=sheet.cloneNode(false); inner.appendChild(shell); sub=b.cloneNode(false); shell.appendChild(sub); }
+        for(var j=0;j<subs.length;j++){
+          var s=subs[j].cloneNode(true); sub.appendChild(s);
+          if(!over(inner)) continue;
+          sub.removeChild(s);
+          inner=newLeaf(); shell=sheet.cloneNode(false); inner.appendChild(shell);
+          sub=b.cloneNode(false); shell.appendChild(sub); sub.appendChild(s);
+          if(over(inner)){ grow(inner); inner=newLeaf(); shell=sheet.cloneNode(false); inner.appendChild(shell); sub=b.cloneNode(false); shell.appendChild(sub); }
+        }
+      }
+    });
+    toArr(stage.children).forEach(function(l){    // 빈 셸/빈 페이지 정리 (안쪽부터)
+      toArr(l.querySelectorAll('.subsection,.entry,.page')).reverse().forEach(function(el){
+        if(el.children.length===0 && el.parentNode) el.parentNode.removeChild(el);
+      });
+      var inner=l.firstChild;
+      if(!inner || inner.children.length===0) stage.removeChild(l);
+    });
+    leaves=toArr(stage.children);
+  }
+
+  function fit(){
+    stage.style.zoom='1';
+    var availW=window.innerWidth-56, availH=window.innerHeight-104;   // 하단 바 여백
+    var natW=stage.scrollWidth||1, natH=stage.scrollHeight||1;
+    var z=Math.min(availW/natW, availH/natH);
+    if(z>1)z=1; if(z<0.25)z=0.25;
+    stage.style.zoom=z;
+  }
+  function render(){
+    var n=leaves.length;
+    for(var i=0;i<n;i++){ leaves[i].hidden=!(i>=cur && i<cur+mode); }
+    var last=Math.min(cur+mode,n);
+    if(ind)ind.textContent=(last>cur+1?(cur+1)+'–'+last:(cur+1))+' / '+n;
+    if(prev)prev.disabled=(cur<=0);
+    if(next)next.disabled=(cur+mode>=n);
+    fit();
+  }
+  function go(d){ var n=leaves.length,t=cur+d*mode; if(t<0)t=0; if(t>n-1)t=n-1; cur=t; render(); }
+  function setMode(m){ mode=m; if(mode===2)cur=cur-(cur%2);
+    if(m1)m1.className='seg-btn'+(m===1?' on':''); if(m2)m2.className='seg-btn'+(m===2?' on':''); render(); }
+
+  try{ build(); }catch(e){                        // 폴백: 분할 없이 원본을 스크롤 페이지로
+    stage.innerHTML='';
+    toArr(src.children).forEach(function(sheet){ newLeaf('scroll').appendChild(sheet.cloneNode(true)); });
+    leaves=toArr(stage.children);
+  }
+  if(!leaves.length){ leaves=toArr(stage.children); }
+
   if(prev)prev.onclick=function(){go(-1);};
   if(next)next.onclick=function(){go(1);};
+  if(m1)m1.onclick=function(){setMode(1);};
+  if(m2)m2.onclick=function(){setMode(2);};
   document.addEventListener('keydown',function(e){
     if(e.key==='ArrowRight'||e.key==='PageDown'){go(1);e.preventDefault();}
     else if(e.key==='ArrowLeft'||e.key==='PageUp'){go(-1);e.preventDefault();}
   });
-  render();
+  window.addEventListener('resize',fit);
+  setMode(1);
 })();
 """

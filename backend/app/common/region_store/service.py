@@ -2216,12 +2216,10 @@ class RegionStoreService:
         return evaluation
 
     def _clone_business_plan(self, source: dict) -> dict:
-        from app.common.hwpx.render.template_defaults import (
-            merge_plan_form_with_template_defaults,
-        )
-
+        # 비어 있는 세부사업·사업명을 템플릿 기본값으로 채우지 않는다.
+        # 세부사업은 실적관리(세목)에서, 사업명은 카드명에서만 채운다.
         result = deepcopy(source)
-        form = merge_plan_form_with_template_defaults(result.get("formData", {}))
+        form = dict(result.get("formData", {}))
         form["goals"] = list(form.get("goals", []))
         form["subProjects"] = [deepcopy(s) for s in form.get("subProjects", [])]
         result["formData"] = form

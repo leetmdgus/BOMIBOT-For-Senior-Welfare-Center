@@ -12,6 +12,12 @@
   box-shadow: 0 2px 12px rgb(0 0 0 / 0.08);
 }
 
+/* A4 페이지처럼 사방 여백 — 사업계획서·사업평가서 요약 + 대목차·본문(추가 본문) 영역.
+   (참고 패널 compact 문서는 제외, 인쇄 시 @page·print-area 에서 처리) */
+.a4-document-viewport .hwpx-doc:not(.hwpx-doc--compact) {
+  padding: 16mm 14mm;
+}
+
 .a4-document-viewport .hwpx-doc__title {
   font-size: 1.08rem;
   padding: 0.65rem 0.5rem 0.55rem;

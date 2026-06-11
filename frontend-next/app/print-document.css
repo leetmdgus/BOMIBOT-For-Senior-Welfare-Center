@@ -130,7 +130,8 @@
     width: 100% !important;
     max-width: 100% !important;
     margin: 0 !important;
-    padding-right: 0 !important;
+    /* 화면용 A4 여백(padding)은 인쇄 시 제거 — 여백은 @page·.print-area 에서 적용 */
+    padding: 0 !important;
     box-shadow: none !important;
     overflow: visible !important;
     page-break-inside: auto;

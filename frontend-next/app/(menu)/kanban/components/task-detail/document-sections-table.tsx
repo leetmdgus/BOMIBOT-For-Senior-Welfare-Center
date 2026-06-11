@@ -41,18 +41,7 @@ type DocumentSectionsTableProps<T extends DocumentSection> = {
   className?: string
 }
 
-function groupRowSpan(
-  rowIndex: number,
-  boundaries: number[],
-  totalRows: number,
-): number {
-  const boundaryIdx = boundaries.indexOf(rowIndex)
-  if (boundaryIdx < 0) return 0
-  const nextStart = boundaries[boundaryIdx + 1] ?? totalRows
-  return nextStart - rowIndex
-}
-
-/** sections 순서대로 대목차·목차·본문 행을 가변 렌더 (본문만 추가 시 목차+본문 2행) */
+/** sections 순서대로 대목차·본문 행을 가변 렌더 ('제목'(목차) 행은 숨김) */
 export function DocumentSectionsTable<T extends DocumentSection>({
   sections,
   readOnly,
@@ -63,18 +52,35 @@ export function DocumentSectionsTable<T extends DocumentSection>({
   onAddBody,
   className,
 }: DocumentSectionsTableProps<T>) {
-  const rows = rowsFromDocumentSections(sections)
+  const allRows = rowsFromDocumentSections(sections)
   const showAddBar =
     !readOnly && onAddHeading && onAddBody && onSectionsChange
   const showSideControls = !readOnly && Boolean(onSectionsChange)
 
-  const groupBoundaries = rows
-    .map((row, index) =>
-      row.kind === "heading" || row.kind === "toc" ? index : -1,
-    )
-    .filter((index) => index >= 0)
+  // "제목"(목차) 행은 노출하지 않는다 — 대목차·본문만 표시한다.
+  // (section.title 데이터는 유지하되 편집 행만 숨긴다)
+  const isHiddenRow = (row: DocumentSectionRow) => row.kind === "toc"
 
-  if (rows.length === 0) {
+  // 대목차(heading) 또는 목차(toc)에서 그룹이 시작된다.
+  // 그룹별로 시작 행(이동·삭제 기준)과 표시 행(숨김 제외)을 함께 보관한다.
+  const groups: Array<{
+    startFullIndex: number
+    startRow: DocumentSectionRow
+    visibleRows: DocumentSectionRow[]
+  }> = []
+  allRows.forEach((row, index) => {
+    const isStart = row.kind === "heading" || row.kind === "toc"
+    if (isStart || groups.length === 0) {
+      groups.push({ startFullIndex: index, startRow: row, visibleRows: [] })
+    }
+    if (!isHiddenRow(row)) {
+      groups[groups.length - 1].visibleRows.push(row)
+    }
+  })
+
+  const hasVisibleRows = groups.some((group) => group.visibleRows.length > 0)
+
+  if (!hasVisibleRows) {
     return (
       <div
         className={cn(
@@ -120,52 +126,56 @@ export function DocumentSectionsTable<T extends DocumentSection>({
       <HwpxTable className="table-fixed w-full border-t border-black">
         {SECTION_COLGROUP}
         <tbody>
-          {rows.map((row, rowIndex) => {
-            const groupStart = groupBoundaries.reduce(
-              (best, start) => (start <= rowIndex ? start : best),
-              0,
-            )
-            const isGroupStart =
-              row.kind === "heading" || row.kind === "toc"
-            const showControls =
-              showSideControls && isGroupStart && rowIndex === groupStart
-            const rowSpan = showControls
-              ? groupRowSpan(rowIndex, groupBoundaries, rows.length)
-              : 0
+          {groups.flatMap((group) =>
+            group.visibleRows.map((row, visibleIndex) => {
+              const showControls = showSideControls && visibleIndex === 0
+              const rowSpan = showControls ? group.visibleRows.length : 0
 
-            return (
-              <DocumentSectionRowView
-                key={`${row.kind}-${row.headingSectionId ?? row.bodySectionId}`}
-                row={row}
-                readOnly={readOnly}
-                onHeadingChange={onHeadingChange}
-                onBodyChange={onBodyChange}
-                showControls={showControls}
-                controlRowSpan={rowSpan}
-                onDelete={
-                  onSectionsChange
-                    ? () => onSectionsChange(deleteRowFromSections(sections, row))
-                    : undefined
-                }
-                onMoveUp={
-                  onSectionsChange
-                    ? () =>
-                        onSectionsChange(
-                          moveRowGroupInSections(sections, rowIndex, "up"),
-                        )
-                    : undefined
-                }
-                onMoveDown={
-                  onSectionsChange
-                    ? () =>
-                        onSectionsChange(
-                          moveRowGroupInSections(sections, rowIndex, "down"),
-                        )
-                    : undefined
-                }
-              />
-            )
-          })}
+              return (
+                <DocumentSectionRowView
+                  key={`${row.kind}-${row.headingSectionId ?? row.bodySectionId}`}
+                  row={row}
+                  readOnly={readOnly}
+                  onHeadingChange={onHeadingChange}
+                  onBodyChange={onBodyChange}
+                  showControls={showControls}
+                  controlRowSpan={rowSpan}
+                  onDelete={
+                    onSectionsChange
+                      ? () =>
+                          onSectionsChange(
+                            deleteRowFromSections(sections, group.startRow),
+                          )
+                      : undefined
+                  }
+                  onMoveUp={
+                    onSectionsChange
+                      ? () =>
+                          onSectionsChange(
+                            moveRowGroupInSections(
+                              sections,
+                              group.startFullIndex,
+                              "up",
+                            ),
+                          )
+                      : undefined
+                  }
+                  onMoveDown={
+                    onSectionsChange
+                      ? () =>
+                          onSectionsChange(
+                            moveRowGroupInSections(
+                              sections,
+                              group.startFullIndex,
+                              "down",
+                            ),
+                          )
+                      : undefined
+                  }
+                />
+              )
+            }),
+          )}
         </tbody>
       </HwpxTable>
       {showAddBar ? (

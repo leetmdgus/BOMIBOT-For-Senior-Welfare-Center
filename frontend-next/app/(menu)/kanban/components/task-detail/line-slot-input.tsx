@@ -32,10 +32,10 @@ export function LineSlotInput({
 
   if (readOnly) {
     if (lines.length === 0) {
-      return <span className="text-sm text-muted-foreground">-</span>
+      return <span className="text-muted-foreground">-</span>
     }
     return (
-      <ul className={cn("list-disc space-y-1 pl-5 text-sm text-[#111]", className)}>
+      <ul className={cn("list-disc space-y-1 pl-5 text-[#111]", className)}>
         {lines.map((line, index) => (
           <li key={`${line}-${index}`}>{line}</li>
         ))}
@@ -88,7 +88,7 @@ export function LineSlotGoalsInput({
 
   if (readOnly) {
     return (
-      <ul className={cn("list-disc space-y-1 pl-5 text-sm text-[#111]", className)}>
+      <ul className={cn("list-disc space-y-1 pl-5 text-[#111]", className)}>
         {goals.map((goal, index) => (
           <li key={`${goal}-${index}`}>{goal}</li>
         ))}

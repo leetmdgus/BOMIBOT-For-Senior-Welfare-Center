@@ -5,7 +5,6 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import Any
 
-from app.common.hwpx.render.template_defaults import get_plan_template_defaults
 from app.common.domain.scoped_ids import strip_scope
 
 # 업무별 연결 설문 시드 ID (task_detail.json taskDetailSurveys)
@@ -47,25 +46,78 @@ def business_name_for_task(task_id: str, *, card_title: str | None = None) -> st
     return normalize_task_id(task_id)
 
 
+def _empty_evaluation(title: str) -> dict:
+    """신규 업무 평가서 — 사업명(=카드명)만 채우고 나머지는 빈 값으로 시작.
+
+    계획/실행 인원·예산·지출은 실적관리 합계에서, 담당자는 카드에서 불러온다.
+    의미 없는 자동 채움(성과지표·평가도구·요인분석 등)은 두지 않는다.
+    """
+    return {
+        "team": "",
+        "manager": "",
+        "period": "",
+        "programName": title,
+        "target": "",
+        "planCount": "",
+        "planBudget": "",
+        "actualCount": "",
+        "actualExpense": "",
+        "purpose": "",
+        "goals": [],
+        "performanceIndicator": "",
+        "evaluationTool": "",
+        "keyFactorAnalysis": "",
+        "goalAppropriacy": "",
+        "suggestion": "",
+        "supervision": "",
+        "evaluationDate": "",
+        "isCompleted": False,
+        "detailRows": [],
+        "sections": [],
+    }
+
+
 def bootstrap_evaluation(
     data: dict,
     task_id: str,
     *,
     card_title: str | None = None,
 ) -> dict:
+    """업무 평가서 초기 데이터.
+
+    시드 예시 카드(사업명이 시드 예시와 동일)는 예시 데이터를 그대로 보존하고,
+    그 외 신규 카드는 사업명만 채운 빈 평가서로 시작한다.
+    """
     tid = normalize_task_id(task_id)
-    base = deepcopy(data.get("businessEvaluationData", {}))
     title = business_name_for_task(tid, card_title=card_title)
-    base["programName"] = title
-    base["performanceIndicator"] = f"{title} 핵심 성과지표"
-    base["evaluationTool"] = f"{title} 만족도·성과 설문"
-    base["keyFactorAnalysis"] = f"{title} 추진 시 핵심 요인 분석"
-    base["goalAppropriacy"] = f"{title} 목표 적절성 검토"
-    base["suggestion"] = f"{title} 차년도 개선·확대 제안"
-    if base.get("detailRows"):
-        first = base["detailRows"][0]
-        first["content"] = f"{title} 관련 {first.get('label', '추진내용')}"
-    return base
+    seed = data.get("businessEvaluationData", {})
+    seed_name = str(seed.get("programName") or "").strip()
+    if seed_name and title == seed_name:
+        return deepcopy(seed)
+    return _empty_evaluation(title)
+
+
+def _empty_business_plan(title: str) -> dict:
+    """신규 업무 사업계획서 — 사업명(=카드명)만 채운 빈 문서.
+
+    세부사업·연인원/예산 등은 실적관리에서, 담당은 카드에서 불러온다.
+    """
+    return {
+        "isCompleted": False,
+        "sections": [],
+        "formData": {
+            "projectName": title,
+            "purpose": "",
+            "goals": [],
+            "period": "",
+            "target": "",
+            "totalCount": "",
+            "budget": "",
+            "budgetCategory": "",
+            "manager": "",
+            "subProjects": [],
+        },
+    }
 
 
 def bootstrap_business_plan(
@@ -74,29 +126,19 @@ def bootstrap_business_plan(
     *,
     card_title: str | None = None,
 ) -> dict:
+    """업무 사업계획서 초기 데이터.
+
+    시드 예시 카드(사업명이 시드 예시와 동일)는 예시 문서를 그대로 보존하고,
+    그 외 신규 카드는 사업명만 채운 빈 문서로 시작한다.
+    """
     tid = normalize_task_id(task_id)
-    source = data.get("businessPlan", {}).get("defaultBusinessPlanDocument", {})
-    doc = deepcopy(source)
     title = business_name_for_task(tid, card_title=card_title)
-    form = doc.setdefault("formData", {})
-    form["projectName"] = title
-    if not str(form.get("purpose") or "").strip():
-        form["purpose"] = (
-            f"{title} 대상자에게 맞춤형 서비스를 제공하고 "
-            "사업 목표 달성을 위한 연간 추진 계획"
-        )
-    if not form.get("goals"):
-        form["goals"] = [
-            f"{title} 목표 {index + 1}" for index in range(3)
-        ]
-    if not form.get("subProjects"):
-        template_subs = get_plan_template_defaults().get("subProjects") or []
-        if template_subs:
-            form["subProjects"] = deepcopy(template_subs)
-        else:
-            default_form = source.get("formData") or {}
-            form["subProjects"] = deepcopy(default_form.get("subProjects") or [])
-    return doc
+    source = data.get("businessPlan", {}).get("defaultBusinessPlanDocument", {})
+    seed_form = source.get("formData") or {}
+    seed_name = str(seed_form.get("projectName") or "").strip()
+    if seed_name and title == seed_name:
+        return deepcopy(source)
+    return _empty_business_plan(title)
 
 
 def bootstrap_task_surveys(
