@@ -96,13 +96,13 @@ export function ParentUpCard({ onUp }: { onUp: () => void }) {
       className={cn(
         "group relative flex flex-col rounded-xl border border-dashed bg-card/60 p-4 text-left transition-all hover:bg-muted/50 hover:shadow-md",
       )}
-      title="상위 폴더로"
+      title="뒤로가기"
     >
       <div className="mb-3 flex h-20 items-center justify-center rounded-lg bg-muted/40">
         <CornerLeftUp className="size-10 text-muted-foreground" />
       </div>
       <p className="truncate text-sm font-medium text-muted-foreground">..</p>
-      <span className="mt-1 text-xs text-muted-foreground">상위 폴더로</span>
+      <span className="mt-1 text-xs text-muted-foreground">뒤로가기</span>
     </button>
   )
 }
@@ -119,7 +119,7 @@ export function ParentUpRow({ onUp }: { onUp: () => void }) {
           <span className="font-medium">..</span>
         </div>
       </td>
-      <td className="p-4 text-sm text-muted-foreground">상위 폴더로</td>
+      <td className="p-4 text-sm text-muted-foreground">뒤로가기</td>
       <td className="p-4" />
       <td className="p-4" />
       <td className="p-4" />

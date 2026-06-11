@@ -166,7 +166,7 @@ export function FilesPageContent() {
 
   // ── 브라우저(·마우스) 뒤로가기로 상위 폴더 이동 ──────────────────────
   // 폴더 안(뎁스 ≥ 1)에서 뒤로가기를 누르면 페이지를 벗어나지 않고 한 단계
-  // 상위 폴더로 이동한다. 폴더에 들어가면 히스토리에 trap 항목을 하나 쌓고,
+  // 뒤로가기 이동한다. 폴더에 들어가면 히스토리에 trap 항목을 하나 쌓고,
   // 뒤로가기(popstate) 때 goUp 후 아직 폴더 안이면 다시 쌓아 계속 가로챈다.
   const depth = inTask ? 2 : inMajor ? 1 : 0
   const depthRef = useRef(depth)
@@ -191,7 +191,7 @@ export function FilesPageContent() {
     }
   }, [depth])
 
-  // 뒤로가기(popstate) → 상위 폴더로
+  // 뒤로가기(popstate) → 뒤로가기
   useEffect(() => {
     const onPopState = () => {
       if (depthRef.current <= 0) return
@@ -360,7 +360,7 @@ export function FilesPageContent() {
                 size="sm"
                 className="h-8 shrink-0 gap-1.5 px-2 text-muted-foreground"
                 onClick={goUp}
-                title="상위 폴더로"
+                title="뒤로가기"
               >
                 <CornerLeftUp className="size-4" />
                 상위 폴더
