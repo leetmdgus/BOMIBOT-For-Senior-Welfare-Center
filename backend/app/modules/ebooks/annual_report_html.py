@@ -810,18 +810,21 @@ table{ width:100%; border-collapse:collapse; margin:8px 0 14px; font-size:13px; 
 .ind{ font-size:12.5px; font-weight:700; color:#334155; min-width:72px; text-align:center; }
 .sep{ width:1px; height:20px; background:var(--line); margin:0 4px; }
 @media print{
-  @page{ size:A4; margin:12mm; }
-  body{ background:#fff; padding:0; }
+  /* 새 창 뷰어와 똑같이: .leaf 한 장 = A4 한 페이지(같은 분할 그대로 인쇄).
+     여백은 페이지 마진이 아니라 내용 자체 패딩으로 — 그래야 화면 분할과 1:1로 맞음. */
+  @page{ size:A4; margin:0; }
+  html, body{ background:#fff; margin:0; padding:0; }
   #src{ display:none!important; }
-  .viewer{ position:static; inset:auto; overflow:visible; display:block; padding:0; background:#fff; }
-  .stage{ display:block; zoom:1!important; gap:0; }
-  .leaf{ width:auto; height:auto; box-shadow:none; border-radius:0; overflow:visible;
-    page-break-after:always; break-after:page; }
-  .leaf[hidden]{ display:block!important; }   /* 화면서 숨긴 페이지도 인쇄엔 모두 포함 */
-  .leaf-inner{ height:auto!important; overflow:visible!important; }
-  .leaf .page, .leaf .entry{ min-height:0; box-shadow:none; border:none; border-radius:0; }
-  .subsection{ break-inside:avoid; }
-  .toolbar{ display:none; }
+  .viewer{ position:static; inset:auto; overflow:visible; display:block; margin:0; padding:0; background:#fff; }
+  .stage{ display:block; zoom:1!important; transform:none!important; gap:0; }
+  .toolbar{ display:none!important; }
+  .leaf{ width:210mm; height:297mm; margin:0; box-shadow:none; border-radius:0; overflow:hidden; }
+  .leaf + .leaf{ break-before:page; page-break-before:always; }   /* 각 장을 페이지 머리에 다시 고정(누적 오차 방지) */
+  .leaf[hidden]{ display:block!important; }                        /* 화면서 숨긴 페이지도 모두 인쇄 */
+  .leaf.grow{ height:auto; overflow:visible; }                     /* A4보다 큰 한 덩어리만 여러 장에 걸침 */
+  .leaf-inner{ height:100%; overflow:hidden; }
+  .leaf.grow .leaf-inner{ height:auto; overflow:visible; }
+  .leaf .page, .leaf .entry{ min-height:100%; box-shadow:none; border:none; border-radius:0; }
 }
 """
 

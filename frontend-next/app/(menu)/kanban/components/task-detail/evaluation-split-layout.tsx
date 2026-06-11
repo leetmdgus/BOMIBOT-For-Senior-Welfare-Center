@@ -20,6 +20,8 @@ type EvaluationSplitLayoutProps = {
   className?: string
   /** 참고 패널 기본 표시 */
   defaultShowReferencePanel?: boolean
+  /** 참고 패널 위치 (기본 좌측). "right" 면 참고 패널을 오른쪽에 배치 */
+  referenceSide?: "left" | "right"
   /** @deprecated use editor */
   evaluation?: ReactNode
   /** @deprecated use referencePanel */
@@ -44,6 +46,7 @@ export function EvaluationSplitLayout({
   documentSelector,
   className,
   defaultShowReferencePanel = true,
+  referenceSide = "left",
   evaluation,
   referencePlan,
   defaultShowPlanPanel,
@@ -137,7 +140,10 @@ export function EvaluationSplitLayout({
           <div
             ref={anchorRef}
             data-eval-reference-column
-            className="plan-floating-panel reference-plan-panel print-hide min-w-0 w-full"
+            className={cn(
+              "plan-floating-panel reference-plan-panel print-hide min-w-0 w-full",
+              referenceSide === "right" && "md:order-2",
+            )}
           >
             <div
               className={cn(
@@ -154,7 +160,11 @@ export function EvaluationSplitLayout({
 
         <div
           data-eval-main-column
-          className={cn("min-w-0 w-full", showPlanPanel && "md:min-w-0")}
+          className={cn(
+            "min-w-0 w-full",
+            showPlanPanel && "md:min-w-0",
+            referenceSide === "right" && "md:order-1",
+          )}
         >
           {resolvedEditor}
         </div>

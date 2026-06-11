@@ -648,6 +648,15 @@ export function InputManagementTab() {
     setMonthSort(null)
   }
 
+  const enterAllMonthsView = () => {
+    setViewAllMonths(true)
+    if (monthSort === null) {
+      setSubProjectSort(null)
+      setDetailCategorySort(null)
+      setMonthSort("asc")
+    }
+  }
+
   const goPrevMonth = () => {
     leaveAllMonthsView()
     setSelectedMonth((prev) => (prev <= 1 ? 12 : prev - 1))
@@ -835,13 +844,19 @@ export function InputManagementTab() {
         </select>
 
         <select
-          value={String(selectedMonth)}
+          value={viewAllMonths ? "all" : String(selectedMonth)}
           onChange={(event) => {
+            const value = event.target.value
+            if (value === "all") {
+              enterAllMonthsView()
+              return
+            }
             leaveAllMonthsView()
-            setSelectedMonth(Number(event.target.value))
+            setSelectedMonth(Number(value))
           }}
           className="h-9 rounded-md border border-slate-300 bg-white px-3 text-sm"
         >
+          <option value="all">전체</option>
           {months.map((month, index) => (
             <option key={month} value={index + 1}>
               {month}
@@ -853,14 +868,7 @@ export function InputManagementTab() {
           type="button"
           variant={viewAllMonths ? "default" : "outline"}
           size="sm"
-          onClick={() => {
-            setViewAllMonths(true)
-            if (monthSort === null) {
-              setSubProjectSort(null)
-              setDetailCategorySort(null)
-              setMonthSort("asc")
-            }
-          }}
+          onClick={enterAllMonthsView}
         >
           전체
         </Button>
@@ -1436,7 +1444,7 @@ function Th({
     <th
       colSpan={colSpan}
       rowSpan={rowSpan}
-      className={`border border-slate-300 px-3 py-3 text-center font-bold whitespace-nowrap ${className}`}
+      className={`border border-slate-300 bg-slate-50 px-3 py-3 text-center font-bold whitespace-nowrap ${className}`}
     >
       {children}
     </th>

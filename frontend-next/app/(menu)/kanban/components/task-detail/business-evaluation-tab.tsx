@@ -23,8 +23,14 @@ import type { HwpxFrontendJson } from "@/services/document-templates.types"
 import {
   completeBusinessEvaluation,
   getBusinessEvaluation,
+  getBusinessPlan,
 } from "@/services/kanban.task-detail.service"
 import type { BusinessEvaluationData } from "@/services/kanban.task-detail.types"
+import type { KanbanProject } from "@/services/kanban.board.types"
+import { getProjects } from "@/services/kanban.board.service"
+import { getCurrentYearString } from "@/lib/current-year"
+import { resolveTaskTeamAndManager } from "@/lib/kanban/resolve-card-title"
+import { fillEvaluationCommonFields } from "@/lib/kanban/sync-evaluation-from-plan"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@common/hooks/use-toast"
 
@@ -63,19 +69,26 @@ export function BusinessEvaluationTab() {
   const load = useCallback(async () => {
     setIsLoading(true)
     try {
-      const [evaluation, performanceTotals] = await Promise.all([
+      const [evaluation, performanceTotals, plan, projects] = await Promise.all([
         getBusinessEvaluation(taskId),
         // 계획/실행 인원·예산·지출은 실적관리(계획·실적 입력관리) 합계에서 가져온다
         loadEvaluationPerformanceTotals(taskId).catch((error) => {
           console.error("실적관리 합계 로드 실패:", error)
           return null
         }),
+        // 사업팀·담당자·기간·대상·목적·목표는 사업계획서·카드에서 비어 있을 때만 채운다
+        getBusinessPlan(taskId).catch(() => null),
+        getProjects(getCurrentYearString()).catch(() => [] as KanbanProject[]),
       ])
-      setEvaluationData({
+      const card = resolveTaskTeamAndManager(taskId, projects)
+      const base: BusinessEvaluationData = {
         ...evaluation,
         ...(performanceTotals ?? {}),
         detailRows: [],
-      })
+      }
+      setEvaluationData(
+        fillEvaluationCommonFields(base, plan?.formData ?? null, card),
+      )
       setIsEditMode(!evaluation.isCompleted)
     } catch (error) {
       console.error("사업평가 데이터 로드 실패:", error)

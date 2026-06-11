@@ -364,6 +364,8 @@ export function PerformanceSummaryView({
 
   const resetRowFilter = () => {
     resetSummaryRowFilter()
+    setSummaryMonth("전체")
+    setSummaryFundingSource("all")
   }
 
   const handleDownload = () => {
@@ -424,7 +426,7 @@ export function PerformanceSummaryView({
     variant === "plan" ? totals.planMonthly : totals.actualMonthly
 
   return (
-    <div className="w-full rounded border border-slate-300 bg-white">
+    <div className="w-full min-w-0 rounded border border-slate-300 bg-white">
       <div className="flex items-center gap-2 border-b border-slate-200 px-5 py-4">
         <h2 className="text-3xl font-bold tracking-tight">
           {VIEW_TITLES[variant]}

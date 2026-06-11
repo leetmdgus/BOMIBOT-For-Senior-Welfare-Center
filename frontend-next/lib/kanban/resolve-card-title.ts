@@ -1,5 +1,6 @@
 import { findTaskLocation } from "@/lib/mocks/kanban.board.mock"
 import {
+  formatParticipantNames,
   formatTaskAssigneeSummary,
   parseAssigneeNames,
 } from "@/lib/kanban/assignee-names"
@@ -43,4 +44,23 @@ export function resolveTaskManagerLabel(
 
   const project = projects.find((item) => item.id === location.projectId)
   return formatTaskAssigneeSummary(location.task.assignee, project?.team)
+}
+
+/**
+ * 칸반 카드(업무) → 사업팀·담당자(분리).
+ * 사업평가서의 「사업팀」·「담당자」칸 자동 채움용. 미지정이면 빈 문자열.
+ */
+export function resolveTaskTeamAndManager(
+  taskId: string,
+  projects: KanbanProject[],
+): { team: string; manager: string } {
+  const location = findTaskLocation(normalizeTaskId(taskId), projects)
+  if (!location) return { team: "", manager: "" }
+
+  const project = projects.find((item) => item.id === location.projectId)
+  const names = parseAssigneeNames(location.task.assignee)
+  return {
+    team: project?.team?.trim() ?? "",
+    manager: names.length > 0 ? formatParticipantNames(names) : "",
+  }
 }

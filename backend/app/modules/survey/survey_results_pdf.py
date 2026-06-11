@@ -13,6 +13,9 @@ import re
 from pathlib import Path
 from typing import Any
 
+from reportlab.graphics.charts.barcharts import VerticalBarChart
+from reportlab.graphics.charts.piecharts import Pie
+from reportlab.graphics.shapes import Drawing, Rect, String
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle
@@ -20,6 +23,7 @@ from reportlab.lib.units import mm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import (
+    KeepTogether,
     PageBreak,
     Paragraph,
     SimpleDocTemplate,
@@ -66,6 +70,186 @@ _FONT_CANDIDATES = (
 )
 
 _TOP_BUCKETS = ("매우불만족", "불만족", "보통", "만족", "매우만족")
+
+# 결과지(survey-results.tsx)와 동일 계열 색상 — 차트 시각화에 사용
+_SCALE_BAR_COLOR = colors.HexColor("#3b82f6")
+_MATRIX_COLORS = {
+    "매우불만족": colors.HexColor("#4338ca"),
+    "불만족": colors.HexColor("#5b73d6"),
+    "보통": colors.HexColor("#3b82f6"),
+    "만족": colors.HexColor("#22a06b"),
+    "매우만족": colors.HexColor("#4ade80"),
+}
+# choice 파이 색상 — pieData 에 color 가 없을 때 폴백(결과지 기본 팔레트)
+_PIE_FALLBACK_COLORS = (
+    "#3b82f6", "#22c55e", "#f59e0b", "#ef4444",
+    "#8b5cf6", "#64748b", "#0ea5e9", "#ec4899",
+)
+# A4(폭 210mm) − 좌우 margin 18mm = 본문 폭 174mm 안에 들어가는 차트 폭
+_CHART_WIDTH = 168 * mm
+_MUTED = colors.HexColor("#64748b")
+
+
+def _num(value: Any) -> float:
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def _hex_color(value: Any, fallback: str):
+    try:
+        return colors.HexColor(value) if value else colors.HexColor(fallback)
+    except (ValueError, AttributeError):
+        return colors.HexColor(fallback)
+
+
+def _scale_chart(question: dict, font: str) -> Drawing | None:
+    """척도(1~5점) 문항 → 점수별 응답 수 막대 차트(결과지와 동일)."""
+    points = question.get("scaleData") or []
+    if not points:
+        return None
+    counts = {int(_num(p.get("score"))): _num(p.get("count", 0)) for p in points}
+    if not any(counts.values()):
+        return None
+
+    height = 56 * mm
+    d = Drawing(_CHART_WIDTH, height)
+    bc = VerticalBarChart()
+    bc.x = 24
+    bc.y = 16
+    bc.width = _CHART_WIDTH - 40
+    bc.height = height - 28
+    bc.data = [[counts.get(s, 0) for s in range(1, 6)]]
+    bc.categoryAxis.categoryNames = ["1점", "2점", "3점", "4점", "5점"]
+    bc.categoryAxis.labels.fontName = font
+    bc.categoryAxis.labels.fontSize = 8.5
+    bc.valueAxis.valueMin = 0
+    bc.valueAxis.labels.fontName = font
+    bc.valueAxis.labels.fontSize = 8
+    bc.bars[0].fillColor = _SCALE_BAR_COLOR
+    bc.bars[0].strokeColor = None
+    bc.barWidth = 14
+    bc.barLabels.fontName = font
+    bc.barLabels.fontSize = 8.5
+    bc.barLabels.boxAnchor = "s"
+    bc.barLabels.dy = 2
+    bc.barLabelFormat = "%d"
+    d.add(bc)
+    return d
+
+
+def _matrix_chart(question: dict, font: str) -> Drawing | None:
+    """표형(매트릭스) 문항 → 항목별 5점 분포 그룹 막대 차트 + 범례."""
+    rows = question.get("matrixChart") or []
+    if not rows:
+        return None
+
+    names = [str(r.get("name", "")) for r in rows]
+    series = [[_num(r.get(bucket, 0)) for r in rows] for bucket in _TOP_BUCKETS]
+
+    legend_h = 7 * mm
+    chart_h = 58 * mm
+    height = chart_h + legend_h
+    d = Drawing(_CHART_WIDTH, height)
+
+    bc = VerticalBarChart()
+    bc.x = 24
+    bc.y = legend_h + 14
+    bc.width = _CHART_WIDTH - 44
+    bc.height = chart_h - 26
+    bc.data = series
+    bc.categoryAxis.categoryNames = names
+    bc.categoryAxis.labels.fontName = font
+    bc.categoryAxis.labels.fontSize = 8.5
+    bc.valueAxis.valueMin = 0
+    bc.valueAxis.labels.fontName = font
+    bc.valueAxis.labels.fontSize = 8
+    bc.groupSpacing = 14
+    bc.barSpacing = 0.5
+    for index, bucket in enumerate(_TOP_BUCKETS):
+        bc.bars[index].fillColor = _MATRIX_COLORS[bucket]
+        bc.bars[index].strokeColor = None
+    d.add(bc)
+
+    # 막대 색상 범례(가로 한 줄)
+    swatch = 3.0 * mm
+    size = 8.0
+    gap = 7 * mm
+    widths = [
+        swatch + 1.6 * mm + pdfmetrics.stringWidth(b, font, size) + gap
+        for b in _TOP_BUCKETS
+    ]
+    x = max(24.0, (_CHART_WIDTH - sum(widths)) / 2)
+    y = 1.5 * mm
+    for bucket, width in zip(_TOP_BUCKETS, widths):
+        d.add(Rect(x, y, swatch, swatch, fillColor=_MATRIX_COLORS[bucket], strokeColor=None))
+        d.add(String(x + swatch + 1.6 * mm, y, bucket, fontName=font, fontSize=size))
+        x += width
+    return d
+
+
+def _choice_chart(question: dict, font: str) -> Drawing | None:
+    """객관식(choice) 문항 → 도넛형 파이 + 항목·응답수·비율 범례(결과지와 동일)."""
+    raw = question.get("pieData") or []
+    if not raw:
+        return None
+
+    entries = []
+    for index, item in enumerate(raw):
+        fallback = _PIE_FALLBACK_COLORS[index % len(_PIE_FALLBACK_COLORS)]
+        entries.append((item, _hex_color(item.get("color"), fallback)))
+    total = sum(_num(item.get("value", 0)) for item, _ in entries)
+
+    row_h = 6.4 * mm
+    pie_size = 42 * mm
+    height = max(pie_size + 4 * mm, row_h * len(entries) + 5 * mm)
+    d = Drawing(_CHART_WIDTH, height)
+
+    nonzero = [(item, col) for item, col in entries if _num(item.get("value", 0)) > 0]
+    if nonzero:
+        pie = Pie()
+        pie.width = pie_size
+        pie.height = pie_size
+        pie.x = 6
+        pie.y = (height - pie_size) / 2
+        pie.data = [_num(item.get("value", 0)) for item, _ in nonzero]
+        pie.innerRadiusFraction = 0.55
+        pie.slices.strokeColor = colors.white
+        pie.slices.strokeWidth = 0.75
+        for index, (_, col) in enumerate(nonzero):
+            pie.slices[index].fillColor = col
+        d.add(pie)
+
+    legend_x = pie_size + 16 * mm
+    swatch = 3.2 * mm
+    top = height - 3 * mm
+    for index, (item, col) in enumerate(entries):
+        y = top - (index + 1) * row_h
+        value = _num(item.get("value", 0))
+        pct = f" ({round(value / total * 100)}%)" if total > 0 else ""
+        d.add(Rect(legend_x, y, swatch, swatch, fillColor=col, strokeColor=None))
+        d.add(
+            String(
+                legend_x + swatch + 3 * mm,
+                y,
+                str(item.get("name", "")),
+                fontName=font,
+                fontSize=9,
+            )
+        )
+        d.add(
+            String(
+                _CHART_WIDTH - 4 * mm,
+                y,
+                f"{int(value) if value == int(value) else value}{pct}",
+                fontName=font,
+                fontSize=9,
+                textAnchor="end",
+                fillColor=_MUTED,
+            )
+        )
+    return d
 
 
 def _ensure_font() -> str:
@@ -182,36 +366,43 @@ def _summary_flow(summary: dict, font: str) -> Table:
 
 
 def _question_flow(question: dict, styles: dict, font: str) -> list:
+    """문항 1개를 결과지(차트)처럼 flowable 로 — 페이지 중간에서 끊기지 않게 묶는다."""
     flow: list = []
     title = question.get("title") or "(제목 없음)"
     flow.append(Paragraph(title, styles["q"]))
     answered = question.get("answeredCount", 0)
     skipped = question.get("skippedCount", 0)
-    flow.append(Paragraph(f"응답 {answered} · 무응답 {skipped}", styles["qsub"]))
+    meta = f"응답 {answered} · 무응답 {skipped}"
+    if question.get("average") is not None:
+        meta += f" · 평균 {question.get('average')} / 5"
+    flow.append(Paragraph(meta, styles["qsub"]))
 
     qtype = question.get("type")
     if qtype == "choice":
-        rows = [["항목", "응답 수"]]
-        for item in question.get("pieData") or []:
-            rows.append([str(item.get("name", "")), str(item.get("value", 0))])
-        if len(rows) > 1:
-            flow.append(_table(rows, font, col_widths=[110 * mm, 30 * mm]))
+        chart = _choice_chart(question, font)
+        if chart is not None:
+            flow.append(chart)
+        else:
+            flow.append(Paragraph("응답 데이터가 없습니다.", styles["qsub"]))
     elif qtype == "scale":
-        avg = question.get("average")
-        header = ["점수", "1", "2", "3", "4", "5"]
-        counts = {p.get("score"): p.get("count", 0) for p in question.get("scaleData") or []}
-        values = ["응답 수"] + [str(counts.get(s, 0)) for s in range(1, 6)]
-        flow.append(_table([header, values], font))
-        if avg is not None:
-            flow.append(Paragraph(f"평균 {avg} / 5", styles["qsub"]))
+        chart = _scale_chart(question, font)
+        if chart is not None:
+            flow.append(chart)
+        else:
+            flow.append(Paragraph("응답 데이터가 없습니다.", styles["qsub"]))
     elif qtype == "matrix":
+        chart = _matrix_chart(question, font)
+        if chart is not None:
+            flow.append(chart)
+        # 정확한 수치는 표로 함께 제공
         rows = [["항목", *_TOP_BUCKETS]]
         for row in question.get("matrixChart") or []:
             rows.append([str(row.get("name", ""))] + [str(row.get(b, 0)) for b in _TOP_BUCKETS])
         if len(rows) > 1:
+            flow.append(Spacer(1, 2))
             flow.append(_table(rows, font))
-        if question.get("average") is not None:
-            flow.append(Paragraph(f"평균 {question.get('average')} / 5", styles["qsub"]))
+        if chart is None and len(rows) <= 1:
+            flow.append(Paragraph("응답 데이터가 없습니다.", styles["qsub"]))
     elif qtype == "text":
         texts = question.get("textResponses") or []
         for item in texts[:50]:
@@ -220,7 +411,8 @@ def _question_flow(question: dict, styles: dict, font: str) -> list:
             flow.append(Paragraph(f"… 외 {len(texts) - 50}건", styles["qsub"]))
         if not texts:
             flow.append(Paragraph("주관식 응답이 없습니다.", styles["qsub"]))
-    return flow
+
+    return [KeepTogether(flow)]
 
 
 def build_survey_results_pdf(

@@ -164,6 +164,49 @@ export function FilesPageContent() {
     else goToRoot()
   }
 
+  // ── 브라우저(·마우스) 뒤로가기로 상위 폴더 이동 ──────────────────────
+  // 폴더 안(뎁스 ≥ 1)에서 뒤로가기를 누르면 페이지를 벗어나지 않고 한 단계
+  // 상위 폴더로 이동한다. 폴더에 들어가면 히스토리에 trap 항목을 하나 쌓고,
+  // 뒤로가기(popstate) 때 goUp 후 아직 폴더 안이면 다시 쌓아 계속 가로챈다.
+  const depth = inTask ? 2 : inMajor ? 1 : 0
+  const depthRef = useRef(depth)
+  const goUpRef = useRef(goUp)
+  const trapArmedRef = useRef(false)
+
+  useEffect(() => {
+    depthRef.current = depth
+  }, [depth])
+  useEffect(() => {
+    goUpRef.current = goUp
+  })
+
+  // 폴더 진입 시 trap 쌓기 / UI로 루트 복귀 시 정리(빈 뒤로가기 방지)
+  useEffect(() => {
+    if (depth > 0 && !trapArmedRef.current) {
+      window.history.pushState(null, "", window.location.href)
+      trapArmedRef.current = true
+    } else if (depth === 0 && trapArmedRef.current) {
+      trapArmedRef.current = false
+      window.history.back()
+    }
+  }, [depth])
+
+  // 뒤로가기(popstate) → 상위 폴더로
+  useEffect(() => {
+    const onPopState = () => {
+      if (depthRef.current <= 0) return
+      goUpRef.current()
+      if (depthRef.current - 1 > 0) {
+        // 아직 폴더 안 → 다음 뒤로가기도 가로채도록 trap을 다시 쌓는다.
+        window.history.pushState(null, "", window.location.href)
+      } else {
+        trapArmedRef.current = false
+      }
+    }
+    window.addEventListener("popstate", onPopState)
+    return () => window.removeEventListener("popstate", onPopState)
+  }, [])
+
   const openMajorFolder = (folder: WorkFolder) => manager.enterMajor(folder.key)
   const openWorkFolder = (folder: WorkFolder) => manager.enterTaskFolder(folder)
 
@@ -481,7 +524,7 @@ export function FilesPageContent() {
                 <>
                   {manager.viewMode === "grid" ? (
                     <div className="mb-4 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-                      <ParentUpCard onUp={goToRoot} />
+                      <ParentUpCard onUp={goUp} />
                     </div>
                   ) : null}
                   <EmptyState
@@ -491,7 +534,7 @@ export function FilesPageContent() {
                 </>
               ) : manager.viewMode === "grid" ? (
                 <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-                  <ParentUpCard onUp={goToRoot} />
+                  <ParentUpCard onUp={goUp} />
                   {manager.workFolders.map((folder) => (
                     <WorkFolderCard
                       key={folder.id}
@@ -507,7 +550,7 @@ export function FilesPageContent() {
               <>
                 {manager.viewMode === "grid" ? (
                   <div className="mb-4 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-                    <ParentUpCard onUp={goToRoot} />
+                    <ParentUpCard onUp={goUp} />
                   </div>
                 ) : null}
                 <EmptyState
@@ -518,7 +561,7 @@ export function FilesPageContent() {
             ) : manager.viewMode === "grid" ? (
               <SortableContext items={orderedIds} strategy={rectSortingStrategy}>
                 <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-                  <ParentUpCard onUp={goToRoot} />
+                  <ParentUpCard onUp={goUp} />
                   {orderedVisibleFiles.map((item) => (
                     <FileCard
                       key={item.id}
@@ -534,7 +577,7 @@ export function FilesPageContent() {
                 <FileList
                   items={orderedVisibleFiles}
                   selectedIds={manager.selectedIds}
-                  parentRow={<ParentUpRow onUp={goToRoot} />}
+                  parentRow={<ParentUpRow onUp={goUp} />}
                   {...commonActions}
                 />
               </SortableContext>
