@@ -10,8 +10,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from app.application.hwpx.render.template_registry import load_render_template_bytes
-from app.application.hwpx.section0_byte_fill import (
+from app.common.hwpx.render.template_registry import load_render_template_bytes
+from app.common.hwpx.section0_byte_fill import (
     HP_T_CLOSE,
     _apply_patches,
     build_plan_byte_patches,

@@ -21,8 +21,8 @@ from pathlib import Path
 BACKEND_DIR = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(BACKEND_DIR))
 
-from app.application.hwpx.automation.service import HwpxAutomationService  # noqa: E402
-from app.application.hwpx.automation.section0_writeback import (  # noqa: E402
+from app.common.hwpx.automation.service import HwpxAutomationService  # noqa: E402
+from app.common.hwpx.automation.section0_writeback import (  # noqa: E402
     export_hwpx_preserving,
 )
 

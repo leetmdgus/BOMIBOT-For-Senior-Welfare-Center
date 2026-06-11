@@ -10,8 +10,8 @@ from typing import Sequence, Union
 
 from alembic import op
 
-from app.core.database import Base
-from app.infrastructure.persistence import models  # noqa: F401
+from app.common.core.database import Base
+from app.common.persistence import registry  # noqa: F401
 
 revision: str = "20260523_0001"
 down_revision: Union[str, None] = None

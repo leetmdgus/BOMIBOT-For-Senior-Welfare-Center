@@ -4,9 +4,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from app.application.hwpx.render.file_json_render import make_file_json_from_bytes
-from app.application.hwpx.render.json_tree import walk_nodes, local_tag, first_child
-from app.application.hwpx.render.template_registry import load_render_template_bytes
+from app.common.hwpx.render.file_json_render import make_file_json_from_bytes
+from app.common.hwpx.render.json_tree import walk_nodes, local_tag, first_child
+from app.common.hwpx.render.template_registry import load_render_template_bytes
 
 fj = make_file_json_from_bytes(load_render_template_bytes("plan"), template_kind="plan")
 tbl = walk_nodes(fj["section"]["data"], "tbl")[1]

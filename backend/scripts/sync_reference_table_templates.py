@@ -10,7 +10,7 @@ sys.path.insert(0, str(ROOT))
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
-from app.application.hwpx.render.template_registry import (
+from app.common.hwpx.render.template_registry import (
     default_template_filename,
     hwpx_templates_dir,
 )

@@ -10,8 +10,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from app.application.hwpx.hwpx_templates import load_template_hwpx_bytes
-from app.application.hwpx.zip_package import pack_hwpx_zip
+from app.common.hwpx.hwpx_templates import load_template_hwpx_bytes
+from app.common.hwpx.zip_package import pack_hwpx_zip
 
 OUT = ROOT / "_hwpx_verify_out"
 

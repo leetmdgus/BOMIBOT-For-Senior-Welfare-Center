@@ -14,10 +14,10 @@ if hasattr(sys.stdout, "reconfigure"):
 
 from lxml import etree
 
-from app.application.hwpx.render.apply_form import apply_evaluation_form, apply_plan_form
-from app.application.hwpx.render.byte_pack import pack_render_hwpx_bytes
-from app.application.hwpx.render.file_json_render import make_file_json_from_bytes
-from app.application.hwpx.render.template_registry import load_render_template_bytes
+from app.common.hwpx.render.apply_form import apply_evaluation_form, apply_plan_form
+from app.common.hwpx.render.byte_pack import pack_render_hwpx_bytes
+from app.common.hwpx.render.file_json_render import make_file_json_from_bytes
+from app.common.hwpx.render.template_registry import load_render_template_bytes
 
 HP_NS = "http://www.hancom.co.kr/hwpml/2011/paragraph"
 HP = f"{{{HP_NS}}}"

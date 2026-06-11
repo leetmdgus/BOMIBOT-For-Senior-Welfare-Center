@@ -10,11 +10,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from app.application.hwpx.export_business_plan import build_business_plan_hwpx
-from app.application.hwpx.builder import build_hwpx_bytes
-from app.application.hwpx.hwpx_templates import load_template_hwpx_bytes
-from app.application.hwpx.zip_package import pack_hwpx_zip
-from app.application.hwpx.section0_byte_fill import fill_template_package_bytes
+from app.common.hwpx.export_business_plan import build_business_plan_hwpx
+from app.common.hwpx.builder import build_hwpx_bytes
+from app.common.hwpx.hwpx_templates import load_template_hwpx_bytes
+from app.common.hwpx.zip_package import pack_hwpx_zip
+from app.common.hwpx.section0_byte_fill import fill_template_package_bytes
 
 OUT = ROOT / "_hwpx_verify_out"
 OLD_NAME = "일반상담 및 정보제공사업"

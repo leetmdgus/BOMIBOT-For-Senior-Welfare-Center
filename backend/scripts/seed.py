@@ -8,9 +8,9 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from app.core.database import Base, SessionLocal, engine
-from app.infrastructure.persistence import models  # noqa: F401
-from app.infrastructure.seed import (
+from app.common.core.database import Base, SessionLocal, engine
+from app.common.persistence import registry  # noqa: F401
+from app.common.seed import (
     clear_performance_input_meta,
     seed_all,
     seed_missing_json_stores,

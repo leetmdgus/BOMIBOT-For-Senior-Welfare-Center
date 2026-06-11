@@ -1,20 +1,20 @@
 import logging
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
-from fastapi.responses import JSONResponse
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
-from app.core.config import get_settings
-from app.core.cors import cors_middleware_kwargs, resolve_cors_origin_regex, resolve_cors_origins
+from app.common.core.config import get_settings
+from app.common.core.cors import cors_middleware_kwargs, resolve_cors_origin_regex, resolve_cors_origins
 from sqlalchemy import text
 
-from app.core.database import Base, SessionLocal, engine
-from app.infrastructure.persistence import models  # noqa: F401
-from app.infrastructure.seed import seed_all, seed_missing_json_stores
-from app.interfaces.api.v1.router import api_router
+from app.common.core.database import Base, SessionLocal, engine
+from app.common.exceptions import register_exception_handlers
+from app.common.persistence import registry  # noqa: F401
+from app.common.seed import seed_all, seed_missing_json_stores
+from app.modules.router import api_router
 
 logger = logging.getLogger("bomibot.api")
 settings = get_settings()
@@ -55,20 +55,8 @@ app = FastAPI(
 )
 
 
-@app.exception_handler(HTTPException)
-async def http_exception_handler(_request: Request, exc: HTTPException):
-    detail = exc.detail
-    message = detail if isinstance(detail, str) else str(detail)
-    return JSONResponse(status_code=exc.status_code, content={"error": message})
-
-
-@app.exception_handler(Exception)
-async def unhandled_exception_handler(request: Request, exc: Exception):
-    logger.exception("Unhandled error on %s %s", request.method, request.url.path)
-    return JSONResponse(
-        status_code=500,
-        content={"error": "Internal Server Error", "detail": str(exc)},
-    )
+# 공통 예외 핸들러(에러 응답 형태 통일) — app/common/exceptions.py 에서 등록
+register_exception_handlers(app)
 
 
 # JSON 응답 gzip 압축 (1KB 이상). 프로덕션 직연동(browser→FastAPI)에서 전송량 감소.

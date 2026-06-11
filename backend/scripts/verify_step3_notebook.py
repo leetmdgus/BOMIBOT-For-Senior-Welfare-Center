@@ -16,11 +16,11 @@ sys.path.insert(0, str(ROOT))
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
-from app.application.hwpx.render.apply_form import apply_plan_form
-from app.application.hwpx.render.file_json_render import make_file_json_from_bytes
-from app.application.hwpx.render.html_preview import render_json_to_html
-from app.application.hwpx.render.render_json_builder import make_render_json
-from app.application.hwpx.render.template_registry import load_render_template_bytes
+from app.common.hwpx.render.apply_form import apply_plan_form
+from app.common.hwpx.render.file_json_render import make_file_json_from_bytes
+from app.common.hwpx.render.html_preview import render_json_to_html
+from app.common.hwpx.render.render_json_builder import make_render_json
+from app.common.hwpx.render.template_registry import load_render_template_bytes
 
 OUT = ROOT / "_hwpx_verify_out"
 TEMPLATE_HWPX = ROOT / "HWPX_TEMPLATES" / "ex_사업계획서(2).hwpx"

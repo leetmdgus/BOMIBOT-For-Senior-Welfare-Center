@@ -11,9 +11,9 @@ from lxml import etree
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from app.application.hwpx.render.json_tree import _HWPX_XML_DECL
-from app.application.hwpx.render.template_registry import load_render_template_bytes
-from app.application.hwpx.section0_template_fill import (
+from app.common.hwpx.render.json_tree import _HWPX_XML_DECL
+from app.common.hwpx.render.template_registry import load_render_template_bytes
+from app.common.hwpx.section0_template_fill import (
     HP_NS,
     _direct_table_paragraphs,
     _fill_plan_main_table,
@@ -62,9 +62,9 @@ def main() -> None:
     print("len", len(section0), "->", len(out))
 
     out_path = ROOT / "_hwpx_verify_out" / "plan_lineseg_stripped.hwpx"
-    from app.application.hwpx.section0_byte_fill import rebuild_plan_prv_bytes
-    from app.application.hwpx.render.byte_pack import pack_render_hwpx_bytes
-    from app.application.hwpx.zip_package import pack_hwpx_zip_bytes
+    from app.common.hwpx.section0_byte_fill import rebuild_plan_prv_bytes
+    from app.common.hwpx.render.byte_pack import pack_render_hwpx_bytes
+    from app.common.hwpx.zip_package import pack_hwpx_zip_bytes
 
     with zipfile.ZipFile(io.BytesIO(template)) as zf:
         prv = zf.read("Preview/PrvText.txt")

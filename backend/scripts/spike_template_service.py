@@ -16,10 +16,10 @@ from pathlib import Path
 BACKEND_DIR = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(BACKEND_DIR))
 
-from app.application.region_store.document_templates import DocumentTemplateService  # noqa: E402
-from app.application.region_store.gateway import RegionStoreGateway  # noqa: E402
-from app.application.services.file_storage_service import FileStorageService  # noqa: E402
-from app.application.hwpx.automation.service import HwpxAutomationService  # noqa: E402
+from app.common.region_store.document_templates import DocumentTemplateService  # noqa: E402
+from app.common.region_store.gateway import RegionStoreGateway  # noqa: E402
+from app.common.services.file_storage_service import FileStorageService  # noqa: E402
+from app.common.hwpx.automation.service import HwpxAutomationService  # noqa: E402
 
 REPO_ROOT = BACKEND_DIR.parent
 SAMPLE = REPO_ROOT / "rhwp" / "samples" / "hwpx" / "form-002.hwpx"

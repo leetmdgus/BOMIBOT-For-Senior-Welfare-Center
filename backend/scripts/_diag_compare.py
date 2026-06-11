@@ -7,10 +7,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from app.application.hwpx.render.template_registry import load_render_template_bytes
-from app.application.hwpx.render.pipeline import build_hwpx_from_file_json, build_file_json_from_template
-from app.application.hwpx.render.apply_form import apply_plan_form
-from app.application.hwpx.zip_package import pack_hwpx_zip_bytes
+from app.common.hwpx.render.template_registry import load_render_template_bytes
+from app.common.hwpx.render.pipeline import build_hwpx_from_file_json, build_file_json_from_template
+from app.common.hwpx.render.apply_form import apply_plan_form
+from app.common.hwpx.zip_package import pack_hwpx_zip_bytes
 
 OUT = ROOT / "_hwpx_verify_out"
 TEMPLATE = load_render_template_bytes("plan")
@@ -41,8 +41,8 @@ form = {"projectName": "치환 테스트", "purpose": "목적", "goals": ["목�
         "target": "대상", "totalCount": "100", "budget": "1000", "budgetCategory": "인건비",
         "manager": "홍길동", "subProjects": []}
 filled = apply_plan_form(fj, form, template_kind="plan")
-from app.application.hwpx.prv_text import build_plan_prv_text
-from app.application.hwpx.render.service import HwpxRenderService
+from app.common.hwpx.prv_text import build_plan_prv_text
+from app.common.hwpx.render.service import HwpxRenderService
 svc = HwpxRenderService()
 filled_hwpx, _ = svc.build_plan_hwpx(form_data=form)
 fill_e = entries(filled_hwpx)

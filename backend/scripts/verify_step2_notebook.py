@@ -18,14 +18,14 @@ sys.path.insert(0, str(ROOT))
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
-from app.application.hwpx.render.apply_form import apply_plan_form
-from app.application.hwpx.render.extract import extract_hwpx
-from app.application.hwpx.render.file_json_render import make_file_json_from_bytes
-from app.application.hwpx.render.hwpx_json import hwpx_xml_to_json
-from app.application.hwpx.render.json_tree import local_tag, walk_nodes
-from app.application.hwpx.render.pack import json_to_hwpx_bytes
-from app.application.hwpx.render.pipeline import build_hwpx_from_file_json
-from app.application.hwpx.render.template_registry import load_render_template_bytes
+from app.common.hwpx.render.apply_form import apply_plan_form
+from app.common.hwpx.render.extract import extract_hwpx
+from app.common.hwpx.render.file_json_render import make_file_json_from_bytes
+from app.common.hwpx.render.hwpx_json import hwpx_xml_to_json
+from app.common.hwpx.render.json_tree import local_tag, walk_nodes
+from app.common.hwpx.render.pack import json_to_hwpx_bytes
+from app.common.hwpx.render.pipeline import build_hwpx_from_file_json
+from app.common.hwpx.render.template_registry import load_render_template_bytes
 
 OUT = ROOT / "_hwpx_verify_out"
 TEMPLATE_HWPX = ROOT / "HWPX_TEMPLATES" / "ex_사업계획서(2).hwpx"

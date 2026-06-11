@@ -22,12 +22,12 @@ COPY scripts ./scripts
 COPY HWPX_TEMPLATES ./HWPX_TEMPLATES
 
 # COPY app 캐시로 render 템플릿 누락 방지 — 빌드 컨텍스트에 파일 필수
-COPY app/application/hwpx/templates/render/plan.hwpx \
-    app/application/hwpx/templates/render/evaluation.hwpx \
-    /app/app/application/hwpx/templates/render/
+COPY app/common/hwpx/templates/render/plan.hwpx \
+    app/common/hwpx/templates/render/evaluation.hwpx \
+    /app/app/common/hwpx/templates/render/
 
-RUN test -s /app/app/application/hwpx/templates/render/plan.hwpx \
-    && test -s /app/app/application/hwpx/templates/render/evaluation.hwpx \
+RUN test -s /app/app/common/hwpx/templates/render/plan.hwpx \
+    && test -s /app/app/common/hwpx/templates/render/evaluation.hwpx \
     || (echo "ERROR: HWPX render templates missing. Run: backend/scripts/sync_hwpx_render_templates.sh" >&2 && exit 1)
 
 # rhwp HWP/HWPX → SVG 렌더러 (리눅스 amd64). .hwp 미리보기용(선택).

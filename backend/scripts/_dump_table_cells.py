@@ -28,6 +28,6 @@ def dump_table_cells(hwpx: Path, table_index: int = 0) -> None:
 
 
 base = Path(__file__).resolve().parents[1]
-dump_table_cells(base / "app/application/hwpx/templates/business_evaluation.hwpx", 0)
-dump_table_cells(base / "app/application/hwpx/templates/business_evaluation.hwpx", 1)
-dump_table_cells(base / "app/application/hwpx/templates/business_plan.hwpx", 0)
+dump_table_cells(base / "app/common/hwpx/templates/business_evaluation.hwpx", 0)
+dump_table_cells(base / "app/common/hwpx/templates/business_evaluation.hwpx", 1)
+dump_table_cells(base / "app/common/hwpx/templates/business_plan.hwpx", 0)

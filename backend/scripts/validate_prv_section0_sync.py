@@ -13,8 +13,8 @@ sys.path.insert(0, str(ROOT))
 
 from lxml import etree
 
-from app.application.hwpx.section0_template_fill import _cells_by_addr
-from app.application.hwpx.template_cell_maps import PLAN_MAIN_TABLE_VALUES, PLAN_SUBPROJECT_ROWS
+from app.common.hwpx.section0_template_fill import _cells_by_addr
+from app.common.hwpx.template_cell_maps import PLAN_MAIN_TABLE_VALUES, PLAN_SUBPROJECT_ROWS
 
 HP = "{http://www.hancom.co.kr/hwpml/2011/paragraph}"
 

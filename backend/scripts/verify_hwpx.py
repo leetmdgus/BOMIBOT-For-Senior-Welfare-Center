@@ -11,16 +11,16 @@ from lxml import etree
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from app.application.hwpx.builder import (  # noqa: E402
+from app.common.hwpx.builder import (  # noqa: E402
     _build_content_hpf,
     _build_preview_text,
     _build_section0_xml,
     build_hwpx_bytes,
 )
-from app.application.hwpx.export_business_plan import build_business_plan_hwpx  # noqa: E402
-from app.application.hwpx.zip_package import pack_hwpx_zip  # noqa: E402
+from app.common.hwpx.export_business_plan import build_business_plan_hwpx  # noqa: E402
+from app.common.hwpx.zip_package import pack_hwpx_zip  # noqa: E402
 
-TEMPLATE = ROOT / "app/application/hwpx/templates/base.hwpx"
+TEMPLATE = ROOT / "app/common/hwpx/templates/base.hwpx"
 REF = ROOT.parent / "frontend-next/scripts/test-plan.hwpx"
 
 

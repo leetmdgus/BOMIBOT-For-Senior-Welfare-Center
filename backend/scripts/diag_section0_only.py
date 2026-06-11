@@ -10,10 +10,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from app.application.hwpx.export_business_plan import build_business_plan_hwpx
-from app.application.hwpx.builder import build_hwpx_bytes
-from app.application.hwpx.hwpx_templates import load_section0_template_bytes
-from app.application.hwpx.zip_package import pack_hwpx_zip
+from app.common.hwpx.export_business_plan import build_business_plan_hwpx
+from app.common.hwpx.builder import build_hwpx_bytes
+from app.common.hwpx.hwpx_templates import load_section0_template_bytes
+from app.common.hwpx.zip_package import pack_hwpx_zip
 from lxml import etree
 
 HP = "{http://www.hancom.co.kr/hwpml/2011/paragraph}"

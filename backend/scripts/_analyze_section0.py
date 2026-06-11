@@ -33,5 +33,5 @@ def summarize(path: Path, label: str) -> None:
 
 
 base = Path(__file__).resolve().parents[1]
-summarize(base / "app/application/hwpx/templates/business_evaluation.hwpx", "template")
+summarize(base / "app/common/hwpx/templates/business_evaluation.hwpx", "template")
 summarize(base / "_hwpx_verify_out/ex_template_evaluation.hwpx", "generated")
