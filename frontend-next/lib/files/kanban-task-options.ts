@@ -1,4 +1,4 @@
-import type { TaskOption } from "@/components/files/file-types"
+import type { TaskOption } from "@common/types/file-types"
 import { getCurrentYearString } from "@/lib/current-year"
 import type { KanbanProject } from "@/services/kanban.board.types"
 

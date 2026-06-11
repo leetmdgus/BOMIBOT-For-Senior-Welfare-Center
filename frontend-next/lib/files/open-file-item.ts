@@ -1,4 +1,4 @@
-import type { FileItem } from "@/components/files/file-types"
+import type { FileItem } from "@common/types/file-types"
 import { triggerBlobDownload } from "@/lib/files/download-blob"
 import { shouldUseMockApi } from "@/lib/api-service-mode"
 import {

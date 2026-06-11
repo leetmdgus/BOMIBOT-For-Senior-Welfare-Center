@@ -1,4 +1,4 @@
-import type { FileItem, TaskOption } from "@/components/files/file-types"
+import type { FileItem, TaskOption } from "@common/types/file-types"
 
 export interface FileManagerState {
   files: FileItem[]

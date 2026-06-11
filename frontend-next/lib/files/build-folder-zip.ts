@@ -1,7 +1,7 @@
 import JSZip from "jszip"
 
-import type { FileItem } from "@/components/files/file-types"
-import { buildExportPayload } from "@/components/files/file-utils"
+import type { FileItem } from "@common/types/file-types"
+import { buildExportPayload } from "@common/utils/file-utils"
 
 export async function buildFolderZipBlob(
   files: FileItem[],

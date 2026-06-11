@@ -1,4 +1,4 @@
-import type { FileItem, TaskOption } from "@/components/files/file-types"
+import type { FileItem, TaskOption } from "@common/types/file-types"
 
 export const taskOptions: TaskOption[] = [
   { id: "task-1", name: "상담 [1-1 일반상담]" },

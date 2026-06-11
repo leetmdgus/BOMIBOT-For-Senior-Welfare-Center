@@ -25,6 +25,18 @@
     "paths": {
       "@/*": [
         "./*"
+      ],
+      "@common/*": [
+        "./common/*"
+      ],
+      "@menu/*": [
+        "./app/(menu)/*"
+      ],
+      "@public/*": [
+        "./app/(public)/*"
+      ],
+      "@auth/*": [
+        "./app/(auth)/*"
       ]
     }
   },

@@ -1,5 +1,5 @@
-import type { FileItem } from "@/components/files/file-types"
-import { getTypeByFileName } from "@/components/files/file-utils"
+import type { FileItem } from "@common/types/file-types"
+import { getTypeByFileName } from "@common/utils/file-utils"
 import { loadRegionStore } from "@/lib/auth/load-region-store"
 import type { RegionId } from "@/lib/auth/regions"
 import { buildFolderZipBlob } from "@/lib/files/build-folder-zip"

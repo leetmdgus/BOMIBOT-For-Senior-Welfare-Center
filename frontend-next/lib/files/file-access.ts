@@ -1,4 +1,4 @@
-import type { FileItem } from "@/components/files/file-types"
+import type { FileItem } from "@common/types/file-types"
 
 function collectDescendantIds(files: FileItem[], folderId: string): Set<string> {
   const byParent = new Map<string | null, string[]>()

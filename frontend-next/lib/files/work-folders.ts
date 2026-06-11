@@ -1,4 +1,4 @@
-import type { FileItem, TaskOption } from "@/components/files/file-types"
+import type { FileItem, TaskOption } from "@common/types/file-types"
 
 /** taskId가 없는 파일을 모으는 가상 폴더 키 */
 export const TASK_UNASSIGNED = "__unassigned__"

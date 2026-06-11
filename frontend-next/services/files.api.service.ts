@@ -1,4 +1,4 @@
-import type { FileItem } from "@/components/files/file-types"
+import type { FileItem } from "@common/types/file-types"
 import type { FileManagerState, FilesListResponse } from "./files.types"
 import { cachedApiGet, invalidateApiGetCache } from "@/lib/api-get-cache"
 import {

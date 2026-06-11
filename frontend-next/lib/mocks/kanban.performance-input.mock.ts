@@ -1,4 +1,4 @@
-import { summaryRowsToInputRows } from "@/components/kanban/task-detail/performance/input-rows-to-summary"
+import { summaryRowsToInputRows } from "@menu/kanban/components/task-detail/performance/input-rows-to-summary"
 import type { PerformanceRow } from "@/services/kanban.performance.types"
 
 import { performanceSummarySeedRows } from "./kanban.performance-summary.mock"

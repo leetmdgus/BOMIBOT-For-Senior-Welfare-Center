@@ -1,4 +1,4 @@
-import type { FileItem, TaskOption } from "@/components/files/file-types"
+import type { FileItem, TaskOption } from "@common/types/file-types"
 
 /** 칸반 taskOptions(카드명)으로 파일 목록의 담당 업무 표시명 동기화 */
 export function syncFileTaskNames(
