@@ -657,6 +657,15 @@ export function InputManagementTab() {
     }
   }
 
+  // 「전체」 버튼: 켜기/끄기 토글 — 이미 전체면 다시 누르면 해제(선택 월로 복귀).
+  const toggleAllMonthsView = () => {
+    if (viewAllMonths) {
+      leaveAllMonthsView()
+    } else {
+      enterAllMonthsView()
+    }
+  }
+
   const goPrevMonth = () => {
     leaveAllMonthsView()
     setSelectedMonth((prev) => (prev <= 1 ? 12 : prev - 1))
@@ -868,7 +877,8 @@ export function InputManagementTab() {
           type="button"
           variant={viewAllMonths ? "default" : "outline"}
           size="sm"
-          onClick={enterAllMonthsView}
+          aria-pressed={viewAllMonths}
+          onClick={toggleAllMonthsView}
         >
           전체
         </Button>
