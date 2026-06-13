@@ -28,7 +28,6 @@ import type {
 import { hydrateDashboardOverview } from "@/services/dashboard.utils"
 
 type DashboardPageProps = {
-  /** 서버에서 FastAPI로 미리 받은 데이터 (로그인·쿠키 있을 때) */
   initialOverviewDTO?: DashboardOverviewDTO | null
 }
 
@@ -36,6 +35,7 @@ export function DashboardPage({
   initialOverviewDTO = null,
 }: DashboardPageProps) {
   const { session, isLoading: authLoading } = useAuth()
+
   const [overview, setOverview] = useState<DashboardOverview | null>(
     initialOverviewDTO ? hydrateDashboardOverview(initialOverviewDTO) : null,
   )
@@ -54,6 +54,7 @@ export function DashboardPage({
     invalidateDashboardCache()
     setIsRefreshing(true)
     setLoadError(null)
+
     getDashboardOverview(getCurrentYearString())
       .then((data) => {
         setOverview(data)
@@ -64,6 +65,7 @@ export function DashboardPage({
           error instanceof ApiError
             ? error.message
             : "대시보드 데이터를 불러오지 못했습니다."
+
         setLoadError(message)
         console.error("대시보드 데이터 로드 실패:", error)
       })
@@ -78,7 +80,9 @@ export function DashboardPage({
   }, [authLoading, loadDashboard])
 
   useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 1000)
+    const timer = setInterval(() => {
+      setCurrentTime(new Date())
+    }, 1000)
 
     return () => clearInterval(timer)
   }, [])
@@ -87,16 +91,20 @@ export function DashboardPage({
     return (
       <div className="flex min-h-screen bg-background">
         <Sidebar />
+
         <main className="flex-1">
           <Header />
+
           <div className="space-y-6 p-6">
             {loadError ? (
               <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-6 text-center text-sm">
                 <p className="text-destructive">{loadError}</p>
+
                 <p className="mt-2 text-muted-foreground">
                   FastAPI(9001) 실행 여부와 로그인 상태를 확인한 뒤 다시 시도해
                   주세요.
                 </p>
+
                 {session?.token ? (
                   <Button
                     type="button"
@@ -112,6 +120,7 @@ export function DashboardPage({
             ) : (
               <>
                 <div className="h-24 animate-pulse rounded-xl bg-muted/60" />
+
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                   {Array.from({ length: 4 }).map((_, index) => (
                     <div
@@ -120,6 +129,7 @@ export function DashboardPage({
                     />
                   ))}
                 </div>
+
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="h-40 animate-pulse rounded-xl bg-muted/40" />
                   <div className="h-40 animate-pulse rounded-xl bg-muted/40" />
@@ -148,7 +158,7 @@ export function DashboardPage({
 
         <div className={isRefreshing ? "p-6 opacity-90" : "p-6"}>
           <GreetingCard currentTime={currentTime} />
-          <StatsGrid stats={overview.stats} />
+
           <ProgressGrid progressItems={overview.progress} />
 
           <div className="grid grid-cols-[1fr_350px] gap-6">
